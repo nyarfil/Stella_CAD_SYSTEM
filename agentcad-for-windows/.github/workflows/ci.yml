@@ -1,0 +1,168 @@
+name: CI
+
+on:
+  push:
+    branches: [main, roadmap]
+  pull_request:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+    inputs:
+      exhaustive:
+        description: Run the complete suite, including the engine example
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    if: github.event_name != 'schedule' && !(github.event_name == 'workflow_dispatch' && inputs.exhaustive)
+    name: pytest (${{ matrix.os }}, ${{ matrix.suite }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # `expect_sandbox` is PRD-006's honesty gate (Decision 13): where it is
+        # `active`, a worker that failed to confine itself is a RED test rather
+        # than a skipped one. All three platforms carry it since PRD-006b landed
+        # the Windows AppContainer — a profile, an ACL or a lowbox spawn that
+        # silently degraded to an unconfined worker is exactly what this catches
+        # — and quotas (rlimits/cgroups, job objects, the supervisor) are
+        # expected on all three.
+        include:
+          # macOS runs every PR-required test; exhaustive examples run nightly.
+          # 30 minutes, not 20: PRD-006 put `test_supervisor.py`'s real 1.5 GB
+          # balloons, `test_sandbox_plan.py` and the acceptance battery on the
+          # PR path, and a suite that times out is indistinguishable from a
+          # suite that failed.
+          - os: macos-latest
+            suite: pr
+            timeout: 30
+            expect_sandbox: active
+          # Other platforms exercise only boundaries whose behavior can vary by OS.
+          - os: ubuntu-latest
+            suite: portability
+            timeout: 20
+            expect_sandbox: active
+          # windows-latest / portability is DROPPED: we deploy on Linux (docker),
+          # so Windows is not a target, and its portability leg was an
+          # intermittent `kernel worker exited unexpectedly` crash in the
+          # AppContainer sandbox tests that only ever cost signal. The Windows
+          # AppContainer surface still has its own opt-in `windows-probe.yml`
+          # (path/dispatch-triggered), which is where any Windows work is gated.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      # OCCT needs an X/GL stack even headless on Linux. Keep this list and the
+      # apt hardening in sync with .github/actions/agentcad-check/action.yml.
+      - name: Install OCCT system libraries (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          # A stalled Ubuntu mirror wedges apt to the 30-minute job cancel with
+          # no output (an intermittent, Linux-only CI flake unrelated to the
+          # suite — see docs/changelog/0253, 0268). `Acquire::*::Timeout` does
+          # not reliably abort a mirror that stalls mid-body, and a plain retry
+          # never fires because a hung apt never returns — so wrap each call in a
+          # hard `timeout` that kills the hung fetch and lets the retry run.
+          apt_opts=(-o Acquire::Retries=3 -o Acquire::http::Timeout=30 \
+                    -o Acquire::https::Timeout=30)
+          ok=0
+          for attempt in 1 2 3; do
+            if sudo timeout 150 apt-get "${apt_opts[@]}" update; then ok=1; break; fi
+            echo "::warning::apt-get update attempt $attempt/3 failed or timed out; retrying"
+            sleep 5
+          done
+          [ "$ok" = 1 ] || { echo "::error::apt-get update failed after 3 attempts"; exit 1; }
+          sudo timeout 300 apt-get install -y --no-install-recommends "${apt_opts[@]}" \
+            libgl1 libglu1-mesa libxrender1 libxcursor1 libxft2 libxinerama1
+
+      # `--extra cloud` pulls in `webauthn`/`cbor2` (PRD-005 FR1) so the
+      # passkey suite (the virtual ES256 authenticator, 24 tests) actually
+      # runs instead of `importorskip`-ing away — a bare `uv sync --locked`
+      # left the whole auth path with zero CI coverage.
+      - name: Sync dependencies (locked)
+        run: uv sync --locked --extra cloud
+
+      # PRD-006 Decision 13. Landlock is a boot-time LSM: compiled into the
+      # kernel is not enough, it must be in the `lsm=` list, and the ABI
+      # decides whether the worker confines itself at all (ABI >= 3 is the
+      # floor — TRUNCATE is bit 14 and without it every truncating open is a
+      # false denial). Printing all three makes a runner-image change
+      # diagnosable in ONE red run instead of a bisect: `expect_sandbox:
+      # active` below turns a degradation red, and this step says why.
+      - name: Sandbox probe (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          uname -r
+          cat /sys/kernel/security/lsm || true
+          uv run python -c "from agentcad.kernel import _confine; print('landlock abi', _confine.landlock_abi())"
+
+      # Two workers cap OCCT memory while parallelizing module scopes. PRs keep
+      # broad boundary coverage but defer the bundled engine stress test.
+      # test_sketch_bench runs as a serial tail: its FR6 assertions measure
+      # wall-clock p50s that a co-scheduled OCCT build on a shared 3-core
+      # runner inflates past the budget (measured 16.36/20.18 ms vs 16 ms on
+      # this suite; main's nightly missed the same gate at 18.65/22.20 ms).
+      - name: Run PR test suite
+        if: matrix.suite == 'pr'
+        run: |
+          uv run pytest -q -n 2 --dist loadscope -m "not exhaustive" --ignore=tests/test_sketch_bench.py --ignore=tests/test_sketch_drag.py
+          uv run pytest -q tests/test_sketch_bench.py tests/test_sketch_drag.py
+        env:
+          AGENTCAD_KERNEL_POOL_SIZE: "1"
+          AGENTCAD_EXPECT_SANDBOX: ${{ matrix.expect_sandbox }}
+          AGENTCAD_EXPECT_QUOTAS: active
+
+      - name: Run portability test suite
+        if: matrix.suite == 'portability'
+        run: uv run pytest -q -n 2 --dist loadscope -m portability
+        env:
+          AGENTCAD_KERNEL_POOL_SIZE: "1"
+          AGENTCAD_EXPECT_SANDBOX: ${{ matrix.expect_sandbox }}
+          AGENTCAD_EXPECT_QUOTAS: active
+
+      # Seconds, no image build: catches a malformed compose file on every PR.
+      # The full `docker compose up` smoke lives in deploy-smoke.yml, off the
+      # PR path, because the OCCT wheels make the image multi-GB — the same
+      # split ci.yml and geometry-ci.yml already make.
+      - name: Lint the compose file (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: docker compose -f compose.yaml config --quiet
+
+  exhaustive:
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.exhaustive)
+    name: pytest (macos-latest, exhaustive)
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Sync dependencies (locked)
+        run: uv sync --locked --extra cloud
+
+      # Same serial bench tail as the PR job — the nightly missed the FR6
+      # drag budget under parallel co-load twice in the week before this.
+      - name: Run complete test suite
+        run: |
+          uv run pytest -q -n 2 --dist loadscope --ignore=tests/test_sketch_bench.py --ignore=tests/test_sketch_drag.py
+          uv run pytest -q tests/test_sketch_bench.py tests/test_sketch_drag.py
+        env:
+          AGENTCAD_KERNEL_POOL_SIZE: "1"

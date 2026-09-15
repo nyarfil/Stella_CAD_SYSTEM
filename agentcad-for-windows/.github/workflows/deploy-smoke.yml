@@ -1,0 +1,353 @@
+name: Deploy smoke
+
+# PRD-005a AC8: `docker compose up` on a clean host serves the UI, reports
+# `{"mode": "hosted"}`, takes an admin through `docker compose exec`, and keeps
+# projects and identities across `down`/`up`.
+#
+# Deliberately **not** on `pull_request`. The OCCT wheels make the runtime
+# image multi-GB, so the build costs minutes on every push — the same split
+# `ci.yml` (macOS on PRs, exhaustive nightly) and `geometry-ci.yml` already
+# make. What PRs get instead is the seconds-long `docker compose config
+# --quiet` lint in `ci.yml`.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Dockerfile"
+      - "compose.yaml"
+      - ".dockerignore"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "agentcad/**"
+      - "frontend/**"
+      - ".github/workflows/deploy-smoke.yml"
+  schedule:
+    - cron: "41 4 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least privilege: this workflow only checks out the repo and drives a
+# locally built compose stack over curl/docker exec — it never pushes,
+# uploads a release artifact or writes packages, so the default GITHUB_TOKEN
+# needs no more than read access to the repo contents.
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: docker compose up
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      # The guard requires `Host` to equal this origin's host, so every curl
+      # below must be addressed to `localhost` and not to `127.0.0.1`.
+      AGENTCAD_PUBLIC_ORIGIN: http://localhost:8630
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write .env
+        run: |
+          {
+            echo "AGENTCAD_PUBLIC_ORIGIN=$AGENTCAD_PUBLIC_ORIGIN"
+            echo "AGENTCAD_SECRET_KEY=$(openssl rand -hex 32)"
+          } > .env
+
+      # Plain `docker compose build`, and no cross-run layer cache. Exporting
+      # to the GHA cache needs `docker buildx bake`, which would make CI build
+      # the image by a different path from the one an operator runs — and this
+      # job exists to prove *that* path. It runs weekly and on main, not per
+      # PR, so the cold build is affordable.
+      - name: Build the image
+        run: docker compose build
+
+      - name: Start the instance
+        run: docker compose up -d
+
+      - name: Wait for the healthcheck
+        run: |
+          for _ in $(seq 1 60); do
+            state=$(docker inspect -f '{{.State.Health.Status}}' \
+              "$(docker compose ps -q agentcad)")
+            echo "health: $state"
+            [ "$state" = "healthy" ] && exit 0
+            [ "$state" = "unhealthy" ] && break
+            sleep 5
+          done
+          echo "the container never became healthy"
+          exit 1
+
+      - name: /api/health reports hosted, and nothing else
+        run: |
+          body=$(curl -sf "$AGENTCAD_PUBLIC_ORIGIN/api/health")
+          echo "$body"
+          # FR21: trimmed to {status, mode} without a principal. Version,
+          # kernel state, chat availability and sandbox status are a
+          # reconnaissance leak on an anonymous route.
+          python3 - "$body" <<'PY'
+          import json, sys
+          body = json.loads(sys.argv[1])
+          assert set(body) == {"status", "mode"}, body
+          assert body["mode"] == "hosted", body
+          PY
+
+      - name: The UI and the anonymous catalog are served; everything else is 401
+        run: |
+          curl -sf -o /dev/null "$AGENTCAD_PUBLIC_ORIGIN/"
+          curl -sf -o /dev/null "$AGENTCAD_PUBLIC_ORIGIN/js/api.js"
+          curl -sf "$AGENTCAD_PUBLIC_ORIGIN/api/public/packages" | head -c 200
+          echo
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            "$AGENTCAD_PUBLIC_ORIGIN/api/projects")
+          [ "$code" = "401" ] || { echo "anonymous /api/projects -> $code"; exit 1; }
+
+      - name: An admin is created through `docker compose exec`
+        run: |
+          docker compose exec -T agentcad \
+            agentcad admin user add smoke --admin | tee add.txt
+          grep -o "$AGENTCAD_PUBLIC_ORIGIN/api/auth/enrol/[^ ]*" add.txt > enrol.txt
+          test -s enrol.txt
+
+      - name: Enrol and sign in
+        run: |
+          curl -sf -c jar -X POST -H 'Content-Type: application/json' \
+            -H "Origin: $AGENTCAD_PUBLIC_ORIGIN" \
+            -d '{"password":"smoke test password"}' "$(cat enrol.txt)"
+          echo
+          code=$(curl -s -b jar -o /dev/null -w '%{http_code}' \
+            "$AGENTCAD_PUBLIC_ORIGIN/api/projects")
+          [ "$code" = "200" ] || { echo "signed-in /api/projects -> $code"; exit 1; }
+          # AC3: a second use of the same enrolment link is a 404.
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+            -H 'Content-Type: application/json' \
+            -H "Origin: $AGENTCAD_PUBLIC_ORIGIN" \
+            -d '{"password":"another one"}' "$(cat enrol.txt)")
+          [ "$code" = "404" ] || { echo "enrolment replay -> $code"; exit 1; }
+
+      - name: A real project, so restart persistence is about real state
+        run: |
+          curl -sf -b jar -X POST -H 'Content-Type: application/json' \
+            -H "Origin: $AGENTCAD_PUBLIC_ORIGIN" \
+            -d '{"name":"smoke"}' "$AGENTCAD_PUBLIC_ORIGIN/api/projects"
+          echo
+
+      - name: Restart, and the account, session and project all survive
+        run: |
+          docker compose down
+          docker compose up -d
+          for _ in $(seq 1 60); do
+            curl -sf -o /dev/null "$AGENTCAD_PUBLIC_ORIGIN/api/health" && break
+            sleep 5
+          done
+          # The SAME cookie jar: sessions live on the volume, not in memory.
+          curl -sf -b jar "$AGENTCAD_PUBLIC_ORIGIN/api/auth/session"
+          echo
+          curl -sf -b jar "$AGENTCAD_PUBLIC_ORIGIN/api/projects" | grep -q smoke
+          docker compose exec -T agentcad agentcad admin user list | grep -q smoke
+
+      # =============================================================
+      # PRD-005: a second user, an org, per-project roles, a scoped
+      # agent token, a git sync round trip and an audit query — the
+      # deployed halves of AC1/AC2/AC5/AC6. Everything above this point
+      # is PRD-005a's single-admin story and is left untouched.
+      # =============================================================
+
+      - name: A second user, an org and a role ladder (AC1/AC2 setup)
+        run: |
+          docker compose exec -T agentcad \
+            agentcad admin user add anya | tee add2.txt
+          grep -o "$AGENTCAD_PUBLIC_ORIGIN/api/auth/enrol/[^ ]*" add2.txt > enrol2.txt
+          test -s enrol2.txt
+          curl -sf -c jar2 -X POST -H 'Content-Type: application/json' \
+            -H "Origin: $AGENTCAD_PUBLIC_ORIGIN" \
+            -d '{"password":"anya test password"}' "$(cat enrol2.txt)"
+          echo
+
+          # The org bootstrap is `agentcad admin org`, the same "read the
+          # state files directly, no service, no kernel, no port" contract
+          # `agentcad admin user` already relies on — so this step is the
+          # documented operator path rather than a script that mirrors it.
+          # `org add --admin` is ONE atomic write, so the org is never
+          # briefly adminless.
+          docker compose exec -T agentcad \
+            agentcad admin org add acme --label 'Acme Robotics' --admin smoke
+          docker compose exec -T agentcad \
+            agentcad admin org workspace add acme main --label Mechanical
+          docker compose exec -T agentcad \
+            agentcad admin org member add acme anya --role view
+
+      - name: Two projects, and view -> 403 -> grant edit -> 200 (AC2 deployed half)
+        run: |
+          curl -sf -b jar -H "X-Agentcad-Workspace: acme/main" \
+            -H "Origin: $AGENTCAD_PUBLIC_ORIGIN" -X POST \
+            -H 'Content-Type: application/json' -d '{"name":"widget"}' \
+            "$AGENTCAD_PUBLIC_ORIGIN/api/projects"
+          echo
+          curl -sf -b jar -H "X-Agentcad-Workspace: acme/main" \
+            -H "Origin: $AGENTCAD_PUBLIC_ORIGIN" -X POST \
+            -H 'Content-Type: application/json' -d '{"name":"gadget"}' \
+            "$AGENTCAD_PUBLIC_ORIGIN/api/projects"
+          echo
+
+          # anya is a VIEWER of acme/main: a read succeeds, a write is a
+          # structured 403 (the same PUT the unit suite pins for AC2).
+          code=$(curl -s -o /dev/null -w '%{http_code}' -b jar2 \
+            -H "X-Agentcad-Workspace: acme/main" -X PUT \
+            -H 'Content-Type: application/json' \
+            -H "Origin: $AGENTCAD_PUBLIC_ORIGIN" \
+            -d '{"instances":[]}' \
+            "$AGENTCAD_PUBLIC_ORIGIN/api/projects/widget/assembly")
+          [ "$code" = "403" ] || {
+            echo "viewer edit -> $code (expected 403)"; exit 1; }
+
+          # smoke (org admin) grants anya `edit` on widget only, over the
+          # tool surface a real operator would use.
+          grant=$(curl -sf -b jar -H "X-Agentcad-Workspace: acme/main" \
+            -H "Origin: $AGENTCAD_PUBLIC_ORIGIN" -X POST \
+            -H 'Content-Type: application/json' \
+            -d '{"project":"widget","principal":"anya","role":"edit"}' \
+            "$AGENTCAD_PUBLIC_ORIGIN/api/tools/grant_role")
+          echo "$grant"
+          echo "$grant" | grep -q '"error"' && {
+            echo "grant_role was refused"; exit 1; }
+
+          # No restart, no new app: the SAME anya session now writes.
+          code=$(curl -s -o /dev/null -w '%{http_code}' -b jar2 \
+            -H "X-Agentcad-Workspace: acme/main" -X PUT \
+            -H 'Content-Type: application/json' \
+            -H "Origin: $AGENTCAD_PUBLIC_ORIGIN" \
+            -d '{"instances":[]}' \
+            "$AGENTCAD_PUBLIC_ORIGIN/api/projects/widget/assembly")
+          [ "$code" = "200" ] || {
+            echo "edit after grant -> $code (expected 200)"; exit 1; }
+
+      - name: A token scoped to project A only, and the cross-project 403 (AC5 deployed half)
+        run: |
+          set -euo pipefail
+          mint=$(curl -sf -b jar -H "X-Agentcad-Workspace: acme/main" \
+            -H "Origin: $AGENTCAD_PUBLIC_ORIGIN" -X POST \
+            -H 'Content-Type: application/json' \
+            -d '{"name":"ci","org":"acme","workspace":"main","projects":["widget"],"role":"edit"}' \
+            "$AGENTCAD_PUBLIC_ORIGIN/api/tools/create_agent_token")
+          echo "$mint" | python3 -c "
+          import json, sys
+          row = json.load(sys.stdin)
+          assert 'error' not in row, row
+          assert row.get('id') and row.get('token')
+          print(row['id']); print(row['token'])
+          " > mint_out.txt || {
+            # Never echo \$mint on this path: it carries the freshly minted
+            # bearer secret in the clear, and this job's log is public. Report
+            # the failure shape, not the value.
+            echo "create_agent_token did not return the expected {id, token} shape"
+            exit 1
+          }
+          # mint_out.txt line 1 is the token id (not secret); line 2 is the
+          # bearer secret, shown once — it is never echoed to the log.
+
+          TOKEN=$(sed -n 2p mint_out.txt)
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d '{"instances":[]}' \
+            "$AGENTCAD_PUBLIC_ORIGIN/api/projects/widget/assembly")
+          [ "$code" = "200" ] || {
+            echo "token edit on A (widget) -> $code (expected 200)"; exit 1; }
+
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d '{"instances":[]}' \
+            "$AGENTCAD_PUBLIC_ORIGIN/api/projects/gadget/assembly")
+          [ "$code" = "403" ] || {
+            echo "token edit on B (gadget) -> $code (expected 403)"; exit 1; }
+
+      - name: A git clone, edit and push against the deployed instance (the sync smoke)
+        run: |
+          # A throwaway CI credential, so `http.extraHeader` on the command
+          # line is an acceptable shortcut here — it is NOT the recommended
+          # flow (docs/deployment.md, "Sync"): `agentcad login`/`clone`
+          # install a git credential helper precisely so a token never sits
+          # in a URL, a config file or `extraHeader`. The token is never
+          # echoed; it lives only in this step's process environment.
+          TOKEN=$(sed -n 2p mint_out.txt)
+          git -c http.extraHeader="Authorization: Bearer $TOKEN" \
+            clone --quiet "$AGENTCAD_PUBLIC_ORIGIN/git/acme/main/widget.git" \
+            sync_clone
+
+          cd sync_clone
+          echo "ci sync smoke $(date -u +%FT%TZ)" > SMOKE_NOTE.txt
+          git add SMOKE_NOTE.txt
+          git -c user.email=ci@agentcad.test -c user.name=ci \
+            commit --quiet -m "smoke: sync round trip"
+          git -c http.extraHeader="Authorization: Bearer $TOKEN" \
+            push --quiet origin HEAD
+          cd ..
+
+          # The server checks out the pushed commit into the SAME directory
+          # it serves from before the push's HTTP response completes
+          # (routes_sync.py's `after()`), so this is already there.
+          docker compose exec -T agentcad \
+            cat /data/projects/orgs/acme/main/widget/SMOKE_NOTE.txt \
+            | tee materialized.txt
+          grep -q "ci sync smoke" materialized.txt || {
+            echo "the pushed file did not materialize on the server"; exit 1; }
+
+      - name: Revoke the token; the next request is 401 (AC5 revocation)
+        run: |
+          TOKEN_ID=$(sed -n 1p mint_out.txt)
+          TOKEN=$(sed -n 2p mint_out.txt)
+          revoke=$(curl -sf -b jar -H "X-Agentcad-Workspace: acme/main" \
+            -H "Origin: $AGENTCAD_PUBLIC_ORIGIN" -X POST \
+            -H 'Content-Type: application/json' \
+            -d "{\"token_id\":\"$TOKEN_ID\"}" \
+            "$AGENTCAD_PUBLIC_ORIGIN/api/tools/revoke_agent_token")
+          echo "$revoke" | grep -q '"error"' && {
+            echo "$revoke"; exit 1; }
+
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $TOKEN" \
+            "$AGENTCAD_PUBLIC_ORIGIN/api/projects/widget")
+          [ "$code" = "401" ] || {
+            echo "revoked token -> $code (expected 401)"; exit 1; }
+          rm -f mint_out.txt
+
+      - name: An audit query distinguishes principals (AC6 deployed half)
+        run: |
+          # Scope: `audit.tap_registry` is wired into the serve path since
+          # slice 10 (`core/tenancy_wiring.py`), so every mutating tool call
+          # above — not just the tenancy tools' own taps — has a row in
+          # `acme`. What this step asserts is still the deployed half: the
+          # principals are distinguishable in a real instance's log.
+          # `_instance` holds the auth events (the sign-ins here). The full
+          # human/chat-agent/MCP-agent three-way distinction on one project
+          # (AC6's complete claim) is graded in
+          # `tests/test_prd005_acceptance.py`, not by this workflow.
+          docker compose exec -T agentcad \
+            agentcad admin audit query acme --json > audit_acme.json
+          docker compose exec -T agentcad \
+            agentcad admin audit query _instance --json > audit_instance.json
+          cat audit_acme.json
+          cat audit_instance.json
+          python3 - <<'PY'
+          import json
+          acme = json.load(open("audit_acme.json"))
+          inst = json.load(open("audit_instance.json"))
+          acme_principals = {row["principal"] for row in acme["rows"]}
+          inst_principals = {row["principal"] for row in inst["rows"]}
+          assert "user:smoke" in acme_principals, acme
+          assert {"user:smoke", "user:anya"} <= inst_principals, inst
+          print("acme principals:", sorted(acme_principals))
+          print("_instance principals:", sorted(inst_principals))
+          PY
+
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail 400
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

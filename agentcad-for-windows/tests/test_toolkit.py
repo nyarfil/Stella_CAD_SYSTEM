@@ -1,0 +1,149 @@
+"""Robustness toolkit + Error Doctor tests (run the real kernel geometry)."""
+
+import pytest
+
+from agentcad.kernel.error_doctor import diagnose, diagnose_text
+
+from .conftest import BOX_SCRIPT
+
+
+# ---- Error Doctor: signature matching (string-level, no kernel needed) ----
+
+@pytest.mark.parametrize("message,expect_id", [
+    ("Failed creating a fillet with radius of 12", "fillet_radius_too_large"),
+    ("There are no suitable edges for chamfer or fillet", "fillet_edges_not_on_part"),
+    ("offset Error, an alternative kind may resolve this error", "offset_failed_alternative_kind"),
+    ("Face can only be created with closed wires", "face_from_open_wire"),
+    ("Polyline requires two or more pts", "polyline_too_few_points"),
+    ("BRep_API: command not done", "generic_occt_not_done"),
+])
+def test_error_doctor_matches_signatures(message, expect_id):
+    entry = diagnose_text("Exception", message, "")
+    assert entry is not None and entry["id"] == expect_id
+    hint = diagnose("Exception", message, "")
+    assert hint and "Fix:" in hint
+
+
+def test_error_doctor_unknown_returns_none():
+    assert diagnose("Exception", "some totally novel error xyzzy", "") is None
+
+
+# ---- PRD-006: the four sandbox/quota denials -------------------------------
+# The blob the doctor matches is "<ExcType>: <message>\n<traceback>", which is
+# exactly what `worker._script_error_from_exc` builds, so these are the real
+# strings a denied script produces — not paraphrases of them.
+
+@pytest.mark.parametrize("exc_type,message,tb,expect_id", [
+    ("PermissionError", "[Errno 1] Operation not permitted",
+     '  File "<part>", line 4, in build\n'
+     "    socket.create_connection(('1.1.1.1', 80))\n",
+     "sandbox_network_denied"),
+    ("PermissionError", "[Errno 13] Permission denied: '/usr/pwned'", "",
+     "sandbox_write_denied"),
+    ("BlockingIOError", "[Errno 11] Resource temporarily unavailable", "",
+     "sandbox_process_cap"),
+    ("BlockingIOError", "[Errno 35] Resource temporarily unavailable", "",
+     "sandbox_process_cap"),
+    ("MemoryError", "", "", "sandbox_memory_cap"),
+])
+def test_error_doctor_names_the_sandbox_denials(exc_type, message, tb,
+                                                expect_id):
+    entry = diagnose_text(exc_type, message, tb)
+    assert entry is not None and entry["id"] == expect_id
+    hint = diagnose(exc_type, message, tb)
+    assert hint and "Fix:" in hint
+    assert "sandbox" in hint or "cap" in hint
+
+
+def test_an_eperm_with_no_network_frame_is_not_a_network_denial():
+    """`[Errno 1]` on its own is only a network denial when the traceback
+    shows a socket call — otherwise it is an unattributed EPERM and a wrong
+    hint would send the reader looking for an egress rule."""
+    entry = diagnose_text("PermissionError", "[Errno 1] Operation not permitted",
+                          '  File "<part>", line 2, in build\n    os.chown(x)\n')
+    assert entry is None or entry["id"] != "sandbox_network_denied"
+
+
+# ---- safe_fillet: recover from an impossible radius --------------------------
+
+def test_safe_fillet_finds_largest_working_radius():
+    from build123d import Axis, Box, BuildPart
+
+    from agentcad.toolkit import safe_fillet
+
+    with BuildPart() as bp:
+        Box(20, 20, 10)
+    part = bp.part
+    edges = part.edges().filter_by(Axis.Z)
+    # radius 12 > half-width (10): adjacent corner fillets collide -> OCCT fails
+    filleted, achieved, warning = safe_fillet(part, edges, radius=12.0)
+    assert filleted.is_valid and filleted.volume > 0
+    assert 0 < achieved < 12.0
+    assert warning and "largest working radius" in warning
+
+
+def test_safe_fillet_success_no_warning():
+    from build123d import Axis, Box, BuildPart
+
+    from agentcad.toolkit import safe_fillet
+
+    with BuildPart() as bp:
+        Box(80, 60, 10)
+    part = bp.part
+    filleted, achieved, warning = safe_fillet(part, part.edges().filter_by(Axis.Z), radius=2.0)
+    assert achieved == pytest.approx(2.0)
+    assert warning is None
+
+
+# ---- safe_shell: fallback yields valid geometry -----------------------------
+
+def test_safe_shell_basic_box():
+    from build123d import Box, BuildPart
+
+    from agentcad.toolkit import safe_shell
+
+    with BuildPart() as bp:
+        Box(40, 40, 40)
+    part = bp.part
+    top = part.faces().sort_by()[-1]
+    shelled, warning = safe_shell(part, thickness=2.0, opening_faces=[top])
+    assert shelled.is_valid and 0 < shelled.volume < part.volume
+
+
+# ---- safe_bool: fuzzy tolerance rescues a tangent-face fuse ------------------
+
+def test_safe_bool_fuses_touching_boxes():
+    from build123d import Box, Pos
+
+    from agentcad.toolkit import safe_bool
+
+    a = Box(10, 10, 10)
+    # b sits a sub-tolerance gap away so a plain fuse leaves two solids
+    b = Pos(10 + 1e-5, 0, 0) * Box(10, 10, 10)
+    result, warning = safe_bool(a, b, "fuse")
+    assert result.is_valid
+    assert len(result.solids()) == 1  # fused into one despite the gap
+
+
+# ---- integration: a kernel error now carries details.hint -------------------
+
+def test_kernel_error_gains_hint(kernel, tmp_path):
+    from agentcad.kernel.client import KernelError
+
+    # fillet radius too large -> kernel_error, Error Doctor adds a hint
+    script = (
+        "from build123d import *\n"
+        'PARAMS = {"r": {"default": 50.0, "min": 1.0, "max": 100.0}}\n'
+        "def build(p):\n"
+        "    with BuildPart() as part:\n"
+        "        Box(20, 20, 4)\n"
+        "        fillet(part.edges().filter_by(Axis.Z), radius=p.r)\n"
+        "    return part.part\n"
+    )
+    with pytest.raises(KernelError) as exc_info:
+        kernel.request("build", {
+            "script": script, "params": {},
+            "density_g_cm3": 2.7, "mesh_path": str(tmp_path / "m.acm"),
+        })
+    assert exc_info.value.details.get("hint")
+    assert "fillet" in exc_info.value.details["hint"].lower()

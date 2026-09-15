@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AgentCAD</title>
+  <script>
+    // Pre-paint theme restore so a stored light theme never flashes dark.
+    try {
+      if (localStorage.getItem("agentcad.theme") === "light") {
+        document.documentElement.dataset.theme = "light";
+      }
+    } catch (e) {}
+  </script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='4' width='9' height='9' rx='1.5' fill='%23272930'/%3E%3Crect x='5' y='2' width='9' height='9' rx='1.5' fill='none' stroke='%23d99a4e' stroke-width='1.5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/vendor/codemirror.css">
+  <link rel="stylesheet" href="/css/app.css">
+  <script type="importmap">
+    { "imports": { "three": "/vendor/three.module.min.js" } }
+  </script>
+  <script src="/vendor/codemirror.js"></script>
+  <script src="/vendor/python.js"></script>
+</head>
+<body>
+
+  <header id="toolbar">
+    <div id="brand">Agent<b>CAD</b></div>
+
+    <!-- PRD-026 slice 4: rendered by shell/menu.js from the action registry
+         (menu.init in main.js's boot()). Empty until then — never a
+         placeholder comment a test could catch left behind. -->
+    <nav id="menubar" role="menubar"></nav>
+
+    <div class="menu-wrap">
+      <button id="project-btn" class="tb-btn" aria-haspopup="menu" aria-expanded="false">
+        <span id="project-name">No project</span><span class="chev">▾</span>
+      </button>
+      <div id="project-menu" class="menu left hidden" role="menu"></div>
+    </div>
+
+    <!-- Static markup. PRD-026 slice 4: shell/menu.js's attach() queries
+         .menu-wrap live at event time, so a wrap inserted later (the menu
+         bar's own generated ones) gets the same handling as this one. -->
+    <div class="menu-wrap">
+      <button id="branch-btn" class="tb-btn hidden" aria-haspopup="menu"
+              aria-expanded="false" title="Current branch">
+        <span class="branch-glyph" aria-hidden="true">⑂</span>
+        <span id="branch-name">—</span><span class="chev">▾</span>
+      </button>
+      <div id="branch-menu" class="menu left hidden" role="menu"></div>
+    </div>
+
+    <button id="proposals-btn" class="tb-btn hidden" title="Change proposals">
+      <span class="branch-glyph" aria-hidden="true">⇄</span>
+      <span>Proposals</span><span id="proposals-count" class="tb-badge hidden"></span>
+    </button>
+
+    <button id="notif-btn" class="tb-btn hidden" title="Mentions">
+      <span class="branch-glyph" aria-hidden="true">@</span>
+      <span>Inbox</span><span id="notif-count" class="tb-badge hidden"></span>
+    </button>
+
+    <div class="toolbar-spacer"></div>
+
+    <div id="rebuild-indicator" class="hidden">
+      <span class="spinner" aria-hidden="true"></span>
+      <span id="rebuild-label">Rebuilding…</span>
+    </div>
+
+    <button id="undo-btn" class="tb-btn" title="Undo (⌘Z / Ctrl+Z)">↩</button>
+    <button id="redo-btn" class="tb-btn" title="Redo (⇧⌘Z / Ctrl+Y)">↪</button>
+
+    <button id="fit-btn" class="tb-btn" title="Fit view (F)">Fit</button>
+
+    <button id="sketch-btn" class="tb-btn" title="2D sketch editor (part mode)">✏️ Sketch</button>
+
+    <button id="bom-btn" class="tb-btn" title="Bill of materials (PRD-015)">BOM</button>
+
+    <button id="releases-btn" class="tb-btn" title="Releases: cut and finalize a versioned revision (PRD-015)">Releases</button>
+
+    <button id="library-btn" class="tb-btn" title="Parts library — search and insert a package part">Library</button>
+
+    <button id="market-btn" class="tb-btn" title="Browse the public marketplace catalog">Market</button>
+
+    <button id="materials-btn" class="tb-btn" title="Browse the materials database">Materials</button>
+
+    <button id="skills-btn" class="tb-btn" title="Agent skills — loadable craft guides">Skills</button>
+
+    <!-- PRD-018 slice 6: generate a part from a prompt (+ optional photos/PDF).
+         Reachable the same three ways as Skills/Materials — toolbar, Model
+         menu (agent.generate), palette — and by `ui_open {view: "generate"}`. -->
+    <button id="generate-btn" class="tb-btn" title="Generate a part from a task description">✦ Generate</button>
+
+    <button id="import-btn" class="tb-btn" title="Import a CAD file (.step / .stp / .brep / .stl)">Import</button>
+    <input id="import-input" type="file" accept=".step,.stp,.brep,.stl" hidden>
+
+    <div class="menu-wrap">
+      <button id="export-btn" class="tb-btn" aria-haspopup="menu" aria-expanded="false">
+        Export<span class="chev">▾</span>
+      </button>
+      <div id="export-menu" class="menu right hidden" role="menu">
+        <div class="menu-label">Part</div>
+        <!-- PRD-017: rebuilt from the action registry (main.js's
+             `renderExportSection`) every time this menu opens, so a format
+             the live tool schema adds (gltf/glb here, usd/3mf later) needs no
+             second copy of the format list in this file. -->
+        <div id="export-part-items"></div>
+        <div class="menu-sep"></div>
+        <div class="menu-label">Assembly</div>
+        <div id="export-assembly-items"></div>
+        <div class="menu-sep"></div>
+        <div class="menu-label">Drawing</div>
+        <button class="menu-item" data-drawing="svg">SVG preview <span class="meta">.svg</span></button>
+        <button class="menu-item" data-drawing="dxf">DXF <span class="meta">.dxf</span></button>
+      </div>
+    </div>
+
+    <!-- Hosted mode only: share-links.js unhides this once we know the app is
+         hosted (a share link needs a public origin). -->
+    <button id="share-btn" class="tb-btn hidden" type="button"
+            aria-haspopup="dialog">Share…</button>
+
+    <!-- PRD-026: the pointer's way to the command palette. The label is the
+         chord, because the chord is the thing worth learning — and it is
+         rewritten at boot by `setupPaletteButton()` from the shortcut table,
+         so a Windows user sees `Ctrl+K` rather than a Command glyph. -->
+    <button id="palette-btn" class="tb-btn" type="button"
+            title="Command palette" aria-label="Command palette">⌘K</button>
+
+    <button id="theme-btn" class="tb-btn" title="Switch to light theme"
+            aria-label="Switch to light theme">☀</button>
+
+    <!-- Hosted mode + at least one org membership only (PRD-005 slice 8):
+         workspace.js fills this with "org/ws" and opens the switcher dialog
+         on click. Stays hidden otherwise — local mode and an untenanted
+         hosted instance (005a with no orgs) render nothing, unchanged. -->
+    <button id="workspace-chip" class="tb-btn hidden" type="button"
+            title="Switch org / workspace">—</button>
+
+    <!-- Hosted mode only: auth.js fills this with the handle and a Sign out
+         button. Stays empty and hidden in local mode, where there is no
+         identity to show. -->
+    <div id="auth-chip" class="hidden"></div>
+
+    <div id="conn-dot" title="Server connection"></div>
+  </header>
+
+  <!-- Hosted mode only: the sign-in / enrolment view. main.js renders into it
+       when nobody is signed in and hides the toolbar and workspace behind it. -->
+  <div id="auth-view" class="hidden"></div>
+
+  <!-- The marketplace (PRD-031a). A full-page view market.js renders into,
+       entered on the `#market` hash BEFORE the auth gate so a logged-out
+       visitor can browse, customize and download; the "Market" toolbar button
+       navigates here. Add-to-library appears only when signed in. -->
+  <div id="market-view" class="hidden"></div>
+
+  <div id="workspace">
+    <!-- PRD-027 FR2/FR7: both lists are VIRTUALIZED trees. Each `<ul
+         role="tree">` is its own scroll container holding a few dozen 28 px
+         rows between two spacer `<li>`s, so a 1 000-part project is a few
+         dozen nodes rather than seven thousand. The sections are the flex
+         children that give those lists a bounded height — `#sidebar` itself no
+         longer scrolls. -->
+    <aside id="sidebar">
+      <div class="side-section" id="parts-section">
+        <div class="side-head">
+          <span>Parts</span>
+          <!-- "n of N" while a filter is active; the plain count otherwise. -->
+          <span id="tree-count" class="tree-count"></span>
+          <button id="add-part-btn" class="side-add" title="New part">+</button>
+        </div>
+        <div class="tree-filterbar">
+          <input id="tree-filter" class="tree-filter" type="search"
+                 placeholder="Filter parts…" aria-label="Filter parts"
+                 autocomplete="off" autocorrect="off" spellcheck="false">
+        </div>
+        <!-- The grammar's refusal ("unknown field: colour"), in the surface
+             that asked — never a toast, which would fire on every keystroke
+             of a half-typed `field:` term. -->
+        <div id="tree-filter-msg" class="tree-filter-msg hidden" role="status"></div>
+        <!-- bulk.js renders into this strip when more than one part is
+             selected; empty and hidden otherwise. -->
+        <div id="bulk-bar" class="bulk-bar hidden" role="toolbar"
+             aria-label="Bulk actions"></div>
+        <!-- The drop target for "file this at the project root", revealed only
+             while parts are being dragged (a permanent one would be a 28 px
+             strip of dead sidebar). -->
+        <div id="parts-root-drop" class="tree-root-drop hidden">Project root</div>
+        <ul id="parts-list" class="side-list tree" role="tree"
+            aria-label="Parts"></ul>
+      </div>
+      <div class="side-section" id="assembly-section">
+        <div class="side-head" id="assembly-head" style="cursor:pointer" title="Show assembly">
+          <span>Assembly</span>
+        </div>
+        <ul id="instances-list" class="side-list tree" role="tree"
+            aria-label="Assembly instances"></ul>
+      </div>
+    </aside>
+
+    <main id="viewport">
+      <!-- Comment pins. An absolutely-positioned HTML overlay filling the same
+           box as the canvas (the #facecard/#hud pattern) — no CSS2DRenderer is
+           vendored. comments.js projects each open face thread's world point
+           with camera.project() inside the existing render loop. -->
+      <div id="pins"></div>
+      <!-- Rep-mode toggle (PRD-013 FR8): Full = exact per-instance meshes;
+           Simplified = one convex-hull proxy per part, instanced for scale. -->
+      <div id="repmode" class="hidden">
+        <button id="repmode-full" class="repmode-btn" data-rep="full">Full</button>
+        <button id="repmode-simplified" class="repmode-btn" data-rep="simplified">Simplified</button>
+        <!-- Explode slider (PRD-013 FR13): a Phase-2 seam. The
+             explode_assembly tool is not built in the MVP, so the control is
+             present but DISABLED with a tooltip — the toolbar seam exists
+             without shipping the animation. -->
+        <label id="explode" class="explode-stub" title="Exploded views are coming in a later phase.">
+          <span class="explode-label">Explode</span>
+          <input id="explode-range" type="range" min="0" max="100" value="0"
+                 disabled aria-label="Explode (coming soon)">
+        </label>
+      </div>
+      <div id="hud" class="hidden"></div>
+      <div id="viewport-empty" class="hidden"></div>
+      <div id="placement" class="hidden">
+        <div id="placement-body"></div>
+      </div>
+      <div id="facecard" class="hidden">
+        <div id="facecard-body"></div>
+      </div>
+      <div id="sketcher" class="hidden"></div>
+      <!-- Legend for a proposal's geometry-diff overlay. The overlay itself
+           lives in the THREE scene root (viewport.showDiffOverlay); this is
+           its only chrome, so it must be dismissible with the modal closed. -->
+      <div id="diff-legend" class="hidden">
+        <span id="diff-legend-part"></span>
+        <span class="diff-key"><i class="diff-sw removed"></i>removed</span>
+        <span class="diff-key"><i class="diff-sw added"></i>added</span>
+        <button id="diff-legend-clear" class="tb-btn" type="button">Clear</button>
+      </div>
+    </main>
+
+    <aside id="inspector">
+      <nav id="tabs">
+        <button class="tab active" data-tab="params">Parameters</button>
+        <button class="tab" data-tab="code">Code</button>
+        <button class="tab" data-tab="metrics">Metrics</button>
+        <button class="tab" data-tab="threads">Threads<span id="threads-count"
+                class="tb-badge hidden"></span></button>
+      </nav>
+
+      <div id="banner" class="hidden">
+        <div class="banner-head">
+          <span id="banner-title">error</span>
+          <button id="banner-close" class="banner-close" title="Dismiss">×</button>
+        </div>
+        <pre id="banner-body"></pre>
+      </div>
+
+      <!-- The configuration switcher. A STATIC host outside #pane-params,
+           which every full param rebuild wipes: the <select> here is rebuilt
+           only when the part, the active configuration or the declared names
+           change, so a rebuild landing while the dropdown is open cannot close
+           it. Hidden entirely for a part with no configurations. -->
+      <div id="config-bar" class="hidden"></div>
+
+      <div id="pane-params" class="pane"></div>
+      <div id="pane-code" class="pane hidden">
+        <div id="editor-host"></div>
+        <div class="editor-actions">
+          <span id="editor-claim" class="hidden"></span>
+          <span id="editor-dirty"></span>
+          <button id="save-btn" class="tb-btn">Save &amp; Rebuild</button>
+        </div>
+      </div>
+      <div id="pane-metrics" class="pane hidden"></div>
+      <div id="pane-threads" class="pane hidden"></div>
+    </aside>
+  </div>
+
+  <!-- PRD-027 FR6: the all-projects dashboard. A full-pane view pinned under
+       the toolbar and over the whole workspace (never a modal — it is a place,
+       not a decision, and the workbench behind it stays alive so closing it
+       costs no reload). Shown on first run, by `project.dashboard` / ⌘⇧O, from
+       the project menu's "All projects…" row, and by `ui_open {view:
+       "dashboard"}`. -->
+  <div id="dashboard" class="hidden" tabindex="-1" role="region"
+       aria-label="All projects"></div>
+
+  <!-- PRD-027: the host `shell/contextmenu.js` builds the one open context
+       menu into. Before #dialog-host so a dialog a menu item opens paints
+       over the menu's own teardown. -->
+  <div id="contextmenu-host"></div>
+
+  <section id="chat-dock" class="collapsed">
+    <header id="chat-head">
+      <span class="chat-title">Agent</span>
+      <span id="chat-hint" class="chat-hint"></span>
+      <span id="chat-chevron">▲</span>
+    </header>
+    <div id="chat-body">
+      <div id="chat-empty" class="hidden"></div>
+      <div id="chat-messages"></div>
+      <form id="chat-form">
+        <input id="chat-input" type="text" autocomplete="off"
+               placeholder="Ask the agent to model something…">
+        <button id="chat-send" class="tb-btn" type="submit">Send</button>
+      </form>
+    </div>
+  </section>
+
+  <div id="drawing-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <header class="modal-head">
+        <span id="drawing-title" class="modal-title">Drawing</span>
+        <div class="modal-actions">
+          <!-- PRD-014 Slice 6: sheet format (FR1), the four projected views,
+               and a single section plane, all regenerate the preview through
+               the same previewSeq-guarded round trip as the dim-table
+               checkbox below. -->
+          <select id="drawing-sheet" class="tb-btn" title="Sheet format">
+            <option value="iso_a4">ISO A4</option>
+            <option value="iso_a3" selected>ISO A3</option>
+            <option value="iso_a2">ISO A2</option>
+            <option value="iso_a1">ISO A1</option>
+            <option value="iso_a0">ISO A0</option>
+            <option value="ansi_a">ANSI A</option>
+            <option value="ansi_b">ANSI B</option>
+            <option value="ansi_c">ANSI C</option>
+            <option value="ansi_d">ANSI D</option>
+          </select>
+          <div id="drawing-views-wrap" class="drawing-views">
+            <label class="drawing-opt"><input id="drawing-view-top" type="checkbox" checked><span>top</span></label>
+            <label class="drawing-opt"><input id="drawing-view-front" type="checkbox" checked><span>front</span></label>
+            <label class="drawing-opt"><input id="drawing-view-right" type="checkbox" checked><span>right</span></label>
+            <label class="drawing-opt"><input id="drawing-view-iso" type="checkbox" checked><span>iso</span></label>
+          </div>
+          <div class="drawing-section-ctl">
+            <button id="drawing-section-toggle" class="tb-btn" type="button">Section…</button>
+            <div id="drawing-section-panel" class="drawing-section-panel hidden">
+              <select id="drawing-section-plane" class="tb-btn" title="Section plane">
+                <option value="xy">XY</option>
+                <option value="xz">XZ</option>
+                <option value="yz">YZ</option>
+              </select>
+              <input id="drawing-section-offset" class="tb-btn drawing-section-offset"
+                     type="number" step="any" value="0" placeholder="offset mm">
+              <button id="drawing-section-apply" class="tb-btn" type="button">Apply</button>
+              <button id="drawing-section-clear" class="tb-btn hidden" type="button">Clear</button>
+            </div>
+          </div>
+          <!-- FR8's dimension table. Shown only for a part that declares
+               configurations: the table's columns are the configured
+               parameters, so it has nothing to say about an unconfigured
+               part. -->
+          <label id="drawing-dimtable-wrap" class="drawing-opt hidden">
+            <input id="drawing-dimtable" type="checkbox">
+            <span>dim table</span>
+          </label>
+          <a id="drawing-download" class="tb-btn hidden" download>Download SVG</a>
+          <button id="drawing-download-pdf" class="tb-btn hidden" type="button">Download PDF</button>
+          <button id="drawing-close" class="tb-btn" type="button">Close</button>
+        </div>
+      </header>
+      <div id="drawing-view" class="drawing-view"></div>
+    </div>
+  </div>
+
+  <div id="versions-modal" class="modal-overlay hidden">
+    <div class="modal narrow">
+      <header class="modal-head">
+        <span id="versions-title" class="modal-title">Versions</span>
+        <div class="modal-actions">
+          <button id="versions-tag" class="tb-btn" type="button">Tag current state…</button>
+          <button id="versions-close" class="tb-btn" type="button">Close</button>
+        </div>
+      </header>
+      <div id="versions-body" class="ver-body"></div>
+    </div>
+  </div>
+
+  <!-- The BOM view (PRD-015 FR1-4): one row per rolled-up assembly line,
+       footer totals, CSV/JSON export, inline edits for the manual bom
+       inputs. Bootstrapped by the standalone script at the end of this file
+       (bom.js), not by main.js — see that script's comment. -->
+  <div id="bom-modal" class="modal-overlay hidden">
+    <div class="modal wide">
+      <header class="modal-head">
+        <span id="bom-title" class="modal-title">BOM</span>
+        <div class="modal-actions">
+          <select id="bom-structure" class="tb-btn" title="Line structure">
+            <option value="flat" selected>Flat (rolled up)</option>
+            <option value="indented">Indented (per occurrence)</option>
+          </select>
+          <a id="bom-download-csv" class="tb-btn hidden" download>Download CSV</a>
+          <a id="bom-download-json" class="tb-btn hidden" download>Download JSON</a>
+          <button id="bom-close" class="tb-btn" type="button">Close</button>
+        </div>
+      </header>
+      <div id="bom-body" class="ver-body bom-body"></div>
+      <footer id="bom-foot" class="modal-foot bom-foot"></footer>
+    </div>
+  </div>
+
+  <!-- The releases panel (PRD-015 FR6-9): the draft -> in_review -> released
+       -> superseded revision state machine. Bootstrapped by releases.js at
+       the end of this file — see bom.js's comment for why it is standalone. -->
+  <div id="releases-modal" class="modal-overlay hidden">
+    <div class="modal narrow">
+      <header class="modal-head">
+        <span id="releases-title" class="modal-title">Releases</span>
+        <div class="modal-actions">
+          <button id="releases-cut" class="tb-btn" type="button">Cut release…</button>
+          <button id="releases-close" class="tb-btn" type="button">Close</button>
+        </div>
+      </header>
+      <div id="releases-body" class="ver-body"></div>
+    </div>
+  </div>
+
+  <div id="share-modal" class="modal-overlay hidden">
+    <div class="modal narrow">
+      <header class="modal-head">
+        <span class="modal-title">Share a part</span>
+        <div class="modal-actions">
+          <button id="share-modal-close" class="tb-btn" type="button">Close</button>
+        </div>
+      </header>
+      <div id="share-body" class="share-modal-body"></div>
+    </div>
+  </div>
+
+  <div id="merge-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <header class="modal-head">
+        <span id="merge-title" class="modal-title">Merge</span>
+        <div class="modal-actions">
+          <button id="merge-abort" class="tb-btn hidden" type="button">Abort merge</button>
+          <button id="merge-close" class="tb-btn" type="button">Close</button>
+        </div>
+      </header>
+      <div id="merge-body" class="conflict-body"></div>
+      <footer id="merge-foot" class="modal-foot hidden">
+        <span id="merge-progress" class="conflict-progress"></span>
+        <div class="modal-actions">
+          <button id="merge-complete" class="tb-btn" type="button">Complete merge</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <div id="proposals-modal" class="modal-overlay hidden">
+    <div class="modal wide">
+      <header class="modal-head">
+        <span id="proposals-title" class="modal-title">Proposals</span>
+        <div class="modal-actions">
+          <button id="proposals-new" class="tb-btn" type="button">New proposal…</button>
+          <button id="proposals-close" class="tb-btn" type="button">Close</button>
+        </div>
+      </header>
+      <div class="prop-body">
+        <div id="proposals-list" class="prop-list"></div>
+        <div id="proposals-detail" class="prop-detail"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Parts library. A plain modal on the proposals/versions pattern, not a
+       native <dialog>: one modal shape in this app is worth more than one
+       modern element. PRD-026 slice 2 adopted every `.modal-overlay` on this
+       page onto the shell's overlay stack (`dialogs.attachLegacy`) — the
+       markup below is unchanged; Esc, the focus trap and the focus restore
+       are the stack's. -->
+  <div id="library-modal" class="modal-overlay hidden">
+    <div class="modal wide">
+      <header class="modal-head">
+        <span id="library-title" class="modal-title">Parts library</span>
+        <div class="modal-actions">
+          <input id="library-search" type="search" class="lib-search"
+                 placeholder="Search packages…  e.g. cap screw, ISO 4762"
+                 aria-label="Search packages">
+          <button id="library-close" class="tb-btn" type="button">Close</button>
+        </div>
+      </header>
+      <div class="lib-body">
+        <div id="library-list" class="lib-list"></div>
+        <div id="library-detail" class="lib-detail"></div>
+      </div>
+      <!-- Decision 11, place 8: visible text on the install affordance, never
+           a tooltip. -->
+      <footer class="modal-foot lib-foot">
+        <span class="lib-nonclaim">
+          The publish gate is a <b>correctness</b> gate, not a security
+          boundary — package scripts run in your kernel with your privileges.
+          <span class="meta">See docs/packages.md.</span>
+        </span>
+      </footer>
+    </div>
+  </div>
+
+  <!-- The configuration matrix. Same `.modal-overlay` shape as every other
+       overlay on this page (see the library note above): the inspector is
+       326 px and `flex: none`, so a family's metrics side by side simply do
+       not fit there. -->
+  <div id="configs-modal" class="modal-overlay hidden">
+    <div class="modal wide">
+      <header class="modal-head">
+        <span id="configs-title" class="modal-title">Configurations</span>
+        <div class="modal-actions">
+          <button id="configs-build" class="tb-btn" type="button">Build all</button>
+          <button id="configs-close" class="tb-btn" type="button">Close</button>
+        </div>
+      </header>
+      <div id="configs-body" class="cfg-body"></div>
+    </div>
+  </div>
+
+  <!-- The claim conflict has no markup any more: PRD-026 slice 1 moved it onto
+       `dialogs.open({view: "claim"})`, which builds it (and its focus trap,
+       its Esc and its backdrop) from the shell primitive. It is still shown
+       ONLY for a 409 whose details carry overridable:true — a plain turn-lock
+       409 keeps today's banner and is offered no override, because there is
+       nothing here that could grant one. -->
+
+  <!-- The materials database browser (PRD-028 FR7/Decision 10). A MODAL
+       inside the workbench — not a `#market`-style full-page takeover — so
+       assign mode (opened from the inspector's material block Browse…
+       button) keeps the workbench, and the part being assigned to, alive
+       underneath it. Same `.modal-overlay` shape as the other six; the tree/
+       filter bar/table/compare/detail panes are built in JS from the
+       `GET /api/materials` and `GET /api/materials/{id}` payloads. -->
+  <div id="materials-modal" class="modal-overlay hidden">
+    <div class="modal wide" role="dialog" aria-modal="true" aria-label="Materials database">
+      <header class="modal-head">
+        <span id="materials-title" class="modal-title">Materials</span>
+        <div class="modal-actions">
+          <span id="materials-count" class="mat-count"></span>
+          <button id="materials-compare-btn" class="tb-btn hidden" type="button">Compare</button>
+          <button id="materials-close" class="tb-btn" type="button">Close</button>
+        </div>
+      </header>
+      <div class="mat-modal-body">
+        <aside id="materials-tree" class="mat-tree" aria-label="Category tree"></aside>
+        <div class="mat-center">
+          <div id="materials-filters" class="mat-filters">
+            <label class="mat-filter">Min density
+              <input id="mat-f-density-min" type="number" step="any" inputmode="decimal" placeholder="g/cm³">
+            </label>
+            <label class="mat-filter">Max density
+              <input id="mat-f-density-max" type="number" step="any" inputmode="decimal" placeholder="g/cm³">
+            </label>
+            <label class="mat-filter">Min E
+              <input id="mat-f-e-min" type="number" step="any" inputmode="decimal" placeholder="GPa">
+            </label>
+            <label class="mat-filter">Min yield
+              <input id="mat-f-yield-min" type="number" step="any" inputmode="decimal" placeholder="MPa">
+            </label>
+            <label class="mat-filter">Min max service temp
+              <input id="mat-f-temp-min" type="number" step="any" inputmode="decimal" placeholder="°C">
+            </label>
+            <label class="mat-filter">Max cost
+              <input id="mat-f-cost-max" type="number" step="any" inputmode="decimal" placeholder="USD/kg">
+            </label>
+            <div id="mat-f-process" class="mat-chips" role="group" aria-label="Process"></div>
+            <label class="mat-filter">Basis
+              <select id="mat-f-basis">
+                <option value="">any</option>
+                <option value="typical">typical</option>
+                <option value="minimum">minimum</option>
+                <option value="characteristic">characteristic</option>
+              </select>
+            </label>
+            <button id="mat-f-clear" class="tb-btn" type="button">Clear filters</button>
+          </div>
+          <div id="materials-table-wrap" class="mat-table-wrap"></div>
+          <div id="materials-compare" class="mat-compare hidden"></div>
+        </div>
+        <aside id="materials-detail" class="mat-detail" aria-label="Material detail"></aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent skills (PRD-029 FR7, spec §7). The same `.modal-overlay` chrome as
+       Materials, adopted onto the dialog stack by `skills.js`. A skill is
+       agent instructions; a PROJECT one needs one human act before an agent
+       may load it, and the "Review & trust" button in here IS that act — the
+       trust route is refused to every non-human client, so no agent surface
+       can approve agent instructions. Rows, badges, the preview and the
+       provenance line are all built in JS from `GET /api/projects/{p}/skills`
+       and `GET /api/projects/{p}/skills/{name}`; the body lands in a `<pre>`
+       via `textContent` and never as markup. -->
+  <div id="skills-modal" class="modal-overlay hidden">
+    <div class="modal wide" role="dialog" aria-modal="true" aria-label="Agent skills">
+      <header class="modal-head">
+        <span id="skills-title" class="modal-title">Agent skills</span>
+        <div class="modal-actions">
+          <span id="skills-count" class="skills-count"></span>
+          <button id="skills-close" class="tb-btn" type="button">Close</button>
+        </div>
+      </header>
+      <div id="skills-banner" class="skills-banner hidden"></div>
+      <div class="skills-modal-body">
+        <aside id="skills-list" class="skills-list" aria-label="Skill index"></aside>
+        <section id="skills-detail" class="skills-detail" aria-label="Skill preview"></section>
+      </div>
+      <footer id="skills-hint" class="skills-hint"></footer>
+    </div>
+  </div>
+
+  <!-- PRD-018 slice 6: task-to-part generation. Prompt + attachment well ->
+       `generate_part` (a LONG synchronous call — progress rides
+       `generation_progress`/`generation_done` and the `chat_tool_call`/
+       `chat_tool_result` events tagged with `generation_id`, reusing the chat
+       dock's `.tool-chip` shape) -> a candidate gallery (iso render, mass,
+       bbox, PARAMS, spec chips, Accept). Same `.modal-overlay` chrome as
+       Skills/Materials, adopted onto the dialog stack by `generate.js`. -->
+  <div id="generate-modal" class="modal-overlay hidden">
+    <div class="modal wide" role="dialog" aria-modal="true" aria-label="Generate a part">
+      <header class="modal-head">
+        <span id="generate-title" class="modal-title">Generate a part</span>
+        <div class="modal-actions">
+          <button id="generate-new" class="tb-btn hidden" type="button">New generation…</button>
+          <button id="generate-close" class="tb-btn" type="button">Close</button>
+        </div>
+      </header>
+      <div id="generate-body" class="gen-body">
+        <form id="generate-form" class="gen-form">
+          <label class="gen-label" for="generate-prompt">Describe the part</label>
+          <textarea id="generate-prompt" class="gen-prompt" rows="4" required
+                    placeholder="e.g. A NEMA 17 motor mount bracket, 3mm aluminium, four M3 clearance holes on the motor face, overall footprint under 60x60mm"></textarea>
+          <div id="generate-attachments" class="gen-attachments"></div>
+          <div class="gen-attach-row">
+            <button id="generate-attach-btn" class="tb-btn" type="button">Add photo / PDF…</button>
+            <input id="generate-attach-input" type="file" accept=".png,.jpg,.jpeg,.pdf" multiple hidden>
+            <span class="gen-attach-hint">a sketch photo, or a PDF datasheet/drawing</span>
+          </div>
+          <div class="gen-opts">
+            <label class="gen-opt">Candidates
+              <input id="generate-candidates" type="number" min="1" max="4" step="1" value="1">
+            </label>
+            <label class="gen-opt">Max iterations
+              <input id="generate-max-iter" type="number" min="1" max="20" step="1" placeholder="default">
+            </label>
+            <label class="gen-opt">Wall-clock budget (s)
+              <input id="generate-wallclock" type="number" min="10" step="10" placeholder="default">
+            </label>
+          </div>
+          <div id="generate-error" class="gen-error hidden"></div>
+          <div class="gen-submit-row">
+            <button id="generate-submit" class="tb-btn primary" type="submit">Generate</button>
+          </div>
+        </form>
+
+        <div id="generate-intent" class="gen-intent hidden"></div>
+        <div id="generate-progress" class="gen-progress hidden"></div>
+        <div id="generate-gallery" class="gen-gallery hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- The claim conflict used to be a hand-rolled `#claim-modal` here. PRD-026
+       slice 2 replaced it with `dialogs.open()` (`main.js`'s claim-conflict
+       dialog), so the markup is gone: an unadopted `.modal-overlay` in this file
+       is now a stack-invariant violation, and the closure test in
+       `tests/test_frontend_shell.py` grades every one of them. -->
+
+  <div id="notifications-modal" class="modal-overlay hidden">
+    <div class="modal narrow">
+      <header class="modal-head">
+        <span class="modal-title">Mentions</span>
+        <div class="modal-actions">
+          <button id="notif-read-all" class="tb-btn" type="button">Mark all read</button>
+          <button id="notif-close" class="tb-btn" type="button">Close</button>
+        </div>
+      </header>
+      <div id="notif-body" class="conflict-body"></div>
+    </div>
+  </div>
+
+  <!-- One composer for every surface. It is a fixed popover rather than a
+       panel section because the four places a thread starts from — the face
+       card, the editor gutter, a param row and a proposal's diff row — are not
+       all reachable while the inspector is visible (the proposals modal covers
+       it), and two composers would be two behaviours to keep in step. -->
+  <div id="comment-pop" class="hidden">
+    <div id="comment-pop-anchor" class="cmt-anchor"></div>
+    <textarea id="comment-pop-body" rows="3" aria-label="Comment body"
+              placeholder="Comment…  @chat:main notifies the agent"></textarea>
+    <div class="cmt-pop-foot">
+      <span id="comment-pop-hint" class="cmt-hint"></span>
+      <button id="comment-pop-cancel" class="tb-btn" type="button">Cancel</button>
+      <button id="comment-pop-send" class="tb-btn" type="button">Comment</button>
+    </div>
+  </div>
+
+  <!-- PRD-026: every shell dialog is built into this host by
+       `shell/dialogs.js` — one overlay stack, one Esc listener, one focus
+       trap. Before #toasts so a toast raised from a dialog still paints over
+       it (the z-index says the same thing; the order makes it true without
+       relying on stacking contexts). -->
+  <div id="dialog-host"></div>
+
+  <div id="toasts"></div>
+
+  <script type="module" src="/js/main.js"></script>
+  <!-- PRD-015 Slice 6: bom.js/releases.js are bootstrapped HERE rather than
+       from main.js (out of scope for this slice's edit boundary). Both
+       import the SAME `state.js` module instance main.js already populates
+       (the browser dedupes ES module imports by resolved URL, so there is
+       no second copy of the store) and target the shared #toasts host
+       directly, so no cooperation from main.js's `actions` object is
+       required — only the two toolbar buttons' click wiring lives here. -->
+  <script type="module">
+    import * as bom from "/js/bom.js";
+    import * as releases from "/js/releases.js";
+    bom.init();
+    releases.init();
+    document.getElementById("bom-btn").addEventListener("click", () => bom.open());
+    document.getElementById("releases-btn").addEventListener("click", () => releases.open());
+  </script>
+</body>
+</html>

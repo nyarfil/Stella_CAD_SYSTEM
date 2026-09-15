@@ -1,0 +1,94 @@
+[project]
+name = "agentcad"
+version = "0.1.0"
+description = "Agentic-first parametric CAD for complex parts and systems"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+dependencies = [
+    "build123d>=0.11.1",
+    "bd_warehouse>=0.3",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "anthropic>=0.40",
+    "mcp>=1.2",
+    "httpx>=0.27",
+    # explicit — was an undeclared transitive of mcp. PRD-005's OIDC relying
+    # party (`core/oidc.py`) validates ID tokens with it, so a future mcp that
+    # drops the requirement must not silently take sign-in with it.
+    "pyjwt[crypto]>=2.10",
+    "ezdxf>=1.1",
+    # The constraint solver (agentcad/toolkit/sketch.py) imports both, and it
+    # runs in the SERVER process, which must never import build123d. They were
+    # previously only transitive through build123d — see PRD-009 design
+    # Decision 1.
+    "numpy>=2.0",
+    "scipy>=1.14",
+]
+
+[project.optional-dependencies]
+# Hosted-instance extras (PRD-005 FR1). ONLY the WebAuthn wire format lives
+# here: the passkey routes lazy-import `webauthn` inside their handlers and
+# answer 501 without it (`routes_auth.passkeys_available`, the `[fem]`
+# precedent), so a local or a password-only hosted instance never installs it.
+# OIDC is NOT gated — `httpx` and `pyjwt[crypto]` are hard dependencies, so
+# single sign-on works on a plain install. `cbor2` arrives with `webauthn`
+# and is named because the virtual authenticator the tests ship builds COSE
+# keys with it directly.
+cloud = [
+    "webauthn>=3.0",
+    "cbor2>=5.6",
+]
+fem = [
+    "gmsh>=4.13",
+    "scikit-fem>=10",
+    "meshio>=5.3",
+]
+# USD export (PRD-017 FR11). The marker is load-bearing, not decoration:
+# usd-core ships wheels for macOS universal2, manylinux x86_64 and win_amd64
+# only — there is NO linux-aarch64 wheel, and `make test-linux` (and an arm64
+# Docker image) is exactly that platform, where an unmarked requirement makes
+# `uv sync --extra usd` fail outright. With the marker those platforms simply
+# get no package, `usd_available()` stays False, and the `usd` format never
+# appears in the export tools (see `agentcad/core/usd_export.py`).
+usd = [
+    "usd-core>=26.8; platform_machine != 'aarch64' or sys_platform != 'linux'",
+]
+# PDF intake (PRD-018 FR1). Gated exactly like `[fem]`: `core/intake.py` lazy-
+# imports pypdfium2 and `pdf_available()` (a `find_spec` probe) fronts every use,
+# so a plain install never carries the ~8 MB bundled pdfium binary and a PDF
+# upload answers a `[pdf]`-extra validation_error rather than crashing. pypdfium2
+# is BSD-3/Apache-2.0, pure-wheels on every deployment platform, and adds no
+# Python dependency (rasterization reuses `core/render.py::encode_png`, no
+# Pillow). See `docs/superpowers/specs/2026-08-25-task-to-part-generation-spike.md`
+# area C for the license/platform/no-Pillow evidence.
+pdf = [
+    "pypdfium2>=4",
+]
+
+[project.scripts]
+agentcad = "agentcad.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-timeout>=2.3",
+    "pytest-xdist>=3.8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["agentcad"]
+
+[tool.pytest.ini_options]
+timeout = 120
+testpaths = ["tests"]
+markers = [
+    "exhaustive: broad example stress coverage run by scheduled full CI",
+    "integration: crosses a process, server, sandbox, or git boundary",
+    "portability: exercises an OS-sensitive boundary repeated on Linux and Windows CI",
+    "slow: broad or timeout-driven coverage excluded by make test-fast",
+]
