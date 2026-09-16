@@ -19,6 +19,13 @@ exports/
 *.acm
 docs/windows/*.txt
 .python/
+node_modules/
+
+# Recreated by scripts/stella/link-aicad.ps1 (Windows junctions)
+ai-cad-labs/tools
+ai-cad-labs/.claude/agents
+ai-cad-labs/.claude/skills
+ai-cad-labs/.opencode/
 
 # Secrets
 .env

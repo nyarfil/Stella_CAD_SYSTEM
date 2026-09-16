@@ -1,0 +1,281 @@
+/* generated from .interface-design/system.md — edit system.md first */
+/* ── TOKEN USAGE (build agents) — full spec: .interface-design/system.md ──────────────────
+   surfaces : bg-background (board) < bg-card (panel) < bg-popover (float) · bg-surface-inset (wells) · paper = bg-sheet (theme-invariant white) · elevation is borders-first; shadow only shadow-sheet / shadow-float (light theme + overlays)
+   ink      : text-foreground > text-ink-secondary > text-ink-tertiary > text-ink-faint (disabled/placeholder only) · on paper: text-sheet-ink / text-sheet-ink-soft
+   pens     : border-stroke-hairline / border-stroke-object (=border) / border-stroke-strong / border-stroke-heavy · on paper only: border-sheet-rule / border-sheet-frame
+   status   : {pass|fail|warn|note}-{ink|line|fill} = text/border/bg (ink-stamp chips, never filled pills) · verdict PASSED=pass FAILED=fail PENDING=neutral · severity critical=fail major=warn minor=note probationary=warn+dashed · issue OPEN=fail RESOLVED=pass · presence = ink levels + hairline solid/dashed/dotted
+   agents   : bg-agent-<role> identity dots (9 roles; hue is the identity, constant across themes) · legend: bg-legend-<color> bar on bg-legend-paper chip — literal renderer hexes, NEVER remap/desaturate/theme
+   type     : font-sans / font-mono (data) · micro-label = text-2xs uppercase tracking-label · tabular-nums on every numeric column · focus = ring (trace blue) · themes: :root = dark "drafting board" (default), [data-theme="light"] = light "drawing office" (dark: variant defined in src/index.css)
+   ─────────────────────────────────────────────────────────────────────────────────────── */
+
+@theme inline {
+    /* type */
+    --font-sans: 'IBM Plex Sans Variable', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+    --font-heading: var(--font-sans);
+    --text-2xs: 0.6875rem;              /* 11px — micro-labels */
+    --text-2xs--line-height: 0.875rem;
+    --tracking-label: 0.08em;           /* uppercase micro-label tracking */
+
+    /* shadcn semantic mapping (unchanged names) */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+
+    /* ink hierarchy (4 levels; level 1 = foreground) */
+    --color-ink-secondary: var(--ink-secondary);
+    --color-ink-tertiary: var(--muted-foreground);
+    --color-ink-faint: var(--ink-faint);
+
+    /* drafting pen tray (border colors; widths in system.md §5) */
+    --color-stroke-hairline: var(--stroke-hairline);
+    --color-stroke-object: var(--border);
+    --color-stroke-strong: var(--stroke-strong);
+    --color-stroke-heavy: var(--stroke-heavy);
+
+    /* surfaces */
+    --color-surface-inset: var(--surface-inset);
+
+    /* sheet family (THEME-INVARIANT — paper is paper) */
+    --color-sheet: var(--sheet);
+    --color-sheet-ink: var(--sheet-ink);
+    --color-sheet-ink-soft: var(--sheet-ink-soft);
+    --color-sheet-rule: var(--sheet-rule);
+    --color-sheet-frame: var(--sheet-frame);
+
+    /* interactive trace (non-photo pencil blue) */
+    --color-trace: var(--trace);
+
+    /* status ink families: ink = text, line = border, fill = tint */
+    --color-pass-ink: var(--pass-ink);
+    --color-pass-line: var(--pass-line);
+    --color-pass-fill: var(--pass-fill);
+    --color-fail-ink: var(--fail-ink);
+    --color-fail-line: var(--fail-line);
+    --color-fail-fill: var(--fail-fill);
+    --color-warn-ink: var(--warn-ink);
+    --color-warn-line: var(--warn-line);
+    --color-warn-fill: var(--warn-fill);
+    --color-note-ink: var(--note-ink);
+    --color-note-line: var(--note-line);
+    --color-note-fill: var(--note-fill);
+
+    /* agent identity dots (9 roles) */
+    --color-agent-orchestrator: var(--agent-orchestrator);
+    --color-agent-planner: var(--agent-planner);
+    --color-agent-cad-designer: var(--agent-cad-designer);
+    --color-agent-validator: var(--agent-validator);
+    --color-agent-repair: var(--agent-repair);
+    --color-agent-assembly-resolver: var(--agent-assembly-resolver);
+    --color-agent-sourcing: var(--agent-sourcing);
+    --color-agent-reviewer: var(--agent-reviewer);
+    --color-agent-dfma-inspector: var(--agent-dfma-inspector);
+
+    /* assembly legend (FIXED renderer inks — never restyle, never theme) */
+    --color-legend-red: #ff0000;
+    --color-legend-blue: #0000ff;
+    --color-legend-green: #008000;
+    --color-legend-orange: #ffa500;
+    --color-legend-purple: #800080;
+    --color-legend-teal: #008080;
+    --color-legend-brown: #a52a2a;
+    --color-legend-magenta: #ff00ff;
+    --color-legend-paper: #ffffff;
+
+    /* misc */
+    --color-scrim: var(--scrim);
+    --color-wash-hover: var(--wash-hover);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+    --radius-sheet: 0.125rem;           /* 2px — drawing sheets are near-sharp */
+    --shadow-sheet: var(--sheet-lift);
+    --shadow-float: var(--float);
+}
+
+/* ─── DARK — "drafting board" (cool machined chrome, hue 175) — the :root DEFAULT ─── */
+:root {
+    --background: oklch(0.155 0.006 175);            /* the board */
+    --foreground: oklch(0.93 0.005 170);
+    --card: oklch(0.19 0.006 175);
+    --card-foreground: oklch(0.93 0.005 170);
+    --popover: oklch(0.23 0.007 175);
+    --popover-foreground: oklch(0.93 0.005 170);
+    --primary: oklch(0.93 0.005 170);
+    --primary-foreground: oklch(0.17 0.006 175);
+    --secondary: oklch(0.245 0.007 175);
+    --secondary-foreground: oklch(0.93 0.005 170);
+    --muted: oklch(0.245 0.007 175);
+    --muted-foreground: oklch(0.665 0.008 173);      /* ink-tertiary */
+    --accent: oklch(0.235 0.007 175);                /* hover wash surface (shadcn) */
+    --accent-foreground: oklch(0.93 0.005 170);
+    --destructive: oklch(0.78 0.14 25);
+    --border: oklch(0.85 0.01 175 / 0.16);           /* object line */
+    --input: oklch(0.85 0.01 175 / 0.22);
+    --ring: oklch(0.74 0.10 235);
+    --chart-1: oklch(0.85 0.006 175);
+    --chart-2: oklch(0.68 0.008 175);
+    --chart-3: oklch(0.55 0.008 175);
+    --chart-4: oklch(0.42 0.007 175);
+    --chart-5: oklch(0.30 0.006 175);
+    --radius: 0.5rem;
+    --sidebar: oklch(0.155 0.006 175);               /* = background; border separates */
+    --sidebar-foreground: oklch(0.93 0.005 170);
+    --sidebar-primary: oklch(0.93 0.005 170);
+    --sidebar-primary-foreground: oklch(0.17 0.006 175);
+    --sidebar-accent: oklch(0.235 0.007 175);
+    --sidebar-accent-foreground: oklch(0.93 0.005 170);
+    --sidebar-border: oklch(0.85 0.01 175 / 0.16);
+    --sidebar-ring: oklch(0.74 0.10 235);
+
+    --ink-secondary: oklch(0.80 0.006 172);
+    --ink-faint: oklch(0.52 0.008 175);
+    --surface-inset: oklch(0.125 0.005 175);         /* code wells, control bg — inset = darker */
+    --stroke-hairline: oklch(0.85 0.01 175 / 0.10);
+    --stroke-strong: oklch(0.85 0.01 175 / 0.28);
+    --stroke-heavy: oklch(0.85 0.01 175 / 0.45);
+    --trace: oklch(0.74 0.10 235);
+    --wash-hover: oklch(0.95 0.005 175 / 0.04);
+    --scrim: oklch(0.10 0.005 175 / 0.75);
+    --sheet-lift: none;                              /* dark: the 19.5:1 glow IS the lift */
+    --float: none;                                   /* dark: borders + lightness carry depth */
+
+    /* sheet family — THEME-INVARIANT (defined once here, never overridden in light):
+       paper is paper under any light; --sheet matches render-PNG white exactly */
+    --sheet: oklch(1 0 0);
+    --sheet-ink: oklch(0.20 0.01 95);
+    --sheet-ink-soft: oklch(0.20 0.01 95 / 0.45);
+    --sheet-rule: oklch(0.20 0.01 95 / 0.12);        /* quadrant dividers, title-block rules */
+    --sheet-frame: oklch(0.20 0.01 95 / 0.35);       /* drafting border frame */
+
+    /* status inks (dark: desaturation via higher L, same hues) */
+    --pass-ink: oklch(0.80 0.14 150);
+    --pass-line: oklch(0.62 0.13 150 / 0.45);
+    --pass-fill: oklch(0.70 0.13 150 / 0.10);
+    --fail-ink: oklch(0.78 0.14 25);
+    --fail-line: oklch(0.60 0.16 25 / 0.45);
+    --fail-fill: oklch(0.62 0.16 25 / 0.10);
+    --warn-ink: oklch(0.82 0.12 70);
+    --warn-line: oklch(0.66 0.12 70 / 0.45);
+    --warn-fill: oklch(0.70 0.12 70 / 0.10);
+    --note-ink: oklch(0.80 0.085 92);
+    --note-line: oklch(0.64 0.09 92 / 0.45);
+    --note-fill: oklch(0.70 0.09 92 / 0.10);
+
+    /* agent hues (dark: L 0.72, C 0.09) */
+    --agent-orchestrator: oklch(0.72 0.09 290);
+    --agent-planner: oklch(0.72 0.09 240);
+    --agent-cad-designer: oklch(0.72 0.09 205);
+    --agent-validator: oklch(0.72 0.09 180);
+    --agent-repair: oklch(0.72 0.09 55);
+    --agent-assembly-resolver: oklch(0.72 0.09 310);
+    --agent-sourcing: oklch(0.72 0.09 100);
+    --agent-reviewer: oklch(0.72 0.09 265);
+    --agent-dfma-inspector: oklch(0.72 0.09 340);
+}
+
+/* ─── LIGHT — "drawing office" (warm vellum chrome, hue 92) — html[data-theme="light"] ─── */
+:root[data-theme="light"] {
+    --background: oklch(0.965 0.004 92);
+    --foreground: oklch(0.22 0.010 95);
+    --card: oklch(0.985 0.003 92);
+    --card-foreground: oklch(0.22 0.010 95);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.22 0.010 95);
+    --primary: oklch(0.27 0.012 95);
+    --primary-foreground: oklch(0.97 0.004 92);
+    --secondary: oklch(0.94 0.005 92);
+    --secondary-foreground: oklch(0.27 0.012 95);
+    --muted: oklch(0.94 0.005 92);
+    --muted-foreground: oklch(0.48 0.012 95);       /* ink-tertiary */
+    --accent: oklch(0.945 0.005 92);                 /* hover wash surface (shadcn) */
+    --accent-foreground: oklch(0.22 0.010 95);
+    --destructive: oklch(0.50 0.17 27);
+    --border: oklch(0.25 0.02 95 / 0.14);            /* object line */
+    --input: oklch(0.25 0.02 95 / 0.22);
+    --ring: oklch(0.47 0.11 235);
+    --chart-1: oklch(0.30 0.010 95);
+    --chart-2: oklch(0.42 0.010 95);
+    --chart-3: oklch(0.55 0.010 95);
+    --chart-4: oklch(0.68 0.008 92);
+    --chart-5: oklch(0.80 0.006 92);
+    --sidebar: oklch(0.965 0.004 92);                /* = background; border separates */
+    --sidebar-foreground: oklch(0.22 0.010 95);
+    --sidebar-primary: oklch(0.27 0.012 95);
+    --sidebar-primary-foreground: oklch(0.97 0.004 92);
+    --sidebar-accent: oklch(0.945 0.005 92);
+    --sidebar-accent-foreground: oklch(0.22 0.010 95);
+    --sidebar-border: oklch(0.25 0.02 95 / 0.14);
+    --sidebar-ring: oklch(0.47 0.11 235);
+
+    --ink-secondary: oklch(0.37 0.010 95);
+    --ink-faint: oklch(0.60 0.010 95);
+    --surface-inset: oklch(0.94 0.005 92);
+    --stroke-hairline: oklch(0.25 0.02 95 / 0.09);
+    --stroke-strong: oklch(0.25 0.02 95 / 0.26);
+    --stroke-heavy: oklch(0.25 0.02 95 / 0.55);
+    --trace: oklch(0.47 0.11 235);
+    --wash-hover: oklch(0.25 0.02 95 / 0.04);
+    --scrim: oklch(0.25 0.015 95 / 0.45);
+    --sheet-lift: 0 1px 2px oklch(0.25 0.02 95 / 0.10), 0 4px 16px oklch(0.25 0.02 95 / 0.08);
+    --float: 0 1px 3px oklch(0.25 0.02 95 / 0.10), 0 8px 24px oklch(0.25 0.02 95 / 0.10);
+
+    /* sheet family: intentionally NOT overridden — paper is paper (§1 signature) */
+
+    /* status inks (light) */
+    --pass-ink: oklch(0.44 0.13 150);
+    --pass-line: oklch(0.55 0.12 150 / 0.50);
+    --pass-fill: oklch(0.60 0.12 150 / 0.10);
+    --fail-ink: oklch(0.50 0.17 27);
+    --fail-line: oklch(0.58 0.16 27 / 0.50);
+    --fail-fill: oklch(0.62 0.16 27 / 0.10);
+    --warn-ink: oklch(0.50 0.12 70);
+    --warn-line: oklch(0.62 0.12 70 / 0.55);
+    --warn-fill: oklch(0.70 0.12 70 / 0.12);
+    --note-ink: oklch(0.47 0.09 92);
+    --note-line: oklch(0.60 0.09 92 / 0.55);
+    --note-fill: oklch(0.70 0.09 92 / 0.12);
+
+    /* agent hues (light: L 0.55, C 0.105) — hue is the role's identity, constant across themes */
+    --agent-orchestrator: oklch(0.55 0.105 290);
+    --agent-planner: oklch(0.55 0.105 240);
+    --agent-cad-designer: oklch(0.55 0.105 205);
+    --agent-validator: oklch(0.55 0.105 180);
+    --agent-repair: oklch(0.55 0.105 55);
+    --agent-assembly-resolver: oklch(0.55 0.105 310);
+    --agent-sourcing: oklch(0.55 0.105 100);
+    --agent-reviewer: oklch(0.55 0.105 265);
+    --agent-dfma-inspector: oklch(0.55 0.105 340);
+}

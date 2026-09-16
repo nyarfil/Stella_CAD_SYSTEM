@@ -1,0 +1,552 @@
+[
+  {
+    "rule_id": "PROPOSED-001",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Fillet/chamfer/sharp-corner rule \u2014 conflicts with the standing fillet-deferral policy (mirrors the retired fillet rules); revisit if fillets are un-deferred.",
+    "criteria_hits": [
+      "fillet_policy"
+    ],
+    "evidence": {
+      "times_applied": 0
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-07-21T10:46:01.215008+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-002",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Fillet/chamfer/sharp-corner rule \u2014 conflicts with the standing fillet-deferral policy (mirrors the retired fillet rules); revisit if fillets are un-deferred.",
+    "criteria_hits": [
+      "fillet_policy"
+    ],
+    "evidence": {
+      "times_applied": 0
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-07-21T10:46:01.216596+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-3DP-001",
+    "rule_type": "dfm",
+    "decision": "promote",
+    "from_tier": "probationary",
+    "to_tier": "active",
+    "rationale": "Sound, novel, well-evidenced (times_applied=21 >= 10); no in-rulebook duplicate. (Pre-normalization evidence may be inflated by the empty-manufacturing bug; the arbiter may re-weight.)",
+    "criteria_hits": [
+      "evidence>=PROMOTE_FLOOR",
+      "novel"
+    ],
+    "evidence": {
+      "times_applied": 21,
+      "confidence_before": 0.5,
+      "confidence_after": 0.75
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-07-21T10:46:01.217811+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-ASSY-001",
+    "rule_type": "dfm",
+    "decision": "promote",
+    "from_tier": "probationary",
+    "to_tier": "active",
+    "rationale": "Sound, novel, well-evidenced (times_applied=20 >= 10); no in-rulebook duplicate. (Pre-normalization evidence may be inflated by the empty-manufacturing bug; the arbiter may re-weight.)",
+    "criteria_hits": [
+      "evidence>=PROMOTE_FLOOR",
+      "novel"
+    ],
+    "evidence": {
+      "times_applied": 20,
+      "confidence_before": 0.5,
+      "confidence_after": 0.75
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-07-21T10:46:01.219097+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-3DP-003",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Fillet/chamfer/sharp-corner rule \u2014 conflicts with the standing fillet-deferral policy (mirrors the retired fillet rules); revisit if fillets are un-deferred.",
+    "criteria_hits": [
+      "fillet_policy"
+    ],
+    "evidence": {
+      "times_applied": 19
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-07-21T10:46:01.220342+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-USABILITY-001",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Out of DFMA scope (usability/documentation \u2014 not a manufacturability check the render-vision evaluator can assess).",
+    "criteria_hits": [
+      "out_of_scope"
+    ],
+    "evidence": {
+      "times_applied": 17
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-07-21T10:46:01.221784+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-GEN-001",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Fillet/chamfer/sharp-corner rule \u2014 conflicts with the standing fillet-deferral policy (mirrors the retired fillet rules); revisit if fillets are un-deferred.",
+    "criteria_hits": [
+      "fillet_policy"
+    ],
+    "evidence": {
+      "times_applied": 17
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-07-21T10:46:01.222987+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-CNC-001",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Fillet/chamfer/sharp-corner rule \u2014 conflicts with the standing fillet-deferral policy (mirrors the retired fillet rules); revisit if fillets are un-deferred.",
+    "criteria_hits": [
+      "fillet_policy"
+    ],
+    "evidence": {
+      "times_applied": 15
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-07-21T10:46:01.224644+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-ASSY-003",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Fillet/chamfer/sharp-corner rule \u2014 conflicts with the standing fillet-deferral policy (mirrors the retired fillet rules); revisit if fillets are un-deferred.",
+    "criteria_hits": [
+      "fillet_policy"
+    ],
+    "evidence": {
+      "times_applied": 11
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-07-21T10:46:01.226035+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-ASSY-005",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Fillet/chamfer/sharp-corner rule \u2014 conflicts with the standing fillet-deferral policy (mirrors the retired fillet rules); revisit if fillets are un-deferred.",
+    "criteria_hits": [
+      "fillet_policy"
+    ],
+    "evidence": {
+      "times_applied": 4
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-07-21T10:46:01.227296+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-001",
+    "rule_type": "dfa",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Legacy-migrated proposal with negligible evidence (times_applied=1); not being generated, will never accrue.",
+    "criteria_hits": [
+      "legacy_low_evidence"
+    ],
+    "evidence": {
+      "times_applied": 1
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-07-21T10:46:01.229273+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-002",
+    "rule_type": "dfa",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Out of DFMA scope (usability/documentation \u2014 not a manufacturability check the render-vision evaluator can assess).",
+    "criteria_hits": [
+      "out_of_scope"
+    ],
+    "evidence": {
+      "times_applied": 0
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-07-21T10:46:01.230340+00:00"
+  },
+  {
+    "decision": "triage_run",
+    "actor": "triage-proposals(deterministic)",
+    "dry_run": false,
+    "promoted": [
+      "PROPOSED-3DP-001",
+      "PROPOSED-ASSY-001"
+    ],
+    "retired": [
+      "PROPOSED-001",
+      "PROPOSED-002",
+      "PROPOSED-3DP-003",
+      "PROPOSED-USABILITY-001",
+      "PROPOSED-GEN-001",
+      "PROPOSED-CNC-001",
+      "PROPOSED-ASSY-003",
+      "PROPOSED-ASSY-005",
+      "PROPOSED-001",
+      "PROPOSED-002"
+    ],
+    "kept": [
+      "PROPOSED-3DP-002",
+      "PROPOSED-ASSY-002",
+      "PROPOSED-TURN-005",
+      "PROPOSED-TURN-001",
+      "PROPOSED-ASSY-004",
+      "PROPOSED-FUNC-001",
+      "PROPOSED-TURN-006",
+      "PROPOSED-FUNC-002",
+      "PROPOSED-FUNC-003"
+    ],
+    "timestamp": "2026-07-21T10:46:01.230719+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-ASSY-001",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "active",
+    "to_tier": "retired",
+    "rationale": "Retired active rule. Arbiter (mission control, 2026-07-21): cross-rulebook duplicate of active DFA-002 (self-locating mating features); assembly-level concern mis-homed as per-part DFM rule (evaluator cannot see the mating counterpart per-part); times_applied=20 evidence inflated by the empty-manufacturing global-rule bug. DFA-002 remains the canonical home for this defect class.",
+    "criteria_hits": [
+      "manual"
+    ],
+    "evidence": {
+      "times_applied": 20
+    },
+    "actor": "manual(--retire-rule)",
+    "timestamp": "2026-07-21T10:53:21.019879+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-TURN-005",
+    "rule_type": "dfm",
+    "decision": "promote",
+    "from_tier": "probationary",
+    "to_tier": "active",
+    "rationale": "Sound, novel, well-evidenced (times_applied=10 >= 10); no in-rulebook duplicate. (Pre-normalization evidence may be inflated by the empty-manufacturing bug; the arbiter may re-weight.)",
+    "criteria_hits": [
+      "evidence>=PROMOTE_FLOOR",
+      "novel"
+    ],
+    "evidence": {
+      "times_applied": 10,
+      "confidence_before": 0.5,
+      "confidence_after": 0.75
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.898573+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-TURN-001",
+    "rule_type": "dfm",
+    "decision": "promote",
+    "from_tier": "probationary",
+    "to_tier": "active",
+    "rationale": "Sound, novel, well-evidenced (times_applied=10 >= 10); no in-rulebook duplicate. (Pre-normalization evidence may be inflated by the empty-manufacturing bug; the arbiter may re-weight.)",
+    "criteria_hits": [
+      "evidence>=PROMOTE_FLOOR",
+      "novel"
+    ],
+    "evidence": {
+      "times_applied": 10,
+      "confidence_before": 0.5,
+      "confidence_after": 0.75
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.900773+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-ASSY-004",
+    "rule_type": "dfm",
+    "decision": "promote",
+    "from_tier": "probationary",
+    "to_tier": "active",
+    "rationale": "Sound, novel, well-evidenced (times_applied=10 >= 10); no in-rulebook duplicate. (Pre-normalization evidence may be inflated by the empty-manufacturing bug; the arbiter may re-weight.)",
+    "criteria_hits": [
+      "evidence>=PROMOTE_FLOOR",
+      "novel"
+    ],
+    "evidence": {
+      "times_applied": 10,
+      "confidence_before": 0.5,
+      "confidence_after": 0.75
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.902442+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-3DP-GEAR-002",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Fillet/chamfer/sharp-corner rule \u2014 conflicts with the standing fillet-deferral policy (mirrors the retired fillet rules); revisit if fillets are un-deferred.",
+    "criteria_hits": [
+      "fillet_policy"
+    ],
+    "evidence": {
+      "times_applied": 0
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.904102+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-001",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Fillet/chamfer/sharp-corner rule \u2014 conflicts with the standing fillet-deferral policy (mirrors the retired fillet rules); revisit if fillets are un-deferred.",
+    "criteria_hits": [
+      "fillet_policy"
+    ],
+    "evidence": {
+      "times_applied": 2
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.905687+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-003",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Legacy-migrated proposal with negligible evidence (times_applied=1); not being generated, will never accrue.",
+    "criteria_hits": [
+      "legacy_low_evidence"
+    ],
+    "evidence": {
+      "times_applied": 1
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.907202+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-004",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Legacy-migrated proposal with negligible evidence (times_applied=2); not being generated, will never accrue.",
+    "criteria_hits": [
+      "legacy_low_evidence"
+    ],
+    "evidence": {
+      "times_applied": 2
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.908711+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-005",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Legacy-migrated proposal with negligible evidence (times_applied=0); not being generated, will never accrue.",
+    "criteria_hits": [
+      "legacy_low_evidence"
+    ],
+    "evidence": {
+      "times_applied": 0
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.911926+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-006",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Fillet/chamfer/sharp-corner rule \u2014 conflicts with the standing fillet-deferral policy (mirrors the retired fillet rules); revisit if fillets are un-deferred.",
+    "criteria_hits": [
+      "fillet_policy"
+    ],
+    "evidence": {
+      "times_applied": 0
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.913593+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-007",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Legacy-migrated proposal with negligible evidence (times_applied=0); not being generated, will never accrue.",
+    "criteria_hits": [
+      "legacy_low_evidence"
+    ],
+    "evidence": {
+      "times_applied": 0
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.915077+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-008",
+    "rule_type": "dfm",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Legacy-migrated proposal with negligible evidence (times_applied=0); not being generated, will never accrue.",
+    "criteria_hits": [
+      "legacy_low_evidence"
+    ],
+    "evidence": {
+      "times_applied": 0
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.916585+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-001",
+    "rule_type": "dfa",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Legacy-migrated proposal with negligible evidence (times_applied=0); not being generated, will never accrue.",
+    "criteria_hits": [
+      "legacy_low_evidence"
+    ],
+    "evidence": {
+      "times_applied": 0
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.918356+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-002",
+    "rule_type": "dfa",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Legacy-migrated proposal with negligible evidence (times_applied=0); not being generated, will never accrue.",
+    "criteria_hits": [
+      "legacy_low_evidence"
+    ],
+    "evidence": {
+      "times_applied": 0
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.919493+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-003",
+    "rule_type": "dfa",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Legacy-migrated proposal with negligible evidence (times_applied=0); not being generated, will never accrue.",
+    "criteria_hits": [
+      "legacy_low_evidence"
+    ],
+    "evidence": {
+      "times_applied": 0
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.920648+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-004",
+    "rule_type": "dfa",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Legacy-migrated proposal with negligible evidence (times_applied=0); not being generated, will never accrue.",
+    "criteria_hits": [
+      "legacy_low_evidence"
+    ],
+    "evidence": {
+      "times_applied": 0
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.921906+00:00"
+  },
+  {
+    "rule_id": "PROPOSED-005",
+    "rule_type": "dfa",
+    "decision": "retire",
+    "from_tier": "probationary",
+    "to_tier": "retired",
+    "rationale": "Legacy-migrated proposal with negligible evidence (times_applied=0); not being generated, will never accrue.",
+    "criteria_hits": [
+      "legacy_low_evidence"
+    ],
+    "evidence": {
+      "times_applied": 0
+    },
+    "actor": "triage-proposals(deterministic)",
+    "timestamp": "2026-08-05T10:53:59.927356+00:00"
+  },
+  {
+    "decision": "triage_run",
+    "actor": "triage-proposals(deterministic)",
+    "dry_run": false,
+    "promoted": [
+      "PROPOSED-TURN-005",
+      "PROPOSED-TURN-001",
+      "PROPOSED-ASSY-004"
+    ],
+    "retired": [
+      "PROPOSED-3DP-GEAR-002",
+      "PROPOSED-001",
+      "PROPOSED-003",
+      "PROPOSED-004",
+      "PROPOSED-005",
+      "PROPOSED-006",
+      "PROPOSED-007",
+      "PROPOSED-008",
+      "PROPOSED-001",
+      "PROPOSED-002",
+      "PROPOSED-003",
+      "PROPOSED-004",
+      "PROPOSED-005"
+    ],
+    "kept": [
+      "PROPOSED-3DP-002",
+      "PROPOSED-ASSY-002",
+      "PROPOSED-FUNC-001",
+      "PROPOSED-TURN-006",
+      "PROPOSED-FUNC-002",
+      "PROPOSED-FUNC-003",
+      "PROPOSED-3DP-GEAR-001",
+      "PROPOSED-GEO-BORE-001",
+      "PROPOSED-3DP-003",
+      "PROPOSED-002"
+    ],
+    "timestamp": "2026-08-05T10:53:59.928015+00:00"
+  }
+]

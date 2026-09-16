@@ -1,0 +1,139 @@
+{
+  "eval_type": "dfm",
+  "target_path": "projects/treasure_chest_cc/assembly/lid",
+  "manufacturing_process": "3D_printing",
+  "pass_label": "merged_dual_pass",
+  "rules_evaluated": 10,
+  "rules_passed": 4,
+  "rules_failed": 6,
+  "rules_uncertain": 0,
+  "overall_verdict": "fail",
+  "results": [
+    {
+      "rule_id": "DFM-3DP-001",
+      "rule_description": "Minimum wall thickness >= 0.8mm (FDM) or >= 0.4mm (SLA)",
+      "verdict": "pass",
+      "severity": "critical",
+      "tier": "active",
+      "observation": "The main body is a shell with a uniform thickness that appears substantial enough for printing, not resembling a fragile membrane.",
+      "recommendation": ""
+    },
+    {
+      "rule_id": "DFM-3DP-002",
+      "rule_description": "Overhang angle should not exceed 45 degrees from vertical without support",
+      "verdict": "fail",
+      "severity": "major",
+      "tier": "active",
+      "observation": "The semi-cylindrical shape means the top of the dome will be nearly horizontal if printed flat. If printed on its side, the hinge knuckles protrude at 90 degrees. Both orientations present severe overhangs > 45 degrees.",
+      "recommendation": "The design will require support structures. Consider flattening the top slightly or designing in custom breakaway supports."
+    },
+    {
+      "rule_id": "DFM-3DP-003",
+      "rule_description": "Minimum feature size >= 0.5mm for reliable printing",
+      "verdict": "pass",
+      "severity": "major",
+      "tier": "active",
+      "observation": "All features, including the hinge knuckles and the shell wall, appear to be well above the minimum feature size threshold.",
+      "recommendation": ""
+    },
+    {
+      "rule_id": "DFM-GEN-002",
+      "rule_description": "All features must have adequate clearance for manufacturing tool access",
+      "verdict": "pass",
+      "severity": "critical",
+      "tier": "active",
+      "observation": "The geometry is open and accessible for a 3D printer nozzle from standard build orientations.",
+      "recommendation": ""
+    },
+    {
+      "rule_id": "DFM-GEN-003",
+      "rule_description": "Prefer symmetric features to reduce setup operations and fixturing complexity",
+      "verdict": "pass",
+      "severity": "minor",
+      "tier": "active",
+      "observation": "The part is symmetric across its central plane, and the two hinges are placed symmetrically.",
+      "recommendation": ""
+    },
+    {
+      "rule_id": "PROPOSED-3DP-001",
+      "rule_description": "Horizontal holes should use a teardrop profile to prevent sagging at the top of the hole.",
+      "verdict": "fail",
+      "severity": "minor",
+      "tier": "probationary",
+      "observation": "The holes in the hinge knuckles are perfectly circular. If printed with the flat base down, these will be horizontal and prone to sagging.",
+      "recommendation": "Modify the circular holes in the hinge knuckles to have a teardrop profile at the top."
+    },
+    {
+      "rule_id": "PROPOSED-3DP-002",
+      "rule_description": "Functional protrusions attached to thin walls should have fillets or ribs to distribute stress and prevent layer delamination.",
+      "verdict": "fail",
+      "severity": "major",
+      "tier": "probationary",
+      "observation": "The rectangular hinge knuckles attach directly to the thin curved wall of the lid with sharp 90-degree angles and no visible reinforcement.",
+      "recommendation": "Add fillets or gusset ribs at the base of the hinge knuckles where they meet the main shell."
+    },
+    {
+      "rule_id": "PROPOSED-ASSY-001",
+      "rule_description": "Lids and mating enclosures should have alignment features such as a lip, flange, or pins to ensure proper registration.",
+      "verdict": "fail",
+      "severity": "major",
+      "tier": "probationary",
+      "observation": "The bottom mating edge of the lid is perfectly flat with no interlocking geometry like a lip or groove.",
+      "recommendation": "Add a lip, groove, or alignment pins along the flat mating edge to ensure it registers correctly with the base."
+    },
+    {
+      "rule_id": "PROPOSED-3DP-003",
+      "rule_description": "Sharp internal corners should be filleted to reduce stress concentrations and prevent cracking.",
+      "verdict": "fail",
+      "severity": "minor",
+      "tier": "probationary",
+      "observation": "There are sharp 90-degree internal corners where the hinge blocks intersect the main cylindrical shell.",
+      "recommendation": "Apply fillets to the internal corners between the hinge knuckles and the lid body."
+    },
+    {
+      "rule_id": "PROPOSED-ASSY-002",
+      "rule_description": "Hinge knuckles must have rounded profiles concentric with the pivot pin to allow rotation without collision.",
+      "verdict": "fail",
+      "severity": "major",
+      "tier": "probationary",
+      "observation": "The hinge knuckles are rectangular blocks with sharp outer corners. They are not rounded concentric to the pivot hole, which will likely cause a collision with the mating part during rotation.",
+      "recommendation": "Round the outer profile of the hinge knuckles so they are concentric with the pivot hole, providing clearance for rotation."
+    }
+  ],
+  "proposed_rules": [
+    {
+      "category": "features",
+      "pass_criteria": "Presence of a handle, protruding tab, or recessed indentation on the side opposite the hinge.",
+      "description": "Lids and doors should have a handle, tab, or indentation to facilitate user opening.",
+      "look_for": "Features designed for user grip or leverage to open the enclosure.",
+      "fail_criteria": "Smooth exterior with no obvious way to grip or pry open the lid.",
+      "severity": "minor",
+      "manufacturing_processes": true,
+      "id": "PROPOSED-USABILITY-001",
+      "tier": "probationary",
+      "confidence": 0.5,
+      "times_applied": 0,
+      "true_positives": 0,
+      "false_positives": 0,
+      "manufacturing": [],
+      "source": "Auto-proposed by DFMA evaluation LLM"
+    },
+    {
+      "look_for": "Sharp 90-degree external edges on the part perimeter.",
+      "severity": "minor",
+      "category": "geometry",
+      "fail_criteria": "External edges are perfectly sharp.",
+      "description": "Sharp external edges should be chamfered or filleted for handling safety and to reduce chipping.",
+      "manufacturing_processes": "3D_printing",
+      "id": "PROPOSED-GEN-001",
+      "pass_criteria": "External edges have a visible chamfer or fillet.",
+      "tier": "probationary",
+      "confidence": 0.5,
+      "times_applied": 0,
+      "true_positives": 0,
+      "false_positives": 0,
+      "manufacturing": [],
+      "source": "Auto-proposed by DFMA evaluation LLM"
+    }
+  ]
+}

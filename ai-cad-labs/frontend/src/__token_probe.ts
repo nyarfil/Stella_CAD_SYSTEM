@@ -1,0 +1,2 @@
+// temporary tailwind scan probe — deleted after verification
+export const probe = "bg-legend-magenta bg-legend-brown bg-legend-orange bg-legend-paper text-pass-ink bg-pass-fill border-fail-line text-warn-ink border-note-line border-stroke-hairline border-stroke-heavy bg-agent-dfma-inspector bg-agent-orchestrator bg-sheet text-sheet-ink text-sheet-ink-soft border-sheet-frame border-sheet-rule text-2xs tracking-label rounded-sheet shadow-sheet shadow-float bg-surface-inset text-ink-secondary text-ink-tertiary text-ink-faint bg-wash-hover bg-scrim text-trace dark:bg-card";

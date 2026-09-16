@@ -1,0 +1,201 @@
+{
+  "eval_type": "dfm",
+  "target_path": "projects/impeller_assembly/assembly/impeller",
+  "manufacturing_process": "CNC_milling",
+  "pass_label": "single_pass",
+  "rules_evaluated": 10,
+  "rules_passed": 3,
+  "rules_failed": 3,
+  "rules_uncertain": 4,
+  "overall_verdict": "conditional_pass",
+  "results": [
+    {
+      "rule_id": "DFM-CNC-001",
+      "rule_description": "Minimum wall thickness >= 1.5mm for CNC milled parts",
+      "verdict": "uncertain",
+      "severity": "critical",
+      "tier": "active",
+      "observation": "Looked for thin walls/webs/blade sections across all 8 views. The top views show 5 curved backswept blades whose projected thickness is a narrow double-line band roughly 1.5-2% of the overall disc diameter. The front/right views show the blade sections tapering from a thick root near the hub to a visibly thin trailing edge at the outer diameter (the upper and lower blade profile curves converge to a near-hairline at the left/right OD in front_clean and right_clean). Also the backplate/shroud disc reads as a slender vertical slab in the front view. Without a dimensioned drawing I cannot convert those proportions to millimetres: if the impeller OD is ~100mm the blades are ~1.5-2mm (marginal); if the OD is ~50mm they are under 1mm (fail). The convergent taper at the blade tip is the specific risk area.",
+      "recommendation": "Publish/confirm the blade thickness parameter and enforce a minimum of 1.5mm at the THINNEST point, including the trailing edge. If the blade profile is lofted/tapered, add an explicit minimum-thickness floor (e.g. blade_t = max(1.5, computed_t)) rather than allowing the taper to run to a knife edge, and thicken the backplate if it is under 3mm."
+    },
+    {
+      "rule_id": "DFM-CNC-002",
+      "rule_description": "Pocket depth-to-width ratio should not exceed 4:1",
+      "verdict": "fail",
+      "severity": "major",
+      "tier": "active",
+      "observation": "Looked for deep narrow cavities. The passages BETWEEN adjacent blades are effectively machined pockets, and they are the controlling feature. In the top views the inter-blade channels narrow dramatically as they approach the hub: near the hub the gap between two adjacent blade walls closes to a very small fraction of the disc diameter, while the front/right views show the blade height at that same inboard station is at or near its maximum (the blade root is the tallest part of the vane, running from the backplate face up to the shroud line). That combination of near-maximum axial depth with a minimum circumferential opening at the hub gives a depth-to-width ratio well past 4:1 in the inboard region. The curved (backswept) channel walls make it worse: a straight end mill cannot follow the curve, so the effective tool must be small enough to fit the narrowest section and then reach full depth, which is exactly the tool-deflection case this rule exists to catch.",
+      "recommendation": "Either open up the inboard passage (increase hub diameter so the blades start further out, reduce blade count from 5, or reduce blade wrap/backsweep so channels stay open), or reduce blade height near the hub so the deep region is also the wide region. If the current channel geometry is functionally required, this part is not a 3-axis milled part: move it to 5-axis flank milling, investment casting, or metal AM and update constraints.md accordingly."
+    },
+    {
+      "rule_id": "DFM-CNC-004",
+      "rule_description": "Avoid undercuts and features inaccessible to standard 3-axis end mills",
+      "verdict": "fail",
+      "severity": "major",
+      "tier": "active",
+      "observation": "Looked for overhangs and restricted-access cavities. The front and right views both show a curved, concave meridional profile: the blade upper edge sweeps from a small diameter at the top of the hub outward and DOWNWARD to the outer diameter in a hyperbolic curve, and the front_clean view shows overhanging lips where the blade profile projects axially beyond the disc face near the OD (the pronounced curved flare at top-left and bottom-left of front_clean). Combined with the backswept blades seen in the top views, the pressure side of each blade wraps over its own channel: a vertical tool path from the top cannot reach the concave face of a backswept blade near the hub because the adjacent blade's suction side overhangs it. This is the classic centrifugal-impeller access problem and it requires 5-axis flank milling or a cast/printed blank.",
+      "recommendation": "For genuine 3-axis manufacture, straighten the blades to purely radial (zero backsweep) and make the blade side faces vertical so every channel is a straight top-down cut, or split the impeller into a bladed disc plus a separate bolted shroud so each half is open from above. Otherwise reclassify the manufacturing process for this part to 5-axis milling or casting, and note it in constraints.md so this rule is evaluated against the right process."
+    },
+    {
+      "rule_id": "DFM-CNC-005",
+      "rule_description": "Hole depth-to-diameter ratio should not exceed 10:1 for standard drills",
+      "verdict": "pass",
+      "severity": "major",
+      "tier": "active",
+      "observation": "Looked for through-holes and blind holes. The only hole visible is the central bore, seen as the inner circle in both top views and as the dashed bore lines running the length of the hub in front_wireframe and right_wireframe. The bore diameter is roughly 30-35% of the hub boss diameter, and the hub axial length (from the boss face through the disc) is on the order of 1.5-2x the bore diameter based on the front/right views. That is well under 10:1. No other drilled features (no bolt circle, no set-screw holes) appear anywhere in the 8 views.",
+      "recommendation": ""
+    },
+    {
+      "rule_id": "DFM-CNC-006",
+      "rule_description": "Avoid thin ribs and webs (< 2mm thick at depth > 4x thickness)",
+      "verdict": "fail",
+      "severity": "major",
+      "tier": "active",
+      "observation": "Looked for tall thin ribs. The 5 blades ARE thin unsupported ribs by this rule's definition, and their aspect ratio is the problem. In the top views the blade thickness is a hairline band; in the front and right views the same blades stand proud of the backplate to a height that is many times that thickness (the blade profile in right_clean rises from the disc face to the shroud line over a distance visibly several times the blade's projected thickness in the top view). The blades are cantilevered off the backplate and unsupported at their free upper edge over their entire length from hub to OD, and they are curved, so machining forces act perpendicular to their weakest axis. Height-to-thickness clearly exceeds 4:1 across most of the span, and the tip taper noted under DFM-CNC-001 makes the free edge the thinnest and least supported point.",
+      "recommendation": "Reduce blade height, thicken the blades (see DFM-CNC-001), or add a shroud that ties the blade tips together so they are no longer cantilevered. If the blades must stay tall and thin, plan a supported machining strategy (sacrificial wax/low-melt fill between blades, or a roughing-then-finishing pass with light radial engagement) and record it in constraints.md; DFM alone will keep flagging this geometry."
+    },
+    {
+      "rule_id": "DFM-CNC-007",
+      "rule_description": "All edges should be accessible for deburring operations",
+      "verdict": "uncertain",
+      "severity": "minor",
+      "tier": "active",
+      "observation": "Looked for recessed or enclosed machined edges. The blade-to-backplate fillet/junction runs the full length of every blade and sits at the bottom of a channel that narrows toward the hub (see DFM-CNC-002). The outer portion of each channel is wide and open, so those edges are reachable, but the inboard end of each blade root radius sits in the tightest part of the passage between two overhanging backswept blades. Whether a deburring tool can physically enter there depends on the actual hub-region channel width, which I cannot measure from these views. Every other edge (hub bore, boss OD, backplate rim, blade upper edges) is fully open and reachable.",
+      "recommendation": "Confirm the minimum inter-blade channel width at the hub against the smallest available deburring tool. If it is too tight, specify abrasive-flow or tumble deburring for the channel region rather than hand deburring, or open the inboard channel per the DFM-CNC-002 fix, which resolves this at the same time."
+    },
+    {
+      "rule_id": "DFM-CNC-008",
+      "rule_description": "Tapped hole thread depth >= 1.5x nominal bolt diameter",
+      "verdict": "pass",
+      "severity": "critical",
+      "tier": "active",
+      "observation": "Looked for threaded/tapped features. No tapped holes, no bolt holes, no set-screw holes, and no threaded bore are visible in any of the 8 views. The central bore appears as a plain smooth-walled cylinder (single dashed pair in the wireframes, no thread relief, no counterbore step, no keyway). With no tapped features present, this rule has nothing to violate. Note that this is itself worth flagging separately as an assembly concern (see proposed rules), because a plain bore gives the impeller no torque-transmitting or axial-retention feature.",
+      "recommendation": ""
+    },
+    {
+      "rule_id": "DFM-GEN-002",
+      "rule_description": "All features must have adequate clearance for manufacturing tool access",
+      "verdict": "uncertain",
+      "severity": "critical",
+      "tier": "active",
+      "observation": "Looked for features no standard tool could reach. This overlaps DFM-CNC-004 but is a broader question: is there ANY tool orientation that reaches each feature? The hub bore, boss, backplate faces and blade outer regions are all clearly reachable. The inboard concave blade faces are unreachable from a fixed vertical orientation (the DFM-CNC-004 finding), but a 5-axis machine with a tilted tool axis, or a cast blank with only finishing cuts, would reach them. So the answer depends on whether the process is truly locked to 3-axis. Because this rule is severity critical and the images cannot settle the process question by themselves, I am marking it uncertain rather than failing it a second time on the same evidence.",
+      "recommendation": "Resolve the process question in constraints.md. If CNC_milling means 3-axis, this part must be redesigned per DFM-CNC-004 and DFM-CNC-002. If 5-axis or a cast-then-machine route is acceptable, state that explicitly so tool access is evaluated against the real capability instead of a 3-axis assumption."
+    },
+    {
+      "rule_id": "DFM-GEN-003",
+      "rule_description": "Prefer symmetric features to reduce setup operations and fixturing complexity",
+      "verdict": "pass",
+      "severity": "minor",
+      "tier": "active",
+      "observation": "Looked for asymmetric feature placement. Both top views show clean 5-fold rotational symmetry: the 5 blades are evenly spaced at 72 degrees with identical curvature and identical hub and tip terminations, and the disc, hub boss and bore are all concentric about the same axis. The part is a body of revolution with a patterned feature set, which is the ideal case for fixturing (chuck or mandrel on the bore/boss, index about the axis). No stray one-off features break the pattern.",
+      "recommendation": ""
+    },
+    {
+      "rule_id": "PROPOSED-ASSY-004",
+      "rule_description": "Closed-loop bearing holes intended for assembly over captive shafts must be split into two pieces with fastening features.",
+      "verdict": "uncertain",
+      "severity": "major",
+      "tier": "probationary",
+      "observation": "Looked for a continuous closed ring that would have to pass over a captive shaft. The central bore is a solid continuous ring with no split line, no cap and no fastener holes anywhere in the 8 views. Whether that is a defect depends on the mating shaft: an impeller is normally slid onto a free shaft END and retained by a nut, in which case a closed bore is correct and a split hub would be wrong. The rule only bites if the shaft in this assembly is captive at both ends. That information is not in these renders.",
+      "recommendation": "Check the assembly's shaft definition. If the shaft end is free (the normal impeller case), this rule does not apply and the closed bore is correct. If the shaft is captive at both ends, the impeller cannot be installed at all and the design needs either a split hub with a clamped cap or a shaft redesign that frees one end."
+    }
+  ],
+  "proposed_rules": [
+    {
+      "id": "PROPOSED-001",
+      "category": "features",
+      "manufacturing": [
+        "CNC_milling",
+        "casting",
+        "metal_AM"
+      ],
+      "description": "A rotating part mounted on a shaft must include an explicit torque-transmitting feature (keyway, D-flat, spline, or a documented interference fit) rather than a plain smooth bore.",
+      "look_for": "The central bore profile in top views and the bore lines in wireframe side views: is it a plain circle, or does it carry a keyway slot, flat, or spline profile?",
+      "pass_criteria": "The bore includes a keyway, D-flat, spline, set-screw boss, or the constraints explicitly specify a shrink/interference fit with the required pressure.",
+      "fail_criteria": "A perfectly circular, smooth, featureless bore on a part that must transmit torque, with no fit specification anywhere in the constraints.",
+      "severity": "major",
+      "tier": "probationary",
+      "confidence": 0.5,
+      "times_applied": 0,
+      "true_positives": 0,
+      "false_positives": 0,
+      "source": "Auto-proposed by DFMA evaluation LLM"
+    },
+    {
+      "id": "PROPOSED-002",
+      "category": "features",
+      "manufacturing": [
+        "CNC_milling",
+        "casting",
+        "metal_AM"
+      ],
+      "description": "A rotating part must include an axial retention feature or a face that a retention element can bear against.",
+      "look_for": "Hub end faces, shoulders, snap-ring grooves, threaded nose, or a boss face square to the axis in the side views.",
+      "pass_criteria": "The hub presents a flat shoulder, groove, or threaded section that a nut, snap ring, or clamp can react against to prevent axial walk.",
+      "fail_criteria": "A plain cylindrical hub with nothing to stop the part sliding along the shaft under axial thrust.",
+      "severity": "major"
+    },
+    {
+      "id": "PROPOSED-003",
+      "category": "geometry",
+      "manufacturing": [
+        "CNC_milling",
+        "casting"
+      ],
+      "description": "Rotating parts must have their blade or vane trailing edges left with a finite minimum thickness rather than tapering to a knife edge.",
+      "look_for": "Convergence of the upper and lower blade profile curves at the outer diameter in front and side views.",
+      "pass_criteria": "The blade tip terminates in a finite flat or radiused edge of at least the process minimum wall thickness.",
+      "fail_criteria": "The two blade surfaces converge to a single line at the outer diameter, producing a knife edge that will chip in machining and is a stress raiser in service.",
+      "severity": "major",
+      "tier": "probationary",
+      "confidence": 0.5,
+      "times_applied": 0,
+      "true_positives": 0,
+      "false_positives": 0,
+      "source": "Auto-proposed by DFMA evaluation LLM"
+    },
+    {
+      "id": "PROPOSED-004",
+      "category": "access",
+      "manufacturing": [
+        "CNC_milling"
+      ],
+      "description": "Curved or swept channel walls on a 3-axis milled part must be checked for a constant-cross-section vertical sweep; a channel whose narrowest point is smaller than the tool needed to reach its full depth is not 3-axis machinable.",
+      "look_for": "In plan view, the minimum gap between adjacent curved walls; in side view, the maximum depth at that same radial station.",
+      "pass_criteria": "Minimum channel width at every station is at least the diameter of a tool whose usable flute length covers the local depth, with a 4:1 or better depth-to-diameter margin.",
+      "fail_criteria": "The narrowest channel station coincides with the deepest station, or the channel curvature means no straight vertical tool path clears both walls.",
+      "severity": "critical",
+      "tier": "probationary",
+      "confidence": 0.5,
+      "times_applied": 0,
+      "true_positives": 0,
+      "false_positives": 0,
+      "source": "Auto-proposed by DFMA evaluation LLM"
+    },
+    {
+      "id": "PROPOSED-005",
+      "category": "tolerances",
+      "manufacturing": [
+        "CNC_milling",
+        "casting",
+        "metal_AM"
+      ],
+      "description": "High-speed rotating assemblies should carry a balancing provision (a designated material-removal ring, balance boss, or documented balance-grade requirement).",
+      "look_for": "A flat annular land on the backplate or hub face where balance material can be drilled away without touching functional surfaces.",
+      "pass_criteria": "A dedicated balance land exists, or the constraints state a balance grade and the method by which it will be achieved.",
+      "fail_criteria": "No balance provision and no balance requirement stated on a part whose whole function is to rotate at speed.",
+      "severity": "minor",
+      "tier": "probationary",
+      "confidence": 0.5,
+      "times_applied": 0,
+      "true_positives": 0,
+      "false_positives": 0,
+      "source": "Auto-proposed by DFMA evaluation LLM"
+    }
+  ],
+  "_meta": {
+    "ruleset_hash": "485d52020645fc13",
+    "engine": "claude-cli",
+    "evaluated_at": "2026-08-05T11:02:24.323779+00:00"
+  }
+}

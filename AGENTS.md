@@ -6,14 +6,21 @@ Anthropic キーは不要です。内蔵チャットは使いません。**あ�
 
 ## これは何か
 
-Stella は AgentCAD を Windows で動かす層です。部品は build123d の Python スクリプト、判定はカーネルです。
+Stella の目的は、ユーザーの意図を汲んで自動で 3D モデリングすることです。AgentCAD の Windows 対応は下ごしらえです。
 
-本家が Claude Code に出していたのと **同じ 109 個の工具** を、このリポの MCP で Cursor と Codex に出します。
+いまはこのリポにエンジンを並べます。
 
-- Cursor: `.cursor/mcp.json` のサーバ名 `agentcad`
-- Codex: `.codex/config.toml` の `mcp_servers.agentcad`（このリポを trusted にすること）
+- **AgentCAD**（`agentcad-for-windows/`）: 部品は build123d、判定はカーネル。本家が Claude Code に出していたのと **同じ 109 個の工具** を MCP 名 **`Stella_Agentcad`** で出します。
+- **AI-CAD**（`ai-cad-labs/`）: CadQuery、多視点レンダ、DFM/DFA。サーバは無く、`uv --directory ai-cad-labs run python -m tools.<name>`。venv は 3.13 で、AgentCAD の 3.12 と混ぜません。セットアップは `scripts/stella/setup-aicad.ps1`。入口 Skill は `.cursor/skills/stella-aicad/SKILL.md`。本家の `ai-cad-labs/AGENTS.md` を読んでから工具を呼びます。
+- **text-to-cad**（`text-to-cad/`）: cadgen（build123d）。自然言語・図面・画像からモデルし、STEP を検査する。サーバ無し。セットアップは `scripts/stella/setup-text-to-cad.ps1`。入口は `.cursor/skills/stella-text-to-cad/SKILL.md`。cookbook は `text-to-cad/skills/`（`.cursor/skills` にコピーしない）。venv は 3.13 で、他と混ぜません。
+- **ForgeCAD**（`forgecad/`）: `.forge.js` と npm の `forgecad@0.13.0`。サーバ無し。セットアップは `scripts/stella/setup-forgecad.ps1`。入口は `.cursor/skills/stella-forgecad/SKILL.md`。グローバル PATH の `forgecad` は使わない。独自ライセンスなので、商用やエージェント埋め込みは本家の条件を確認する。
 
-ユーザー全体の共有 `mcp.json` には登録しないでください（マウス側の設定を壊します）。
+- Cursor: このリポの `.cursor/mcp.json`、およびマウス（`V:\mouse`）の `.cursor/mcp.json`。サーバ名は **`Stella_Agentcad`**
+- Codex: このリポとマウスの `.codex/config.toml` の `mcp_servers.Stella_Agentcad`
+
+本家 n3r/AgentCAD の MCP（`agentcad` / `n3r-agentcad`）は登録しないでください。マウスの OpenSCAD MCP は残します。
+
+Cursor 3.20 はプロジェクト MCP を Customize に出さず、`disconnected` のまま落とすことがあります。そのときは共有 `mcp.json` に **`Stella_Agentcad` だけ** 足してよい（本家の名前では足さない）。OpenSCAD 作業中は Customize で Stella をオフにしてよい。
 
 ## 起動（人に頼まない）
 
@@ -40,6 +47,8 @@ uv run python -m stella_cad.bridge stop
 隔離（AppContainer）は既定オンです。オフにするのはユーザーが明示したときだけです。
 
 既定ポートは 8630 です。そこが別の AgentCAD（隔離オフ）なら 8640 を使います。MCP も同じ判定をします。
+
+`/api/health` が数秒で落ちても、待ち受けプロセスのコマンドラインにこのリポと `agentcad serve` があれば Stella です。未知プロセスではありません。カーネルが重い処理中なので、第二サーバは立てません。`.stella/server.pid` は venv ランチャではなく、ポートを聞いている PID です。MCP の表示名 `Stella_Agentcad` は判定に使いません。
 
 ## 工具の呼び方（Claude Code と同じ）
 
@@ -111,8 +120,13 @@ MCP も橋も、AgentCAD の JSON を加工しません。典型:
 
 ## やってはいけないこと
 
-- 109 工具を Cursor の **共有** `mcp.json` に登録する（このリポの `.cursor/mcp.json` は正）
-- マウス（ZA13）のリポや共有 MCP を書き換える
+- 本家 n3r/AgentCAD を MCP 名 `agentcad` / `n3r-agentcad` で出す
+- 共有 `mcp.json` に本家の名前で 109 工具を出す（見える必要があるときだけ `Stella_Agentcad`）
+- マウスの `.cursor/mcp.json` から OpenSCAD を消す、または本家名で AgentCAD を足す
 - 隔離を黙ってオフにする
 - 知らないプロセスを `stop` で殺す
 - API キーやトークンをコード・ログ・コミットに出す
+- AgentCAD の 3.12 venv と AI-CAD / text-to-cad の 3.13 venv を混ぜる
+- AI-CAD の正本として `V:\mouse\vendor\ai-cad` を使う
+- text-to-cad の正本として `V:\mouse\.venv-text-to-cad` を使う
+- ForgeCAD の正本としてグローバル PATH の `forgecad` を使う

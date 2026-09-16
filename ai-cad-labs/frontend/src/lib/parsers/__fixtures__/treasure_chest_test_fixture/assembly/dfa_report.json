@@ -1,0 +1,13 @@
+{
+  "eval_type": "dfa",
+  "target_path": "projects/treasure_chest_cc/assembly",
+  "manufacturing_process": "",
+  "pass_label": "assembly_global",
+  "rules_evaluated": 11,
+  "rules_passed": 7,
+  "rules_failed": 4,
+  "rules_uncertain": 0,
+  "overall_verdict": "fail",
+  "results": [],
+  "proposed_rules": []
+}

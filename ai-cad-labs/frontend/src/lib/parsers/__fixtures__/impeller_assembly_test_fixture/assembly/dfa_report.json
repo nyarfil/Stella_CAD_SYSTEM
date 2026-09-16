@@ -1,0 +1,146 @@
+{
+  "eval_type": "dfa",
+  "target_path": "projects/impeller_assembly/assembly",
+  "manufacturing_process": "",
+  "pass_label": "assembly_global",
+  "rules_evaluated": 10,
+  "rules_passed": 3,
+  "rules_failed": 4,
+  "rules_uncertain": 3,
+  "overall_verdict": "fail",
+  "results": [
+    {
+      "rule_id": "DFA-001",
+      "rule_description": "Minimize total part count \u2014 challenge whether each part is truly independent",
+      "verdict": "pass",
+      "severity": "major",
+      "tier": "active",
+      "observation": "Looked for functionally redundant adjacent parts. Six distinct colored bodies are visible: red bracket/base (an L-shaped plate with a 4-hole footplate, front_clean), orange shaft with an integral V-groove pulley on the right end (right_clean), blue bearing/housing block straddling the shaft at the bracket bore, green impeller with hub and 4 curved blades (top_clean), purple hex nut, and cyan washer at the left shaft end. Each has an independent reason to exist: the shaft rotates relative to the bracket, the bearing is a different material and is the wear/service item, and the nut+washer are removable to allow impeller service. The one arguable case is the bracket+base, which read as a single red body already (single red outline in right_clean, no seam line between vertical plate and footplate). No two separate parts share material and have zero relative motion.",
+      "recommendation": ""
+    },
+    {
+      "rule_id": "DFA-002",
+      "rule_description": "Parts should self-locate via geometric features (chamfers, pins, shoulders, bosses)",
+      "verdict": "fail",
+      "severity": "major",
+      "tier": "active",
+      "observation": "Looked for shoulders, bosses, pins or chamfers at each mating interface. In right_clean and front_clean the orange shaft is a stepped shaft: there IS a visible diameter step just left of the pulley and a smaller step at the left threaded end, so the shaft has some axial location. But the two most critical interfaces have none. (1) Bearing-to-bracket: the blue bearing block sits against the flat face of the red plate with no counterbore, no register lip and no visible shoulder in the bracket bore \u2014 front_wireframe shows the bracket bore as a plain dashed rectangle of constant width through the plate, so the bearing is located only by whatever press fit exists, with nothing setting its axial depth. (2) Bracket-to-base bolt interface: the 4 base holes (iso_clean) are plain through holes with no dowel or locating pin, so the whole bracket's position on the mounting surface is set purely by bolt clearance. Both interfaces rely on a jig or careful manual positioning.",
+      "recommendation": "Add a counterbore/register shoulder in the bracket bore so the bearing outer race seats against a machined face and cannot be pressed past its correct depth: on the bracket bore add .faces('>X').workplane().circle(bearing_od/2).cutBlind(-seat_depth) leaving a shoulder of bore_id smaller than bearing_od. Add at least two dowel-pin holes to the base footprint (diagonally opposite the bolt holes) so the bracket self-locates on the mount before the bolts are tightened."
+    },
+    {
+      "rule_id": "DFA-003",
+      "rule_description": "Avoid flexible, fragile, or slippery parts that are difficult to handle and orient",
+      "verdict": "fail",
+      "severity": "minor",
+      "tier": "active",
+      "observation": "Looked for thin, slender or ungraspable parts. The cyan washer at the left shaft end (front_clean, right_clean) renders as a very thin tall rectangle in section \u2014 its axial thickness is a small fraction of its outer diameter and it is visibly thinner than any other body in the assembly. It is a flat annular part with no graspable feature, the classic hard-to-handle DFA case (it must be oriented and threaded over the shaft end by hand or by a dedicated feeder). Separately the green impeller blades are thin curved shells (top_clean shows narrow double-line blade sections) that would be the fragile handling feature of the largest part, though the hub gives an adequate grip point. All other parts (bracket, shaft, bearing block, hex nut) are rigid and graspable \u2014 the hex nut in particular has flats for both grip and tooling.",
+      "recommendation": "Either increase the washer thickness so it is self-supporting and machine-feedable, or eliminate it by integrating a flange onto the nut (use a flanged nut as a single purchased part). In CadQuery this is a one-line change: replace the separate washer body with a flange on the nut, .faces('<X').workplane().circle(flange_r).extrude(flange_t)."
+    },
+    {
+      "rule_id": "DFA-004",
+      "rule_description": "Design for top-down assembly so gravity assists part insertion",
+      "verdict": "fail",
+      "severity": "minor",
+      "tier": "active",
+      "observation": "Looked at the insertion direction of every part relative to gravity. The assembly's functional axis is HORIZONTAL: front_clean and right_clean both show the orange shaft running left-right, with the red base plate flat at the bottom in iso_clean/top_clean. Every rotating part therefore installs along a horizontal axis \u2014 the bearing is pressed sideways into the bracket bore, the shaft slides in horizontally, the impeller slides on horizontally, and the washer and nut are threaded on horizontally at the far left end. Gravity assists none of these; it actively fights them, because the shaft assembly is a long cantilever (right_clean shows the pulley overhung well outside the bracket on one side and the impeller overhung on the other) that must be supported by hand or fixture until the nut is torqued. Only the bracket-onto-base-surface step is gravity-assisted.",
+      "recommendation": "This is inherent to a horizontal-shaft machine and cannot be fixed by reorienting the product, so fix it at the process level: design the assembly to be built with the bracket standing on its footplate rotated 90 degrees (shaft vertical) so the bearing, shaft, impeller, washer and nut all drop in along Z, then rotate the completed cartridge onto its base. Alternatively add a shaft shoulder that seats hard against the bearing inner race so the shaft self-supports axially and only the impeller stack needs holding."
+    },
+    {
+      "rule_id": "DFA-005",
+      "rule_description": "Sufficient clearance around fasteners for wrench/driver access",
+      "verdict": "fail",
+      "severity": "critical",
+      "tier": "active",
+      "observation": "Looked for tool swing space around every fastener. Two fastener groups exist. (1) The purple retaining hex nut at the left shaft end: front_clean and right_clean show it sits immediately adjacent to the cyan washer and the green impeller hub, and the green hub cone flares outward right where a socket would have to sit. In right_clean the axial gap between the right face of the nut and the flaring green hub is roughly one nut-height, and radially the hub cone is at a larger diameter than the nut across-corners dimension within a very short axial distance \u2014 a standard deep socket would foul the hub cone, and an open-end wrench would have limited swing between the hub and the shaft stub protruding to the left. (2) The 4 base bolt holes: iso_clean shows them as counterbored circles set very close to the base plate ends and to the vertical bracket web \u2014 the two inboard holes are directly beneath the rising bracket plate in top_clean/iso_clean, so a socket approaching vertically would foul the bracket web. This is a critical access failure at two independent locations.",
+      "recommendation": "For the retaining nut: recess or relieve the impeller hub face so a socket can reach the nut \u2014 cut a socket clearance counterbore into the hub, .faces('<X').workplane().circle(socket_od/2).cutBlind(-socket_depth), sized to at least 1.5x the across-flats dimension in diameter and one socket-wall depth. For the base bolts: move the bolt holes outboard of the bracket web footprint so a vertical socket has a clear approach, or switch to counterbored socket-head cap screws with a straight vertical access line clear of the web."
+    },
+    {
+      "rule_id": "DFA-006",
+      "rule_description": "Avoid requiring part reorientation during the assembly sequence",
+      "verdict": "fail",
+      "severity": "minor",
+      "tier": "active",
+      "observation": "Looked at whether all parts install from one direction. They do not. Reading right_clean left-to-right: the orange pulley is on the far LEFT (outboard, opposite side of the bracket) while the green impeller, purple nut and cyan washer are on the far RIGHT \u2014 the two sub-stacks are on OPPOSITE sides of the red bracket plate. The bearing must be pressed into the bracket bore from one side, the shaft fed through, then the pulley installed on one face and the impeller/washer/nut stack installed on the other face. That is a minimum of two opposed working directions, so the assembly must be flipped (or worked from both sides in a rotating fixture) between steps. The base bolts add a third, orthogonal (vertical) working direction.",
+      "recommendation": "Accept two-sided access as inherent to a through-shaft drive, but reduce it to one flip by grouping all threaded operations on one side: press the bearing and slide the shaft from the pulley side, install the pulley with the assembly in that orientation, then flip ONCE and complete the impeller/washer/nut stack. Also install the bracket onto its base LAST so the vertical bolt direction does not interleave with the axial steps."
+    },
+    {
+      "rule_id": "DFA-007",
+      "rule_description": "Standardize fastener types \u2014 minimize unique fastener count",
+      "verdict": "uncertain",
+      "severity": "minor",
+      "tier": "active",
+      "observation": "Looked for distinct fastener sizes and head types. Only one physical fastener is modelled: the purple hex nut on the shaft's left threaded end. The 4 base holes in iso_clean and front_clean are modelled as holes only \u2014 no bolts, screws or nuts are present as bodies, so their size, thread and head type cannot be read from the renders. What IS visible is a size mismatch risk: the shaft nut is small (it fits a shaft end smaller than the bearing bore) while the base holes appear counterbored and considerably larger relative to the base plate. Whether that lands at 2-3 unique fastener types or more cannot be determined from geometry alone.",
+      "recommendation": "Cannot be resolved from renders. Needed: the BOM / sourcing notes listing the base bolt size and head type, plus the shaft thread spec, to count unique fastener types. If the base bolts and the shaft nut can be brought to one thread family (for example all M6), do so; otherwise document the intended two-type set explicitly."
+    },
+    {
+      "rule_id": "DFA-008",
+      "rule_description": "Interference fits and press fits should have lead-in chamfers for guided insertion",
+      "verdict": "fail",
+      "severity": "major",
+      "tier": "active",
+      "observation": "Looked specifically at every shaft-bore and press-fit edge for a 45-degree lead-in. There are at least three close-tolerance insertions: shaft into bearing bore, bearing OD into bracket bore, and impeller hub bore onto the shaft. In right_clean and front_clean every one of these edges renders as a SQUARE corner \u2014 the orange shaft's left and right ends terminate in perfectly rectangular profiles with no angled lead-in line, the blue bearing block's outer corners are square rectangles at both ends, and the red bracket bore edge (visible as the dashed bore outline in front_wireframe) shows no chamfer break. The green impeller hub bore edge is likewise square where it meets the shaft. Zero chamfers are visible anywhere on the assembly; every visible edge in all 8 views is sharp. This is exactly the fail condition: both the shaft and the bore are sharp at every press-fit interface.",
+      "recommendation": "Add lead-in chamfers on both sides of each press-fit pair. On the shaft ends: .faces('>X or <X').edges('%CIRCLE').chamfer(0.5). On the bracket bore and the impeller hub bore: select the bore entry edges and .chamfer(0.5). A 0.5-1.0 mm x 45-degree lead-in on the entering member plus a matching break on the receiving bore is the minimum for a guided press fit; without it the bearing OD will shave the bracket bore and raise a burr that blocks full seating."
+    },
+    {
+      "rule_id": "DFA-009",
+      "rule_description": "Assembly mating surfaces must be unobstructed by other parts or features",
+      "verdict": "uncertain",
+      "severity": "critical",
+      "tier": "active",
+      "observation": "Looked for blocked insertion paths in a plausible build order. The stack is linear along the shaft axis, which is favourable: bearing into bracket, shaft through bearing, pulley on one end, impeller then washer then nut on the other. Each of those is a straight axial slide with no part needing to curve around another. BUT one path cannot be resolved from the renders: the impeller. In right_clean the green impeller hub bore is drawn over the orange shaft in the region between the bracket and the shaft's right end \u2014 and the shaft is STEPPED, with a visibly larger diameter section immediately to the left (the bearing journal / pulley-side section) than the right-hand section the impeller sits on. If the impeller's hub bore is sized to the smaller right-hand diameter, it can only be installed from the right, which is fine; but the front_clean view also shows the green hub extending LEFT past the bracket face and overlapping the blue bearing block region, which would make the impeller's final position require it to pass over or interfere with the bearing. The 2D projections cannot distinguish overlap from occlusion here. Additionally the orange pulley outer diameter in right_clean is visibly larger than the bracket bore, confirming the pulley must be installed after the shaft is through \u2014 a constraint, not a blockage.",
+      "recommendation": "Cannot be confirmed from renders alone. Needed: a section view through the shaft axis (or the analytic bounding boxes / bore diameters of the impeller hub, bearing bore and each shaft step) to verify that the impeller hub bore diameter is greater than or equal to every shaft feature it must pass over, and that the hub's left face does not axially overlap the bearing block. Run a pairwise interference check between the impeller solid and the bearing solid, and report the impeller hub bore ID against each shaft step OD."
+    },
+    {
+      "rule_id": "DFA-010",
+      "rule_description": "Bolt patterns should have consistent, standard spacing for common tools",
+      "verdict": "uncertain",
+      "severity": "minor",
+      "tier": "active",
+      "observation": "Looked at the base bolt pattern geometry. front_clean shows 4 holes in a rectangular pattern on the red plate, symmetric top-to-bottom and left-to-right, which is the correct regular pattern shape. iso_clean confirms 4 counterbored holes, one near each corner of the base footplate. The pattern itself is consistent and standard. What cannot be judged from the renders is whether the spacing clears a socket: the holes sit close to the plate edges and, per DFA-005, the two inboard ones fall under the bracket web, so hole-to-web spacing rather than hole-to-hole spacing is the binding constraint \u2014 and the actual dimensions are not readable from these projections. Hole-to-hole spacing looks generous (roughly the full plate length apart in front_clean), so adjacent-fastener interference is unlikely.",
+      "recommendation": "Cannot be fully resolved from renders. Needed: the base plate hole coordinates and hole diameter from constraints.md, plus the intended bolt size, to check edge distance (should be at least 1.5x hole diameter) and clearance from each hole centre to the bracket web face (should be at least 0.75x the socket outer diameter). The pattern regularity itself passes; only the tool-clearance dimension is unverified."
+    }
+  ],
+  "proposed_rules": [
+    {
+      "id": "PROPOSED-001",
+      "category": "access",
+      "manufacturing": [
+        "assembly"
+      ],
+      "description": "Rotating assemblies must provide an anti-rotation feature or wrench flat so the shaft can be held while the retaining nut is torqued",
+      "look_for": "A hex flat, spanner slot, cross hole, or keyway on the shaft near the threaded retaining end, or any other feature the assembler can grip to react torque",
+      "pass_criteria": "The shaft carries a visible wrench flat, hex, spanner hole, or key feature that lets the assembler hold the shaft against the nut tightening torque",
+      "fail_criteria": "The shaft is a plain cylinder at the retaining-nut end with no anti-rotation feature, so torquing the nut just spins the whole rotor and the joint cannot be reliably preloaded",
+      "severity": "major"
+    },
+    {
+      "id": "PROPOSED-002",
+      "category": "geometry",
+      "manufacturing": [
+        "assembly"
+      ],
+      "description": "Overhung rotating masses must be axially constrained on both sides of their bearing support",
+      "look_for": "Shaft shoulders, spacers, circlip grooves, or retaining features on both the drive side and the driven side of the bearing",
+      "pass_criteria": "Both the overhung driven element and the overhung drive element are positively located axially against a shoulder or retaining feature, so the rotor cannot walk through the bearing",
+      "fail_criteria": "One or both overhung masses rely only on friction or a single-sided nut, allowing axial float or the rotor to be driven through its own bearing under thrust load",
+      "severity": "critical"
+    },
+    {
+      "id": "PROPOSED-003",
+      "category": "access",
+      "manufacturing": [
+        "assembly"
+      ],
+      "description": "Bearings must have a service extraction path \u2014 a puller groove, blind-bore jacking hole, or through access from the opposite side",
+      "look_for": "Whether a pressed-in bearing can be removed: is the bore a through hole, is there a puller shoulder, or are there jacking holes behind the outer race",
+      "pass_criteria": "The bearing can be driven or pulled out without destroying it or the housing, via a through bore, a relieved shoulder, or dedicated jacking holes",
+      "fail_criteria": "The bearing is pressed into a pocket with no extraction access, so the only removal method is destructive",
+      "severity": "major"
+    }
+  ],
+  "_meta": {
+    "ruleset_hash": "5064e503fea6d6b4",
+    "engine": "claude-cli",
+    "evaluated_at": "2026-08-05T10:39:26.500385+00:00"
+  }
+}

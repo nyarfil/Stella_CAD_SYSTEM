@@ -1,0 +1,8 @@
+{
+  "name": "stella-forgecad",
+  "private": true,
+  "description": "Pinned ForgeCAD CLI for Stella CAD System. Not a fork of ForgeCAD.",
+  "dependencies": {
+    "forgecad": "0.13.0"
+  }
+}

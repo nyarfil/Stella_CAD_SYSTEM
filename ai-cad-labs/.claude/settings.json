@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run:*)",
+      "Bash(python -m tools.*)"
+    ]
+  },
+  "env": {
+    "CAD_EVALUATOR_MODEL": "claude-opus-5[1m]"
+  }
+}

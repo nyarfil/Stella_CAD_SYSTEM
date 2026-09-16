@@ -1,0 +1,7 @@
+Assembly color legend (part -> stroke color):
+  bearing_housing: red (RGB 220,40,40)
+  main_bearing: blue (RGB 40,40,220)
+  impeller: green (RGB 40,160,40)
+  pulley_shaft: orange (RGB 220,140,20)
+  lock_nut: purple (RGB 160,40,200)
+  inlet_bearing: teal (RGB 40,180,180)

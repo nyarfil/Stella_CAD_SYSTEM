@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/ibm-plex-sans";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+@import "./styles/tokens.css";
+
+/* Dark "drafting board" is the :root default; html[data-theme="light"] switches to the
+   light "drawing office". shadcn dark: utilities fire whenever light is not set. */
+@custom-variant dark (&:is(:root:not([data-theme="light"]) *));
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  html {
+    @apply font-sans;
+    }
+}

@@ -1,0 +1,87 @@
+{
+  "eval_type": "dfm",
+  "target_path": "projects/treasure_chest_cc/assembly/base_box",
+  "manufacturing_process": "3D_printing",
+  "pass_label": "merged_dual_pass",
+  "rules_evaluated": 5,
+  "rules_passed": 2,
+  "rules_failed": 1,
+  "rules_uncertain": 2,
+  "overall_verdict": "fail",
+  "results": [
+    {
+      "rule_id": "DFM-3DP-001",
+      "rule_description": "Minimum wall thickness >= 0.8mm (FDM) or >= 0.4mm (SLA)",
+      "verdict": "uncertain",
+      "severity": "critical",
+      "tier": "active",
+      "observation": "The main walls of the hollow box appear to have a uniform thickness. However, without a reference scale in the images, it is impossible to verify if the wall thickness meets the 0.8mm (FDM) or 0.4mm (SLA) minimum requirement.",
+      "recommendation": "Verify in the CAD model that the shell thickness is at least 0.8mm for FDM or 0.4mm for SLA."
+    },
+    {
+      "rule_id": "DFM-3DP-002",
+      "rule_description": "Overhang angle should not exceed 45 degrees from vertical without support",
+      "verdict": "fail",
+      "severity": "major",
+      "tier": "active",
+      "observation": "The latch feature on the top edge of the front wall protrudes horizontally outward with a flat bottom surface. If the box is printed with its base flat on the build plate, this creates a 90-degree overhang. Additionally, the horizontal holes in the hinge knuckles create overhangs at the top of the holes.",
+      "recommendation": "Add a chamfer or fillet (<= 45 degrees from vertical) underneath the latch protrusion to make it self-supporting. Consider using a teardrop shape for the horizontal hinge holes."
+    },
+    {
+      "rule_id": "DFM-3DP-003",
+      "rule_description": "Minimum feature size >= 0.5mm for reliable printing",
+      "verdict": "uncertain",
+      "severity": "major",
+      "tier": "active",
+      "observation": "The hinge knuckles contain small holes, and the latch feature has small geometric details. Without a scale, it cannot be confirmed if these features meet the 0.5mm minimum size requirement for reliable printing.",
+      "recommendation": "Verify that the diameter of the hinge holes and the dimensions of the latch catch are at least 0.5mm."
+    },
+    {
+      "rule_id": "DFM-GEN-002",
+      "rule_description": "All features must have adequate clearance for manufacturing tool access",
+      "verdict": "pass",
+      "severity": "critical",
+      "tier": "active",
+      "observation": "The part is an open box with external protrusions. For 3D printing, the print head has clear access to deposit material for all visible features from the top down. There are no enclosed or inaccessible cavities.",
+      "recommendation": ""
+    },
+    {
+      "rule_id": "DFM-GEN-003",
+      "rule_description": "Prefer symmetric features to reduce setup operations and fixturing complexity",
+      "verdict": "pass",
+      "severity": "minor",
+      "tier": "active",
+      "observation": "The part exhibits bilateral symmetry along its central axis. The hinge knuckles are symmetrically placed on the back wall, and the latch is centered on the front wall.",
+      "recommendation": ""
+    }
+  ],
+  "proposed_rules": [
+    {
+      "fail_criteria": "Horizontal circular holes that will sag without support.",
+      "id": "PROPOSED-3DP-001",
+      "manufacturing_process": "3D_printing",
+      "severity": "minor",
+      "pass_criteria": "Horizontal holes have a teardrop shape or are small enough to bridge reliably.",
+      "look_for": "Circular holes oriented horizontally (parallel to the build plate).",
+      "category": "geometry",
+      "description": "Horizontal holes should use a teardrop profile to prevent sagging at the top of the hole.",
+      "tier": "probationary",
+      "confidence": 0.5,
+      "times_applied": 0,
+      "true_positives": 0,
+      "false_positives": 0,
+      "manufacturing": [],
+      "source": "Auto-proposed by DFMA evaluation LLM"
+    },
+    {
+      "severity": "minor",
+      "category": "geometry",
+      "fail_criteria": "Internal corners are perfectly sharp (0 radius).",
+      "description": "Internal corners should be filleted to reduce stress concentrations and warping during 3D printing.",
+      "manufacturing_processes": "3D_printing",
+      "pass_criteria": "Internal corners have a visible fillet radius.",
+      "look_for": "Sharp 90-degree internal corners at the base of walls or inside cavities.",
+      "id": "PROPOSED-3DP-001"
+    }
+  ]
+}

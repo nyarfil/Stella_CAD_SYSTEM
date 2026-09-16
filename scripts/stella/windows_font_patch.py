@@ -22,6 +22,8 @@ PATCH = '''        _, ext = os.path.splitext(path)
 
 
 def target_path() -> Path:
+    if len(sys.argv) > 1:
+        return Path(sys.argv[1])
     repo = Path(__file__).resolve().parents[2]
     return repo / "agentcad-for-windows" / ".venv" / "Lib" / "site-packages" / "build123d" / "text.py"
 
@@ -29,7 +31,7 @@ def target_path() -> Path:
 def main() -> int:
     target = target_path()
     if not target.is_file():
-        print(f"missing {target}; run scripts/stella/setup.ps1 first", file=sys.stderr)
+        print(f"missing {target}; run the matching setup script first", file=sys.stderr)
         return 1
     text = target.read_text(encoding="utf-8")
     if PATCH in text:

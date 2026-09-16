@@ -1,0 +1,6 @@
+Assembly color legend (part -> stroke color):
+  base_box: red (RGB 220,40,40)
+  lid: blue (RGB 40,40,220)
+  hinge_block_R: green (RGB 40,160,40)
+  hinge_block_L: orange (RGB 220,140,20)
+  hasp_plate: purple (RGB 160,40,200)

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<rect width="512" height="512" fill="#10131A"/>
+<path d="M74 292 L194 92" fill="none" stroke="#F4F4F4" stroke-width="16"/>
+<rect x="188" y="88" width="9" height="30" fill="#F4F4F4"/>
+<path d="M190 92 L265 232 C282 266 314 292 350 292 L392 292
+M392 92 L350 92 C305 92 278 122 266 182" fill="none" stroke="#F4F4F4" stroke-width="16" stroke-linejoin="round"/>
+<rect x="368" y="185" width="23" height="23" fill="#67D8C8"/>
+<text x="256" y="432" text-anchor="middle"
+font-family="Avenir Next,Helvetica,Arial,sans-serif"
+font-size="54" font-weight="300" letter-spacing="34">
+<tspan fill="#67D8C8">AI </tspan><tspan fill="#F4F4F4">CAD</tspan>
+</text>
+</svg>
