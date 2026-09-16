@@ -17,6 +17,8 @@ build/
 out/
 exports/
 *.acm
+docs/windows/*.txt
+.python/
 
 # Secrets
 .env

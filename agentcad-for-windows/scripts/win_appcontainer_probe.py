@@ -118,6 +118,8 @@ from agentcad.kernel.sandbox_windows import (  # noqa: E402
 )
 from agentcad.kernel.sandbox_windows import (  # noqa: E402
     ConfinedProcess as _ConfinedProcess,
+    real_python_exe,
+    venv_pythonpath,
 )
 
 
@@ -659,7 +661,8 @@ class Probe:
         for label, path, rights in grants:
             # The product's `acl_grant`, rights included: the probe asks the
             # same question the plan asks, or it is not answering it.
-            ok, tail = acl_grant(str(path), self.sid_text, rights)
+            ok, tail = acl_grant(str(path), self.sid_text, rights,
+                                 recurse=(rights == READ_RIGHTS))
             ok_count += int(ok)
             note(f"icacls grant {label} {rights}: {tail}")
             report(f"acl.grant.{label}", ok, f"{path}")
@@ -761,6 +764,7 @@ class Probe:
             "TEMP": tmp, "TMP": tmp, "USERPROFILE": tmp,
             "APPDATA": tmp, "LOCALAPPDATA": tmp,
             "PYTHONDONTWRITEBYTECODE": "1",
+            "PYTHONPATH": venv_pythonpath(),
             # The parent declares the two facets it really applied, exactly as
             # `sandbox_macos.build` does for the seatbelt, so the worker's
             # `denials.classify` may name a filesystem/network denial.
@@ -788,7 +792,8 @@ class Probe:
         self.job = job_create(memory_bytes, 64)
         note(f"job object: commit limit {self.args.job_memory_mb} MiB, "
              f"64 active processes, KILL_ON_JOB_CLOSE")
-        argv = [sys.executable, "-u", "-m", "agentcad.kernel.worker"]
+        argv = [real_python_exe(sys.executable), "-u", "-m",
+                "agentcad.kernel.worker"]
         note(f"argv: {subprocess.list2cmdline(argv)}")
         note(f"cwd:  {self.root}")
         self.worker = ConfinedProcess(argv, self.child_env(), str(self.root),
@@ -816,7 +821,7 @@ class Probe:
                   .replace("@@OTHER@@", repr(str(self.other))))
         script = self.project / "token_probe.py"
         script.write_text(source, encoding="utf-8")
-        argv = [sys.executable, "-u", str(script)]
+        argv = [real_python_exe(sys.executable), "-u", str(script)]
         self.token_child = ConfinedProcess(argv, self.child_env(),
                                            str(self.root), self.sid_ptr,
                                            self.job)

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "agentcad": {
+      "command": "cmd.exe",
+      "args": ["/d", "/c", "scripts\\stella\\mcp.cmd"],
+      "env": {
+        "AGENTCAD_AGENT_ID": "cursor"
+      }
+    }
+  }
+}

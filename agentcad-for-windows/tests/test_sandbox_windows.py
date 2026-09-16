@@ -49,6 +49,7 @@ pytestmark = [
     pytest.mark.portability,
     pytest.mark.integration,
     pytest.mark.slow,
+    pytest.mark.timeout(300),
     pytest.mark.skipif(sys.platform != "win32",
                        reason="the job object and the AppContainer are "
                               "Windows-only"),
@@ -77,7 +78,9 @@ def build(p):
     return part.part
 """
 
-QUOTAS = {"memory_mb": 1024, "pids": 32}
+# Windows job objects cap *commit*, not RSS. A warm OCCT worker here
+# measured ~1800 MiB peak commit (probe 2026-09-15); 1024 kills ping.
+QUOTAS = {"memory_mb": 2048, "pids": 32}
 
 #: The first ping pays for `import build123d` **inside the container**, where
 #: every DLL open is an access check the ordinary path does not make. The
@@ -223,7 +226,7 @@ def test_the_plan_confines_with_an_appcontainer_and_caps_with_a_job_object(
 
     assert plan.quotas["status"] == "active"
     assert plan.quotas["mechanism"] == "job_object+supervisor"
-    assert plan.quotas["limits"]["memory_mb"] == 1024
+    assert plan.quotas["limits"]["memory_mb"] == 2048
     assert plan.backend.job is not None
     assert report["quotas"] == plan.quotas
 

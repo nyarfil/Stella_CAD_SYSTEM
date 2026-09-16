@@ -77,6 +77,7 @@ import secrets
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from .._resources import resource_root
 from ._preamble import ENV as CONFINE_ENV
@@ -431,21 +432,28 @@ class AppContainerProfile:
                           f"HRESULT 0x{hr & 0xFFFFFFFF:08X}")
 
 
-def acl_grant(path: str, sid_str: str, rights: str) -> tuple[bool, str]:
+def acl_grant(path: str, sid_str: str, rights: str, *,
+              recurse: bool = False) -> tuple[bool, str]:
     """``icacls <path> /grant *<SID>:<rights>``; ``(ok, output tail)``.
 
-    ``icacls`` rather than a hand-built DACL, and no ``/T``: setting an
-    inheritable ACE through ``SetNamedSecurityInfo`` (what ``icacls`` calls)
-    makes Windows propagate it to the existing children whose DACLs have
-    inheritance enabled, which is the default — so a pre-existing
-    ``project/.cache/`` is covered without a tree walk. That is measured, not
-    assumed (probe round 2).
+    ``(OI)(CI)`` makes the ACE inheritable on a **directory**. Applying that
+    same string with ``/T`` does **not** stamp files: ``python312.dll`` stays
+    without the package SID and the worker dies ``0xC0000135``
+    (``STATUS_DLL_NOT_FOUND``). So a recursive grant is two calls — the
+    inheritable ACE on the directory, then a file ACE (``RX`` or ``M``) with
+    ``/T``.
 
     Never raises: the tail is what the caller puts in the warning, and a step
     that could not run is a confinement that is ``off``, not a server that
     fails to start.
     """
-    return _icacls_run([str(path), "/grant", f"*{sid_str}:{rights}"])
+    ok, tail = _icacls_run([str(path), "/grant", f"*{sid_str}:{rights}"])
+    if not recurse or not ok:
+        return ok, tail
+    file_rights = "RX" if "RX" in rights else "M"
+    ok2, tail2 = _icacls_run(
+        [str(path), "/grant", f"*{sid_str}:{file_rights}", "/T", "/C", "/Q"])
+    return ok2, f"{tail} | {tail2}"
 
 
 def acl_revoke(path: str, sid_str: str) -> tuple[bool, str]:
@@ -782,16 +790,73 @@ def supported() -> bool:
 
 # ----------------------------------------------------------------- the build
 
+def real_python_exe(exe: str | None = None) -> str:
+    """The real CPython behind a Windows venv launcher, else *exe*.
+
+    ``.venv/Scripts/python.exe`` is a stub. Inside an AppContainer it exits
+    103 (CPython ``RC_NO_PYTHON``) because the stub cannot see a ``home``
+    under the user profile even when that directory carries an ACE. Spawn the
+    interpreter named in ``pyvenv.cfg`` instead, and put the venv on
+    ``PYTHONPATH`` (:func:`venv_pythonpath`).
+    """
+    path = exe or sys.executable
+    try:
+        cfg = Path(path).resolve().parent.parent / "pyvenv.cfg"
+    except (OSError, ValueError):
+        return path
+    if not cfg.is_file():
+        return path
+    home = ""
+    try:
+        for line in cfg.read_text(encoding="utf-8").splitlines():
+            key, _, value = line.partition("=")
+            if key.strip().lower() == "home":
+                home = value.strip().strip('"')
+                break
+    except OSError:
+        return path
+    if not home:
+        return path
+    candidate = Path(home) / "python.exe"
+    try:
+        if candidate.is_file():
+            return str(candidate)
+    except OSError:
+        return path
+    return path
+
+
+def venv_pythonpath() -> str:
+    """``sys.path`` pieces a base interpreter needs to see the venv."""
+    parts = [str(resource_root())]
+    site = Path(sys.prefix) / "Lib" / "site-packages"
+    if site.is_dir():
+        parts.append(str(site))
+    extra = os.environ.get("PYTHONPATH", "")
+    if extra:
+        parts.append(extra)
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for part in parts:
+        key = os.path.normcase(os.path.normpath(part))
+        if part and key not in seen:
+            seen.add(key)
+            ordered.append(part)
+    return os.pathsep.join(ordered)
+
+
 def build(argv: list[str], write_roots: list[str], quotas: Quotas,
           posture: str, server_pid: int | None, *, confine: bool = True,
           pool_size: int = 1):
     """Plan a Windows worker: ``(argv, env, confinement, quotas, backend)``.
 
-    The argv comes back unchanged — the confinement is not a wrapper here but
-    a **token**, applied by :class:`ConfinedProcess` at spawn time, so what
-    this function does is prepare the two things that must exist first: the
-    package SID (:class:`AppContainerProfile`) and the ACEs that let it read
-    the interpreter and write the plan's roots (:func:`acl_grant`).
+    The confinement is not a wrapper here but a **token**, applied by
+    :class:`ConfinedProcess` at spawn time. What this function prepares first
+    is the package SID (:class:`AppContainerProfile`) and the ACEs that let
+    it read the interpreter and write the plan's roots (:func:`acl_grant`).
+
+    On Windows the argv's interpreter is rewritten from a venv launcher to
+    the real CPython in ``pyvenv.cfg`` (see :func:`real_python_exe`).
 
     The environment addition is the ``AGENTCAD_CONFINE`` payload. It carries
     ``quotas`` when the job object really exists (Windows has no rlimits for
@@ -818,7 +883,12 @@ def build(argv: list[str], write_roots: list[str], quotas: Quotas,
             f"Windows keeps the local read posture (requested {posture!r}): "
             f"the hosted read allow-list is Landlock, and so Linux-only")
 
+    if argv:
+        argv = [real_python_exe(argv[0]), *argv[1:]]
     env: dict[str, str] = {}
+    pythonpath = venv_pythonpath()
+    if pythonpath:
+        env["PYTHONPATH"] = pythonpath
     tiers: list[str] = []
     payload: dict = {"posture": "local"}
     if backend.open_job():
@@ -883,8 +953,14 @@ def _confine_appcontainer(backend: "WindowsBackend", write_roots: list[str],
     # a base interpreter there is readable with or without ours — but a grant
     # that FAILED is still a confinement we cannot vouch for, and saying
     # `active` over it would be exactly the overstatement Decision 8 forbids.
+    app_root = os.path.realpath(str(resource_root()))
     for path in _read_roots():
-        ok, tail = acl_grant(path, profile.sid_str, READ_RIGHTS)
+        # uv-copied interpreter/venv files do not inherit a directory ACE.
+        # The app tree is ordinary source and does; walking it with /T
+        # is tens of thousands of files and trips pytest's 120 s timeout.
+        recurse = os.path.realpath(path) != app_root
+        ok, tail = acl_grant(path, profile.sid_str, READ_RIGHTS,
+                             recurse=recurse)
         if not ok:
             return off(f"read access to {path} could not be granted: {tail}")
     for path in write_roots:
@@ -916,8 +992,18 @@ def _read_roots() -> list[str]:
     not there, because `icacls` on a missing path is a failure that would take
     the whole confinement down for no reason.
     """
+    candidates = [sys.base_prefix, sys.prefix, str(resource_root())]
+    base_exe = getattr(sys, "_base_executable", None)
+    if base_exe:
+        try:
+            candidates.append(str(Path(base_exe).resolve().parent))
+        except (OSError, ValueError):
+            pass
+    uv_dir = os.environ.get("UV_PYTHON_INSTALL_DIR", "").strip()
+    if uv_dir:
+        candidates.append(uv_dir)
     roots: list[str] = []
-    for path in (sys.base_prefix, sys.prefix, str(resource_root())):
+    for path in candidates:
         try:
             real = os.path.realpath(path)
         except (OSError, ValueError):          # pragma: no cover - defensive
