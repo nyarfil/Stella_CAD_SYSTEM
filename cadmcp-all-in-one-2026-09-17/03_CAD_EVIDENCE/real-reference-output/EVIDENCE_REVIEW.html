@@ -1,0 +1,441 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; base-uri 'none'">
+<title>Real-reference flanged shaft guide — geometry demonstrator — 構造設計の根拠</title><style>
+body{font:16px/1.7 system-ui,sans-serif;margin:0;background:#f4f6f8;color:#202d38}main{max-width:1100px;margin:auto;padding:38px 24px}h1{font-size:30px;line-height:1.35}h2{margin-top:40px}article{background:white;padding:22px;border:1px solid #d9e1e7;border-radius:8px;margin:18px 0}.views{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}img{max-width:100%;background:white}.part{max-height:350px}.banner{padding:20px;background:#fff4d9;border-left:4px solid #b47800}.muted{color:#586b79}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;background:#eef2f5;padding:14px}table{width:100%;border-collapse:collapse}td,th{text-align:left;border-bottom:1px solid #d1dbe4;padding:10px}a{color:#14618a}.outputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+</style><main><p class="muted">cadMCP Design Studio 0.3.0 / 構造参照 → 適合設計 → 幾何検査</p>
+<h1>Real-reference flanged shaft guide — geometry demonstrator</h1><div class="banner"><strong>全体判定: 未検証</strong><br>幾何検査: pass。材料・製造・疲労・連続可動域の合格証ではありません。</div>
+<h2>元の要求</h2><p>公開CADの構造を参考に、小型の軸案内部品と、その穴を通る軸の試作アセンブリを作る。外形・寸法は実物マウスの推奨値ではなく動作検証用とする。</p><p class="muted">根拠識別子: 35e7c34d9ac31022f7cf513a1d199b0c0e8978069f29aa870ae9a15d9cc7b83c</p>
+<h2>出力アセンブリ</h2><img alt="assembly view" src="assembly.png"><p><a href="assembly.step">アセンブリSTEP</a> · <a href="recipe.json">編集可能な構築レシピ</a> · <a href="measurements.json">全測定結果JSON</a></p><div class="outputs"><article><h3>guide</h3><img class="part" src="guide/iso.png"><p><a href="guide/model.step">STEP</a> · <a href="guide/model.stl">STL</a></p><p>外接寸法 mm: [22.0, 18.0, 6.0]</p></article><article><h3>shaft</h3><img class="part" src="shaft/iso.png"><p><a href="shaft/model.step">STEP</a> · <a href="shaft/model.stl">STL</a></p><p>外接寸法 mm: [3.0, 3.0, 7.5]</p></article></div>
+<h2>実形状で確認した項目</h2><table><tr><th>項目</th><th>方式</th><th>判定</th><th>測定値・範囲</th></tr><tr><td>solid-count-guide</td><td>BRep validity and expected solid count</td><td>pass</td><td>1</td></tr><tr><td>solid-count-shaft</td><td>BRep validity and expected solid count</td><td>pass</td><td>1</td></tr><tr><td>overlap-guide-shaft</td><td>automatic_output_pair_interference</td><td>pass</td><td>0.14999999999999966</td></tr><tr><td>guide_width</td><td>bbox</td><td>pass</td><td>[22.00000020000001]</td></tr><tr><td>bore_size</td><td>inner_cylinder_diameter</td><td>pass</td><td>[2.5, 2.5, 3.3]</td></tr><tr><td>shaft_size</td><td>outer_cylinder_diameter</td><td>pass</td><td>[3.0]</td></tr><tr><td>guide_shaft_gap</td><td>static_clearance</td><td>pass</td><td>0.14999999999999966</td></tr><tr><td>axial_motion_samples</td><td>sampled_translation_clearance</td><td>pass</td><td>幾何サンプルと距離の下界をJSONに記録</td></tr></table>
+<h2>未確認の事項</h2><pre>[
+  &quot;Not a complete mouse assembly. No actual PCB/switch/shell was supplied.&quot;,
+  &quot;FDM hole-size calibration, surface friction, wear and support removal are untested.&quot;,
+  &quot;Force capacity, creep and fatigue life have not been established.&quot;,
+  &quot;Linear-motion distance bound assumes kernel accuracy; no rotational, deformation or assembly-path proof.&quot;,
+  &quot;Fastener selection, insertion and retained assembly require further design.&quot;
+]</pre>
+<h2>参照CADと構造の根拠</h2><article><h3>0032/00329619</h3><p>provide surface, support rotation, guide part, connect component</p><p class="muted">機能注釈は仮説。実形状の面・穴・接続を確認する。</p><div class="views"><img alt="iso" src="references/0032_00329619/iso.png"><img alt="top" src="references/0032_00329619/top.png"><img alt="front" src="references/0032_00329619/front.png"><img alt="right" src="references/0032_00329619/right.png"></div><details><summary>測定した接続面・出典</summary><pre>{
+  &quot;capabilities&quot;: {
+    &quot;has_cylindrical_cavity_surface&quot;: true,
+    &quot;has_cylindrical_outer_surface&quot;: true,
+    &quot;has_planar_surface&quot;: true
+  },
+  &quot;ports&quot;: [
+    {
+      &quot;angular_span_rad&quot;: 6.283185307179586,
+      &quot;area_model_units2&quot;: 753.9822368615504,
+      &quot;axial_parameter_range_model_units&quot;: [
+        -3.0,
+        0.0
+      ],
+      &quot;axial_span_model_units&quot;: 3.0,
+      &quot;axis_direction&quot;: [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      &quot;axis_origin_model_units&quot;: [
+        0.0,
+        0.0,
+        0.0
+      ],
+      &quot;center_model_units&quot;: [
+        1.4210854715202004e-14,
+        -9.270362255620055e-16,
+        1.5
+      ],
+      &quot;evidence_kind&quot;: &quot;OCCT_BRep_measurement&quot;,
+      &quot;face_id&quot;: &quot;F0&quot;,
+      &quot;fit_and_load_capacity&quot;: &quot;not_determined&quot;,
+      &quot;full_parameter_wrap&quot;: true,
+      &quot;normal_radial_dot&quot;: 1.0,
+      &quot;port_kind&quot;: &quot;outer_cylinder&quot;,
+      &quot;radius_model_units&quot;: 40.0,
+      &quot;surface_type&quot;: &quot;CYLINDER&quot;,
+      &quot;through_bore&quot;: &quot;not_determined&quot;
+    },
+    {
+      &quot;area_model_units2&quot;: 3140.807255426395,
+      &quot;center_model_units&quot;: [
+        -7.105427357601002e-15,
+        -5.5151904271051545e-15,
+        0.0
+      ],
+      &quot;evidence_kind&quot;: &quot;OCCT_BRep_measurement&quot;,
+      &quot;face_id&quot;: &quot;F1&quot;,
+      &quot;normal&quot;: [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      &quot;port_kind&quot;: &quot;planar_surface&quot;,
+      &quot;surface_type&quot;: &quot;PLANE&quot;
+    },
+    {
+      &quot;area_model_units2&quot;: 3140.807255426395,
+      &quot;center_model_units&quot;: [
+        -7.105427357601002e-15,
+        -5.5151904271051545e-15,
+        3.0
+      ],
+      &quot;evidence_kind&quot;: &quot;OCCT_BRep_measurement&quot;,
+      &quot;face_id&quot;: &quot;F2&quot;,
+      &quot;normal&quot;: [
+        0.0,
+        0.0,
+        1.0
+      ],
+      &quot;port_kind&quot;: &quot;planar_surface&quot;,
+      &quot;surface_type&quot;: &quot;PLANE&quot;
+    },
+    {
+      &quot;area_model_units2&quot;: 365.210145979813,
+      &quot;center_model_units&quot;: [
+        -2.4868995751603503e-14,
+        -1.4241415693084175e-14,
+        0.0
+      ],
+      &quot;evidence_kind&quot;: &quot;OCCT_BRep_measurement&quot;,
+      &quot;face_id&quot;: &quot;F3&quot;,
+      &quot;normal&quot;: [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      &quot;port_kind&quot;: &quot;planar_surface&quot;,
+      &quot;surface_type&quot;: &quot;PLANE&quot;
+    },
+    {
+      &quot;angular_span_rad&quot;: 6.283185307179586,
+      &quot;area_model_units2&quot;: 4156.327080699297,
+      &quot;axial_parameter_range_model_units&quot;: [
+        -30.0,
+        -3.0
+      ],
+      &quot;axial_span_model_units&quot;: 27.0,
+      &quot;axis_direction&quot;: [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      &quot;axis_origin_model_units&quot;: [
+        0.0,
+        0.0,
+        0.0
+      ],
+      &quot;center_model_units&quot;: [
+        7.105427357601002e-15,
+        7.544985044901573e-16,
+        16.5
+      ],
+      &quot;evidence_kind&quot;: &quot;OCCT_BRep_measurement&quot;,
+      &quot;face_id&quot;: &quot;F4&quot;,
+      &quot;fit_and_load_capacity&quot;: &quot;not_determined&quot;,
+      &quot;full_parameter_wrap&quot;: true,
+      &quot;normal_radial_dot&quot;: 1.0,
+      &quot;port_kind&quot;: &quot;outer_cylinder&quot;,
+      &quot;radius_model_units&quot;: 24.5,
+      &quot;surface_type&quot;: &quot;CYLINDER&quot;,
+      &quot;through_bore&quot;: &quot;not_determined&quot;
+    },
+    {
+      &quot;area_model_units2&quot;: 1504.6265315286616,
+      &quot;center_model_units&quot;: [
+        -1.7763568394002505e-15,
+        -9.068390911827977e-16,
+        0.0
+      ],
+      &quot;evidence_kind&quot;: &quot;OCCT_BRep_measurement&quot;,
+      &quot;face_id&quot;: &quot;F5&quot;,
+      &quot;normal&quot;: [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      &quot;port_kind&quot;: &quot;planar_surface&quot;,
+      &quot;surface_type&quot;: &quot;PLANE&quot;
+    },
+    {
+      &quot;area_model_units2&quot;: 365.210145979813,
+      &quot;center_model_units&quot;: [
+        -2.4868995751603503e-14,
+        -1.4241415693084175e-14,
+        30.0
+      ],
+      &quot;evidence_kind&quot;: &quot;OCCT_BRep_measurement&quot;,
+      &quot;face_id&quot;: &quot;F6&quot;,
+      &quot;normal&quot;: [
+        0.0,
+        0.0,
+        1.0
+      ],
+      &quot;port_kind&quot;: &quot;planar_surface&quot;,
+      &quot;surface_type&quot;: &quot;PLANE&quot;
+    },
+    {
+      &quot;angular_span_rad&quot;: 6.283185307179586,
+      &quot;area_model_units2&quot;: 42.411500823462205,
+      &quot;axial_parameter_range_model_units&quot;: [
+        -3.0,
+        0.0
+      ],
+      &quot;axial_span_model_units&quot;: 3.0,
+      &quot;axis_direction&quot;: [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      &quot;axis_origin_model_units&quot;: [
+        0.0,
+        0.0,
+        0.0
+      ],
+      &quot;center_model_units&quot;: [
+        -4.440892098500626e-16,
+        -1.599800538956389e-17,
+        1.5
+      ],
+      &quot;evidence_kind&quot;: &quot;OCCT_BRep_measurement&quot;,
+      &quot;face_id&quot;: &quot;F7&quot;,
+      &quot;fit_and_load_capacity&quot;: &quot;not_determined&quot;,
+      &quot;full_parameter_wrap&quot;: true,
+      &quot;normal_radial_dot&quot;: -1.0,
+      &quot;port_kind&quot;: &quot;inner_cylinder&quot;,
+      &quot;radius_model_units&quot;: 2.25,
+      &quot;surface_type&quot;: &quot;CYLINDER&quot;,
+      &quot;through_bore&quot;: &quot;not_determined&quot;
+    },
+    {
+      &quot;angular_span_rad&quot;: 6.283185307179586,
+      &quot;area_model_units2&quot;: 3732.212072464674,
+      &quot;axial_parameter_range_model_units&quot;: [
+        -30.0,
+        -3.0
+      ],
+      &quot;axial_span_model_units&quot;: 27.0,
+      &quot;axis_direction&quot;: [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      &quot;axis_origin_model_units&quot;: [
+        0.0,
+        0.0,
+        0.0
+      ],
+      &quot;center_model_units&quot;: [
+        0.0,
+        -1.6527183662033583e-15,
+        16.5
+      ],
+      &quot;evidence_kind&quot;: &quot;OCCT_BRep_measurement&quot;,
+      &quot;face_id&quot;: &quot;F8&quot;,
+      &quot;fit_and_load_capacity&quot;: &quot;not_determined&quot;,
+      &quot;full_parameter_wrap&quot;: true,
+      &quot;normal_radial_dot&quot;: -1.0,
+      &quot;port_kind&quot;: &quot;inner_cylinder&quot;,
+      &quot;radius_model_units&quot;: 22.0,
+      &quot;surface_type&quot;: &quot;CYLINDER&quot;,
+      &quot;through_bore&quot;: &quot;not_determined&quot;
+    },
+    {
+      &quot;area_model_units2&quot;: 1504.6265315286616,
+      &quot;center_model_units&quot;: [
+        -1.7763568394002505e-15,
+        -9.068390911827977e-16,
+        3.0
+      ],
+      &quot;evidence_kind&quot;: &quot;OCCT_BRep_measurement&quot;,
+      &quot;face_id&quot;: &quot;F9&quot;,
+      &quot;normal&quot;: [
+        0.0,
+        0.0,
+        1.0
+      ],
+      &quot;port_kind&quot;: &quot;planar_surface&quot;,
+      &quot;surface_type&quot;: &quot;PLANE&quot;
+    }
+  ],
+  &quot;scope&quot;: &quot;Analytic surfaces in this B-rep only. No automatic mechanism-function, through-hole, fit, wear or strength certification.&quot;,
+  &quot;unclassified_faces&quot;: [],
+  &quot;version&quot;: 1
+}</pre><pre>{
+  &quot;dataset&quot;: &quot;subset://Req2CAD-public-labels-with-paraphrased-descriptions;see-examples/public-cases/provenance.json&quot;,
+  &quot;uid&quot;: &quot;0032/00329619&quot;,
+  &quot;row_number&quot;: 2,
+  &quot;dataset_sha256&quot;: &quot;88b630ef9ecf23ba3d6688c29a296c34ae6651fcc209e4ac82d3ba0a7e27ece3&quot;
+}</pre></details></article><article><h3>0032/00321991</h3><p>hold parts, guide rotating shafts, assemble parts</p><p class="muted">機能注釈は仮説。実形状の面・穴・接続を確認する。</p><div class="views"><img alt="iso" src="references/0032_00321991/iso.png"><img alt="top" src="references/0032_00321991/top.png"><img alt="front" src="references/0032_00321991/front.png"><img alt="right" src="references/0032_00321991/right.png"></div><details><summary>測定した接続面・出典</summary><pre>{
+  &quot;capabilities&quot;: {
+    &quot;has_cylindrical_cavity_surface&quot;: false,
+    &quot;has_cylindrical_outer_surface&quot;: true,
+    &quot;has_planar_surface&quot;: true
+  },
+  &quot;ports&quot;: [
+    {
+      &quot;angular_span_rad&quot;: 6.283185307179586,
+      &quot;area_model_units2&quot;: 3141.5926535897934,
+      &quot;axial_parameter_range_model_units&quot;: [
+        -50.0,
+        0.0
+      ],
+      &quot;axial_span_model_units&quot;: 50.0,
+      &quot;axis_direction&quot;: [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      &quot;axis_origin_model_units&quot;: [
+        0.0,
+        0.0,
+        0.0
+      ],
+      &quot;center_model_units&quot;: [
+        3.552713678800501e-15,
+        -2.3175905639050137e-16,
+        25.0
+      ],
+      &quot;evidence_kind&quot;: &quot;OCCT_BRep_measurement&quot;,
+      &quot;face_id&quot;: &quot;F0&quot;,
+      &quot;fit_and_load_capacity&quot;: &quot;not_determined&quot;,
+      &quot;full_parameter_wrap&quot;: true,
+      &quot;normal_radial_dot&quot;: 1.0,
+      &quot;port_kind&quot;: &quot;outer_cylinder&quot;,
+      &quot;radius_model_units&quot;: 10.0,
+      &quot;surface_type&quot;: &quot;CYLINDER&quot;,
+      &quot;through_bore&quot;: &quot;not_determined&quot;
+    },
+    {
+      &quot;area_model_units2&quot;: 314.15926535897927,
+      &quot;center_model_units&quot;: [
+        1.7763568394002505e-15,
+        -4.796163466380677e-16,
+        0.0
+      ],
+      &quot;evidence_kind&quot;: &quot;OCCT_BRep_measurement&quot;,
+      &quot;face_id&quot;: &quot;F1&quot;,
+      &quot;normal&quot;: [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      &quot;port_kind&quot;: &quot;planar_surface&quot;,
+      &quot;surface_type&quot;: &quot;PLANE&quot;
+    },
+    {
+      &quot;area_model_units2&quot;: 314.15926535897927,
+      &quot;center_model_units&quot;: [
+        1.7763568394002505e-15,
+        -4.796163466380677e-16,
+        50.0
+      ],
+      &quot;evidence_kind&quot;: &quot;OCCT_BRep_measurement&quot;,
+      &quot;face_id&quot;: &quot;F2&quot;,
+      &quot;normal&quot;: [
+        0.0,
+        0.0,
+        1.0
+      ],
+      &quot;port_kind&quot;: &quot;planar_surface&quot;,
+      &quot;surface_type&quot;: &quot;PLANE&quot;
+    }
+  ],
+  &quot;scope&quot;: &quot;Analytic surfaces in this B-rep only. No automatic mechanism-function, through-hole, fit, wear or strength certification.&quot;,
+  &quot;unclassified_faces&quot;: [],
+  &quot;version&quot;: 1
+}</pre><pre>{
+  &quot;dataset&quot;: &quot;subset://Req2CAD-public-labels-with-paraphrased-descriptions;see-examples/public-cases/provenance.json&quot;,
+  &quot;uid&quot;: &quot;0032/00321991&quot;,
+  &quot;row_number&quot;: 4,
+  &quot;dataset_sha256&quot;: &quot;88b630ef9ecf23ba3d6688c29a296c34ae6651fcc209e4ac82d3ba0a7e27ece3&quot;
+}</pre></details></article>
+<h2>何を変更したか</h2><pre>[
+  {
+    &quot;function_id&quot;: &quot;Guide&quot;,
+    &quot;node&quot;: &quot;retainer_ref&quot;,
+    &quot;op&quot;: &quot;reference&quot;,
+    &quot;reason&quot;: &quot;Keep the real flanged retainer structure as a geometric starting point.&quot;,
+    &quot;solids&quot;: 1,
+    &quot;volume_mm3&quot;: 199.14084592207794
+  },
+  {
+    &quot;function_id&quot;: &quot;Guide&quot;,
+    &quot;node&quot;: &quot;cavity_fill&quot;,
+    &quot;op&quot;: &quot;cylinder&quot;,
+    &quot;reason&quot;: &quot;Replace the oversized recess with a longer load-supporting sleeve before making the new trial bore.&quot;,
+    &quot;solids&quot;: 1,
+    &quot;volume_mm3&quot;: 364.9274026409904
+  },
+  {
+    &quot;function_id&quot;: &quot;Guide&quot;,
+    &quot;node&quot;: &quot;sleeve&quot;,
+    &quot;op&quot;: &quot;union&quot;,
+    &quot;reason&quot;: &quot;Join the reference shell and internal fill; preserve the reference flange-and-boss organization.&quot;,
+    &quot;solids&quot;: 1,
+    &quot;volume_mm3&quot;: 527.9572118063824
+  },
+  {
+    &quot;function_id&quot;: &quot;Mount&quot;,
+    &quot;node&quot;: &quot;mount_plate&quot;,
+    &quot;op&quot;: &quot;box&quot;,
+    &quot;reason&quot;: &quot;Provide a flat mounting face and adequate proposed edge distance for two demonstration holes.&quot;,
+    &quot;solids&quot;: 1,
+    &quot;volume_mm3&quot;: 792.0
+  },
+  {
+    &quot;function_id&quot;: &quot;Mount&quot;,
+    &quot;node&quot;: &quot;mount_blank&quot;,
+    &quot;op&quot;: &quot;union&quot;,
+    &quot;reason&quot;: &quot;Merge the reference-derived guide with the proposed mounting plate.&quot;,
+    &quot;solids&quot;: 1,
+    &quot;volume_mm3&quot;: 1093.7185584507556
+  },
+  {
+    &quot;function_id&quot;: &quot;Guide&quot;,
+    &quot;node&quot;: &quot;shaft_bore&quot;,
+    &quot;op&quot;: &quot;cylinder&quot;,
+    &quot;reason&quot;: &quot;Use a proposed 3.3 mm bore around the proposed 3.0 mm shaft; not a qualified printing clearance.&quot;,
+    &quot;solids&quot;: 1,
+    &quot;volume_mm3&quot;: 68.42388799518568
+  },
+  {
+    &quot;function_id&quot;: &quot;Mount&quot;,
+    &quot;node&quot;: &quot;mount_hole_l&quot;,
+    &quot;op&quot;: &quot;cylinder&quot;,
+    &quot;reason&quot;: &quot;First proposed mounting hole; fastener and printer qualification remain open.&quot;,
+    &quot;solids&quot;: 1,
+    &quot;volume_mm3&quot;: 19.634954084936204
+  },
+  {
+    &quot;function_id&quot;: &quot;Mount&quot;,
+    &quot;node&quot;: &quot;mount_hole_r&quot;,
+    &quot;op&quot;: &quot;cylinder&quot;,
+    &quot;reason&quot;: &quot;Second proposed mounting hole for the demonstration fixture only.&quot;,
+    &quot;solids&quot;: 1,
+    &quot;volume_mm3&quot;: 19.634954084936204
+  },
+  {
+    &quot;function_id&quot;: &quot;Guide&quot;,
+    &quot;node&quot;: &quot;finished_guide&quot;,
+    &quot;op&quot;: &quot;difference&quot;,
+    &quot;reason&quot;: &quot;Cut the functional bore and both mounting holes from the actual reference-derived body.&quot;,
+    &quot;solids&quot;: 1,
+    &quot;volume_mm3&quot;: 1022.7656883694283
+  },
+  {
+    &quot;function_id&quot;: &quot;Move&quot;,
+    &quot;node&quot;: &quot;shaft_ref&quot;,
+    &quot;op&quot;: &quot;reference&quot;,
+    &quot;reason&quot;: &quot;The solid cylindrical example is usable as a shaft, not as a hollow guide.&quot;,
+    &quot;solids&quot;: 1,
+    &quot;volume_mm3&quot;: 53.01437602932776
+  },
+  {
+    &quot;function_id&quot;: &quot;Move&quot;,
+    &quot;node&quot;: &quot;positioned_shaft&quot;,
+    &quot;op&quot;: &quot;transform&quot;,
+    &quot;reason&quot;: &quot;Place the shaft through the guide with nominal radial clearance; do not fuse moving and fixed parts.&quot;,
+    &quot;solids&quot;: 1,
+    &quot;volume_mm3&quot;: 53.01437602932776
+  }
+]</pre>
+<p class="muted">このページはローカルの読取専用成果物です。プリンタ送信、CAD正本の書換え、外部通信は行いません。</p></main></html>

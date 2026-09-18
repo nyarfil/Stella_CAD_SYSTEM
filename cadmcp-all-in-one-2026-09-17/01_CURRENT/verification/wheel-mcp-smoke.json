@@ -1,0 +1,55 @@
+{
+  "check": "configured MCP stdio process; NOT a real Cursor GUI/CLI session",
+  "mcp_protocol_ok": true,
+  "server_info": {
+    "name": "cadmcp-design-brain",
+    "version": "0.3.1"
+  },
+  "tool_count": 33,
+  "required_studio_tools_present": true,
+  "doctor": {
+    "ok": true,
+    "result": {
+      "agentcad_configured": false,
+      "backend_allowed_tools": [],
+      "external_llm_api_used": false,
+      "geometry_extra_available": true,
+      "host_llm_required": true,
+      "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+      "protocol": "2025-06-18 stdio subset",
+      "python": "3.13.5",
+      "version": "0.3.1",
+      "workspace": "/mnt/data/cursor_work/smoke_project 日本語/workspace"
+    }
+  },
+  "req2cad_status": {
+    "ok": true,
+    "result": {
+      "breps_measured": 0,
+      "cad_assets_linked": 0,
+      "cases": 0,
+      "ready": false,
+      "semantic_ready": false,
+      "sources": {
+        "DeepCAD": {
+          "license_note": "Repository code MIT; verify original CAD/data terms separately.",
+          "url": "https://github.com/rundiwu/DeepCAD"
+        },
+        "Req2CAD": {
+          "annotation_origin": "VLM/LLM inferred, not engineering validation",
+          "author": "Qianzhi Jing et al.",
+          "license": "CC-BY-4.0",
+          "url": "https://huggingface.co/datasets/QianzhiJing/Req2CAD"
+        },
+        "paper": {
+          "filtered_components_reported": 128873,
+          "raw_rows_reported": 175978,
+          "url": "https://doi.org/10.1145/3772318.3791949"
+        }
+      }
+    }
+  },
+  "schema_received": true,
+  "model_called": false,
+  "cursor_gui_tested": false
+}

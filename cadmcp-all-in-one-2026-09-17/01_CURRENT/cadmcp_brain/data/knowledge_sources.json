@@ -1,0 +1,11 @@
+{
+  "design_method": {
+    "type": "original_author_reasoning",
+    "meaning": "Function / behavior / mechanism decomposition used as a design starting point; no product validation claimed."
+  },
+  "manufacturing_principles": {
+    "type": "original_author_review_checklist",
+    "meaning": "Manufacturing questions and qualitative failure modes; no certified allowable dimensions or material data."
+  },
+  "external_architecture_references": "See docs/UPSTREAM_AUDIT_JA.md; these are not empirical validation of the mechanism cards."
+}

@@ -1,0 +1,103 @@
+{
+  "$defs": {
+    "FunctionTask": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "source_excerpt": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Source Excerpt",
+          "type": "string"
+        },
+        "function": {
+          "maxLength": 300,
+          "minLength": 2,
+          "title": "Function",
+          "type": "string"
+        },
+        "behavior": {
+          "maxLength": 2000,
+          "minLength": 5,
+          "title": "Behavior",
+          "type": "string"
+        },
+        "queries": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Queries",
+          "type": "array"
+        },
+        "required_features": {
+          "items": {
+            "enum": [
+              "has_cylindrical_cavity_surface",
+              "has_cylindrical_outer_surface",
+              "has_planar_surface"
+            ],
+            "type": "string"
+          },
+          "maxItems": 3,
+          "title": "Required Features",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "source_excerpt",
+        "function",
+        "behavior",
+        "queries"
+      ],
+      "title": "FunctionTask",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "original_request": {
+      "maxLength": 20000,
+      "minLength": 3,
+      "title": "Original Request",
+      "type": "string"
+    },
+    "functions": {
+      "items": {
+        "$ref": "#/$defs/FunctionTask"
+      },
+      "maxItems": 12,
+      "minItems": 1,
+      "title": "Functions",
+      "type": "array"
+    },
+    "protected_constraints": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 50,
+      "title": "Protected Constraints",
+      "type": "array"
+    },
+    "unresolved": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 50,
+      "title": "Unresolved",
+      "type": "array"
+    }
+  },
+  "required": [
+    "original_request",
+    "functions"
+  ],
+  "title": "FunctionBrief",
+  "type": "object"
+}

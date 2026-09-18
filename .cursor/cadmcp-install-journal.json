@@ -1,0 +1,32 @@
+{
+  "started": "20260917T101430Z-69521b",
+  "planned": [
+    ".cursor/rules/cadmcp-design-brain.mdc",
+    ".cursor/agents/cadmcp-assembly.md",
+    ".cursor/agents/cadmcp-manufacturing.md",
+    ".cursor/agents/cadmcp-mechanism.md",
+    ".cursor/agents/cadmcp-requirements.md",
+    ".cursor/agents/cadmcp-verification.md",
+    ".cursor/commands/cad-check.md",
+    ".cursor/commands/cad-design.md",
+    ".cursor/commands/cad-review.md",
+    ".cursor/skills/cadmcp-cursor/references/AGENT_WORKFLOW_JA.md",
+    ".cursor/skills/cadmcp-cursor/SKILL.md",
+    ".cursor/mcp.json"
+  ],
+  "written": [
+    ".cursor/rules/cadmcp-design-brain.mdc",
+    ".cursor/agents/cadmcp-assembly.md",
+    ".cursor/agents/cadmcp-manufacturing.md",
+    ".cursor/agents/cadmcp-mechanism.md",
+    ".cursor/agents/cadmcp-requirements.md",
+    ".cursor/agents/cadmcp-verification.md",
+    ".cursor/commands/cad-check.md",
+    ".cursor/commands/cad-design.md",
+    ".cursor/commands/cad-review.md",
+    ".cursor/skills/cadmcp-cursor/references/AGENT_WORKFLOW_JA.md",
+    ".cursor/skills/cadmcp-cursor/SKILL.md",
+    ".cursor/mcp.json"
+  ],
+  "complete": true
+}

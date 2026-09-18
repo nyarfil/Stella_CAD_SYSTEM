@@ -1,0 +1,5 @@
+uid,function_keywords,function_description
+0032/00329619,"['provide surface', 'support rotation', 'guide part', 'connect component']","Published annotation describes a flanged cylindrical bushing or retainer; function is inferred, not tested."
+0032/00325917,"['provide sliding fit', 'reduce friction', 'serve as spacer', 'serve as retainer', 'act as guide', 'act as alignment element']",Published annotation proposes a bushing/sleeve. This description is a paraphrase; the retrieved geometry must be checked.
+0032/00321991,"['hold parts', 'guide rotating shafts', 'assemble parts']","Published annotation proposes mounting pins, shaft supports or fasteners; this is a paraphrase, not verified function."
+0032/00325799,"['support structure', 'mounting bracket', 'base plate']","Published annotation proposes support/mounting/base plate; this is a paraphrase, not verified function."

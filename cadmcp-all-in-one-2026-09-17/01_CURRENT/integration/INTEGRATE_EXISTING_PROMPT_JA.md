@@ -1,0 +1,11 @@
+既存cadMCPを読み、正本CAD/ツール登録/状態管理/Undo/権限の実装位置を確認する。
+本パッケージのREADME_JA.md、AGENT_WORKFLOW_JA.md、INSTALL_INTEGRATE_JA.mdを読む。
+旧機能を置換せず、まず独立MCPとして接続し、brain_fs_statusとStudio schemaを実呼び出しする。
+同一Pythonサーバーへ統合する場合はBrainとToolsを利用し、既存tool routerに33toolsの実schemaを登録する。
+基板等は実STEPを取り込んで保護IDを所有者設定から与える。シェルの編集許可も所有者設定に置く。
+設計順はFunctionBrief→実例CAD検索→実PNG/面の確認→Matrix→Recipe→実カーネル→5役/相互反証→固定条件修正。
+全データ未導入を完了と表示しない。既存プロジェクトをデモ4件で上書きしない。
+正本への書込みの強制制御は既存書込み入口で実装し、対象project/part/revision/operationを検査する。
+ソースを変更したら差分・既存回帰試験・実接続試験・失敗/未知を保存する。
+同一プロセスで両カーネル依存が衝突する場合は、別worker/別venvを維持する。
+ユーザーの実データを受け取っていない段階で統合完了や実マウス完成と報告しない。

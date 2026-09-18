@@ -1,0 +1,107 @@
+{
+  "release": "0.3.1",
+  "test_run_utc": "2026-09-16T22:23:33.609461+00:00",
+  "report_date_jst": "2026-09-17",
+  "full_suite": {
+    "tests": 304,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 304,
+    "seconds": 201.215
+  },
+  "cursor_added_tests": {
+    "tests": 44,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 44,
+    "seconds": 52.909
+  },
+  "cursor_added_tests_are_subset_of_full_suite": true,
+  "scripted_cursor_process_autopilot": {
+    "calls": 14,
+    "review_rounds": 2,
+    "actual_cad_kernel": true,
+    "responses": "explicit scripted test double, NOT Cursor or an LLM"
+  },
+  "wheel": {
+    "file": "cadmcp_design_brain-0.3.1-py3-none-any.whl",
+    "sha256": "680daf614339143501e17a0d9c6f97d5ea39a486fdb2fe802ecc9e23ec2fb29f",
+    "package_files_equal_source": 51
+  },
+  "wheel_environment": "separate venv; reuse /opt/pyvenv dependency site-packages via explicit .pth; no package source directory on sys.path",
+  "configured_mcp_smoke": {
+    "check": "configured MCP stdio process; NOT a real Cursor GUI/CLI session",
+    "mcp_protocol_ok": true,
+    "server_info": {
+      "name": "cadmcp-design-brain",
+      "version": "0.3.1"
+    },
+    "tool_count": 33,
+    "required_studio_tools_present": true,
+    "doctor": {
+      "ok": true,
+      "result": {
+        "agentcad_configured": false,
+        "backend_allowed_tools": [],
+        "external_llm_api_used": false,
+        "geometry_extra_available": true,
+        "host_llm_required": true,
+        "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+        "protocol": "2025-06-18 stdio subset",
+        "python": "3.13.5",
+        "version": "0.3.1",
+        "workspace": "/mnt/data/cursor_work/smoke_project 日本語/workspace"
+      }
+    },
+    "req2cad_status": {
+      "ok": true,
+      "result": {
+        "breps_measured": 0,
+        "cad_assets_linked": 0,
+        "cases": 0,
+        "ready": false,
+        "semantic_ready": false,
+        "sources": {
+          "DeepCAD": {
+            "license_note": "Repository code MIT; verify original CAD/data terms separately.",
+            "url": "https://github.com/rundiwu/DeepCAD"
+          },
+          "Req2CAD": {
+            "annotation_origin": "VLM/LLM inferred, not engineering validation",
+            "author": "Qianzhi Jing et al.",
+            "license": "CC-BY-4.0",
+            "url": "https://huggingface.co/datasets/QianzhiJing/Req2CAD"
+          },
+          "paper": {
+            "filtered_components_reported": 128873,
+            "raw_rows_reported": 175978,
+            "url": "https://doi.org/10.1145/3772318.3791949"
+          }
+        }
+      }
+    },
+    "schema_received": true,
+    "model_called": false,
+    "cursor_gui_tested": false
+  },
+  "live_cursor_cli_tested": false,
+  "live_cursor_gui_tested": false,
+  "live_cursor_subagents_tested": false,
+  "windows_execution_tested": false,
+  "full_req2cad_qwen_quality_tested": false,
+  "environment": {
+    "python": "3.13.5",
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "packages": {
+      "pydantic": "2.13.4",
+      "jsonschema": "4.26.0",
+      "cadquery": "2.8.0",
+      "pytest": "9.0.2",
+      "numpy": "2.3.5",
+      "Pillow": "12.3.0",
+      "setuptools": "82.0.1"
+    }
+  }
+}

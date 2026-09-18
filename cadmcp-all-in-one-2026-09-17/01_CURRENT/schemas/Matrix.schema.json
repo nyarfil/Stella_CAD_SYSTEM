@@ -1,0 +1,309 @@
+{
+  "$defs": {
+    "CaseRef": {
+      "additionalProperties": false,
+      "properties": {
+        "uid": {
+          "pattern": "^\\d{4}/\\d{8}$",
+          "title": "Uid",
+          "type": "string"
+        },
+        "evidence_digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Evidence Digest",
+          "type": "string"
+        },
+        "used_face_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 128,
+          "minItems": 1,
+          "title": "Used Face Ids",
+          "type": "array"
+        },
+        "adopted_principle": {
+          "maxLength": 2000,
+          "minLength": 10,
+          "title": "Adopted Principle",
+          "type": "string"
+        },
+        "adaptations": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "title": "Adaptations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "uid",
+        "evidence_digest",
+        "used_face_ids",
+        "adopted_principle",
+        "adaptations"
+      ],
+      "title": "CaseRef",
+      "type": "object"
+    },
+    "FunctionBrief": {
+      "additionalProperties": false,
+      "properties": {
+        "original_request": {
+          "maxLength": 20000,
+          "minLength": 3,
+          "title": "Original Request",
+          "type": "string"
+        },
+        "functions": {
+          "items": {
+            "$ref": "#/$defs/FunctionTask"
+          },
+          "maxItems": 12,
+          "minItems": 1,
+          "title": "Functions",
+          "type": "array"
+        },
+        "protected_constraints": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 50,
+          "title": "Protected Constraints",
+          "type": "array"
+        },
+        "unresolved": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 50,
+          "title": "Unresolved",
+          "type": "array"
+        }
+      },
+      "required": [
+        "original_request",
+        "functions"
+      ],
+      "title": "FunctionBrief",
+      "type": "object"
+    },
+    "FunctionTask": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "source_excerpt": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Source Excerpt",
+          "type": "string"
+        },
+        "function": {
+          "maxLength": 300,
+          "minLength": 2,
+          "title": "Function",
+          "type": "string"
+        },
+        "behavior": {
+          "maxLength": 2000,
+          "minLength": 5,
+          "title": "Behavior",
+          "type": "string"
+        },
+        "queries": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Queries",
+          "type": "array"
+        },
+        "required_features": {
+          "items": {
+            "enum": [
+              "has_cylindrical_cavity_surface",
+              "has_cylindrical_outer_surface",
+              "has_planar_surface"
+            ],
+            "type": "string"
+          },
+          "maxItems": 3,
+          "title": "Required Features",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "source_excerpt",
+        "function",
+        "behavior",
+        "queries"
+      ],
+      "title": "FunctionTask",
+      "type": "object"
+    },
+    "Incompatible": {
+      "additionalProperties": false,
+      "properties": {
+        "option_a": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Option A",
+          "type": "string"
+        },
+        "option_b": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Option B",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "option_a",
+        "option_b",
+        "reason"
+      ],
+      "title": "Incompatible",
+      "type": "object"
+    },
+    "Option": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 200,
+          "minLength": 2,
+          "title": "Name",
+          "type": "string"
+        },
+        "covers": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "maxItems": 12,
+          "minItems": 1,
+          "title": "Covers",
+          "type": "array"
+        },
+        "mechanism_principle": {
+          "maxLength": 2000,
+          "minLength": 10,
+          "title": "Mechanism Principle",
+          "type": "string"
+        },
+        "references": {
+          "items": {
+            "$ref": "#/$defs/CaseRef"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "References",
+          "type": "array"
+        },
+        "proposed_parts": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Proposed Parts",
+          "type": "array"
+        },
+        "force_path": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Force Path",
+          "type": "string"
+        },
+        "assembly_method": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Assembly Method",
+          "type": "string"
+        },
+        "risks": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "title": "Risks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "covers",
+        "mechanism_principle",
+        "references",
+        "proposed_parts",
+        "force_path",
+        "assembly_method",
+        "risks"
+      ],
+      "title": "Option",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "brief": {
+      "$ref": "#/$defs/FunctionBrief"
+    },
+    "options": {
+      "items": {
+        "$ref": "#/$defs/Option"
+      },
+      "maxItems": 64,
+      "minItems": 2,
+      "title": "Options",
+      "type": "array"
+    },
+    "incompatibilities": {
+      "items": {
+        "$ref": "#/$defs/Incompatible"
+      },
+      "maxItems": 256,
+      "title": "Incompatibilities",
+      "type": "array"
+    },
+    "max_search_states": {
+      "default": 5000,
+      "maximum": 100000,
+      "minimum": 10,
+      "title": "Max Search States",
+      "type": "integer"
+    },
+    "max_candidates": {
+      "default": 6,
+      "maximum": 12,
+      "minimum": 1,
+      "title": "Max Candidates",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "brief",
+    "options"
+  ],
+  "title": "Matrix",
+  "type": "object"
+}

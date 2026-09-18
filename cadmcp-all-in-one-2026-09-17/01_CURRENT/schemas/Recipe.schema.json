@@ -1,0 +1,773 @@
+{
+  "$defs": {
+    "Boolean": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "function_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Function Id",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Reason",
+          "type": "string"
+        },
+        "op": {
+          "enum": [
+            "union",
+            "difference",
+            "intersection"
+          ],
+          "title": "Op",
+          "type": "string"
+        },
+        "operands": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "maxItems": 32,
+          "minItems": 2,
+          "title": "Operands",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "function_id",
+        "reason",
+        "op",
+        "operands"
+      ],
+      "title": "Boolean",
+      "type": "object"
+    },
+    "Box": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "function_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Function Id",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Reason",
+          "type": "string"
+        },
+        "op": {
+          "const": "box",
+          "title": "Op",
+          "type": "string"
+        },
+        "size_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Size Mm",
+          "type": "array"
+        },
+        "center_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Center Mm",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "function_id",
+        "reason",
+        "op",
+        "size_mm",
+        "center_mm"
+      ],
+      "title": "Box",
+      "type": "object"
+    },
+    "Clearance": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "part_a": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Part A",
+          "type": "string"
+        },
+        "part_b": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Part B",
+          "type": "string"
+        },
+        "min_mm": {
+          "maximum": 1000000,
+          "minimum": 0,
+          "title": "Min Mm",
+          "type": "number"
+        },
+        "max_overlap_mm3": {
+          "default": 1e-07,
+          "maximum": 0.001,
+          "minimum": 0,
+          "title": "Max Overlap Mm3",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "part_a",
+        "part_b",
+        "min_mm"
+      ],
+      "title": "Clearance",
+      "type": "object"
+    },
+    "Cylinder": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "function_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Function Id",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Reason",
+          "type": "string"
+        },
+        "op": {
+          "const": "cylinder",
+          "title": "Op",
+          "type": "string"
+        },
+        "radius_mm": {
+          "exclusiveMinimum": 0,
+          "maximum": 1000000,
+          "title": "Radius Mm",
+          "type": "number"
+        },
+        "height_mm": {
+          "exclusiveMinimum": 0,
+          "maximum": 1000000,
+          "title": "Height Mm",
+          "type": "number"
+        },
+        "origin_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Origin Mm",
+          "type": "array"
+        },
+        "axis": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Axis",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "function_id",
+        "reason",
+        "op",
+        "radius_mm",
+        "height_mm",
+        "origin_mm",
+        "axis"
+      ],
+      "title": "Cylinder",
+      "type": "object"
+    },
+    "Dimension": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "part": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Part",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "bbox",
+            "inner_cylinder_diameter",
+            "outer_cylinder_diameter"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "axis": {
+          "enum": [
+            "x",
+            "y",
+            "z"
+          ],
+          "title": "Axis",
+          "type": "string"
+        },
+        "nominal_mm": {
+          "exclusiveMinimum": 0,
+          "maximum": 1000000,
+          "title": "Nominal Mm",
+          "type": "number"
+        },
+        "tolerance_mm": {
+          "maximum": 1000,
+          "minimum": 0,
+          "title": "Tolerance Mm",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "part",
+        "kind",
+        "axis",
+        "nominal_mm",
+        "tolerance_mm"
+      ],
+      "title": "Dimension",
+      "type": "object"
+    },
+    "Fillet": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "function_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Function Id",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Reason",
+          "type": "string"
+        },
+        "op": {
+          "const": "fillet_all",
+          "title": "Op",
+          "type": "string"
+        },
+        "source": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Source",
+          "type": "string"
+        },
+        "radius_mm": {
+          "exclusiveMinimum": 0,
+          "maximum": 1000000,
+          "title": "Radius Mm",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "function_id",
+        "reason",
+        "op",
+        "source",
+        "radius_mm"
+      ],
+      "title": "Fillet",
+      "type": "object"
+    },
+    "Motion": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "moving_part": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Moving Part",
+          "type": "string"
+        },
+        "obstacles": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "title": "Obstacles",
+          "type": "array"
+        },
+        "translation_end_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Translation End Mm",
+          "type": "array"
+        },
+        "samples": {
+          "default": 11,
+          "maximum": 101,
+          "minimum": 2,
+          "title": "Samples",
+          "type": "integer"
+        },
+        "max_samples": {
+          "default": 101,
+          "maximum": 201,
+          "minimum": 2,
+          "title": "Max Samples",
+          "type": "integer"
+        },
+        "assumed_distance_error_mm": {
+          "default": 1e-06,
+          "exclusiveMinimum": 0,
+          "maximum": 0.1,
+          "title": "Assumed Distance Error Mm",
+          "type": "number"
+        },
+        "min_mm": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Min Mm",
+          "type": "number"
+        },
+        "max_overlap_mm3": {
+          "default": 1e-07,
+          "maximum": 0.001,
+          "minimum": 0,
+          "title": "Max Overlap Mm3",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "moving_part",
+        "obstacles",
+        "translation_end_mm"
+      ],
+      "title": "Motion",
+      "type": "object"
+    },
+    "Output": {
+      "additionalProperties": false,
+      "properties": {
+        "part_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Part Id",
+          "type": "string"
+        },
+        "node": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Node",
+          "type": "string"
+        },
+        "expected_solids": {
+          "default": 1,
+          "maximum": 64,
+          "minimum": 1,
+          "title": "Expected Solids",
+          "type": "integer"
+        },
+        "manufacturing_process": {
+          "default": "FDM prototype; parameters not qualified",
+          "maxLength": 300,
+          "title": "Manufacturing Process",
+          "type": "string"
+        }
+      },
+      "required": [
+        "part_id",
+        "node"
+      ],
+      "title": "Output",
+      "type": "object"
+    },
+    "ProjectStep": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "function_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Function Id",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Reason",
+          "type": "string"
+        },
+        "op": {
+          "const": "project_step",
+          "title": "Op",
+          "type": "string"
+        },
+        "artifact_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "protected_hardware",
+            "design_reference"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "unit_basis": {
+          "maxLength": 2000,
+          "minLength": 10,
+          "title": "Unit Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "function_id",
+        "reason",
+        "op",
+        "artifact_id",
+        "sha256",
+        "role",
+        "unit_basis"
+      ],
+      "title": "ProjectStep",
+      "type": "object"
+    },
+    "Reference": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "function_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Function Id",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Reason",
+          "type": "string"
+        },
+        "op": {
+          "const": "reference",
+          "title": "Op",
+          "type": "string"
+        },
+        "uid": {
+          "pattern": "^\\d{4}/\\d{8}$",
+          "title": "Uid",
+          "type": "string"
+        },
+        "evidence_digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Evidence Digest",
+          "type": "string"
+        },
+        "uniform_scale": {
+          "exclusiveMinimum": 0,
+          "maximum": 1000000,
+          "title": "Uniform Scale",
+          "type": "number"
+        },
+        "adaptation_basis": {
+          "maxLength": 2000,
+          "minLength": 12,
+          "title": "Adaptation Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "function_id",
+        "reason",
+        "op",
+        "uid",
+        "evidence_digest",
+        "uniform_scale",
+        "adaptation_basis"
+      ],
+      "title": "Reference",
+      "type": "object"
+    },
+    "Transform": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "function_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Function Id",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Reason",
+          "type": "string"
+        },
+        "op": {
+          "const": "transform",
+          "title": "Op",
+          "type": "string"
+        },
+        "source": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Source",
+          "type": "string"
+        },
+        "translation_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Translation Mm",
+          "type": "array"
+        },
+        "rotation_axis": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Rotation Axis",
+          "type": "array"
+        },
+        "rotation_deg": {
+          "default": 0.0,
+          "maximum": 360,
+          "minimum": -360,
+          "title": "Rotation Deg",
+          "type": "number"
+        },
+        "rotation_origin_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Rotation Origin Mm",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "function_id",
+        "reason",
+        "op",
+        "source",
+        "translation_mm"
+      ],
+      "title": "Transform",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "title": {
+      "maxLength": 200,
+      "minLength": 3,
+      "title": "Title",
+      "type": "string"
+    },
+    "original_request": {
+      "maxLength": 20000,
+      "minLength": 3,
+      "title": "Original Request",
+      "type": "string"
+    },
+    "units": {
+      "const": "mm",
+      "default": "mm",
+      "title": "Units",
+      "type": "string"
+    },
+    "design_parameters": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Design Parameters",
+      "type": "object"
+    },
+    "parameter_basis": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Parameter Basis",
+      "type": "object"
+    },
+    "functions": {
+      "minProperties": 1,
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_-]{0,63}$": {
+          "type": "string"
+        }
+      },
+      "title": "Functions",
+      "type": "object"
+    },
+    "operations": {
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "box": "#/$defs/Box",
+            "cylinder": "#/$defs/Cylinder",
+            "difference": "#/$defs/Boolean",
+            "fillet_all": "#/$defs/Fillet",
+            "intersection": "#/$defs/Boolean",
+            "project_step": "#/$defs/ProjectStep",
+            "reference": "#/$defs/Reference",
+            "transform": "#/$defs/Transform",
+            "union": "#/$defs/Boolean"
+          },
+          "propertyName": "op"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/Reference"
+          },
+          {
+            "$ref": "#/$defs/ProjectStep"
+          },
+          {
+            "$ref": "#/$defs/Box"
+          },
+          {
+            "$ref": "#/$defs/Cylinder"
+          },
+          {
+            "$ref": "#/$defs/Transform"
+          },
+          {
+            "$ref": "#/$defs/Boolean"
+          },
+          {
+            "$ref": "#/$defs/Fillet"
+          }
+        ]
+      },
+      "maxItems": 128,
+      "minItems": 1,
+      "title": "Operations",
+      "type": "array"
+    },
+    "outputs": {
+      "items": {
+        "$ref": "#/$defs/Output"
+      },
+      "maxItems": 16,
+      "minItems": 1,
+      "title": "Outputs",
+      "type": "array"
+    },
+    "dimension_checks": {
+      "items": {
+        "$ref": "#/$defs/Dimension"
+      },
+      "maxItems": 64,
+      "title": "Dimension Checks",
+      "type": "array"
+    },
+    "clearance_checks": {
+      "items": {
+        "$ref": "#/$defs/Clearance"
+      },
+      "maxItems": 64,
+      "title": "Clearance Checks",
+      "type": "array"
+    },
+    "motion_checks": {
+      "items": {
+        "$ref": "#/$defs/Motion"
+      },
+      "maxItems": 8,
+      "title": "Motion Checks",
+      "type": "array"
+    },
+    "unverified_requirements": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Unverified Requirements",
+      "type": "array"
+    }
+  },
+  "required": [
+    "title",
+    "original_request",
+    "functions",
+    "operations",
+    "outputs",
+    "unverified_requirements"
+  ],
+  "title": "Recipe",
+  "type": "object"
+}

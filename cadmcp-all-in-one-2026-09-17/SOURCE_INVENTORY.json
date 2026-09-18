@@ -1,0 +1,199 @@
+{
+  "bundle": "cadmcp-all-in-one-2026-09-17",
+  "date_jst": "2026-09-17",
+  "application_version": "0.3.1",
+  "application_code_modified": false,
+  "sources": [
+    {
+      "source_name": "cadmcp-design-brain-v0.1.0.zip",
+      "source_group": "conversation",
+      "bundle_path": "04_ARCHIVE/packages/cadmcp-design-brain-v0.1.0.zip",
+      "bytes": 183561,
+      "sha256": "997268d3d1f3b57d121fee1dd688b39d0bde727c6a7f081211fb36c6cd3d3bc4"
+    },
+    {
+      "source_name": "cadmcp-design-brain-v0.2.0-req2cad.zip",
+      "source_group": "conversation",
+      "bundle_path": "04_ARCHIVE/packages/cadmcp-design-brain-v0.2.0-req2cad.zip",
+      "bytes": 539357,
+      "sha256": "4af7391865b673abc9bb01fa44731e41c33f7ecaa55823c99c414e252439b79f"
+    },
+    {
+      "source_name": "cadmcp-design-studio-v0.3.0.zip",
+      "source_group": "conversation",
+      "bundle_path": "04_ARCHIVE/packages/cadmcp-design-studio-v0.3.0.zip",
+      "bytes": 1094286,
+      "sha256": "8c3fe3a8ec7b5770668da0e4cf50a219a48c8b181d920802d18162a1ab8a405f"
+    },
+    {
+      "source_name": "cadmcp-design-studio-v0.3.1-cursor.zip",
+      "source_group": "conversation",
+      "bundle_path": "04_ARCHIVE/packages/cadmcp-design-studio-v0.3.1-cursor.zip",
+      "bytes": 1149655,
+      "sha256": "add06078caa30c72b65adef2d5fe0b1c747b0c19a15d97155b0fb49b60c505d7"
+    },
+    {
+      "source_name": "cadmcp-v03-real-reference-evidence.zip",
+      "source_group": "conversation",
+      "bundle_path": "04_ARCHIVE/packages/cadmcp-v03-real-reference-evidence.zip",
+      "bytes": 419834,
+      "sha256": "2f6293d1d3cdfd2405be5d2812d3f61addcc5d345e4cd5f3d78e7f6f9c15dd0c"
+    },
+    {
+      "source_name": "INSTALL_INTEGRATE_JA.md",
+      "source_group": "cadmcp-design-brain",
+      "bundle_path": "04_ARCHIVE/documents/v0.1.0/INSTALL_INTEGRATE_JA.md",
+      "bytes": 11277,
+      "sha256": "49fa7dfbb65916949ce6dbb4a8540e5e0d108e4a861dd8565f40eb4f818c3a86"
+    },
+    {
+      "source_name": "TEST_REPORT_JA.md",
+      "source_group": "cadmcp-design-brain",
+      "bundle_path": "04_ARCHIVE/documents/v0.1.0/TEST_REPORT_JA.md",
+      "bytes": 6004,
+      "sha256": "e7ec1ad2b431a7acc88f708801200dbf37f42c9d3209d17bf304eac5841daf75"
+    },
+    {
+      "source_name": "UPSTREAM_AUDIT_JA.md",
+      "source_group": "docs",
+      "bundle_path": "04_ARCHIVE/documents/v0.1.0/docs/UPSTREAM_AUDIT_JA.md",
+      "bytes": 7585,
+      "sha256": "52e11d8a8cfbce1b4a2d4c446f0a4ba9ff8ea46f02c33b73fa0976c89a3fa591"
+    },
+    {
+      "source_name": "AGENT_WORKFLOW_JA.md",
+      "source_group": "cadmcp-function-structure-0.2.1",
+      "bundle_path": "04_ARCHIVE/documents/v0.2.1-documents-only/AGENT_WORKFLOW_JA.md",
+      "bytes": 2395,
+      "sha256": "b5766e3bdf08ef13e4f75492fcc2c5d898318a03d6afbfb4787db3939b4fefc6"
+    },
+    {
+      "source_name": "README_JA.md",
+      "source_group": "cadmcp-function-structure-0.2.1",
+      "bundle_path": "04_ARCHIVE/documents/v0.2.1-documents-only/README_JA.md",
+      "bytes": 8074,
+      "sha256": "723dc3fef9e4fc63b9f5bc08849c02ca3bfa225b39c0f0bacf3145e7177809c3"
+    },
+    {
+      "source_name": "INSTALL_INTEGRATE_JA.md",
+      "source_group": "cadmcp-design-studio-0.3.0",
+      "bundle_path": "04_ARCHIVE/documents/v0.3.0/INSTALL_INTEGRATE_JA.md",
+      "bytes": 7787,
+      "sha256": "d9791e035a40a91dd0d3f3f5d597a6fd5c1a82dd461e82ea233dd469fba9d7c4"
+    },
+    {
+      "source_name": "README_JA.md",
+      "source_group": "cadmcp-design-studio-0.3.0",
+      "bundle_path": "04_ARCHIVE/documents/v0.3.0/README_JA.md",
+      "bytes": 7916,
+      "sha256": "14f29b8af4a31cef469a20d275f8b3f1196611dff8f83c00e6553e49b7d12d25"
+    },
+    {
+      "source_name": "TEST_REPORT_JA.md",
+      "source_group": "cadmcp-design-studio-0.3.0",
+      "bundle_path": "04_ARCHIVE/documents/v0.3.0/TEST_REPORT_JA.md",
+      "bytes": 6275,
+      "sha256": "0e71b6e8c111744c496f16013e5c4219b150b1d23526639312095d326b9e370a"
+    },
+    {
+      "source_name": "CURSOR_GUIDE_JA.md",
+      "source_group": "cadmcp-design-studio-0.3.1-cursor",
+      "bundle_path": "04_ARCHIVE/documents/v0.3.1-cursor/CURSOR_GUIDE_JA.md",
+      "bytes": 12333,
+      "sha256": "62480523ea08df078ed6cf26c4dfaee876f51b0fc6c752f53b8446431749e547"
+    },
+    {
+      "source_name": "TEST_REPORT_JA.md",
+      "source_group": "cadmcp-design-studio-0.3.1-cursor",
+      "bundle_path": "04_ARCHIVE/documents/v0.3.1-cursor/TEST_REPORT_JA.md",
+      "bytes": 5866,
+      "sha256": "cd24ad59034faf28f2121e24cd32457a76742df03bee5cc6fb3a992c77b4067e"
+    },
+    {
+      "source_name": "Req2CAD_implementation_v0.2_JA.md",
+      "source_group": "conversation",
+      "bundle_path": "04_ARCHIVE/documents/v0.2.0/Req2CAD_implementation_v0.2_JA.md",
+      "bytes": 9768,
+      "sha256": "b49ab97494516e041ad22055a9be87b468010bed1e74b1054694dda593e9b09f"
+    },
+    {
+      "source_name": "Req2CAD_install_v0.2_JA.md",
+      "source_group": "conversation",
+      "bundle_path": "04_ARCHIVE/documents/v0.2.0/Req2CAD_install_v0.2_JA.md",
+      "bytes": 6741,
+      "sha256": "a5600cf9891ae4c67f4a369cf2fc8d2e215953e6d3ee246b455957fd3824c648"
+    },
+    {
+      "source_name": "Req2CAD_tests_v0.2_JA.md",
+      "source_group": "conversation",
+      "bundle_path": "04_ARCHIVE/documents/v0.2.0/Req2CAD_tests_v0.2_JA.md",
+      "bytes": 4359,
+      "sha256": "897fe378e6c4a91ae9e21e3382cb902fe7c94936d734ffad8e85445947aeeaad"
+    },
+    {
+      "source_name": "mouse_mcp_architecture_2026-09-16.md",
+      "source_group": "_cadmcp_bundle_inputs",
+      "bundle_path": "02_DOCUMENTS/planning/mouse_mcp_architecture_2026-09-16.md",
+      "bytes": 17865,
+      "sha256": "95c96778af1cb5e167439123417b76d268da9752c4ba3b5cc664cf2d59d673d0"
+    },
+    {
+      "source_name": "mouse_mcp_research_requirements_2026-09-16.md",
+      "source_group": "_cadmcp_bundle_inputs",
+      "bundle_path": "02_DOCUMENTS/planning/mouse_mcp_research_requirements_2026-09-16.md",
+      "bytes": 19530,
+      "sha256": "63574cce47b673059c7e32e8250422f39826fc897189404aa77d6e7f518dfac4"
+    },
+    {
+      "source_name": "cadmcp_v03_reference_assembly.step",
+      "source_group": "conversation",
+      "bundle_path": "03_CAD_EVIDENCE/standalone/cadmcp_v03_reference_assembly.step",
+      "bytes": 50480,
+      "sha256": "8c91758bb7e518cc04fbb568d287c70b23fc039b1f7f80987b8fa6ddec9f8211"
+    },
+    {
+      "source_name": "cadmcp_v03_reference_assembly.png",
+      "source_group": "conversation",
+      "bundle_path": "03_CAD_EVIDENCE/standalone/cadmcp_v03_reference_assembly.png",
+      "bytes": 16285,
+      "sha256": "7a109287c89e0c9b31f06ffafe18c3831f70eee480bd1950236fdff3b58b26c5"
+    }
+  ],
+  "expanded_archives": [
+    {
+      "archive": "cadmcp-design-studio-v0.3.1-cursor.zip",
+      "files": 244,
+      "uncompressed_bytes": 2909134,
+      "crc_ok": true,
+      "unsafe_paths": 0,
+      "links": 0,
+      "font_files": 0,
+      "sha256": "add06078caa30c72b65adef2d5fe0b1c747b0c19a15d97155b0fb49b60c505d7"
+    },
+    {
+      "archive": "cadmcp-v03-real-reference-evidence.zip",
+      "files": 49,
+      "uncompressed_bytes": 1138239,
+      "crc_ok": true,
+      "unsafe_paths": 0,
+      "links": 0,
+      "font_files": 0,
+      "sha256": "2f6293d1d3cdfd2405be5d2812d3f61addcc5d345e4cd5f3d78e7f6f9c15dd0c"
+    }
+  ],
+  "unavailable": [
+    {
+      "name": "cadmcp-function-structure-v0.2.1.zip",
+      "status": "not_found_in_active_runtime_or_file_search",
+      "included_instead": "04_ARCHIVE/documents/v0.2.1-documents-only/ (original documents only, not replacement code)"
+    }
+  ],
+  "not_bundled": [
+    "Req2CAD full CSV",
+    "DeepCAD full corpus",
+    "Qwen model weights",
+    "Python dependency environment",
+    "User CAD workspace",
+    "Credentials"
+  ]
+}

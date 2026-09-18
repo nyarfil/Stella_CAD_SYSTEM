@@ -1,0 +1,15 @@
+---
+description: Structure-first mechanical CAD with Req2CAD, measured interfaces, typed build and Cursor review roles.
+alwaysApply: true
+---
+
+For mechanical CAD design, read `.cursor/skills/cadmcp-cursor/SKILL.md`.
+Use the installed cadmcp-design-brain MCP, not imagined APIs or the legacy 13
+cards as a substitute for the real Function–Structure knowledge base.
+First call brain_doctor, brain_fs_status and brain_studio_schema. A missing
+semantic index must be reported, never silently replaced by a demo database.
+Do not spawn Codex/Cursor CLI or change providers unless the owner explicitly
+requests external automated execution. In IDE mode use Cursor's current agent.
+Keep protected PCB/shell geometry fixed; do not weaken acceptance checks or
+modify canonical CAD/printer settings to turn a failure into a pass.
+For non-CAD tasks, this rule adds no workflow.

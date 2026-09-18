@@ -1,0 +1,30 @@
+{
+  "description": "Unmodified original Req2CAD and Studio implementation files (except Studio CLI provider routing)",
+  "matched_count": 23,
+  "files": [
+    "cadmcp_brain/req2cad/__init__.py",
+    "cadmcp_brain/req2cad/__main__.py",
+    "cadmcp_brain/req2cad/assets.py",
+    "cadmcp_brain/req2cad/catalog.py",
+    "cadmcp_brain/req2cad/common.py",
+    "cadmcp_brain/req2cad/geometry.py",
+    "cadmcp_brain/req2cad/mixin.py",
+    "cadmcp_brain/req2cad/semantic.py",
+    "cadmcp_brain/req2cad/service.py",
+    "cadmcp_brain/req2cad/worker.py",
+    "cadmcp_brain/studio/__init__.py",
+    "cadmcp_brain/studio/autopilot.py",
+    "cadmcp_brain/studio/interfaces.py",
+    "cadmcp_brain/studio/mixin.py",
+    "cadmcp_brain/studio/packets.py",
+    "cadmcp_brain/studio/provider.py",
+    "cadmcp_brain/studio/recipe.py",
+    "cadmcp_brain/studio/render.py",
+    "cadmcp_brain/studio/report.py",
+    "cadmcp_brain/studio/runtime.py",
+    "cadmcp_brain/studio/synthesis.py",
+    "cadmcp_brain/studio/wire.py",
+    "cadmcp_brain/studio/worker.py"
+  ],
+  "all_equal": true
+}

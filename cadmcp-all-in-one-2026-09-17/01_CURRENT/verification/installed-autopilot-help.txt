@@ -1,0 +1,43 @@
+usage: __main__.py autopilot [-h] --project PROJECT
+                             [--request-file REQUEST_FILE] [--execute-model]
+                             [--provider {codex,cursor}] [--codex CODEX]
+                             [--model MODEL] [--cursor-agent CURSOR_AGENT]
+                             [--cursor-permissions-only]
+                             [--search-mode {semantic,lexical}]
+                             [--max-calls MAX_CALLS]
+                             [--per-call-seconds PER_CALL_SECONDS]
+                             [--max-reference-builds MAX_REFERENCE_BUILDS]
+                             [--max-repairs MAX_REPAIRS]
+                             [--debate-rounds {1,2,3}]
+                             [--protect-artifact PROTECT_ARTIFACT]
+                             [--editable-reference EDITABLE_REFERENCE]
+                             [--review-workers {1,2,3}]
+
+options:
+  -h, --help            show this help message and exit
+  --project PROJECT
+  --request-file REQUEST_FILE
+                        UTF-8 request to open a NEW project. Omit for an
+                        existing project.
+  --execute-model       Explicitly authorize calls through the selected,
+                        already-authenticated CLI.
+  --provider {codex,cursor}
+                        Choose a provider explicitly; never fall back to
+                        another provider.
+  --codex CODEX
+  --model MODEL
+  --cursor-agent CURSOR_AGENT
+                        Cursor Agent executable (auto: cursor-agent, then
+                        agent); not the cursor editor launcher.
+  --cursor-permissions-only
+                        Explicitly omit --sandbox enabled for Cursor; ask mode
+                        and deny rules remain. No OS isolation guarantee.
+  --search-mode {semantic,lexical}
+  --max-calls MAX_CALLS
+  --per-call-seconds PER_CALL_SECONDS
+  --max-reference-builds MAX_REFERENCE_BUILDS
+  --max-repairs MAX_REPAIRS
+  --debate-rounds {1,2,3}
+  --protect-artifact PROTECT_ARTIFACT
+  --editable-reference EDITABLE_REFERENCE
+  --review-workers {1,2,3}

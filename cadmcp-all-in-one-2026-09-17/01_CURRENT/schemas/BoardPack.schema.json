@@ -1,0 +1,438 @@
+{
+  "$defs": {
+    "AssemblyPath": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Description",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "measured",
+            "specified",
+            "unverified"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "description",
+        "status"
+      ],
+      "title": "AssemblyPath",
+      "type": "object"
+    },
+    "Keepout": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "fixed",
+            "motion"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Description",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "measured",
+            "specified",
+            "unverified"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "description",
+        "status"
+      ],
+      "title": "Keepout",
+      "type": "object"
+    },
+    "MountRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "screw",
+            "support",
+            "unverified"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "hole_diameter_mm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hole Diameter Mm"
+        },
+        "evidence": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Evidence",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "measured",
+            "specified",
+            "unverified"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "evidence",
+        "status"
+      ],
+      "title": "MountRecord",
+      "type": "object"
+    },
+    "SensorReference": {
+      "additionalProperties": false,
+      "properties": {
+        "model_component_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Model Component Id",
+          "type": "string"
+        },
+        "datum_definition": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Datum Definition",
+          "type": "string"
+        },
+        "distance_to_contact_plane_mm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Distance To Contact Plane Mm"
+        },
+        "status": {
+          "enum": [
+            "measured",
+            "specified",
+            "unverified"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "evidence": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Evidence",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model_component_id",
+        "datum_definition",
+        "status",
+        "evidence"
+      ],
+      "title": "SensorReference",
+      "type": "object"
+    },
+    "SourceFile": {
+      "additionalProperties": false,
+      "properties": {
+        "relative_path": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Relative Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "bytes": {
+          "exclusiveMinimum": 0,
+          "maximum": 104857600,
+          "title": "Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "relative_path",
+        "sha256",
+        "bytes"
+      ],
+      "title": "SourceFile",
+      "type": "object"
+    },
+    "SwitchRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "actuation_axis": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Actuation Axis",
+          "type": "array"
+        },
+        "actuation_point_mm": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Actuation Point Mm",
+          "type": "array"
+        },
+        "travel_mm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Travel Mm"
+        },
+        "overtravel_limit_mm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Overtravel Limit Mm"
+        },
+        "status": {
+          "enum": [
+            "measured",
+            "specified",
+            "unverified"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "evidence": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Evidence",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "actuation_axis",
+        "actuation_point_mm",
+        "status",
+        "evidence"
+      ],
+      "title": "SwitchRecord",
+      "type": "object"
+    },
+    "WheelAssembly": {
+      "additionalProperties": false,
+      "properties": {
+        "axis_direction": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Axis Direction",
+          "type": "array"
+        },
+        "encoder_connection": {
+          "maxLength": 2000,
+          "minLength": 4,
+          "title": "Encoder Connection",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "measured",
+            "specified",
+            "unverified"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "evidence": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Evidence",
+          "type": "string"
+        }
+      },
+      "required": [
+        "axis_direction",
+        "encoder_connection",
+        "status",
+        "evidence"
+      ],
+      "title": "WheelAssembly",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "0.3.3",
+      "enum": [
+        "0.3.2",
+        "0.3.3"
+      ],
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "board_pack_id": {
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+      "title": "Board Pack Id",
+      "type": "string"
+    },
+    "unit": {
+      "const": "mm",
+      "title": "Unit",
+      "type": "string"
+    },
+    "source_step": {
+      "$ref": "#/$defs/SourceFile"
+    },
+    "board_to_world_transform": {
+      "items": {
+        "type": "number"
+      },
+      "maxItems": 16,
+      "minItems": 16,
+      "title": "Board To World Transform",
+      "type": "array"
+    },
+    "sensor_reference": {
+      "$ref": "#/$defs/SensorReference"
+    },
+    "mounts": {
+      "items": {
+        "$ref": "#/$defs/MountRecord"
+      },
+      "maxItems": 64,
+      "title": "Mounts",
+      "type": "array"
+    },
+    "switches": {
+      "items": {
+        "$ref": "#/$defs/SwitchRecord"
+      },
+      "maxItems": 32,
+      "title": "Switches",
+      "type": "array"
+    },
+    "wheel_assembly": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/WheelAssembly"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "fixed_keepouts": {
+      "items": {
+        "$ref": "#/$defs/Keepout"
+      },
+      "maxItems": 64,
+      "title": "Fixed Keepouts",
+      "type": "array"
+    },
+    "motion_keepouts": {
+      "items": {
+        "$ref": "#/$defs/Keepout"
+      },
+      "maxItems": 64,
+      "title": "Motion Keepouts",
+      "type": "array"
+    },
+    "assembly_paths": {
+      "items": {
+        "$ref": "#/$defs/AssemblyPath"
+      },
+      "maxItems": 32,
+      "title": "Assembly Paths",
+      "type": "array"
+    },
+    "unresolved_required_fields": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 64,
+      "title": "Unresolved Required Fields",
+      "type": "array"
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "ready"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "board_pack_id",
+    "unit",
+    "source_step",
+    "board_to_world_transform",
+    "sensor_reference",
+    "status"
+  ],
+  "title": "BoardPack",
+  "type": "object"
+}

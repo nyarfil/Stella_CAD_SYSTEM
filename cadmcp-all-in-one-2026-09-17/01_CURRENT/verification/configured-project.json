@@ -1,0 +1,25 @@
+{
+  "project": "/mnt/data/cursor_work/smoke_project 日本語",
+  "workspace": "/mnt/data/cursor_work/smoke_project 日本語/workspace",
+  "server": "cadmcp-design-brain",
+  "changed": [
+    ".cursor/rules/cadmcp-design-brain.mdc",
+    ".cursor/agents/cadmcp-assembly.md",
+    ".cursor/agents/cadmcp-manufacturing.md",
+    ".cursor/agents/cadmcp-mechanism.md",
+    ".cursor/agents/cadmcp-requirements.md",
+    ".cursor/agents/cadmcp-verification.md",
+    ".cursor/commands/cad-check.md",
+    ".cursor/commands/cad-design.md",
+    ".cursor/commands/cad-review.md",
+    ".cursor/skills/cadmcp-cursor/SKILL.md",
+    ".cursor/skills/cadmcp-cursor/references/AGENT_WORKFLOW_JA.md",
+    ".cursor/mcp.json"
+  ],
+  "dry_run": false,
+  "backups": [],
+  "model_called": false,
+  "existing_unrelated_mcp_entries_preserved": true
+}
+Cursor setup files written. Reopen the project/reload MCP, then use /cad-check.
+No model was called. GUI recognition and account authentication must be checked in your Cursor installation.

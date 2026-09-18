@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cadmcp-design-brain"
+version = "0.3.3"
+description = "Source-grounded design intent, mechanism selection and verification gates for existing CAD MCP hosts"
+requires-python = ">=3.11"
+dependencies = ["pydantic==2.13.4", "jsonschema==4.26.0"]
+license = "MIT"
+
+[project.optional-dependencies]
+test = ["numpy>=2.0,<3", "pytest==9.0.2", "coverage==7.13.3"]
+geometry = ["cadquery==2.8.0", "Pillow>=10,<13"]
+semantic = ["numpy>=2.0,<3", "sentence-transformers>=3.0,<6", "transformers>=4.51,<6", "huggingface-hub>=0.30,<2"]
+
+[project.scripts]
+cadmcp-brain = "cadmcp_brain.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["cadmcp_brain*"]
+
+[tool.setuptools.package-data]
+cadmcp_brain = ["data/*.json", "prompts/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

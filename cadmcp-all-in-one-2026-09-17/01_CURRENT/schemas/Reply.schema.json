@@ -1,0 +1,55 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "review_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Review Id",
+      "type": "string"
+    },
+    "finding_id": {
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+      "title": "Finding Id",
+      "type": "string"
+    },
+    "responder_label": {
+      "maxLength": 120,
+      "minLength": 2,
+      "title": "Responder Label",
+      "type": "string"
+    },
+    "disposition": {
+      "enum": [
+        "accept_and_revise",
+        "request_evidence",
+        "disagree_with_evidence"
+      ],
+      "title": "Disposition",
+      "type": "string"
+    },
+    "explanation": {
+      "maxLength": 4000,
+      "minLength": 12,
+      "title": "Explanation",
+      "type": "string"
+    },
+    "evidence": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 24,
+      "minItems": 1,
+      "title": "Evidence",
+      "type": "array"
+    }
+  },
+  "required": [
+    "review_id",
+    "finding_id",
+    "responder_label",
+    "disposition",
+    "explanation",
+    "evidence"
+  ],
+  "title": "Reply",
+  "type": "object"
+}

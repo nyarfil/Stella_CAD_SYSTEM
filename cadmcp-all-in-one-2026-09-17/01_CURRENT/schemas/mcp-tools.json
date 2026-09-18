@@ -1,0 +1,1303 @@
+[
+  {
+    "name": "brain_add_source",
+    "description": "Append an exact new user instruction; invalidate old intent, concepts, plans and verification, preserving audit history.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "text"
+      ],
+      "title": "brain_add_source_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_backend_call",
+    "description": "Opt-in gated AgentCAD call. Owner allowlist required. Default dry-run. A call_id permits at most one network write attempt; never retry uncertain outcomes.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "contract_digest": {
+          "title": "Contract Digest",
+          "type": "string"
+        },
+        "call_id": {
+          "title": "Call Id",
+          "type": "string"
+        },
+        "tool": {
+          "title": "Tool",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": true,
+          "title": "Arguments",
+          "type": "object"
+        },
+        "dry_run": {
+          "default": true,
+          "title": "Dry Run",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "contract_digest",
+        "call_id",
+        "tool",
+        "arguments"
+      ],
+      "title": "brain_backend_call_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "brain_backend_probe",
+    "description": "Read the configured loopback AgentCAD live tool registry. Disabled unless CADMCP_AGENTCAD_URL is set by the owner.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {},
+      "title": "brain_backend_probe_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "brain_doctor",
+    "description": "Report local capabilities without pretending to test a remote CAD backend or a Windows/Cursor installation.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {},
+      "title": "brain_doctor_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_export",
+    "description": "Export immutable contract.json, CAD_HANDOFF.md and design_graph.json for the existing CAD backend. Does not execute CAD.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision"
+      ],
+      "title": "brain_export_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_fs_case",
+    "description": "Read exact original functional annotation and linked asset metadata. Labels are hypotheses, not verified engineering capabilities.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "uid": {
+          "title": "Uid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid"
+      ],
+      "title": "brain_fs_case_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_fs_compare",
+    "description": "Compare actual materialized face-adjacency topology (WL) and surface geometry descriptors. Not a functional equivalence or automatic assembly proof.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "uid_a": {
+          "title": "Uid A",
+          "type": "string"
+        },
+        "uid_b": {
+          "title": "Uid B",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid_a",
+        "uid_b"
+      ],
+      "title": "brain_fs_compare_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_fs_evidence",
+    "description": "Return source-hashed function + geometry + topology evidence, usable in Concept.case_references. Requires original file integrity; no strength claims.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "uid": {
+          "title": "Uid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid"
+      ],
+      "title": "brain_fs_evidence_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_fs_interfaces",
+    "description": "Inspect materialized planar/cylindrical surfaces. Distinguish inner cavity from solid shaft exterior; NOT proof of through-bore, fit, force transmission or fatigue.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "uid": {
+          "title": "Uid",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Features",
+          "type": "array"
+        }
+      },
+      "required": [
+        "uid",
+        "required_features"
+      ],
+      "title": "brain_fs_interfaces_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_fs_materialize",
+    "description": "Reconstruct/import the registered real CAD; export STEP/STL/views and measure face-type graph, WL features and sampled geometry. Never invent geometry for missing UIDs.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "uid": {
+          "title": "Uid",
+          "type": "string"
+        },
+        "timeout_seconds": {
+          "default": 60,
+          "title": "Timeout Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "uid"
+      ],
+      "title": "brain_fs_materialize_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_fs_portfolio",
+    "description": "Choose structurally diverse representatives from retrieved, measured CAD UIDs. Missing geometry is reported, not fabricated.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Uids",
+          "type": "array"
+        },
+        "mode": {
+          "default": "topology",
+          "title": "Mode",
+          "type": "string"
+        },
+        "limit": {
+          "default": 6,
+          "title": "Limit",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "uids"
+      ],
+      "title": "brain_fs_portfolio_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_fs_search",
+    "description": "Retrieve real CAD UIDs by functional keywords. Semantic is default and requires a prepared real model/index. Lexical mode must be explicitly requested.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "functions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Functions",
+          "type": "array"
+        },
+        "limit": {
+          "default": 20,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "threshold": {
+          "default": 0.7,
+          "title": "Threshold",
+          "type": "number"
+        },
+        "require_cad": {
+          "default": false,
+          "title": "Require Cad",
+          "type": "boolean"
+        },
+        "mode": {
+          "default": "semantic",
+          "title": "Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "functions"
+      ],
+      "title": "brain_fs_search_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_fs_search_tasks",
+    "description": "Search multiple paraphrases per functional requirement without double-counting them. Inspect real surface preconditions; unknown geometry is not a pass. Explicit lexical mode is only a diagnostic/limited retrieval route.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "brief": {
+          "additionalProperties": true,
+          "title": "Brief",
+          "type": "object"
+        },
+        "mode": {
+          "default": "semantic",
+          "title": "Mode",
+          "type": "string"
+        },
+        "limit_per_function": {
+          "default": 12,
+          "title": "Limit Per Function",
+          "type": "integer"
+        },
+        "threshold": {
+          "default": 0.7,
+          "title": "Threshold",
+          "type": "number"
+        }
+      },
+      "required": [
+        "brief"
+      ],
+      "title": "brain_fs_search_tasks_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_fs_status",
+    "description": "Read actual function/asset/geometry coverage. An empty catalog is not an installed 128k library.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {},
+      "title": "brain_fs_status_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_fusion_handoff",
+    "description": "Issue the only Fusion adapter script allowed for this built subject. Host must pass it to fusion_mcp_execute unchanged. Does not save f3d. CadQuery remains the geometry referee.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "subject_digest": {
+          "title": "Subject Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "subject_digest"
+      ],
+      "title": "brain_fusion_handoff_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_fusion_ingest",
+    "description": "Accept Fusion print JSON only when it echoes the issued adapter. Remeasure overlap/clearance/motion in CadQuery. A Fusion screenshot is not a pass. f3d is not saved.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "subject_digest": {
+          "title": "Subject Digest",
+          "type": "string"
+        },
+        "adapter_sha256": {
+          "title": "Adapter Sha256",
+          "type": "string"
+        },
+        "fusion_report": {
+          "additionalProperties": true,
+          "title": "Fusion Report",
+          "type": "object"
+        },
+        "export_step_relative": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Export Step Relative"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "subject_digest",
+        "adapter_sha256",
+        "fusion_report"
+      ],
+      "title": "brain_fusion_ingest_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_get",
+    "description": "Read current state and revision. Reload after REVISION_CONFLICT; never overwrite a newer design.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id"
+      ],
+      "title": "brain_get_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_history",
+    "description": "Read the transactional project event history.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id"
+      ],
+      "title": "brain_history_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_import_step",
+    "description": "Copy/hash a workspace-relative STEP. output needs current contract digest; reference performs actual kernel measurements and invalidates concepts/plans. Trusted local STEP only.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "artifact_id": {
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "relative_path": {
+          "title": "Relative Path",
+          "type": "string"
+        },
+        "contract_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Contract Digest"
+        },
+        "purpose": {
+          "default": "output",
+          "title": "Purpose",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "artifact_id",
+        "relative_path"
+      ],
+      "title": "brain_import_step_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_get_board_pack",
+    "description": "Read one stored board pack. Presence is not printability, optical alignment, or click-feel.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "board_pack_id": {
+          "title": "Board Pack Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "board_pack_id"
+      ],
+      "title": "brain_mouse_get_board_pack_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_get_shell_pack",
+    "description": "Read one stored shell pack. Registration is not printability, wall-thickness proof everywhere, or optical alignment.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "shell_pack_id": {
+          "title": "Shell Pack Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "shell_pack_id"
+      ],
+      "title": "brain_mouse_get_shell_pack_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_inspect_inputs",
+    "description": "Hash workspace files and report board/shell pack status. A STEP on disk is not a ready shell. Does not invent fasteners or a passing design.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "relative_paths": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Relative Paths",
+          "type": "array"
+        }
+      },
+      "required": [
+        "relative_paths"
+      ],
+      "title": "brain_mouse_inspect_inputs_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_list_board_packs",
+    "description": "List draft and ready board packs in this workspace. Demo CAD cases are not listed here.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {},
+      "title": "brain_mouse_list_board_packs_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_list_shell_packs",
+    "description": "List draft and ready prepared-shell packs. A mesh scan is not listed here.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {},
+      "title": "brain_mouse_list_shell_packs_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_register_board_pack",
+    "description": "Store a typed PCB mechanical pack. Ready status is refused when required fields are unverified, hashes mismatch, or the STEP is not a valid B-rep.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "pack": {
+          "additionalProperties": true,
+          "title": "Pack",
+          "type": "object"
+        }
+      },
+      "required": [
+        "pack"
+      ],
+      "title": "brain_mouse_register_board_pack_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_register_shell_pack",
+    "description": "Store a typed prepared-shell pack. Ready status needs a protected outer envelope, a positive wall thickness, matching STEP hash, and a valid B-rep. Scan-to-shell conversion is not performed.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "pack": {
+          "additionalProperties": true,
+          "title": "Pack",
+          "type": "object"
+        }
+      },
+      "required": [
+        "pack"
+      ],
+      "title": "brain_mouse_register_shell_pack_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_structure_gate",
+    "description": "Report whether a ready board pack and a ready shell pack exist. Does not generate structure CAD, bosses, or click parts.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {},
+      "title": "brain_mouse_structure_gate_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_open",
+    "description": "Start source-grounded design. request is the user's exact original text, not an invented paraphrase. Next call brain_task.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "request": {
+          "title": "Request",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "request"
+      ],
+      "title": "brain_open_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_patterns",
+    "description": "Retrieve original mechanism patterns using lexical English/Japanese search. Results are not validated designs or dimensional allowables.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "query": {
+          "default": "",
+          "title": "Query",
+          "type": "string"
+        },
+        "limit": {
+          "default": 6,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "function": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Function"
+        }
+      },
+      "title": "brain_patterns_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_schema",
+    "description": "Read a versioned Brief, Concept, Concepts or Plan JSON schema.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "brain_schema_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_select",
+    "description": "Select a gate-eligible concept. This does not attest human approval, printability, strength or fatigue life.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "concept_id": {
+          "title": "Concept Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "concept_id"
+      ],
+      "title": "brain_select_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_studio_build",
+    "description": "Build a STEP-bound typed CAD recipe in a separate process; export real STEP/STL/SVG and static/sampled-motion clearance. No arbitrary Python exec, printer send or canonical project modification.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "recipe": {
+          "additionalProperties": true,
+          "title": "Recipe",
+          "type": "object"
+        },
+        "timeout_seconds": {
+          "default": 120,
+          "title": "Timeout Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "recipe"
+      ],
+      "title": "brain_studio_build_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_studio_reply",
+    "description": "Record an evidence-based response to a specific review finding. No majority vote or prose rebuttal automatically clears a blocker.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "subject_digest": {
+          "title": "Subject Digest",
+          "type": "string"
+        },
+        "reply": {
+          "additionalProperties": true,
+          "title": "Reply",
+          "type": "object"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "subject_digest",
+        "reply"
+      ],
+      "title": "brain_studio_reply_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_studio_review_packet",
+    "description": "Prepare a requirements/mechanism/assembly/manufacturing/verification reviewer packet with real evidence and exact output schema. This does NOT spawn an independent LLM itself.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "subject_digest": {
+          "title": "Subject Digest",
+          "type": "string"
+        },
+        "role": {
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "subject_digest",
+        "role"
+      ],
+      "title": "brain_studio_review_packet_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_studio_review_status",
+    "description": "Read review coverage, open disagreements, geometry failures and unverified physical requirements. Reviewer independence and human approval are never inferred.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "subject_digest": {
+          "title": "Subject Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "subject_digest"
+      ],
+      "title": "brain_studio_review_status_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_studio_schema",
+    "description": "Get FunctionBrief, Matrix, Recipe, Review, Reply, BoardPack, ShellPack, FusionHandoff or FusionReport schemas. These are typed host/worker contracts, not a claim of semantic intelligence.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "brain_studio_schema_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_studio_submit_review",
+    "description": "Record actual host-submitted engineering findings for this revision and subject. Roles and agreement never authenticate independent reviewers or clear physical tests.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "subject_digest": {
+          "title": "Subject Digest",
+          "type": "string"
+        },
+        "review": {
+          "additionalProperties": true,
+          "title": "Review",
+          "type": "object"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "subject_digest",
+        "review"
+      ],
+      "title": "brain_studio_submit_review_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_studio_synthesize",
+    "description": "Combine real-reference mechanism options into compatible functional covers. Reject absent required surfaces and invented face IDs. Returns review subjects, NOT finished assemblies.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "matrix": {
+          "additionalProperties": true,
+          "title": "Matrix",
+          "type": "object"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "matrix"
+      ],
+      "title": "brain_studio_synthesize_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_submit_concepts",
+    "description": "Commit 2–4 distinct FBS mechanism alternatives and return mechanical/declaration gate results for each.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "concepts": {
+          "additionalProperties": true,
+          "title": "Concepts",
+          "type": "object"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "concepts"
+      ],
+      "title": "brain_submit_concepts_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_submit_intent",
+    "description": "Validate and commit the source-linked Brief. Reject source omissions, fabricated quotations, contradictory constraints and mandatory inferences.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "brief": {
+          "additionalProperties": true,
+          "title": "Brief",
+          "type": "object"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "brief"
+      ],
+      "title": "brain_submit_intent_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_submit_plan",
+    "description": "Commit a typed geometric construction plan with dependency, provenance and test-obligation validation.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "plan": {
+          "additionalProperties": true,
+          "title": "Plan",
+          "type": "object"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "plan"
+      ],
+      "title": "brain_submit_plan_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_task",
+    "description": "Get the next host-model task, relevant state and exact JSON schema. The server does not pretend to understand natural language itself.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "stage": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stage"
+        }
+      },
+      "required": [
+        "project_id"
+      ],
+      "title": "brain_task_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_verify",
+    "description": "Measure imported B-reps and evaluate listed geometry checks. Missing/stale/unsupported evidence remains unknown; physical performance is not certified.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision"
+      ],
+      "title": "brain_verify_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  }
+]

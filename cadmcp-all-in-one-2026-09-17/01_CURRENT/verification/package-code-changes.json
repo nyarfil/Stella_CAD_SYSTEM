@@ -1,0 +1,5 @@
+{
+  "cadmcp_brain/__init__.py": "modified",
+  "cadmcp_brain/studio/__main__.py": "modified",
+  "cadmcp_brain/studio/cursor_provider.py": "added"
+}

@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "release": "0.3.1",
+  "managed_sha256": {
+    ".cursor/rules/cadmcp-design-brain.mdc": "988fb9032f799a35be9515b0e9bd23c85a5e9f39e412d6a519e5944a159dabec",
+    ".cursor/agents/cadmcp-assembly.md": "b1c5ca803c12f08276635517bd8acb124d7a81b9e1c031af15d2e9cd6d505479",
+    ".cursor/agents/cadmcp-manufacturing.md": "f774bd36d3a3f2a47f605789cec0b08fcc4d64e6f52efe7406f376353c01c116",
+    ".cursor/agents/cadmcp-mechanism.md": "ef75c339803e66a65930da06cccc4e8cd7b056fe25672b033dc1fc899cfd8ec3",
+    ".cursor/agents/cadmcp-requirements.md": "a87a0c00a685929bb0cf03fa4e80c58ada791d526e149f473378e06f128bccf2",
+    ".cursor/agents/cadmcp-verification.md": "7b265308ae5de174622ab6988a5838323a34bc07faddd2bea3af9e3b1426f9bb",
+    ".cursor/commands/cad-check.md": "6b5f0d16cf35d164d75b3cd54463dc5302ae3c9eea177ab2d1bf6d0dbbbc995e",
+    ".cursor/commands/cad-design.md": "776e1603f8f0c01713973552c4c2e5b60e8602c2a515693399f1212a33f51d82",
+    ".cursor/commands/cad-review.md": "cc0629057c225f046c087a217b87a3c90986735bff927f0a7dcc8391777715f5",
+    ".cursor/skills/cadmcp-cursor/references/AGENT_WORKFLOW_JA.md": "875c08738d960b524f4354a59320da278d6cacb2d975bf2c4cf797ef0fd01dd9",
+    ".cursor/skills/cadmcp-cursor/SKILL.md": "1577117a609860abe42a61949e039cea725e677e083883a78d3ae4b338586c81"
+  },
+  "workspace": "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace",
+  "python": "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-all-in-one-2026-09-17\\01_CURRENT\\.venv\\Scripts\\python.exe",
+  "server": "cadmcp-design-brain",
+  "note": "Only these managed files and the named MCP entry are updated. Existing custom environment keys are preserved."
+}

@@ -1,0 +1,109 @@
+{
+  "contract_digest": "b0c56006ae6fdecccfe26f51df648d959b42ab6164ad65e3007e14d1b5d05737",
+  "geometry_status": "pass",
+  "overall": "unknown",
+  "results": [
+    {
+      "check_id": "CH-brep",
+      "kind": "brep_valid",
+      "requirement_ids": [
+        "R-width"
+      ],
+      "status": "pass",
+      "actual": true,
+      "target": true,
+      "op": "eq",
+      "tolerance": 0.0,
+      "artifact_hashes": {
+        "A-frame": "1c53cea50eee88e18832641a757585b705d21d4658f69dbada7ae5758a634348"
+      }
+    },
+    {
+      "check_id": "CH-width",
+      "kind": "bbox_x_mm",
+      "requirement_ids": [
+        "R-width"
+      ],
+      "status": "pass",
+      "actual": 20.0,
+      "target": 20.0,
+      "op": "eq",
+      "tolerance": 1e-06,
+      "artifact_hashes": {
+        "A-frame": "1c53cea50eee88e18832641a757585b705d21d4658f69dbada7ae5758a634348"
+      }
+    },
+    {
+      "check_id": "CH-gap",
+      "kind": "distance_mm",
+      "requirement_ids": [
+        "R-axis"
+      ],
+      "status": "pass",
+      "actual": 1.0,
+      "target": 0.5,
+      "op": "ge",
+      "tolerance": 0.0,
+      "artifact_hashes": {
+        "A-frame": "1c53cea50eee88e18832641a757585b705d21d4658f69dbada7ae5758a634348",
+        "A-button": "aaddc57a367ed0c12f50e74d6e92d61aae1811f8cfe2aff3d45b14d49f6627c5"
+      }
+    },
+    {
+      "check_id": "CH-collision",
+      "kind": "intersection_mm3",
+      "requirement_ids": [
+        "R-axis"
+      ],
+      "status": "pass",
+      "actual": 0.0,
+      "target": 0.0,
+      "op": "le",
+      "tolerance": 1e-06,
+      "artifact_hashes": {
+        "A-frame": "1c53cea50eee88e18832641a757585b705d21d4658f69dbada7ae5758a634348",
+        "A-button": "aaddc57a367ed0c12f50e74d6e92d61aae1811f8cfe2aff3d45b14d49f6627c5"
+      }
+    },
+    {
+      "check_id": "CH-design",
+      "kind": "manual",
+      "requirement_ids": [
+        "R-axis",
+        "R-count",
+        "R-spring"
+      ],
+      "status": "unknown",
+      "actual": null,
+      "target": true,
+      "op": "eq",
+      "tolerance": 0.0,
+      "reason": "external_evidence_required_not_certified_by_this_release"
+    },
+    {
+      "check_id": "CH-life",
+      "kind": "physical_test",
+      "requirement_ids": [
+        "R-life"
+      ],
+      "status": "unknown",
+      "actual": null,
+      "target": true,
+      "op": "eq",
+      "tolerance": 0.0,
+      "reason": "external_evidence_required_not_certified_by_this_release"
+    }
+  ],
+  "unresolved_release_questions": [
+    {
+      "id": "U-life",
+      "question": "実物の繰返し押下試験で復帰性・耐久性を確認する。試験回数・条件はまだ未確定。",
+      "blocks": "release",
+      "resolution": null,
+      "source_refs": []
+    }
+  ],
+  "engine": "CadQuery/OpenCascade",
+  "physical_design_certified": false,
+  "note": "Passing enumerated checks does not establish that the requirements/checks are complete or that the product is fit for use."
+}

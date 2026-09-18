@@ -1,0 +1,444 @@
+{
+  "schema_version": "1.0",
+  "contract_digest": "b0c56006ae6fdecccfe26f51df648d959b42ab6164ad65e3007e14d1b5d05737",
+  "project_id": "demo-03a6df0f",
+  "source_revision": 4,
+  "brief": {
+    "schema_version": "1.0",
+    "objective": "架空のサイドボタン設計で意図・構造・検証処理を試験する",
+    "coordinate_frame": "右手系。原点は試験フレーム中央。+X=前、+Y=右、+Z=上。入力とスイッチ押下方向はともに-Y。単位mm。",
+    "requirements": [
+      {
+        "id": "R-axis",
+        "text": "スイッチはボタンのすぐ内側で、押す方向は両方とも-Yです。",
+        "priority": "must",
+        "origin": "explicit",
+        "source_refs": [
+          {
+            "source_id": "SRC-1",
+            "quote": "スイッチはボタンのすぐ内側で、押す方向は両方とも-Yです。"
+          }
+        ],
+        "verification": "declaration"
+      },
+      {
+        "id": "R-count",
+        "text": "造形部品は2個以内。",
+        "priority": "must",
+        "origin": "explicit",
+        "source_refs": [
+          {
+            "source_id": "SRC-1",
+            "quote": "造形部品は2個以内。"
+          }
+        ],
+        "verification": "declaration"
+      },
+      {
+        "id": "R-spring",
+        "text": "金属ばねは使わない。",
+        "priority": "must_not",
+        "origin": "explicit",
+        "source_refs": [
+          {
+            "source_id": "SRC-1",
+            "quote": "金属ばねは使わない。"
+          }
+        ],
+        "verification": "declaration"
+      },
+      {
+        "id": "R-width",
+        "text": "試験片の幅は20 mm。",
+        "priority": "must",
+        "origin": "explicit",
+        "source_refs": [
+          {
+            "source_id": "SRC-1",
+            "quote": "試験片の幅は20 mm。"
+          }
+        ],
+        "verification": "geometry"
+      },
+      {
+        "id": "R-life",
+        "text": "耐久性は実物で確認する。",
+        "priority": "must",
+        "origin": "explicit",
+        "source_refs": [
+          {
+            "source_id": "SRC-1",
+            "quote": "耐久性は実物で確認する。"
+          }
+        ],
+        "verification": "physical"
+      }
+    ],
+    "constraints": [
+      {
+        "requirement_id": "R-count",
+        "property": "printed_parts_count",
+        "op": "le",
+        "value": 2,
+        "unit": "count"
+      },
+      {
+        "requirement_id": "R-spring",
+        "property": "uses_metal_spring",
+        "op": "eq",
+        "value": false,
+        "unit": "dimensionless"
+      }
+    ],
+    "unknowns": [
+      {
+        "id": "U-life",
+        "question": "実物の繰返し押下試験で復帰性・耐久性を確認する。試験回数・条件はまだ未確定。",
+        "blocks": "release",
+        "resolution": null,
+        "source_refs": []
+      }
+    ],
+    "dispositions": [
+      {
+        "source_id": "SRC-1",
+        "quote": "これは動作試験用の架空のサイドボタンです。",
+        "reason": "これは実機寸法ではない、テスト用の例であるという位置付け。"
+      }
+    ],
+    "manufacturing_notes": "試験用仮説。ABS/FDMを検討するが素材特性・隙間・疲労寿命の合格値は設定しない。"
+  },
+  "concept": {
+    "id": "C-direct",
+    "title": "同軸直押し案",
+    "rationale": "指とスイッチの押下方向が一致するため、方向変換を増やさない。",
+    "functions": [
+      {
+        "id": "F-act",
+        "function_key": "actuate_switch",
+        "verb": "transmit",
+        "object": "finger force to lateral switch",
+        "requirement_ids": [
+          "R-axis",
+          "R-life"
+        ],
+        "expected_behavior": "入力は-Yへ動き、スイッチへ同方向で伝わり、除荷で戻る。"
+      },
+      {
+        "id": "F-frame",
+        "function_key": "support_component",
+        "verb": "support",
+        "object": "button and switch with bounded part count",
+        "requirement_ids": [
+          "R-count",
+          "R-spring",
+          "R-width"
+        ],
+        "expected_behavior": "20 mm幅の試験フレームを基準に位置を保持する。"
+      }
+    ],
+    "components": [
+      {
+        "id": "P-frame",
+        "name": "試験フレーム",
+        "role": "printed",
+        "material": "ABS proposal, not tested material data",
+        "function_ids": [
+          "F-frame"
+        ],
+        "manufacturing_orientation": "平面をベッドに置く案。重要なガイド面のサポート痕は許容を実測。",
+        "assembly_access": "ボタンとスイッチを開放側から挿入する想定。"
+      },
+      {
+        "id": "P-button",
+        "name": "試験ボタン",
+        "role": "printed",
+        "material": "ABS proposal",
+        "function_ids": [
+          "F-act"
+        ],
+        "manufacturing_orientation": "ガイド面をサポート面にしない向きを比較する。",
+        "assembly_access": "フレーム開放側から挿入。"
+      },
+      {
+        "id": "P-switch",
+        "name": "架空スイッチ参照部品",
+        "role": "reference",
+        "material": "supplier-defined, unspecified",
+        "function_ids": [
+          "F-act",
+          "F-frame"
+        ],
+        "manufacturing_orientation": "購入/流用部品。印刷しない。",
+        "assembly_access": "背面からフレームに固定。実物の許容接触面は未検証。"
+      }
+    ],
+    "mechanisms": [
+      {
+        "id": "M-button",
+        "pattern_id": "side_direct_guided",
+        "function_ids": [
+          "F-act"
+        ],
+        "component_ids": [
+          "P-button",
+          "P-switch",
+          "P-frame"
+        ],
+        "input_direction": [
+          0.0,
+          -1.0,
+          0.0
+        ],
+        "output_direction": [
+          0.0,
+          -1.0,
+          0.0
+        ],
+        "return_method": "switch_internal",
+        "hard_stop": true,
+        "force_path": "指→ボタン→スイッチ押し子→スイッチ支持→フレーム。ストッパー接触後はフレームへ荷重を逃がす。",
+        "failure_modes": [
+          "摩擦による復帰不足",
+          "押し過ぎによる局所損傷"
+        ],
+        "verification_notes": "復帰力と摩擦、公差、過走行量を実機で確認する。"
+      },
+      {
+        "id": "M-frame",
+        "pattern_id": "component_seat_retainer",
+        "function_ids": [
+          "F-frame"
+        ],
+        "component_ids": [
+          "P-frame",
+          "P-switch"
+        ],
+        "input_direction": null,
+        "output_direction": null,
+        "return_method": "not_applicable",
+        "hard_stop": false,
+        "force_path": "スイッチ反力→端部受け→フレーム。",
+        "failure_modes": [
+          "保持片のクリープ"
+        ],
+        "verification_notes": "参照部品の禁止接触面と固定剛性を確認。"
+      }
+    ],
+    "interfaces": [
+      {
+        "id": "I-guide",
+        "component_a": "P-button",
+        "component_b": "P-frame",
+        "kind": "guide",
+        "description": "並進案内を想定。",
+        "allowed_motion": "-Y方向の押下と+Y方向の復帰。"
+      },
+      {
+        "id": "I-contact",
+        "component_a": "P-button",
+        "component_b": "P-switch",
+        "kind": "contact",
+        "description": "押し子への接触。",
+        "allowed_motion": "押し子の許容ストローク内。"
+      },
+      {
+        "id": "I-mount",
+        "component_a": "P-switch",
+        "component_b": "P-frame",
+        "kind": "mount",
+        "description": "参照部品支持。",
+        "allowed_motion": "固定。"
+      },
+      {
+        "id": "I-stop",
+        "component_a": "P-button",
+        "component_b": "P-frame",
+        "kind": "stop",
+        "description": "過走行防止。寸法は実機で決める。",
+        "allowed_motion": "所定ストローク後に停止。"
+      }
+    ],
+    "properties": {},
+    "unknowns": [],
+    "rejected_alternatives": [
+      "この配置では方向変換レバーを最初に採らない。"
+    ]
+  },
+  "plan": {
+    "schema_version": "1.0",
+    "concept_id": "C-direct",
+    "dimensions": [
+      {
+        "id": "D-width",
+        "name": "試験フレーム幅",
+        "value_mm": 20.0,
+        "provenance": "user",
+        "source_refs": [
+          {
+            "source_id": "SRC-1",
+            "quote": "試験片の幅は20 mm。"
+          }
+        ],
+        "evidence_id": null,
+        "rationale": "ユーザー原文の20 mm。実機OP1寸法ではない。"
+      }
+    ],
+    "steps": [
+      {
+        "id": "S-frame",
+        "operation": "create_part",
+        "component_ids": [
+          "P-frame"
+        ],
+        "requirement_ids": [
+          "R-width",
+          "R-count"
+        ],
+        "depends_on": [],
+        "purpose": "試験フレームを作る。",
+        "instructions": "試験計画に基づき幅20 mmのフレームを作る。demoで出力する直方体は検査器の試験形状であり、この機構の完成品ではない。",
+        "preserves": [
+          "20 mmという明示寸法"
+        ]
+      },
+      {
+        "id": "S-button",
+        "operation": "create_part",
+        "component_ids": [
+          "P-button"
+        ],
+        "requirement_ids": [
+          "R-axis",
+          "R-count",
+          "R-spring",
+          "R-life"
+        ],
+        "depends_on": [
+          "S-frame"
+        ],
+        "purpose": "同軸の押しボタンを作る。",
+        "instructions": "ガイド・接触面・ストッパーを設計。寸法未確定部は実機確認を経て更新する。デモ直方体に機構の合格判定は付けない。",
+        "preserves": [
+          "入力と出力は-Y",
+          "金属ばねを追加しない"
+        ]
+      },
+      {
+        "id": "S-switch",
+        "operation": "place_part",
+        "component_ids": [
+          "P-switch"
+        ],
+        "requirement_ids": [
+          "R-axis"
+        ],
+        "depends_on": [
+          "S-frame",
+          "S-button"
+        ],
+        "purpose": "参照スイッチを配置する。",
+        "instructions": "共通アセンブリ座標系で向きを合わせる。実機モデルがなければ製造用データには昇格しない。",
+        "preserves": [
+          "スイッチ押下方向-Y"
+        ]
+      }
+    ],
+    "checks": [
+      {
+        "id": "CH-brep",
+        "requirement_ids": [
+          "R-width"
+        ],
+        "kind": "brep_valid",
+        "artifact_a": "A-frame",
+        "artifact_b": null,
+        "op": "eq",
+        "target": true,
+        "tolerance": 0.0,
+        "description": "STEPが有効なソリッドである。"
+      },
+      {
+        "id": "CH-width",
+        "requirement_ids": [
+          "R-width"
+        ],
+        "kind": "bbox_x_mm",
+        "artifact_a": "A-frame",
+        "artifact_b": null,
+        "op": "eq",
+        "target": 20.0,
+        "tolerance": 1e-06,
+        "description": "試験フレームのX幅を実測する。"
+      },
+      {
+        "id": "CH-gap",
+        "requirement_ids": [
+          "R-axis"
+        ],
+        "kind": "distance_mm",
+        "artifact_a": "A-frame",
+        "artifact_b": "A-button",
+        "op": "ge",
+        "target": 0.5,
+        "tolerance": 0.0,
+        "description": "検査器の離隔試験用。0.5 mmは本番の推奨クリアランスではない。"
+      },
+      {
+        "id": "CH-collision",
+        "requirement_ids": [
+          "R-axis"
+        ],
+        "kind": "intersection_mm3",
+        "artifact_a": "A-frame",
+        "artifact_b": "A-button",
+        "op": "le",
+        "target": 0.0,
+        "tolerance": 1e-06,
+        "description": "試験形状の重なり体積。"
+      },
+      {
+        "id": "CH-design",
+        "requirement_ids": [
+          "R-axis",
+          "R-count",
+          "R-spring"
+        ],
+        "kind": "manual",
+        "artifact_a": null,
+        "artifact_b": null,
+        "op": "eq",
+        "target": true,
+        "tolerance": 0.0,
+        "description": "機構・部品数・ばね不使用・座標系の設計レビュー。自動合格しない。"
+      },
+      {
+        "id": "CH-life",
+        "requirement_ids": [
+          "R-life"
+        ],
+        "kind": "physical_test",
+        "artifact_a": null,
+        "artifact_b": null,
+        "op": "eq",
+        "target": true,
+        "tolerance": 0.0,
+        "description": "実物で耐久性を試験する。デモでは未検証。"
+      }
+    ],
+    "assembly_sequence": [
+      "フレームへ参照部品を配置する。",
+      "ボタンを開放部から挿入する。",
+      "案内・戻り・ストッパーを実物で確認する。"
+    ],
+    "print_strategy": "試験用仮説。本番の印刷向きと隙間は材料と試験片で校正する。",
+    "unknowns": []
+  },
+  "step_order": [
+    "S-frame",
+    "S-button",
+    "S-switch"
+  ],
+  "verification_status": "not_verified",
+  "reference_measurements": {}
+}

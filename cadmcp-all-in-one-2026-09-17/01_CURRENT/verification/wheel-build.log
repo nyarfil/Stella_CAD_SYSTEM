@@ -1,0 +1,10 @@
+WARNING: The directory '/home/oai/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.
+Processing /mnt/data/cadmcp-design-studio-0.3.1-cursor
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: cadmcp-design-brain
+  Building wheel for cadmcp-design-brain (pyproject.toml): started
+  Building wheel for cadmcp-design-brain (pyproject.toml): finished with status 'done'
+  Created wheel for cadmcp-design-brain: filename=cadmcp_design_brain-0.3.1-py3-none-any.whl size=126865 sha256=680daf614339143501e17a0d9c6f97d5ea39a486fdb2fe802ecc9e23ec2fb29f
+  Stored in directory: /tmp/pip-ephem-wheel-cache-85gvcc4j/wheels/0b/fb/2f/fb0f3f5ba15e1d1a5de03c6d6e2a48a0a3da64f7128f1a159d
+Successfully built cadmcp-design-brain

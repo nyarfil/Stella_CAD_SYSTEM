@@ -1,0 +1,38 @@
+{
+  "description": "Four public mirror CAD records associated with author-published Req2CAD function labels; not a random sample; not the complete official corpus.",
+  "annotation_source": "https://huggingface.co/datasets/QianzhiJing/Req2CAD",
+  "cad_records": [
+    {
+      "uid": "0032/00329619",
+      "source_url": "https://github.com/arnavagarwal05/3d_modelling/blob/432d03406b89a924b755c1826f2eb78da650e440/data/cad_json/0032/00329619.json",
+      "git_blob_sha1": "ff1be1a77ae6df1e9446b8b356f763dab881c2fd",
+      "sha256": "b686e391806ec09dd73068e3c6fc9db1b772a0f10add7af1bb40be2f82ca381c",
+      "retrieval": "GitHub connector content transcribed losslessly; upstream official archive hash match not checked",
+      "official_data_archive_verified": false
+    },
+    {
+      "uid": "0032/00325917",
+      "source_url": "https://github.com/arnavagarwal05/3d_modelling/blob/432d03406b89a924b755c1826f2eb78da650e440/data/cad_json/0032/00325917.json",
+      "git_blob_sha1": "7e96950c50c146ba290cb7726cd0036445c4cc09",
+      "sha256": "e374779cc4b55492c189ec0be8ad6a1daab0cfe574d5e71bead1e07dde0937e4",
+      "retrieval": "GitHub connector content transcribed losslessly; upstream official archive hash match not checked",
+      "official_data_archive_verified": false
+    },
+    {
+      "uid": "0032/00321991",
+      "source_url": "https://github.com/arnavagarwal05/3d_modelling/blob/432d03406b89a924b755c1826f2eb78da650e440/data/cad_json/0032/00321991.json",
+      "git_blob_sha1": "4fa89db5257a03f077c6176a1a88785630e3f0f8",
+      "sha256": "2c976c85f0c385cbe44cf6b97b0774e3325541ce2879c0e283216f86edd9fa33",
+      "retrieval": "GitHub connector content transcribed losslessly; upstream official archive hash match not checked",
+      "official_data_archive_verified": false
+    },
+    {
+      "uid": "0032/00325799",
+      "source_url": "https://github.com/arnavagarwal05/3d_modelling/blob/432d03406b89a924b755c1826f2eb78da650e440/data/cad_json/0032/00325799.json",
+      "git_blob_sha1": "0e7a54c65da8cb54729d6b394217b2c74843f598",
+      "sha256": "77e445aeeae110e7d79a96a3b8b3b0749a399e1ef3a940f588473e0628fa3bca",
+      "retrieval": "GitHub connector content transcribed losslessly; upstream official archive hash match not checked",
+      "official_data_archive_verified": false
+    }
+  ]
+}

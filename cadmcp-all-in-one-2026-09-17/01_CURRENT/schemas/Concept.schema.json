@@ -1,0 +1,570 @@
+{
+  "$defs": {
+    "CaseReference": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "uid": {
+          "pattern": "^\\d{4}/\\d{8}$",
+          "title": "Uid",
+          "type": "string"
+        },
+        "evidence_digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Evidence Digest",
+          "type": "string"
+        },
+        "function_query": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Function Query",
+          "type": "string"
+        },
+        "adopted_principle": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Adopted Principle",
+          "type": "string"
+        },
+        "required_adaptations": {
+          "items": {
+            "maxLength": 12000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Required Adaptations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "uid",
+        "evidence_digest",
+        "function_query",
+        "adopted_principle",
+        "required_adaptations"
+      ],
+      "title": "CaseReference",
+      "type": "object"
+    },
+    "Component": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "printed",
+            "purchased",
+            "reference"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "material": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Material",
+          "type": "string"
+        },
+        "function_ids": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Function Ids",
+          "type": "array"
+        },
+        "manufacturing_orientation": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Manufacturing Orientation",
+          "type": "string"
+        },
+        "assembly_access": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Assembly Access",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "role",
+        "material",
+        "function_ids",
+        "manufacturing_orientation",
+        "assembly_access"
+      ],
+      "title": "Component",
+      "type": "object"
+    },
+    "Function": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "function_key": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Function Key",
+          "type": "string"
+        },
+        "verb": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Verb",
+          "type": "string"
+        },
+        "object": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Object",
+          "type": "string"
+        },
+        "requirement_ids": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Requirement Ids",
+          "type": "array"
+        },
+        "expected_behavior": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Expected Behavior",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "function_key",
+        "verb",
+        "object",
+        "requirement_ids",
+        "expected_behavior"
+      ],
+      "title": "Function",
+      "type": "object"
+    },
+    "Interface": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "component_a": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Component A",
+          "type": "string"
+        },
+        "component_b": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Component B",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "mount",
+            "load",
+            "contact",
+            "guide",
+            "return",
+            "stop"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "allowed_motion": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Allowed Motion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "component_a",
+        "component_b",
+        "kind",
+        "description",
+        "allowed_motion"
+      ],
+      "title": "Interface",
+      "type": "object"
+    },
+    "Mechanism": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "pattern_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Pattern Id",
+          "type": "string"
+        },
+        "function_ids": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Function Ids",
+          "type": "array"
+        },
+        "component_ids": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Component Ids",
+          "type": "array"
+        },
+        "input_direction": {
+          "anyOf": [
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Direction"
+        },
+        "output_direction": {
+          "anyOf": [
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Direction"
+        },
+        "return_method": {
+          "enum": [
+            "switch_internal",
+            "printed_flexure",
+            "metal_spring",
+            "none",
+            "not_applicable"
+          ],
+          "title": "Return Method",
+          "type": "string"
+        },
+        "hard_stop": {
+          "title": "Hard Stop",
+          "type": "boolean"
+        },
+        "force_path": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Force Path",
+          "type": "string"
+        },
+        "failure_modes": {
+          "items": {
+            "maxLength": 12000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Failure Modes",
+          "type": "array"
+        },
+        "verification_notes": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Verification Notes",
+          "type": "string"
+        },
+        "reference_ids": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+            "type": "string"
+          },
+          "title": "Reference Ids",
+          "type": "array"
+        },
+        "motion_relation": {
+          "anyOf": [
+            {
+              "enum": [
+                "direct",
+                "lever",
+                "other"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Motion Relation"
+        }
+      },
+      "required": [
+        "id",
+        "pattern_id",
+        "function_ids",
+        "component_ids",
+        "return_method",
+        "hard_stop",
+        "force_path",
+        "failure_modes",
+        "verification_notes"
+      ],
+      "title": "Mechanism",
+      "type": "object"
+    },
+    "SourceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "quote": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Quote",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "quote"
+      ],
+      "title": "SourceRef",
+      "type": "object"
+    },
+    "Unknown": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "question": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Question",
+          "type": "string"
+        },
+        "blocks": {
+          "enum": [
+            "intent",
+            "concepts",
+            "plan",
+            "release"
+          ],
+          "title": "Blocks",
+          "type": "string"
+        },
+        "resolution": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resolution"
+        },
+        "source_refs": {
+          "items": {
+            "$ref": "#/$defs/SourceRef"
+          },
+          "title": "Source Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "question",
+        "blocks"
+      ],
+      "title": "Unknown",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "title": {
+      "maxLength": 12000,
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "rationale": {
+      "maxLength": 12000,
+      "minLength": 1,
+      "title": "Rationale",
+      "type": "string"
+    },
+    "functions": {
+      "items": {
+        "$ref": "#/$defs/Function"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Functions",
+      "type": "array"
+    },
+    "components": {
+      "items": {
+        "$ref": "#/$defs/Component"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Components",
+      "type": "array"
+    },
+    "mechanisms": {
+      "items": {
+        "$ref": "#/$defs/Mechanism"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Mechanisms",
+      "type": "array"
+    },
+    "interfaces": {
+      "items": {
+        "$ref": "#/$defs/Interface"
+      },
+      "maxItems": 200,
+      "title": "Interfaces",
+      "type": "array"
+    },
+    "properties": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_.-]{0,79}$": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "title": "Properties"
+    },
+    "unknowns": {
+      "items": {
+        "$ref": "#/$defs/Unknown"
+      },
+      "title": "Unknowns",
+      "type": "array"
+    },
+    "rejected_alternatives": {
+      "items": {
+        "maxLength": 12000,
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Rejected Alternatives",
+      "type": "array"
+    },
+    "case_references": {
+      "items": {
+        "$ref": "#/$defs/CaseReference"
+      },
+      "maxItems": 50,
+      "title": "Case References",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "rationale",
+    "functions",
+    "components",
+    "mechanisms",
+    "rejected_alternatives"
+  ],
+  "title": "Concept",
+  "type": "object"
+}

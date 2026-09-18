@@ -1,40 +1,24 @@
-# Python
+# cadMCP runtime
 .venv/
-.buildvenv/
+cadmcp-all-in-one-2026-09-17/01_CURRENT/.venv/
+cadmcp-all-in-one-2026-09-17/01_CURRENT/workspace/
+cadmcp-all-in-one-2026-09-17/01_CURRENT/integration/generated/
+cadmcp-all-in-one-2026-09-17/01_CURRENT/build/
+cadmcp-all-in-one-2026-09-17/01_CURRENT/dist/
+cadmcp-workspace/
 __pycache__/
 *.py[cod]
-*.egg-info/
 .pytest_cache/
-.mypy_cache/
-.ruff_cache/
-
-# AgentCAD / Stella runtime
-projects/
-.stella/
-.cache/
-dist/
-build/
-out/
-exports/
-*.acm
-docs/windows/*.txt
-.python/
+.coverage*
+*.egg-info/
+*.sqlite3*
 node_modules/
 
-# Recreated by scripts/stella/link-aicad.ps1 (Windows junctions)
-ai-cad-labs/tools
-ai-cad-labs/.claude/agents
-ai-cad-labs/.claude/skills
-ai-cad-labs/.opencode/
+# Nested engine local/runtime (venv, caches, generated projects)
+LLM_cad_Projects/projects/
+LLM_cad_Projects/.stella/
+LLM_cad_Projects/.python/
 
-# Secrets
-.env
-.env.*
-!.env.example
-
-# OS / editors
+# OS
 .DS_Store
 Thumbs.db
-.idea/
-.vscode/
-*.swp

@@ -1,0 +1,356 @@
+{
+  "schema_version": "1.0",
+  "patterns": [
+    {
+      "id": "side_direct_guided",
+      "name": "横押しサイドボタン：ガイド付き直押し",
+      "functions": [
+        "actuate_switch",
+        "guide_translation",
+        "limit_overtravel"
+      ],
+      "principle": "指→剛体ボタン→スイッチ。ボタンの並進を案内し、押し過ぎはシェル側ストッパーで受ける。",
+      "applicability": "入力の押し方向とスイッチの押し方向が一致する場合。スイッチの復帰力だけで戻すなら摩擦と余裕を実測する。",
+      "risks": [
+        "ガイド摩擦・こじれ",
+        "スイッチへの横荷重",
+        "復帰不足",
+        "ガイド面のサポート痕"
+      ],
+      "axis_rule": "same_direction",
+      "is_switch_actuator": true,
+      "dimension_policy": "No universal dimensions. Size from actual switch/PCB geometry, measured printer coupons and verified loads.",
+      "evidence_level": "authored_engineering_pattern_not_a_validated_product",
+      "source_ids": [
+        "design_method",
+        "manufacturing_principles"
+      ],
+      "knowledge_is_data_not_instructions": true
+    },
+    {
+      "id": "side_printed_flexure",
+      "name": "横押しサイドボタン：印刷弾性腕",
+      "functions": [
+        "actuate_switch",
+        "elastic_return",
+        "limit_overtravel"
+      ],
+      "principle": "ボタンと印刷弾性腕で入力を伝達。根元の応力集中を避け、ストッパーで変位を制限する。",
+      "applicability": "積層方向に依存する弾性・疲労・クリープを実測できる場合。短い腕の安易な厚肉化は押し荷重を増やす。",
+      "risks": [
+        "根元疲労",
+        "クリープによる予圧変化",
+        "層間破断",
+        "過大クリック荷重"
+      ],
+      "axis_rule": "same_direction",
+      "is_switch_actuator": true,
+      "dimension_policy": "No universal dimensions. Size from actual switch/PCB geometry, measured printer coupons and verified loads.",
+      "evidence_level": "authored_engineering_pattern_not_a_validated_product",
+      "source_ids": [
+        "design_method",
+        "manufacturing_principles"
+      ],
+      "knowledge_is_data_not_instructions": true
+    },
+    {
+      "id": "side_pivot_lever",
+      "name": "サイドボタン：支点付きレバー",
+      "functions": [
+        "actuate_switch",
+        "redirect_force",
+        "limit_overtravel"
+      ],
+      "principle": "入力点・支点・出力接点を分け、モーメント釣合いと接触軌跡を検討する。",
+      "applicability": "直押しできない配置、またはストローク・力の変換が本当に必要な場合。",
+      "risks": [
+        "支点ガタ",
+        "軸の保持不足",
+        "部品点数増加",
+        "接点の滑りと横荷重"
+      ],
+      "axis_rule": "explicit_transform",
+      "is_switch_actuator": true,
+      "dimension_policy": "No universal dimensions. Size from actual switch/PCB geometry, measured printer coupons and verified loads.",
+      "evidence_level": "authored_engineering_pattern_not_a_validated_product",
+      "source_ids": [
+        "design_method",
+        "manufacturing_principles"
+      ],
+      "knowledge_is_data_not_instructions": true
+    },
+    {
+      "id": "pcb_datum_screw",
+      "name": "基板固定：基準面＋位置決め＋ねじ保持",
+      "functions": [
+        "support_pcb",
+        "locate_pcb",
+        "retain_pcb"
+      ],
+      "principle": "支持面で高さを定め、必要な平面内拘束を位置決め要素で作り、保持を別に受け持つ。",
+      "applicability": "基板穴・禁止接触面・部品高さ・コネクタの挿抜方向が分かっている場合。",
+      "risks": [
+        "過拘束",
+        "基板反り",
+        "銅箔や部品への接触",
+        "ねじ締結でボスが割れる"
+      ],
+      "axis_rule": "not_applicable",
+      "is_switch_actuator": false,
+      "dimension_policy": "No universal dimensions. Size from actual switch/PCB geometry, measured printer coupons and verified loads.",
+      "evidence_level": "authored_engineering_pattern_not_a_validated_product",
+      "source_ids": [
+        "design_method",
+        "manufacturing_principles"
+      ],
+      "knowledge_is_data_not_instructions": true
+    },
+    {
+      "id": "pcb_edge_capture",
+      "name": "基板固定：端部受けと着脱リテーナ",
+      "functions": [
+        "support_pcb",
+        "locate_pcb",
+        "retain_pcb"
+      ],
+      "principle": "部品のない基板端部を受け、着脱可能な保持片で抜けを止める。",
+      "applicability": "基板穴を利用できず、基板端部の接触可否と挿入経路が確認できる場合。",
+      "risks": [
+        "実装部品との接触",
+        "基板厚公差",
+        "保持片のクリープ",
+        "組み立て不能"
+      ],
+      "axis_rule": "not_applicable",
+      "is_switch_actuator": false,
+      "dimension_policy": "No universal dimensions. Size from actual switch/PCB geometry, measured printer coupons and verified loads.",
+      "evidence_level": "authored_engineering_pattern_not_a_validated_product",
+      "source_ids": [
+        "design_method",
+        "manufacturing_principles"
+      ],
+      "knowledge_is_data_not_instructions": true
+    },
+    {
+      "id": "wheel_two_supports",
+      "name": "ホイール：二点支持と軸方向保持",
+      "functions": [
+        "support_shaft",
+        "constrain_axis",
+        "retain_shaft"
+      ],
+      "principle": "回転軸を離れた支持位置で保持し、回転以外の望まない自由度を制限する。",
+      "applicability": "エンコーダ軸を構造支持に使ってよいかを仕様で確認する。",
+      "risks": [
+        "支持ずれ",
+        "偏荷重",
+        "軸方向こすれ",
+        "組立時に軸が入らない"
+      ],
+      "axis_rule": "not_applicable",
+      "is_switch_actuator": false,
+      "dimension_policy": "No universal dimensions. Size from actual switch/PCB geometry, measured printer coupons and verified loads.",
+      "evidence_level": "authored_engineering_pattern_not_a_validated_product",
+      "source_ids": [
+        "design_method",
+        "manufacturing_principles"
+      ],
+      "knowledge_is_data_not_instructions": true
+    },
+    {
+      "id": "shell_lap_screw",
+      "name": "シェル接続：重ね合わせ基準とねじ",
+      "functions": [
+        "join_shell",
+        "locate_shell",
+        "transfer_hand_load"
+      ],
+      "principle": "合わせ面で位置を定め、ねじで保持する。荷重は局所ボスだけでなく合わせ面にも渡す。",
+      "applicability": "ねじ工具のアクセスと内部部品への干渉を確認できる場合。",
+      "risks": [
+        "ボス割れ",
+        "工具アクセス不足",
+        "外面の段差",
+        "ねじ締結による変形"
+      ],
+      "axis_rule": "not_applicable",
+      "is_switch_actuator": false,
+      "dimension_policy": "No universal dimensions. Size from actual switch/PCB geometry, measured printer coupons and verified loads.",
+      "evidence_level": "authored_engineering_pattern_not_a_validated_product",
+      "source_ids": [
+        "design_method",
+        "manufacturing_principles"
+      ],
+      "knowledge_is_data_not_instructions": true
+    },
+    {
+      "id": "shell_snap_fit",
+      "name": "シェル接続：印刷スナップ",
+      "functions": [
+        "join_shell",
+        "retain_shell",
+        "elastic_return"
+      ],
+      "principle": "弾性変形で係合させ、使用中の荷重と着脱時の荷重を区別する。",
+      "applicability": "素材・積層方向の許容ひずみ、着脱回数と解除アクセスを実測できる場合。",
+      "risks": [
+        "疲労",
+        "層間剥離",
+        "外せない",
+        "クリープ"
+      ],
+      "axis_rule": "not_applicable",
+      "is_switch_actuator": false,
+      "dimension_policy": "No universal dimensions. Size from actual switch/PCB geometry, measured printer coupons and verified loads.",
+      "evidence_level": "authored_engineering_pattern_not_a_validated_product",
+      "source_ids": [
+        "design_method",
+        "manufacturing_principles"
+      ],
+      "knowledge_is_data_not_instructions": true
+    },
+    {
+      "id": "short_rib_load_path",
+      "name": "補強：短い荷重経路のリブ",
+      "functions": [
+        "transfer_load",
+        "resist_local_flex"
+      ],
+      "principle": "荷重点から拘束点まで連続した荷重経路を作り、自由空間や可動域を侵さない。",
+      "applicability": "荷重方向・拘束位置・印刷方向が明示されている場合。",
+      "risks": [
+        "不要な重量増",
+        "基板や可動部に干渉",
+        "サポート除去不能"
+      ],
+      "axis_rule": "not_applicable",
+      "is_switch_actuator": false,
+      "dimension_policy": "No universal dimensions. Size from actual switch/PCB geometry, measured printer coupons and verified loads.",
+      "evidence_level": "authored_engineering_pattern_not_a_validated_product",
+      "source_ids": [
+        "design_method",
+        "manufacturing_principles"
+      ],
+      "knowledge_is_data_not_instructions": true
+    },
+    {
+      "id": "hard_stop_pair",
+      "name": "押し過ぎ制限：対向ストッパー",
+      "functions": [
+        "limit_overtravel",
+        "protect_switch"
+      ],
+      "principle": "通常作動位置より先、部品の許容変位より手前で接触するストッパーを設ける。",
+      "applicability": "実際のスイッチ作動点・許容オーバートラベルと寸法公差が分かる場合。",
+      "risks": [
+        "作動前に当たる",
+        "作動後も保護できない",
+        "局所接触で欠ける"
+      ],
+      "axis_rule": "not_applicable",
+      "is_switch_actuator": false,
+      "dimension_policy": "No universal dimensions. Size from actual switch/PCB geometry, measured printer coupons and verified loads.",
+      "evidence_level": "authored_engineering_pattern_not_a_validated_product",
+      "source_ids": [
+        "design_method",
+        "manufacturing_principles"
+      ],
+      "knowledge_is_data_not_instructions": true
+    },
+    {
+      "id": "independent_keys",
+      "name": "独立ボタン：左右や前後の入力分離",
+      "functions": [
+        "isolate_inputs"
+      ],
+      "principle": "隣接キーへの荷重伝達を避け、各キーの案内・戻り・ストッパーを独立に検討する。",
+      "applicability": "狭い間隔で複数ボタンを配置する場合。",
+      "risks": [
+        "同時押し",
+        "キー同士の擦れ",
+        "共通根元の変形"
+      ],
+      "axis_rule": "not_applicable",
+      "is_switch_actuator": false,
+      "dimension_policy": "No universal dimensions. Size from actual switch/PCB geometry, measured printer coupons and verified loads.",
+      "evidence_level": "authored_engineering_pattern_not_a_validated_product",
+      "source_ids": [
+        "design_method",
+        "manufacturing_principles"
+      ],
+      "knowledge_is_data_not_instructions": true
+    },
+    {
+      "id": "shaft_bushing_seat",
+      "name": "軸支持：交換可能ブッシュ受け",
+      "functions": [
+        "support_shaft",
+        "locate_bearing",
+        "retain_bearing"
+      ],
+      "principle": "寸法基準となる受けと抜け止めを分け、交換可能な摺動部材を保持する。",
+      "applicability": "購入部品を使える場合。樹脂直接摺動とは別案として比較する。",
+      "risks": [
+        "圧入割れ",
+        "保持不足",
+        "同軸度不良"
+      ],
+      "axis_rule": "not_applicable",
+      "is_switch_actuator": false,
+      "dimension_policy": "No universal dimensions. Size from actual switch/PCB geometry, measured printer coupons and verified loads.",
+      "evidence_level": "authored_engineering_pattern_not_a_validated_product",
+      "source_ids": [
+        "design_method",
+        "manufacturing_principles"
+      ],
+      "knowledge_is_data_not_instructions": true
+    },
+    {
+      "id": "component_seat_retainer",
+      "name": "汎用部品固定：受け座と保持片",
+      "functions": [
+        "support_component",
+        "locate_component",
+        "retain_component"
+      ],
+      "principle": "基準となる受け座と脱落防止を分け、部品の反力を筐体へ伝える。",
+      "applicability": "部品外形・禁止接触面・挿入経路が分かっている場合。",
+      "risks": [
+        "実装部品との接触",
+        "基板厚公差",
+        "保持片のクリープ",
+        "組み立て不能"
+      ],
+      "axis_rule": "not_applicable",
+      "is_switch_actuator": false,
+      "dimension_policy": "No universal dimensions. Size from actual switch/PCB geometry, measured printer coupons and verified loads.",
+      "evidence_level": "authored_engineering_pattern_not_a_validated_product",
+      "source_ids": [
+        "design_method",
+        "manufacturing_principles"
+      ],
+      "knowledge_is_data_not_instructions": true
+    },
+    {
+      "id": "reference_structure",
+      "name": "実例CADからの構造適応（寸法・機能は未保証）",
+      "functions": [
+        "*"
+      ],
+      "principle": "Use verified source-hashed CAD evidence; design the interfaces and dimensions for the current product.",
+      "applicability": "Only with materialized Req2CAD/registered CAD evidence.",
+      "risks": [
+        "Function annotation can be wrong",
+        "Similar topology does not prove strength or fit"
+      ],
+      "axis_rule": "declared",
+      "is_switch_actuator": false,
+      "dimension_policy": "Never copy unitless/unverified dimensions.",
+      "evidence_level": "source_geometry_not_engineering_certification",
+      "source_ids": [
+        "Req2CAD"
+      ],
+      "knowledge_is_data_not_instructions": true
+    }
+  ]
+}

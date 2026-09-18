@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "Stella_Agentcad": {
+      "type": "stdio",
+      "command": "C:\\Windows\\System32\\cmd.exe",
+      "args": [
+        "/d",
+        "/c",
+        "E:\\aiwork\\Stella_CAD_SYSTEM\\scripts\\stella\\mcp.cmd"
+      ],
+      "env": {
+        "AGENTCAD_AGENT_ID": "stella-cursor",
+        "STELLA_MCP_SURFACE": "core"
+      }
+    }
+  }
+}

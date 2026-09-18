@@ -1,0 +1,398 @@
+{
+  "$defs": {
+    "Check": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "requirement_ids": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Requirement Ids",
+          "type": "array"
+        },
+        "kind": {
+          "enum": [
+            "brep_valid",
+            "solid_count",
+            "bbox_x_mm",
+            "bbox_y_mm",
+            "bbox_z_mm",
+            "distance_mm",
+            "intersection_mm3",
+            "external_geometry",
+            "manual",
+            "physical_test"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "artifact_a": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Artifact A"
+        },
+        "artifact_b": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Artifact B"
+        },
+        "op": {
+          "enum": [
+            "eq",
+            "le",
+            "ge"
+          ],
+          "title": "Op",
+          "type": "string"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Target"
+        },
+        "tolerance": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Tolerance",
+          "type": "number"
+        },
+        "description": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "requirement_ids",
+        "kind",
+        "op",
+        "target",
+        "description"
+      ],
+      "title": "Check",
+      "type": "object"
+    },
+    "Dimension": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "value_mm": {
+          "exclusiveMinimum": 0,
+          "title": "Value Mm",
+          "type": "number"
+        },
+        "provenance": {
+          "enum": [
+            "user",
+            "measurement",
+            "proposal"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "$ref": "#/$defs/SourceRef"
+          },
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "evidence_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Id"
+        },
+        "rationale": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "value_mm",
+        "provenance",
+        "rationale"
+      ],
+      "title": "Dimension",
+      "type": "object"
+    },
+    "PlanStep": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "operation": {
+          "enum": [
+            "create_part",
+            "modify_part",
+            "place_part",
+            "create_joint",
+            "inspect"
+          ],
+          "title": "Operation",
+          "type": "string"
+        },
+        "component_ids": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Component Ids",
+          "type": "array"
+        },
+        "requirement_ids": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Requirement Ids",
+          "type": "array"
+        },
+        "depends_on": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+            "type": "string"
+          },
+          "title": "Depends On",
+          "type": "array"
+        },
+        "purpose": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Purpose",
+          "type": "string"
+        },
+        "instructions": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Instructions",
+          "type": "string"
+        },
+        "preserves": {
+          "items": {
+            "maxLength": 12000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Preserves",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "operation",
+        "component_ids",
+        "requirement_ids",
+        "purpose",
+        "instructions",
+        "preserves"
+      ],
+      "title": "PlanStep",
+      "type": "object"
+    },
+    "SourceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "quote": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Quote",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "quote"
+      ],
+      "title": "SourceRef",
+      "type": "object"
+    },
+    "Unknown": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "question": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Question",
+          "type": "string"
+        },
+        "blocks": {
+          "enum": [
+            "intent",
+            "concepts",
+            "plan",
+            "release"
+          ],
+          "title": "Blocks",
+          "type": "string"
+        },
+        "resolution": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resolution"
+        },
+        "source_refs": {
+          "items": {
+            "$ref": "#/$defs/SourceRef"
+          },
+          "title": "Source Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "question",
+        "blocks"
+      ],
+      "title": "Unknown",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "concept_id": {
+      "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+      "title": "Concept Id",
+      "type": "string"
+    },
+    "dimensions": {
+      "items": {
+        "$ref": "#/$defs/Dimension"
+      },
+      "maxItems": 200,
+      "title": "Dimensions",
+      "type": "array"
+    },
+    "steps": {
+      "items": {
+        "$ref": "#/$defs/PlanStep"
+      },
+      "maxItems": 200,
+      "minItems": 1,
+      "title": "Steps",
+      "type": "array"
+    },
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/Check"
+      },
+      "maxItems": 200,
+      "minItems": 1,
+      "title": "Checks",
+      "type": "array"
+    },
+    "assembly_sequence": {
+      "items": {
+        "maxLength": 12000,
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Assembly Sequence",
+      "type": "array"
+    },
+    "print_strategy": {
+      "maxLength": 12000,
+      "minLength": 1,
+      "title": "Print Strategy",
+      "type": "string"
+    },
+    "unknowns": {
+      "items": {
+        "$ref": "#/$defs/Unknown"
+      },
+      "title": "Unknowns",
+      "type": "array"
+    }
+  },
+  "required": [
+    "concept_id",
+    "steps",
+    "checks",
+    "assembly_sequence",
+    "print_strategy"
+  ],
+  "title": "Plan",
+  "type": "object"
+}

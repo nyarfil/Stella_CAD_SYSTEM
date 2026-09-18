@@ -1,0 +1,299 @@
+{
+  "$defs": {
+    "Constraint": {
+      "additionalProperties": false,
+      "description": "A predicate over declared candidate properties, NOT a geometric certificate.",
+      "properties": {
+        "requirement_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Requirement Id",
+          "type": "string"
+        },
+        "property": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Property",
+          "type": "string"
+        },
+        "op": {
+          "enum": [
+            "eq",
+            "le",
+            "ge",
+            "ne"
+          ],
+          "title": "Op",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "enum": [
+            "mm",
+            "N",
+            "g",
+            "count",
+            "dimensionless",
+            "text"
+          ],
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "requirement_id",
+        "property",
+        "op",
+        "value",
+        "unit"
+      ],
+      "title": "Constraint",
+      "type": "object"
+    },
+    "Disposition": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "quote": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Quote",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "quote",
+        "reason"
+      ],
+      "title": "Disposition",
+      "type": "object"
+    },
+    "Requirement": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "priority": {
+          "enum": [
+            "must",
+            "preference",
+            "must_not"
+          ],
+          "title": "Priority",
+          "type": "string"
+        },
+        "origin": {
+          "enum": [
+            "explicit",
+            "inferred"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "$ref": "#/$defs/SourceRef"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "verification": {
+          "enum": [
+            "declaration",
+            "geometry",
+            "physical"
+          ],
+          "title": "Verification",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "priority",
+        "origin",
+        "source_refs",
+        "verification"
+      ],
+      "title": "Requirement",
+      "type": "object"
+    },
+    "SourceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "quote": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Quote",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "quote"
+      ],
+      "title": "SourceRef",
+      "type": "object"
+    },
+    "Unknown": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "question": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Question",
+          "type": "string"
+        },
+        "blocks": {
+          "enum": [
+            "intent",
+            "concepts",
+            "plan",
+            "release"
+          ],
+          "title": "Blocks",
+          "type": "string"
+        },
+        "resolution": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resolution"
+        },
+        "source_refs": {
+          "items": {
+            "$ref": "#/$defs/SourceRef"
+          },
+          "title": "Source Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "question",
+        "blocks"
+      ],
+      "title": "Unknown",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "objective": {
+      "maxLength": 12000,
+      "minLength": 1,
+      "title": "Objective",
+      "type": "string"
+    },
+    "coordinate_frame": {
+      "maxLength": 12000,
+      "minLength": 1,
+      "title": "Coordinate Frame",
+      "type": "string"
+    },
+    "requirements": {
+      "items": {
+        "$ref": "#/$defs/Requirement"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Requirements",
+      "type": "array"
+    },
+    "constraints": {
+      "items": {
+        "$ref": "#/$defs/Constraint"
+      },
+      "maxItems": 100,
+      "title": "Constraints",
+      "type": "array"
+    },
+    "unknowns": {
+      "items": {
+        "$ref": "#/$defs/Unknown"
+      },
+      "maxItems": 100,
+      "title": "Unknowns",
+      "type": "array"
+    },
+    "dispositions": {
+      "items": {
+        "$ref": "#/$defs/Disposition"
+      },
+      "maxItems": 100,
+      "title": "Dispositions",
+      "type": "array"
+    },
+    "manufacturing_notes": {
+      "maxLength": 12000,
+      "minLength": 1,
+      "title": "Manufacturing Notes",
+      "type": "string"
+    }
+  },
+  "required": [
+    "objective",
+    "coordinate_frame",
+    "requirements",
+    "manufacturing_notes"
+  ],
+  "title": "Brief",
+  "type": "object"
+}

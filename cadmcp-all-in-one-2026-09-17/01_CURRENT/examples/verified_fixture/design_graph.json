@@ -1,0 +1,198 @@
+{
+  "schema_version": "1.0",
+  "nodes": [
+    {
+      "id": "R-axis",
+      "kind": "requirement",
+      "text": "スイッチはボタンのすぐ内側で、押す方向は両方とも-Yです。"
+    },
+    {
+      "id": "R-count",
+      "kind": "requirement",
+      "text": "造形部品は2個以内。"
+    },
+    {
+      "id": "R-spring",
+      "kind": "requirement",
+      "text": "金属ばねは使わない。"
+    },
+    {
+      "id": "R-width",
+      "kind": "requirement",
+      "text": "試験片の幅は20 mm。"
+    },
+    {
+      "id": "R-life",
+      "kind": "requirement",
+      "text": "耐久性は実物で確認する。"
+    },
+    {
+      "id": "F-act",
+      "kind": "function",
+      "behavior": "入力は-Yへ動き、スイッチへ同方向で伝わり、除荷で戻る。"
+    },
+    {
+      "id": "F-frame",
+      "kind": "function",
+      "behavior": "20 mm幅の試験フレームを基準に位置を保持する。"
+    },
+    {
+      "id": "M-button",
+      "kind": "mechanism",
+      "pattern": "side_direct_guided"
+    },
+    {
+      "id": "M-frame",
+      "kind": "mechanism",
+      "pattern": "component_seat_retainer"
+    },
+    {
+      "id": "P-frame",
+      "kind": "component",
+      "name": "試験フレーム"
+    },
+    {
+      "id": "P-button",
+      "kind": "component",
+      "name": "試験ボタン"
+    },
+    {
+      "id": "P-switch",
+      "kind": "component",
+      "name": "架空スイッチ参照部品"
+    },
+    {
+      "id": "CH-brep",
+      "kind": "check",
+      "method": "brep_valid"
+    },
+    {
+      "id": "CH-width",
+      "kind": "check",
+      "method": "bbox_x_mm"
+    },
+    {
+      "id": "CH-gap",
+      "kind": "check",
+      "method": "distance_mm"
+    },
+    {
+      "id": "CH-collision",
+      "kind": "check",
+      "method": "intersection_mm3"
+    },
+    {
+      "id": "CH-design",
+      "kind": "check",
+      "method": "manual"
+    },
+    {
+      "id": "CH-life",
+      "kind": "check",
+      "method": "physical_test"
+    }
+  ],
+  "edges": [
+    {
+      "from": "R-axis",
+      "to": "F-act",
+      "relation": "realized_by"
+    },
+    {
+      "from": "R-life",
+      "to": "F-act",
+      "relation": "realized_by"
+    },
+    {
+      "from": "R-count",
+      "to": "F-frame",
+      "relation": "realized_by"
+    },
+    {
+      "from": "R-spring",
+      "to": "F-frame",
+      "relation": "realized_by"
+    },
+    {
+      "from": "R-width",
+      "to": "F-frame",
+      "relation": "realized_by"
+    },
+    {
+      "from": "F-act",
+      "to": "M-button",
+      "relation": "implemented_by"
+    },
+    {
+      "from": "M-button",
+      "to": "P-button",
+      "relation": "embodied_by"
+    },
+    {
+      "from": "M-button",
+      "to": "P-switch",
+      "relation": "embodied_by"
+    },
+    {
+      "from": "M-button",
+      "to": "P-frame",
+      "relation": "embodied_by"
+    },
+    {
+      "from": "F-frame",
+      "to": "M-frame",
+      "relation": "implemented_by"
+    },
+    {
+      "from": "M-frame",
+      "to": "P-frame",
+      "relation": "embodied_by"
+    },
+    {
+      "from": "M-frame",
+      "to": "P-switch",
+      "relation": "embodied_by"
+    },
+    {
+      "from": "R-width",
+      "to": "CH-brep",
+      "relation": "verified_by"
+    },
+    {
+      "from": "R-width",
+      "to": "CH-width",
+      "relation": "verified_by"
+    },
+    {
+      "from": "R-axis",
+      "to": "CH-gap",
+      "relation": "verified_by"
+    },
+    {
+      "from": "R-axis",
+      "to": "CH-collision",
+      "relation": "verified_by"
+    },
+    {
+      "from": "R-axis",
+      "to": "CH-design",
+      "relation": "verified_by"
+    },
+    {
+      "from": "R-count",
+      "to": "CH-design",
+      "relation": "verified_by"
+    },
+    {
+      "from": "R-spring",
+      "to": "CH-design",
+      "relation": "verified_by"
+    },
+    {
+      "from": "R-life",
+      "to": "CH-life",
+      "relation": "verified_by"
+    }
+  ],
+  "traceability_is_not_satisfaction": true
+}

@@ -1,0 +1,12 @@
+# Project MCP for Codex (Astra / Sol). Loaded when this repo is trusted.
+# Fork name is Stella_Agentcad so it never collides with n3r/AgentCAD.
+
+[mcp_servers.Stella_Agentcad]
+command = "cmd.exe"
+args = ["/d", "/c", "scripts\\stella\\mcp.cmd"]
+startup_timeout_sec = 300.0
+tool_timeout_sec = 600.0
+
+[mcp_servers.Stella_Agentcad.env]
+AGENTCAD_AGENT_ID = "stella-codex"
+STELLA_MCP_SURFACE = "core"
