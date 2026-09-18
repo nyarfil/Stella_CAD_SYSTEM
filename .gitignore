@@ -19,6 +19,7 @@ LLM_cad_Projects/projects/
 LLM_cad_Projects/.stella/
 LLM_cad_Projects/.python/
 
-# OS
+# OS / git temp
 .DS_Store
 Thumbs.db
+.merge_file_*
