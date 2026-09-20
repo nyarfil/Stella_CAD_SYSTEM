@@ -298,15 +298,15 @@ successful recovery by a real model remains to be demonstrated.
 
 Reference runner R2 also fingerprints `studio/autopilot.py` before and after the
 model run, binding the recovery implementation to the evidence. Runner tests:
-13 passed (windows-codex-20260920-reference-runner-pre-r2.xml). R2 is in flight;
-no completion or model recovery claim is made until its terminal report is inspected.
+13 passed (windows-codex-20260920-reference-runner-pre-r2.xml). R2はその後終了し、
+terminal reportを確認済みである。結果と未達境界は下記の正式版引渡し記録に固定する。
 
-## Owner-requested MCP preview handoff
+## Owner-requested 0.3.3 official MCP handoff
 
 R2 terminal evidence: 14 actual Sol calls; geometry oracle and integrity checks pass,
 five-role/two-round execution complete; owner acceptance remains not_accepted.
 Further capability development is paused at the owner's request, not declared complete.
-The project Codex MCP and product Skill are enabled for preview use. Cursor and global
+The project Codex MCP and product Skill are enabled for official 0.3.3 use. Cursor and global
 trust/security settings are unchanged. Actual app read-only diagnostic evidence is
 verification/mcp-preview-app-connection.json; source-based isolated stdio exposes 50 tools.
 Local wheel packaging is not a clean-install or physical-performance certification.

@@ -1,8 +1,14 @@
-# Stella CAD System
+# Stella CAD System — cadMCP Design Studio
 
 ユーザーの意図を汲んで、実例CADを見ながら機械部品を設計する作業リポです。
 
-本体は **cadMCP Design Studio 0.3.3 + 未リリース拡張** です。考えるのは Cursor / Codex のモデル、探す・測る・検査するのは共通の cadMCP、形を計算するのは CadQuery です。
+本体は **cadMCP Design Studio 0.3.3（正式版）** です。考えるのは Cursor / Codex のモデル、探す・測る・検査するのは共通の cadMCP、形を計算するのは CadQuery です。
+
+## リリース状態
+
+現在の正式版タグは `v0.3.3` です。これはMCPソフトウェアと運用基盤の正式リリースを意味します。CADレビューの受入、マウス機構、物理性能、強度、耐久性、競合比較まで完了したという意味ではありません。未検証事項は合格に変換せず、設計成果物・幾何検査・レビュー・物理試験を別々に扱います。
+
+CodexのプロジェクトMCPとFactory OSの下位能力登録を含みます。CursorとCodexは同じMCP本体・検証ロジックを使いますが、Cursorのホスト設定は現在の安全境界により無効のままです。利用手順と限界は `docs/MCP_PREVIEW_JA.md`（旧ファイル名を互換維持）を参照してください。
 
 Codexの導入状況と初回操作は `CODEX_GUIDE_JA.md`、受入状況と残作業は `IMPLEMENTATION_PLAN_JA.md` を参照してください。
 
@@ -42,4 +48,4 @@ Stella_CAD_SYSTEM/
   LLM_cad_Projects/        旧エンジン置き場（隔離）
 ```
 
-詳細は `cadmcp-all-in-one-2026-09-17/START_HERE_JA.md` と `01_CURRENT/CURSOR_GUIDE_JA.md` です。
+詳細は `cadmcp-all-in-one-2026-09-17/START_HERE_JA.md`、`01_CURRENT/CURSOR_GUIDE_JA.md`、`CODEX_GUIDE_JA.md` です。

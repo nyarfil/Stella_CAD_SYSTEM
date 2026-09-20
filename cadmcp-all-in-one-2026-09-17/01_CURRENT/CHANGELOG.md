@@ -1,3 +1,12 @@
+# 0.3.3 — Official MCP release (2026-09-20)
+
+- Publish the Codex project MCP configuration, Design Skill, Factory OS handoff, and the shared Cursor/Codex cadMCP implementation as the current official software release.
+- Include typed Studio planning, principle-reference routing, bounded CAD acceptance, project protection, evidence-state handling, delivery consistency checks, review contracts, and the 505-test regression baseline (2 Windows symlink skips).
+- Preserve known boundaries: a software release is not CAD review acceptance, mouse-mechanism completion, physical-performance certification, clean-install proof, or a competitive benchmark.
+- Runtime model/image/STEP traces remain local evidence and are intentionally not included in the GitHub source release.
+
+The older `Unreleased` headings below are retained as development-history sections for the same 0.3.3 release.
+
 # Unreleased — Parallel polygon Loft and evidence limits (2026-09-20)
 
 - Require registered per-part/assembly STEP equivalence in new supplemental verification subjects, within the existing worker budget. Bind the internal delivery manifest, report details and STEP hashes; reject contract downgrade and contradictory results.

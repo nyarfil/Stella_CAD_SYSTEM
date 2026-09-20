@@ -2,19 +2,20 @@
 
 ## 最新の注意事項（2026-09-20）
 
-### 方針変更：高度化を中断しMCP暫定利用へ
+### 方針変更：高度化を中断しMCP正式版0.3.3へ
 
-ユーザー指定により現在版0.3.3をローカルMCPとして引渡す。未達要件は保持し、高度化は再開指示後。
+ユーザー指定により現在版0.3.3をMCPソフトウェアの正式版として引渡す。未達要件は保持し、高度化は再開指示後。正式版はCADレビュー受入・マウス機構・物理性能の完了宣言ではない。
 R2は終了: 実Sol14呼出し、execution_completed=true、参照形状importなし、固定oracle4検査pass、要求/参考STEP/検査コードhash不変、5役2巡。レビュー受入not_accepted、物理未認定。追加モデル試行なし。
 verification/package-20260920-mcp-handoffにwheel作成。既存venv/現ソースで隔離stdio50工具成功（codex-isolated-20260920-mcp-handoff.json）。clean install試験ではない。
 現Codexアプリ実工具でdoctor/fs_status/projects/FunctionBrief schema成功（mcp-preview-app-connection.json）。本番は読取診断のみ。カタログ175978・注釈付き128873・機能24757・意味索引ready・BRep測定記録5。全件測定や検索品質の証明ではない。
-CodexプロジェクトMCP/Skillを有効化。Cursor・無関係設定を保持。Factory標準は変更せず個人能力CATALOG/references/cadmcp.mdへ接続。docs/MCP_PREVIEW_JA.mdが最新入口。
+CodexプロジェクトMCP/Skillを正式版として有効化。Cursor・無関係設定を保持。Factory標準は変更せず個人能力CATALOG/references/cadmcp.mdへ接続。docs/MCP_PREVIEW_JA.mdが現行入口（旧ファイル名を互換維持）。
 引渡し対象回帰: development isolation / codex setup / protocol の27試験成功（3.25秒）。設定の構造比較で変更は該当MCP/Skillのenabled二箇所のみ、Cursor空設定保持を確認。wheel SHA256: 84c3de02d560d46549a782038ebc78084064491072677c4fc98309e94296c1b8。現在アプリの既存サーバとwheelのコード同一性・別PCのclean installは未検証。
 
-原理参考R2: runnerの前後hash対象へautopilot.pyを追加し、対象13試験成功（10.45秒、windows-codex-20260920-reference-runner-pre-r2.xml）。verification/reference-design-20260920-r2で実Sol試験を開始。handle83598は直近pollで稼働中、要求整理段階・callsディレクトリ1件。最大16呼出し/各180秒、条件はR1と同じ。結果未確定、重複起動禁止。ユーザーから週間使用枠の急速消費について懸念があり、追加試行の開始前に予算方針を確認する。
+原理参考R2: runnerの前後hash対象へautopilot.pyを追加し、対象13試験成功（10.45秒）。verification/reference-design-20260920-r2の実Sol試験は終了済みで、結果は上記のとおり。旧R1失敗記録も保持し、追加モデル試行は行わない。
 
 以下の古い日付の「現セッション」「完了」「実行中」はその記録時点を指す。
-通常MCPと製品Skillは開発中無効。直近の全体449成功は追加測定v2・証拠状態表示の統合前であり、現行全体の合格とは扱わない。
+以下の次段落以降は開発履歴であり、現行の正式版0.3.3の状態を上書きしない。
+（履歴）通常MCPと製品Skillは開発中無効。直近の全体449成功は追加測定v2・証拠状態表示の統合前であり、現行全体の合格とは扱わない。
 その後の全体回帰 `windows-codex-20260920-evidence-reference-all.xml` は488成功・2スキップ・失敗0、391.80秒。追加測定v2・証拠状態表示・原理参考実CAD試験までを含む。スキップはWindows symlink制約。この実行開始後に新規追加した `check_reference_design.py` / `test_reference_design_script.py` は含まない。
 口頭の「実現見込み80％前後」「完成度半分程度」は主観的な見立てで、測定された成功率や受入判定ではない。完成判定は下記の証拠と未達項目で行う。
 
