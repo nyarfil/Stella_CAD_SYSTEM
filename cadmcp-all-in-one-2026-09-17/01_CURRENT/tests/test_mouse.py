@@ -241,4 +241,4 @@ def test_schema_and_tool_flags(tools):
     assert names['brain_mouse_list_board_packs']['annotations']['readOnlyHint'] is True
     assert names['brain_mouse_structure_gate']['annotations']['readOnlyHint'] is True
     assert names['brain_mouse_register_shell_pack']['annotations']['readOnlyHint'] is False
-    assert len(names) == 43
+    assert len(names) == 50

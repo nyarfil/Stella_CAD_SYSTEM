@@ -1,5 +1,51 @@
 {
   "$defs": {
+    "EvidenceInspection": {
+      "additionalProperties": false,
+      "properties": {
+        "attachment_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Attachment Sha256",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "json",
+            "image"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "attachment_path": {
+          "default": "",
+          "maxLength": 4096,
+          "title": "Attachment Path",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "viewed",
+            "unreadable"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "observation": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Observation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "attachment_sha256",
+        "kind",
+        "status",
+        "observation"
+      ],
+      "title": "EvidenceInspection",
+      "type": "object"
+    },
     "Finding": {
       "additionalProperties": false,
       "properties": {
@@ -99,6 +145,22 @@
       "minLength": 8,
       "title": "Execution Description",
       "type": "string"
+    },
+    "evidence_inspections": {
+      "items": {
+        "$ref": "#/$defs/EvidenceInspection"
+      },
+      "maxItems": 32,
+      "title": "Evidence Inspections",
+      "type": "array"
+    },
+    "challenged_review_ids": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 16,
+      "title": "Challenged Review Ids",
+      "type": "array"
     },
     "findings": {
       "items": {

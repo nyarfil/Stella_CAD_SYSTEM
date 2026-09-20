@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "case_id": "original_L_plate",
+  "original_request": "ソフトウェアの幾何検証用L字プレート。XY輪郭(0,0),(20,0),(20,6),(10,6),(10,14),(0,14) mm、Z=0..2 mmの単一ソリッド。カタログ形状を流用せず新規設計。外接20x14x2、体積400 mm3、欠き取り領域を検証。実機の荷重・材料性能や製造認定は今回要求しないが未検証として残す。",
+  "expected_solids": 1,
+  "lower_mm": [0.0, 0.0, 0.0],
+  "upper_mm": [20.0, 14.0, 2.0],
+  "coordinate_tolerance_mm": 0.00001,
+  "volume_mm3": 400.0,
+  "volume_tolerance_mm3": 0.00001,
+  "expected_prism": {
+    "points_mm": [[0.0, 0.0], [20.0, 0.0], [20.0, 6.0], [10.0, 6.0], [10.0, 14.0], [0.0, 14.0]],
+    "z_min_mm": 0.0,
+    "z_max_mm": 2.0,
+    "max_symmetric_difference_mm3": 0.00001
+  },
+  "regions": [
+    {"id": "notch", "lower_mm": [11.0, 7.0, 0.1], "upper_mm": [19.0, 13.0, 1.9], "min_fill": 0.0, "max_fill": 0.00000001},
+    {"id": "left_arm", "lower_mm": [1.0, 7.0, 0.1], "upper_mm": [9.0, 13.0, 1.9], "min_fill": 0.99999999, "max_fill": 1.0}
+  ],
+  "unverified_requirements": ["実機荷重、材料強度、疲労、製造ばらつきは未検証。占有検査は指定領域のみで全表面の一致を証明しない。"]
+}

@@ -6,7 +6,7 @@ from ..engine import Brain
 from ..api import Tools
 from ..errors import BrainError
 from .autopilot import Autopilot
-from .provider import CodexProvider
+from .provider import CodexProvider, probe_codex
 from .cursor_provider import CursorProvider, probe_cursor
 
 def main(argv=None):
@@ -17,6 +17,8 @@ def main(argv=None):
     s=sub.add_parser('schema');s.add_argument('kind',choices=['brief','matrix','recipe','review','reply'])
     check=sub.add_parser('provider-check',help='Probe CLI flags/version only; no model call or login.').add_argument_group('Cursor')
     check.add_argument('--cursor-agent',default=None)
+    check.add_argument('--provider',choices=['cursor','codex'],default='cursor')
+    check.add_argument('--codex',default='codex')
     check.add_argument('--cursor-permissions-only',action='store_true',help='Owner explicitly chooses ask/deny rules without requesting an OS sandbox.')
     a=sub.add_parser('autopilot')
     a.add_argument('--project',required=True)
@@ -27,6 +29,8 @@ def main(argv=None):
     a.add_argument('--cursor-agent',default=None,help='Cursor Agent executable (auto: cursor-agent, then agent); not the cursor editor launcher.')
     a.add_argument('--cursor-permissions-only',action='store_true',help='Explicitly omit --sandbox enabled for Cursor; ask mode and deny rules remain. No OS isolation guarantee.')
     a.add_argument('--search-mode',choices=['semantic','lexical'],default='semantic')
+    a.add_argument('--design-route',choices=['auto','reference_required','original'],default='auto',help='References inform design; original explicitly skips catalog retrieval.')
+    a.add_argument('--max-replans',type=int,choices=[0,1,2],default=1)
     a.add_argument('--max-calls',type=int,default=32)
     a.add_argument('--per-call-seconds',type=int,default=600)
     a.add_argument('--max-reference-builds',type=int,default=8)
@@ -40,7 +44,7 @@ def main(argv=None):
         p.error('No model was called. Supply --execute-model to authorize an owner-side run, or use host-driven MCP tools.')
     try:
         if args.command=='provider-check':
-            value=probe_cursor(args.cursor_agent,require_sandbox=not args.cursor_permissions_only)
+            value=probe_codex(args.codex) if args.provider=='codex' else probe_cursor(args.cursor_agent,require_sandbox=not args.cursor_permissions_only)
             print(json.dumps(value,ensure_ascii=False,indent=2));return 0
         if args.command=='autopilot' and args.provider!='cursor' and (args.cursor_agent or args.cursor_permissions_only):
             raise BrainError('PROVIDER_OPTIONS','Cursor options require --provider cursor.')
@@ -54,12 +58,13 @@ def main(argv=None):
             if args.provider=='cursor':
                 provider=CursorProvider(folder/'calls',executable=args.cursor_agent,model=args.model,max_calls=args.max_calls,timeout_seconds=args.per_call_seconds,evidence_root=args.workspace,require_sandbox=not args.cursor_permissions_only)
             else:
-                provider=CodexProvider(folder/'calls',executable=args.codex,model=args.model,max_calls=args.max_calls,timeout_seconds=args.per_call_seconds)
+                provider=CodexProvider(folder/'calls',executable=args.codex,model=args.model,max_calls=args.max_calls,timeout_seconds=args.per_call_seconds,evidence_root=args.workspace)
             if args.request_file:
                 if args.request_file.stat().st_size>128*1024:raise BrainError('REQUEST_SIZE','Request file exceeds 128 KiB.')
                 tools.brain_open(args.project,args.request_file.read_text('utf-8'))
             run=Autopilot(tools,provider,folder,search_mode=args.search_mode,max_reference_builds=args.max_reference_builds,
-                          max_repairs=args.max_repairs,review_workers=args.review_workers,debate_rounds=args.debate_rounds)
+                          max_repairs=args.max_repairs,review_workers=args.review_workers,debate_rounds=args.debate_rounds,
+                          design_route=args.design_route,max_replans=args.max_replans)
             value=run.run(args.project)
         print(json.dumps(value,ensure_ascii=False,indent=2));return 0
     except (BrainError,ValueError,OSError) as exc:

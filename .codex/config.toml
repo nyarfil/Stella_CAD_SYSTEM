@@ -1,0 +1,20 @@
+# BEGIN cadMCP managed configuration
+[mcp_servers.cadmcp-design-brain]
+enabled = true
+"command" = "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-all-in-one-2026-09-17\\01_CURRENT\\.venv\\Scripts\\python.exe"
+"args" = ["-m", "cadmcp_brain", "--workspace", "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace", "serve"]
+"cwd" = "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-all-in-one-2026-09-17\\01_CURRENT"
+"startup_timeout_sec" = 60
+"tool_timeout_sec" = 600
+
+[mcp_servers.cadmcp-design-brain.env]
+"CADMCP_REQ2CAD_ROOT" = "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace\\knowledge\\req2cad"
+"CADMCP_REQUIRE_CAD_REFERENCES" = "1"
+"PYTHONUTF8" = "1"
+"PYTHONIOENCODING" = "utf-8"
+# END cadMCP managed configuration
+
+# Owner-enabled preview. Product CAD instructions do not govern MCP development.
+[[skills.config]]
+path = "E:/aiwork/Stella_CAD_SYSTEM/.agents/skills/cadmcp-design-brain/SKILL.md"
+enabled = true

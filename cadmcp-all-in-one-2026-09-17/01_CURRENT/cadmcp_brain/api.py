@@ -33,7 +33,8 @@ class Tools(MouseToolsMixin,StudioToolsMixin,Req2CADToolsMixin):
 
     def list(self):
         readonly={"brain_get","brain_task","brain_schema","brain_patterns","brain_history","brain_backend_probe","brain_doctor","brain_fs_status","brain_fs_search","brain_fs_case","brain_fs_evidence","brain_fs_compare","brain_fs_portfolio","brain_studio_schema","brain_fs_search_tasks","brain_fs_interfaces","brain_studio_review_status","brain_mouse_inspect_inputs","brain_mouse_get_board_pack","brain_mouse_list_board_packs","brain_mouse_get_shell_pack","brain_mouse_list_shell_packs","brain_mouse_structure_gate"}
-        return [{"name":name,"description":t["description"],"inputSchema":t["model"].model_json_schema(),"annotations":{"readOnlyHint":name in readonly,"destructiveHint":name=="brain_backend_call","openWorldHint":name in {"brain_backend_probe","brain_backend_call"}}} for name,t in sorted(self.registry.items())]
+        readonly.update({'brain_projects', 'brain_studio_attempts', 'brain_studio_capabilities', 'brain_get_project_protection'})
+        return [{"name":name,"description":t["description"],"inputSchema":t["model"].model_json_schema(),"annotations":{"readOnlyHint":name in readonly,"destructiveHint":name in {"brain_backend_call", "brain_set_project_protection"},"openWorldHint":name in {"brain_backend_probe","brain_backend_call"}}} for name,t in sorted(self.registry.items())]
 
     def call(self,name: str,arguments: dict[str,Any]):
         if name not in self.registry: raise BrainError("UNKNOWN_TOOL","Unknown brain tool.",{"name":name})
@@ -48,6 +49,25 @@ class Tools(MouseToolsMixin,StudioToolsMixin,Req2CADToolsMixin):
     def brain_get(self,project_id: str) -> dict:
         """Read current state and revision. Reload after REVISION_CONFLICT; never overwrite a newer design."""
         return self.brain.get(project_id)
+
+    def brain_get_project_protection(self,project_id: str) -> dict:
+        """Read durable project protection and effective legacy environment guards. No CAD/model execution or policy change."""
+        return self.brain.get_project_protection(project_id)
+
+    def brain_set_project_protection(self,project_id: str,expected_revision: int,protection: dict[str,Any],reason: str) -> dict:
+        """Explicit owner-directed policy change only, never an automatic repair. Replaces project protection, records before/after and reason, advances revision. Get ProjectProtection via brain_schema. Caller identity/owner approval must be enforced by the host; a reason is not authentication. Can remove protection or grant editing, so requires approval review."""
+        return self.brain.set_project_protection(project_id,expected_revision,protection,reason)
+
+    def brain_projects(self,limit: int=50,offset: int=0) -> dict:
+        """List saved project IDs/revisions. Legacy next_stage does not describe Studio builds; use brain_studio_attempts for prototype history."""
+        total, projects = self.brain.store.list_projects(limit, offset)
+        return {'total': total, 'projects': [self.brain.summary(p) for p in projects],
+                'next_offset': offset + len(projects) if offset + len(projects) < total else None,
+                'stage_scope': 'legacy Brief/Concept/Plan only; Studio is a separate workflow'}
+
+    def brain_studio_attempts(self,project_id: str,limit: int=50,offset: int=0) -> dict:
+        """List persisted Studio subjects and current/stale revisions. Recorded geometry verdicts are history, not freshly verified evidence. Use review_status to recheck hashes."""
+        return self._studio().attempts(project_id, limit, offset)
 
     def brain_add_source(self,project_id: str,expected_revision: int,text: str) -> dict:
         """Append an exact new user instruction; invalidate old intent, concepts, plans and verification, preserving audit history."""

@@ -6,6 +6,13 @@ from pathlib import Path
 def build_report(folder,record,service):
     folder=Path(folder);report=record['measurements'];recipe=record['context']['recipe']
     esc=lambda x:html.escape(str(x),quote=True)
+    use_labels={'principle_reference':'原理の参考（形状流用を意味しない）',
+                'fit_reference':'寸法・接続面の適合参考','direct_reuse':'形状の直接流用'}
+    reference_uses=''.join(
+        f'<article><h3>{esc(use_labels.get(use["use"],use["use"]))}</h3>'
+        f'<p>参照: {esc(use["uid"])} / 機能: {esc(use["function_id"])}</p>'
+        f'<p>{esc(use["application"])}</p><p class="muted">参照STEP SHA256: {esc(use["cad_sha256"])}</p></article>'
+        for use in report.get('reference_uses',[]))
     sections=[]
     for uid in record['context']['reference_digests']:
         if uid.startswith('project:'):continue
@@ -27,6 +34,7 @@ body{{font:16px/1.7 system-ui,sans-serif;margin:0;background:#f4f6f8;color:#202d
 <h2>出力アセンブリ</h2><img alt="assembly view" src="assembly.png"><p><a href="assembly.step">アセンブリSTEP</a> · <a href="recipe.json">編集可能な構築レシピ</a> · <a href="measurements.json">全測定結果JSON</a></p><div class="outputs">{cards}</div>
 <h2>実形状で確認した項目</h2><table><tr><th>項目</th><th>方式</th><th>判定</th><th>測定値・範囲</th></tr>{checks}</table>
 <h2>未確認の事項</h2><pre>{esc(json.dumps(report['unverified_requirements'],ensure_ascii=False,indent=2))}</pre>
+<h2>参考の使い方</h2><p>以下は設計者が記録した利用意図です。参考の存在だけでは機構の有効性・適合・性能を証明しません。</p>{reference_uses or '<p>明示的な利用区分の記録なし。直接流用したとは推定しません。</p>'}
 <h2>参照CADと構造の根拠</h2>{''.join(sections)}
 <h2>何を変更したか</h2><pre>{esc(json.dumps(report['trace'],ensure_ascii=False,indent=2))}</pre>
 <p class="muted">このページはローカルの読取専用成果物です。プリンタ送信、CAD正本の書換え、外部通信は行いません。</p></main></html>'''

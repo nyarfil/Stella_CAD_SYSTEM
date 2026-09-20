@@ -9,13 +9,25 @@ from .synthesis import FunctionBrief,Matrix,retrieve_tasks
 from .interfaces import screen_interfaces
 from ..errors import BrainError
 
+def studio_schemas():
+    """Single registry for runtime discovery and published schema generation."""
+    from .acceptance import AcceptanceSpec
+    return {'FunctionBrief':FunctionBrief,'Matrix':Matrix,'Recipe':Recipe,'Review':Review,
+            'Reply':Reply,'BoardPack':BoardPack,'ShellPack':ShellPack,
+            'FusionHandoff':FusionHandoff,'FusionReport':FusionReport,'AcceptanceSpec':AcceptanceSpec}
+
 class StudioToolsMixin:
     def _studio(self):return Studio(self.brain,self._fs())
 
+    def brain_studio_capabilities(self,required_operations: list[str] | None=None,required_checks: list[str] | None=None) -> dict:
+        """Inspect supported CAD operations/checks before planning. Unsupported is not impossible or pass; returns explicit limitations and next actions. No CAD/model execution."""
+        from .planning import capabilities
+        return capabilities(required_operations or [],required_checks or [])
+
     def brain_studio_schema(self,name: str) -> dict:
-        """Get FunctionBrief, Matrix, Recipe, Review, Reply, BoardPack, ShellPack, FusionHandoff or FusionReport schemas. These are typed host/worker contracts, not a claim of semantic intelligence."""
-        schemas={'FunctionBrief':FunctionBrief,'Matrix':Matrix,'Recipe':Recipe,'Review':Review,'Reply':Reply,'BoardPack':BoardPack,'ShellPack':ShellPack,'FusionHandoff':FusionHandoff,'FusionReport':FusionReport}
-        if name not in schemas:raise BrainError('STUDIO_SCHEMA','Choose FunctionBrief, Matrix, Recipe, Review, Reply, BoardPack, ShellPack, FusionHandoff or FusionReport.')
+        """Get FunctionBrief, Matrix, Recipe, Review, Reply, AcceptanceSpec, BoardPack, ShellPack, FusionHandoff or FusionReport schemas. These are typed host/worker contracts, not a claim of semantic intelligence."""
+        schemas=studio_schemas()
+        if name not in schemas:raise BrainError('STUDIO_SCHEMA','Choose one of: '+', '.join(schemas)+'.')
         return schemas[name].model_json_schema()
 
     def brain_fs_search_tasks(self,brief: dict[str,Any],mode: str='semantic',limit_per_function: int=12,threshold: float=.7) -> dict:
@@ -41,13 +53,18 @@ class StudioToolsMixin:
         """Combine real-reference mechanism options into compatible functional covers. Reject absent required surfaces and invented face IDs. Returns review subjects, NOT finished assemblies."""
         return self._studio().register_matrix(project_id,expected_revision,matrix)
 
-    def brain_studio_build(self,project_id: str,expected_revision: int,recipe: dict[str,Any],timeout_seconds: int=120) -> dict:
+    def brain_studio_build(self,project_id: str,expected_revision: int,recipe: dict[str,Any],timeout_seconds: int=120,baseline_subject_digest: str | None=None) -> dict:
         """Build a STEP-bound typed CAD recipe in a separate process; export real STEP/STL/SVG and static/sampled-motion clearance. No arbitrary Python exec, printer send or canonical project modification."""
-        return self._studio().build(project_id,expected_revision,recipe,timeout_seconds)
+        return self._studio().build(project_id,expected_revision,recipe,timeout_seconds,baseline_subject_digest=baseline_subject_digest)
 
     def brain_studio_review_packet(self,project_id: str,expected_revision: int,subject_digest: str,role: str) -> dict:
         """Prepare a requirements/mechanism/assembly/manufacturing/verification reviewer packet with real evidence and exact output schema. This does NOT spawn an independent LLM itself."""
         return self._studio().packet(project_id,expected_revision,subject_digest,role)
+
+    def brain_studio_verify_artifact(self,project_id: str,expected_revision: int,subject_digest: str,spec: dict[str,Any],timeout_seconds: int=60) -> dict:
+        """Measure the exact registered STEP against additional geometric criteria in a bounded worker. Create a new evidence subject without regenerating CAD or copying reviews. Original checks, failures and unverified requirements remain; this is not physical certification or owner approval."""
+        from .supplement import verify_artifact
+        return verify_artifact(self._studio(),project_id,expected_revision,subject_digest,spec,timeout_seconds)
 
     def brain_studio_submit_review(self,project_id: str,expected_revision: int,subject_digest: str,review: dict[str,Any]) -> dict:
         """Record actual host-submitted engineering findings for this revision and subject. Roles and agreement never authenticate independent reviewers or clear physical tests."""
@@ -60,6 +77,10 @@ class StudioToolsMixin:
     def brain_studio_review_status(self,project_id: str,expected_revision: int,subject_digest: str) -> dict:
         """Read review coverage, open disagreements, geometry failures and unverified physical requirements. Reviewer independence and human approval are never inferred."""
         return self._studio().status(project_id,expected_revision,subject_digest)
+
+    def brain_studio_delivery(self,project_id: str,expected_revision: int,subject_digest: str) -> dict:
+        """Generate DELIVERY.json and DELIVERY.md for one verified subject. Missing BOM/physical proof remains explicit; canonical CAD is not modified."""
+        return self._studio().delivery(project_id,expected_revision,subject_digest)
 
     def brain_fusion_handoff(self,project_id: str,expected_revision: int,subject_digest: str) -> dict:
         """Issue the only Fusion adapter script allowed for this built subject. Host must pass it to fusion_mcp_execute unchanged. Does not save f3d. CadQuery remains the geometry referee."""

@@ -57,8 +57,16 @@ class Store:
             raise BrainError("NOT_FOUND", "Unknown project.")
         return Project.model_validate_json(row[0])
 
+    def list_projects(self, limit=50, offset=0):
+        if type(limit) is not int or not 1 <= limit <= 100 or type(offset) is not int or offset < 0:
+            raise BrainError('LIST_ARGUMENT', 'limit must be 1–100 and offset must be nonnegative.')
+        with self.connect() as db:
+            total = db.execute('SELECT count(*) FROM projects').fetchone()[0]
+            rows = db.execute('SELECT document FROM projects ORDER BY id LIMIT ? OFFSET ?', (limit, offset)).fetchall()
+        return total, [Project.model_validate_json(row[0]) for row in rows]
+
     @contextmanager
-    def edit(self, project_id: str, expected_revision: int, kind: str):
+    def edit(self, project_id: str, expected_revision: int, kind: str, event_detail: dict | None=None):
         safe_id(project_id)
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
@@ -72,7 +80,9 @@ class Store:
                 yield p
                 p.revision += 1
                 db.execute("UPDATE projects SET revision=?,document=? WHERE id=?", (p.revision, p.model_dump_json(), project_id))
-                db.execute("INSERT INTO events (project,revision,kind,payload) VALUES (?,?,?,?)", (project_id, p.revision, kind, canonical({"selection": p.selection, "has_plan": p.plan is not None})))
+                payload={"selection": p.selection, "has_plan": p.plan is not None}
+                if event_detail: payload['detail']=event_detail
+                db.execute("INSERT INTO events (project,revision,kind,payload) VALUES (?,?,?,?)", (project_id, p.revision, kind, canonical(payload)))
                 db.commit()
             except BaseException:
                 db.rollback()

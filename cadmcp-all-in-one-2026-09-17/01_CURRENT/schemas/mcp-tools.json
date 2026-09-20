@@ -526,6 +526,29 @@
     }
   },
   {
+    "name": "brain_get_project_protection",
+    "description": "Read durable project protection and effective legacy environment guards. No CAD/model execution or policy change.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id"
+      ],
+      "title": "brain_get_project_protection_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "brain_history",
     "description": "Read the transactional project event history.",
     "inputSchema": {
@@ -835,6 +858,32 @@
     }
   },
   {
+    "name": "brain_projects",
+    "description": "List saved project IDs/revisions. Legacy next_stage does not describe Studio builds; use brain_studio_attempts for prototype history.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "default": 50,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "offset": {
+          "default": 0,
+          "title": "Offset",
+          "type": "integer"
+        }
+      },
+      "title": "brain_projects_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "brain_schema",
     "description": "Read a versioned Brief, Concept, Concepts or Plan JSON schema.",
     "inputSchema": {
@@ -891,6 +940,78 @@
     }
   },
   {
+    "name": "brain_set_project_protection",
+    "description": "Explicit owner-directed policy change only, never an automatic repair. Replaces project protection, records before/after and reason, advances revision. Get ProjectProtection via brain_schema. Caller identity/owner approval must be enforced by the host; a reason is not authentication. Can remove protection or grant editing, so requires approval review.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "protection": {
+          "additionalProperties": true,
+          "title": "Protection",
+          "type": "object"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "protection",
+        "reason"
+      ],
+      "title": "brain_set_project_protection_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_studio_attempts",
+    "description": "List persisted Studio subjects and current/stale revisions. Recorded geometry verdicts are history, not freshly verified evidence. Use review_status to recheck hashes.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "limit": {
+          "default": 50,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "offset": {
+          "default": 0,
+          "title": "Offset",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "project_id"
+      ],
+      "title": "brain_studio_attempts_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "brain_studio_build",
     "description": "Build a STEP-bound typed CAD recipe in a separate process; export real STEP/STL/SVG and static/sampled-motion clearance. No arbitrary Python exec, printer send or canonical project modification.",
     "inputSchema": {
@@ -913,6 +1034,18 @@
           "default": 120,
           "title": "Timeout Seconds",
           "type": "integer"
+        },
+        "baseline_subject_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Baseline Subject Digest"
         }
       },
       "required": [
@@ -921,6 +1054,85 @@
         "recipe"
       ],
       "title": "brain_studio_build_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_studio_capabilities",
+    "description": "Inspect supported CAD operations/checks before planning. Unsupported is not impossible or pass; returns explicit limitations and next actions. No CAD/model execution.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "required_operations": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Required Operations"
+        },
+        "required_checks": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Required Checks"
+        }
+      },
+      "title": "brain_studio_capabilities_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_studio_delivery",
+    "description": "Generate DELIVERY.json and DELIVERY.md for one verified subject. Missing BOM/physical proof remains explicit; canonical CAD is not modified.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "subject_digest": {
+          "title": "Subject Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "subject_digest"
+      ],
+      "title": "brain_studio_delivery_arguments",
       "type": "object"
     },
     "annotations": {
@@ -1041,7 +1253,7 @@
   },
   {
     "name": "brain_studio_schema",
-    "description": "Get FunctionBrief, Matrix, Recipe, Review, Reply, BoardPack, ShellPack, FusionHandoff or FusionReport schemas. These are typed host/worker contracts, not a claim of semantic intelligence.",
+    "description": "Get FunctionBrief, Matrix, Recipe, Review, Reply, AcceptanceSpec, BoardPack, ShellPack, FusionHandoff or FusionReport schemas. These are typed host/worker contracts, not a claim of semantic intelligence.",
     "inputSchema": {
       "additionalProperties": false,
       "properties": {
@@ -1127,6 +1339,50 @@
         "matrix"
       ],
       "title": "brain_studio_synthesize_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_studio_verify_artifact",
+    "description": "Measure the exact registered STEP against additional geometric criteria in a bounded worker. Create a new evidence subject without regenerating CAD or copying reviews. Original checks, failures and unverified requirements remain; this is not physical certification or owner approval.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "title": "Project Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "subject_digest": {
+          "title": "Subject Digest",
+          "type": "string"
+        },
+        "spec": {
+          "additionalProperties": true,
+          "title": "Spec",
+          "type": "object"
+        },
+        "timeout_seconds": {
+          "default": 60,
+          "title": "Timeout Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "project_id",
+        "expected_revision",
+        "subject_digest",
+        "spec"
+      ],
+      "title": "brain_studio_verify_artifact_arguments",
       "type": "object"
     },
     "annotations": {

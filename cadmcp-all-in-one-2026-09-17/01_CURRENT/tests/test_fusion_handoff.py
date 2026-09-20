@@ -43,8 +43,8 @@ def test_recipe_project_step_is_sufficient_origin():
     Recipe.model_validate(_origin_recipe('a' * 64, 'b' * 64))
 
 
-def test_recipe_primitives_only_still_refused():
-    with pytest.raises(ValidationError, match='real STEP'):
+def test_recipe_without_import_or_explicit_design_basis_is_refused():
+    with pytest.raises(ValidationError, match='explicit design basis and verification plan'):
         Recipe.model_validate({
             'schema_version': 1, 'title': 'Boxes only',
             'original_request': 'Just make two boxes from numbers.',
@@ -115,7 +115,7 @@ def test_studio_schema_lists_fusion_handoff(tmp_path):
     assert allow.get('const') is False or allow.get('enum') == [False]
     names = {row['name'] for row in tools.list()}
     assert 'brain_fusion_handoff' in names and 'brain_fusion_ingest' in names
-    assert len(names) == 43
+    assert len(names) == 50
 
 
 @pytest.mark.skipif(not HAS_CQ, reason='Actual CAD kernel not installed; remesure not claimed executed.')

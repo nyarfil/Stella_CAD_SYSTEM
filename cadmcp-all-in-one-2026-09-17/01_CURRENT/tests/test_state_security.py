@@ -113,7 +113,7 @@ def test_unknown_tool_and_schema(brain):
 def test_registry_schemas_and_readonly_flags(brain):
     from jsonschema import Draft202012Validator
     tools=Tools(brain)
-    assert len(tools.list())==43
+    assert len(tools.list())==50
     for tool in tools.list(): Draft202012Validator.check_schema(tool['inputSchema'])
     assert next(t for t in tools.list() if t['name']=='brain_get')['annotations']['readOnlyHint']
 

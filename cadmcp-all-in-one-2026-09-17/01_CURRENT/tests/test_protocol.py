@@ -23,7 +23,7 @@ def test_lifecycle_requires_initialized(brain):
     assert p.handle(request('tools/list'))['error']['code']==-32002
     result=initialize(p)
     assert result['result']['protocolVersion']==PROTOCOL
-    assert len(p.handle(request('tools/list'))['result']['tools'])==43
+    assert len(p.handle(request('tools/list'))['result']['tools'])==50
     assert p.handle(request('initialize'))['error']['code']==-32600
 
 
@@ -31,6 +31,12 @@ def test_protocol_negotiation(brain):
     p=Protocol(Tools(brain))
     result=p.handle(request('initialize',{'protocolVersion':'2099-01-01','capabilities':{},'clientInfo':{'name':'new','version':'1'}}))
     assert result['result']['protocolVersion']==PROTOCOL
+
+
+def test_published_tool_schema_matches_runtime(brain):
+    from pathlib import Path
+    published=Path(__file__).resolve().parents[1]/'schemas/mcp-tools.json'
+    assert json.loads(published.read_text('utf-8'))==Tools(brain).list()
 
 
 @pytest.mark.parametrize('raw',['{"a":1,"a":2}','{"x":NaN}','{"x":Infinity}','{"a":'])

@@ -212,6 +212,45 @@
       "title": "Cylinder",
       "type": "object"
     },
+    "DesignBasis": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "first_principles",
+            "provided_cad",
+            "reference_informed",
+            "mixed"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "summary": {
+          "maxLength": 2000,
+          "minLength": 12,
+          "title": "Summary",
+          "type": "string"
+        },
+        "assumptions": {
+          "items": {
+            "maxLength": 2000,
+            "minLength": 8,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "title": "Assumptions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "summary",
+        "assumptions"
+      ],
+      "title": "DesignBasis",
+      "type": "object"
+    },
     "Dimension": {
       "additionalProperties": false,
       "properties": {
@@ -312,6 +351,92 @@
         "radius_mm"
       ],
       "title": "Fillet",
+      "type": "object"
+    },
+    "Loft": {
+      "additionalProperties": false,
+      "description": "Solid loft through parallel XY polygon sections; not a sweep.",
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "function_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Function Id",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Reason",
+          "type": "string"
+        },
+        "op": {
+          "const": "loft",
+          "title": "Op",
+          "type": "string"
+        },
+        "sections": {
+          "items": {
+            "$ref": "#/$defs/LoftSection"
+          },
+          "maxItems": 16,
+          "minItems": 2,
+          "title": "Sections",
+          "type": "array"
+        },
+        "mode": {
+          "enum": [
+            "smooth",
+            "ruled"
+          ],
+          "title": "Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "function_id",
+        "reason",
+        "op",
+        "sections",
+        "mode"
+      ],
+      "title": "Loft",
+      "type": "object"
+    },
+    "LoftSection": {
+      "additionalProperties": false,
+      "description": "One closed XY polygon at a fixed Z elevation for a bounded solid loft.",
+      "properties": {
+        "z_mm": {
+          "maximum": 1000000,
+          "minimum": -1000000,
+          "title": "Z Mm",
+          "type": "number"
+        },
+        "points_mm": {
+          "items": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "maxItems": 64,
+          "minItems": 3,
+          "title": "Points Mm",
+          "type": "array"
+        }
+      },
+      "required": [
+        "z_mm",
+        "points_mm"
+      ],
+      "title": "LoftSection",
       "type": "object"
     },
     "Motion": {
@@ -422,6 +547,72 @@
         "node"
       ],
       "title": "Output",
+      "type": "object"
+    },
+    "PolygonExtrusion": {
+      "additionalProperties": false,
+      "description": "A bounded, closed XY polygon extruded along +Z; not a loft/sweep substitute.",
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "function_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Function Id",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 8,
+          "title": "Reason",
+          "type": "string"
+        },
+        "op": {
+          "const": "polygon_extrusion",
+          "title": "Op",
+          "type": "string"
+        },
+        "points_mm": {
+          "items": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "maxItems": 64,
+          "minItems": 3,
+          "title": "Points Mm",
+          "type": "array"
+        },
+        "height_mm": {
+          "exclusiveMinimum": 0,
+          "maximum": 1000000,
+          "title": "Height Mm",
+          "type": "number"
+        },
+        "origin_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Origin Mm",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "function_id",
+        "reason",
+        "op",
+        "points_mm",
+        "height_mm"
+      ],
+      "title": "PolygonExtrusion",
       "type": "object"
     },
     "ProjectStep": {
@@ -544,6 +735,65 @@
         "adaptation_basis"
       ],
       "title": "Reference",
+      "type": "object"
+    },
+    "ReferenceUse": {
+      "additionalProperties": false,
+      "description": "Auditable Req2CAD use, independent of whether its shape is imported.",
+      "properties": {
+        "function_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Function Id",
+          "type": "string"
+        },
+        "use": {
+          "enum": [
+            "principle_reference",
+            "fit_reference",
+            "direct_reuse"
+          ],
+          "title": "Use",
+          "type": "string"
+        },
+        "uid": {
+          "pattern": "^\\d{4}/\\d{8}$",
+          "title": "Uid",
+          "type": "string"
+        },
+        "evidence_digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Evidence Digest",
+          "type": "string"
+        },
+        "cad_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Cad Sha256",
+          "type": "string"
+        },
+        "application": {
+          "maxLength": 2000,
+          "minLength": 12,
+          "title": "Application",
+          "type": "string"
+        },
+        "used_face_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 128,
+          "title": "Used Face Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "function_id",
+        "use",
+        "uid",
+        "evidence_digest",
+        "cad_sha256",
+        "application"
+      ],
+      "title": "ReferenceUse",
       "type": "object"
     },
     "Transform": {
@@ -672,6 +922,43 @@
       "title": "Functions",
       "type": "object"
     },
+    "protected_constraints": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 50,
+      "title": "Protected Constraints",
+      "type": "array"
+    },
+    "reference_uses": {
+      "items": {
+        "$ref": "#/$defs/ReferenceUse"
+      },
+      "maxItems": 64,
+      "title": "Reference Uses",
+      "type": "array"
+    },
+    "design_basis": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DesignBasis"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "verification_plan": {
+      "items": {
+        "maxLength": 2000,
+        "minLength": 8,
+        "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Verification Plan",
+      "type": "array"
+    },
     "operations": {
       "items": {
         "discriminator": {
@@ -681,6 +968,8 @@
             "difference": "#/$defs/Boolean",
             "fillet_all": "#/$defs/Fillet",
             "intersection": "#/$defs/Boolean",
+            "loft": "#/$defs/Loft",
+            "polygon_extrusion": "#/$defs/PolygonExtrusion",
             "project_step": "#/$defs/ProjectStep",
             "reference": "#/$defs/Reference",
             "transform": "#/$defs/Transform",
@@ -700,6 +989,12 @@
           },
           {
             "$ref": "#/$defs/Cylinder"
+          },
+          {
+            "$ref": "#/$defs/PolygonExtrusion"
+          },
+          {
+            "$ref": "#/$defs/Loft"
           },
           {
             "$ref": "#/$defs/Transform"

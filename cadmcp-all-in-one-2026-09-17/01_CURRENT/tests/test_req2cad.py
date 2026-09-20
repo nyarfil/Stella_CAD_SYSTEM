@@ -248,7 +248,7 @@ def test_real_worker_and_evidence(fs,cad_sources):
 def test_tool_registration_and_no_fallback(brain):
     from cadmcp_brain.api import Tools
     from cadmcp_brain.protocol import Protocol
-    t=Tools(brain);names={x['name'] for x in t.list()};assert len(names)==43
+    t=Tools(brain);names={x['name'] for x in t.list()};assert len(names)==50
     assert t.brain_fs_status()['cases']==0
     with pytest.raises(BrainError):t.brain_fs_search(['軸を回転可能に支持する'])
 

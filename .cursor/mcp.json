@@ -1,20 +1,3 @@
 {
-  "mcpServers": {
-    "cadmcp-design-brain": {
-      "type": "stdio",
-      "command": "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-all-in-one-2026-09-17\\01_CURRENT\\.venv\\Scripts\\python.exe",
-      "args": [
-        "-m",
-        "cadmcp_brain",
-        "--workspace",
-        "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace",
-        "serve"
-      ],
-      "env": {
-        "PYTHONUTF8": "1",
-        "CADMCP_REQ2CAD_ROOT": "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace\\knowledge\\req2cad",
-        "CADMCP_REQUIRE_CAD_REFERENCES": "1"
-      }
-    }
-  }
+  "mcpServers": {}
 }

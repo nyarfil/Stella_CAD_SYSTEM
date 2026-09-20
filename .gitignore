@@ -14,6 +14,13 @@ __pycache__/
 *.sqlite3*
 node_modules/
 
+# Local-only agent configuration and generated verification traces
+.serena/
+.codex/config.toml.before-mcp-preview
+.codex/cadmcp-install.json
+.cursor/mcp.json.disabled-*
+cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/
+
 # Nested engine local/runtime (venv, caches, generated projects)
 LLM_cad_Projects/projects/
 LLM_cad_Projects/.stella/

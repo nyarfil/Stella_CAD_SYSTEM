@@ -1,0 +1,146 @@
+{
+  "$defs": {
+    "FusionOccurrence": {
+      "additionalProperties": false,
+      "properties": {
+        "occurrence": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Occurrence",
+          "type": "string"
+        },
+        "part_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Part Id",
+          "type": "string"
+        },
+        "step_relative_path": {
+          "maxLength": 800,
+          "minLength": 1,
+          "title": "Step Relative Path",
+          "type": "string"
+        },
+        "step_absolute_path": {
+          "maxLength": 800,
+          "minLength": 1,
+          "title": "Step Absolute Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "translation_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Translation Mm",
+          "type": "array"
+        },
+        "rotation_axis": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Rotation Axis",
+          "type": "array"
+        },
+        "rotation_deg": {
+          "default": 0.0,
+          "maximum": 360,
+          "minimum": -360,
+          "title": "Rotation Deg",
+          "type": "number"
+        },
+        "rotation_origin_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Rotation Origin Mm",
+          "type": "array"
+        },
+        "protected": {
+          "default": false,
+          "title": "Protected",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "occurrence",
+        "part_id",
+        "step_relative_path",
+        "step_absolute_path",
+        "sha256"
+      ],
+      "title": "FusionOccurrence",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "adapter_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Adapter Version",
+      "type": "string"
+    },
+    "allow_save": {
+      "const": false,
+      "default": false,
+      "title": "Allow Save",
+      "type": "boolean"
+    },
+    "units": {
+      "const": "mm",
+      "default": "mm",
+      "title": "Units",
+      "type": "string"
+    },
+    "fusion_internal_units": {
+      "const": "cm",
+      "default": "cm",
+      "title": "Fusion Internal Units",
+      "type": "string"
+    },
+    "subject_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Subject Digest",
+      "type": "string"
+    },
+    "occurrences": {
+      "items": {
+        "$ref": "#/$defs/FusionOccurrence"
+      },
+      "maxItems": 16,
+      "minItems": 1,
+      "title": "Occurrences",
+      "type": "array"
+    },
+    "protected_occurrences": {
+      "items": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+        "type": "string"
+      },
+      "maxItems": 16,
+      "title": "Protected Occurrences",
+      "type": "array"
+    }
+  },
+  "required": [
+    "subject_digest",
+    "occurrences"
+  ],
+  "title": "FusionHandoff",
+  "type": "object"
+}
