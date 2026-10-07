@@ -42,6 +42,13 @@ def test_simple_native_and_limited_loft():
     assert result['automatic_failure_fallback'] is False
 
 
+def test_native_shell_and_spline_loft_route_to_cadquery_without_external_adapter():
+    result = route_backend({'mode': 'auto', 'required_operations': ['spline_loft', 'shell', 'fillet_edges'],
+                            'required_checks': ['sampled_rotation_clearance']})
+    assert result['selected_backend'] == 'cadquery'
+    assert result['status'] == 'ready'
+
+
 def test_advanced_surface_uses_observed_freecad():
     result = route_backend({'mode': 'auto', 'required_operations': ['shell', 'surface_loft'],
                             'probes': [probe()]})
@@ -51,7 +58,7 @@ def test_advanced_surface_uses_observed_freecad():
 
 
 def test_explicit_cadquery_does_not_switch_on_missing_operation():
-    result = route_backend({'required_operations': ['shell'], 'selected_backend': 'cadquery',
+    result = route_backend({'required_operations': ['surface_loft'], 'selected_backend': 'cadquery',
                             'probes': [probe()]})
     assert result['status'] == 'selected_backend_unavailable'
     assert result['selected_backend'] is None
@@ -62,13 +69,13 @@ def test_explicit_cadquery_does_not_switch_on_missing_operation():
 def test_unavailable_or_unfunded_adapter_blocked(overrides):
     observation = probe()
     observation.update(overrides)
-    result = route_backend({'mode': 'auto', 'required_operations': ['shell'],
+    result = route_backend({'mode': 'auto', 'required_operations': ['surface_loft'],
                             'probes': [observation]})
     assert result['status'] == 'no_capable_backend'
 
 
 def test_unsupported_check_blocks_otherwise_valid_geometry():
-    result = route_backend({'mode': 'auto', 'required_operations': ['shell'],
+    result = route_backend({'mode': 'auto', 'required_operations': ['surface_loft'],
                             'required_checks': ['fatigue'], 'probes': [probe()]})
     assert result['status'] == 'verification_extension_required'
     assert result['selected_backend'] is None
@@ -82,7 +89,7 @@ def test_build123d_can_dispatch_only_observed_operations():
 
 
 def test_host_cannot_extend_native_recipe_by_claim():
-    result = route_backend({'mode': 'auto', 'required_operations': ['shell'],
+    result = route_backend({'mode': 'auto', 'required_operations': ['surface_loft'],
                             'probes': [probe('cadquery')]})
     assert result['status'] == 'no_capable_backend'
 
@@ -95,7 +102,7 @@ def test_unknown_or_duplicate_probes_rejected():
 
 
 def test_external_route_cannot_claim_native_only_verification():
-    result = route_backend({'mode': 'auto', 'required_operations': ['shell'],
+    result = route_backend({'mode': 'auto', 'required_operations': ['surface_loft'],
                             'required_checks': ['sampled_translation_clearance'], 'probes': [probe()]})
     assert result['status'] == 'no_capable_backend'
     freecad = next(c for c in result['candidates'] if c['backend'] == 'freecad')
@@ -104,7 +111,7 @@ def test_external_route_cannot_claim_native_only_verification():
 
 def test_missing_or_broken_common_verifier_blocks_external_generation():
     with patch('cadmcp_brain.studio.backend_routing.geometry.available', return_value=False):
-        assert route_backend({'mode': 'auto', 'required_operations': ['shell'],
+        assert route_backend({'mode': 'auto', 'required_operations': ['surface_loft'],
                               'probes': [probe()]})['status'] == 'verification_engine_unavailable'
     with patch('cadmcp_brain.studio.backend_routing.importlib.import_module', side_effect=ImportError('kernel')):
         assert route_backend({'mode': 'auto', 'required_operations': ['box']})['status'] == 'verification_engine_unavailable'
@@ -132,7 +139,7 @@ def test_real_stdio_dispatch_in_isolated_workspace(tmp_path):
                 'mode': 'auto', 'required_operations': ['box'], 'required_checks': ['bbox']}}}},
         {'jsonrpc': '2.0', 'id': 3, 'method': 'tools/call', 'params': {
             'name': 'brain_cad_route', 'arguments': {'request': {
-                'mode': 'auto', 'required_operations': ['shell']}}}},
+                'mode': 'auto', 'required_operations': ['surface_loft']}}}},
     ]
     proc = subprocess.run([sys.executable, '-m', 'cadmcp_brain', '--workspace', str(workspace), 'serve'],
                           input=''.join(json.dumps(m) + '\n' for m in messages),

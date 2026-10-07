@@ -82,7 +82,7 @@ calls as a substitute. For strictly controlled external runs the owner may use
 `--provider cursor --execute-model` from the separate terminal workflow.
 
 Before repair freeze original_request, functions, dimension_checks,
-clearance_checks, motion_checks, unverified_requirements and protected output
+clearance_checks, motion_checks, rotation_checks, unverified_requirements and protected output
 parts. Pass `baseline_subject_digest` when building a correction. Make a new
 prototype attempt, remeasure and repeat the relevant reviews.
 Use `brain_studio_review_status`; never announce completion based on votes alone.

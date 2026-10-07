@@ -150,7 +150,90 @@ class Fillet(Node):
     radius_mm: Positive
     # Explicit operation, no reduction of failed radius.
 
-Operation = Annotated[Union[Reference,ProjectStep,Box,Cylinder,PolygonExtrusion,Loft,Transform,Boolean,Fillet],Field(discriminator='op')]
+def _signed_area(points):
+    return sum(points[i][0]*points[(i+1)%len(points)][1]-points[(i+1)%len(points)][0]*points[i][1]
+               for i in range(len(points)))/2
+
+class Revolve(Node):
+    """Closed (radius, z) profile revolved about the local +Z axis, then placed at origin_mm."""
+    op: Literal['revolve']
+    profile_rz_mm: list[Vec2] = Field(min_length=3, max_length=64)
+    angle_deg: float = Field(gt=0, le=360)
+    origin_mm: Vec = Field(default_factory=lambda:[0.,0.,0.])
+    @model_validator(mode='after')
+    def half_plane_profile(self):
+        if any(r<0 for r,_ in self.profile_rz_mm):
+            raise ValueError('Revolve profile radii must be non-negative; the profile may not cross the axis.')
+        PolygonExtrusion(id='profile',function_id='profile',
+                         reason='Validate this bounded revolve profile.',
+                         op='polygon_extrusion',points_mm=self.profile_rz_mm,
+                         height_mm=1.,origin_mm=[0.,0.,0.])
+        return self
+
+class SplineLoftSection(Strict):
+    """Closed periodic spline through XY points at a fixed Z elevation."""
+    z_mm: float = Field(ge=-1_000_000, le=1_000_000)
+    points_mm: list[Vec2] = Field(min_length=4, max_length=64)
+    @model_validator(mode='after')
+    def simple_control_polygon(self):
+        # A simple interpolation polygon is necessary, not sufficient; the
+        # kernel validity check after construction remains authoritative.
+        LoftSection(z_mm=self.z_mm,points_mm=self.points_mm)
+        return self
+
+class SplineLoft(Node):
+    """Smooth solid through parallel closed-spline XY sections (curved shells, grips)."""
+    op: Literal['spline_loft']
+    sections: list[SplineLoftSection] = Field(min_length=2, max_length=16)
+    @model_validator(mode='after')
+    def coherent_sections(self):
+        z_values=[section.z_mm for section in self.sections]
+        if any(later<=earlier for earlier,later in zip(z_values,z_values[1:])):
+            raise ValueError('Spline loft section elevations must be strictly ascending; duplicate planes are not allowed.')
+        areas=[_signed_area(section.points_mm) for section in self.sections]
+        if any(area*areas[0]<=0 for area in areas[1:]):
+            raise ValueError('Spline loft sections must retain one winding direction.')
+        return self
+
+FaceSelector = Literal['>X','<X','>Y','<Y','>Z','<Z']
+EdgeSelector = Literal['|X','|Y','|Z','>X','<X','>Y','<Y','>Z','<Z']
+
+class Shell(Node):
+    """Hollow one solid inward by a uniform wall, keeping its outer skin; optional open faces."""
+    op: Literal['shell']
+    source: Name
+    wall_mm: Annotated[float, Field(gt=0, le=1000)]
+    open_faces: list[FaceSelector] = Field(default_factory=list, max_length=6)
+    @model_validator(mode='after')
+    def distinct_faces(self):
+        if len(self.open_faces)!=len(set(self.open_faces)):raise ValueError('Duplicate open-face selector.')
+        return self
+
+class Mirror(Node):
+    """Mirrored copy of one solid across a principal plane through base_point_mm."""
+    op: Literal['mirror']
+    source: Name
+    plane: Literal['XY','YZ','XZ']
+    base_point_mm: Vec = Field(default_factory=lambda:[0.,0.,0.])
+
+class EdgeFinish(Node):
+    """Fillet or chamfer only the edges chosen by one bounded direction selector."""
+    op: Literal['fillet_edges','chamfer_edges']
+    source: Name
+    selector: EdgeSelector
+    size_mm: Positive
+    # Explicit operation, no reduction of failed size.
+
+RESHAPING = (Transform,Fillet,Shell,Mirror,EdgeFinish)
+
+def node_dependencies(node):
+    """Earlier node IDs this operation reads, in operand order."""
+    if isinstance(node,RESHAPING):return [node.source]
+    if isinstance(node,Boolean):return list(node.operands)
+    return []
+
+Operation = Annotated[Union[Reference,ProjectStep,Box,Cylinder,PolygonExtrusion,Loft,Revolve,SplineLoft,
+                            Transform,Boolean,Fillet,Shell,Mirror,EdgeFinish],Field(discriminator='op')]
 
 class ReferenceUse(Strict):
     """Auditable Req2CAD use, independent of whether its shape is imported."""
@@ -210,6 +293,25 @@ class Motion(Strict):
     min_mm: float = Field(default=0., ge=0)
     max_overlap_mm3: float = Field(default=1e-7, ge=0, le=1e-3)
 
+class RotationMotion(Strict):
+    """Rigid rotation of one part about a fixed axis (button hinge, wheel, lever)."""
+    id: Name
+    moving_part: Name
+    obstacles: list[Name] = Field(min_length=1, max_length=32)
+    axis_origin_mm: Vec
+    axis_direction: Vec
+    end_deg: float = Field(ge=-360, le=360)
+    samples: int = Field(default=11, ge=2, le=101)
+    max_samples: int = Field(default=101,ge=2,le=201)
+    assumed_distance_error_mm: float = Field(default=1e-6,gt=0,le=.1)
+    min_mm: float = Field(default=0., ge=0)
+    max_overlap_mm3: float = Field(default=1e-7, ge=0, le=1e-3)
+    @model_validator(mode='after')
+    def meaningful_rotation(self):
+        if abs(sum(x*x for x in self.axis_direction)-1) > 1e-6:raise ValueError('Rotation axis must be a unit direction.')
+        if self.end_deg==0:raise ValueError('A rotation check needs a nonzero end angle.')
+        return self
+
 class Recipe(Strict):
     schema_version: Literal[1] = 1
     title: str = Field(min_length=3, max_length=200)
@@ -227,6 +329,7 @@ class Recipe(Strict):
     dimension_checks: list[Dimension] = Field(default_factory=list,max_length=64)
     clearance_checks: list[Clearance] = Field(default_factory=list, max_length=64)
     motion_checks: list[Motion] = Field(default_factory=list, max_length=8)
+    rotation_checks: list[RotationMotion] = Field(default_factory=list, max_length=8)
     unverified_requirements: list[str] = Field(min_length=1, max_length=100)
     @model_validator(mode='after')
     def connected(self):
@@ -238,12 +341,11 @@ class Recipe(Strict):
         for node in self.operations:
             if node.id in defined: raise ValueError('Duplicate node id.')
             if node.function_id not in self.functions: raise ValueError('Node must link to a defined function.')
-            deps = ([node.source] if isinstance(node,(Transform,Fillet)) else
-                    node.operands if isinstance(node,Boolean) else [])
+            deps = node_dependencies(node)
             if any(x not in defined for x in deps): raise ValueError('DAG operands must name earlier nodes; no cycles or guessed IDs.')
             if len(deps) != len(set(deps)): raise ValueError('Duplicate operands are not meaningful.')
             if isinstance(node,ProjectStep) and node.role=='protected_hardware':protected.add(node.id)
-            if isinstance(node,(Transform,Fillet)) and node.source in protected:
+            if isinstance(node,RESHAPING) and node.source in protected:
                 raise ValueError('Protected hardware cannot be transformed or reshaped.')
             if isinstance(node,Boolean) and (node.operands[0] in protected or (node.op=='union' and set(node.operands)&protected)):
                 raise ValueError('Protected hardware can only serve as a read-only obstacle/cutting tool, not the mutable target or fused part.')
@@ -281,7 +383,7 @@ class Recipe(Strict):
         for chk in self.clearance_checks:
             if chk.part_a not in parts or chk.part_b not in parts or chk.part_a==chk.part_b: raise ValueError('Invalid clearance part pair.')
             ids.append(chk.id)
-        for chk in self.motion_checks:
+        for chk in [*self.motion_checks,*self.rotation_checks]:
             if chk.max_samples<chk.samples:raise ValueError('Maximum samples cannot be smaller than the initial samples.')
             if any(p.part_id==chk.moving_part and p.node in protected for p in self.outputs):raise ValueError('Protected hardware pose must stay fixed.')
             if chk.moving_part not in parts or any(x not in parts or x==chk.moving_part for x in chk.obstacles):raise ValueError('Invalid motion obstacles.')
@@ -465,7 +567,64 @@ def evaluate_geometry(recipe,part_shapes):
                        'assumed_distance_error_mm':motion.assumed_distance_error_mm,
                        'initial_samples':motion.samples,'final_samples':count,
                        'certificate_scope':'Fixed-orientation linear translation against fixed obstacles. The numerical distance-error allowance is an assumption, not a certified OCCT error bound. Rotations, deformation, wear and tolerance variation are excluded.'})
+    for rotation in recipe.rotation_checks:
+        checks.append(_rotation_check(rotation,part_shapes))
     return {'checks':checks,'geometry_checks_verdict':'pass' if all(x['verdict']=='pass' for x in checks) else 'fail'}
+
+
+def max_axis_radius_mm(body,axis_origin_mm,axis_direction):
+    """Upper bound of any body point's distance from the axis line.
+
+    Distance to a line is convex, so its maximum over the nominal bounding box
+    is reached at a box corner; the box contains the body.
+    """
+    import itertools
+    import numpy as np
+    from .measurement import nominal_bounds
+    bounds=nominal_bounds(body);origin=np.asarray(axis_origin_mm,dtype=float);axis=np.asarray(axis_direction,dtype=float)
+    radius=0.
+    for corner in itertools.product(*((bounds[i],bounds[i+3]) for i in range(3))):
+        offset=np.asarray(corner)-origin
+        radius=max(radius,float(np.linalg.norm(offset-np.dot(offset,axis)*axis)))
+    return radius
+
+
+def _rotation_check(rotation,part_shapes):
+    # A point at distance rho from the axis moves rho*|d theta| (radians), so
+    # distance(R(theta)A, B) is rho_max-Lipschitz in theta. Same conditional
+    # bound as translation: NOT a formal OCCT error certificate.
+    import math
+    import numpy as np
+    body=part_shapes[rotation.moving_part]
+    origin=tuple(rotation.axis_origin_mm)
+    tip=tuple(np.asarray(rotation.axis_origin_mm)+np.asarray(rotation.axis_direction))
+    rho=max_axis_radius_mm(body,rotation.axis_origin_mm,rotation.axis_direction)
+    sweep_rad=math.radians(abs(rotation.end_deg))
+    count=rotation.samples;cache={};lower_bound=None;certificate=False
+    while True:
+        samples=[]
+        for t in np.linspace(0.,1.,count):
+            angle=float(rotation.end_deg*t)
+            moving=body.rotate(origin,tip,angle)
+            for obstacle in rotation.obstacles:
+                key=(float(t),obstacle)
+                if key not in cache:cache[key]=pair_clearance(moving,part_shapes[obstacle])
+                distance,overlap=cache[key]
+                samples.append({'t':float(t),'angle_deg':angle,'obstacle':obstacle,'distance_mm':distance,'overlap_mm3':overlap,
+                                'verdict':'pass' if distance+1e-8>=rotation.min_mm and overlap<=rotation.max_overlap_mm3 else 'fail'})
+        min_observed=min(s['distance_mm'] for s in samples)
+        lower_bound=min_observed-rho*sweep_rad/(2*(count-1))-rotation.assumed_distance_error_mm
+        failed=any(s['verdict']=='fail' for s in samples)
+        certificate=not failed and lower_bound>=rotation.min_mm and lower_bound>0
+        if failed or certificate or count>=rotation.max_samples:break
+        count=min(2*(count-1)+1,rotation.max_samples)
+    return {'id':rotation.id,'kind':'sampled_rotation_clearance','samples':samples,
+            'verdict':'pass' if all(x['verdict']=='pass' for x in samples) else 'fail',
+            'continuous_swept_motion':'distance_bound_satisfied_under_stated_assumptions' if certificate else 'not_proven',
+            'continuous_distance_lower_bound_mm':lower_bound,'max_axis_radius_mm':rho,
+            'assumed_distance_error_mm':rotation.assumed_distance_error_mm,
+            'initial_samples':rotation.samples,'final_samples':count,
+            'certificate_scope':'Rigid rotation about one fixed axis against fixed obstacles. Lipschitz constant is the bounding-box corner radius from the axis. The numerical distance-error allowance is an assumption, not a certified OCCT error bound. Deformation, hinge play, wear and tolerance variation are excluded.'}
 
 
 def execute_recipe(recipe, sources, out_dir):
@@ -509,6 +668,66 @@ def execute_recipe(recipe, sources, out_dir):
             except Exception as exc:
                 raise BrainError('STUDIO_INVALID_SOLID','Loft kernel construction failed; no fallback geometry was used.',
                                  {'node':node.id,'op':node.op}) from exc
+        elif isinstance(node,Revolve):
+            try:
+                wire=cq.Wire.makePolygon([(r,0.,z) for r,z in node.profile_rz_mm],close=True)
+                body=cq.Solid.revolve(wire,[],node.angle_deg,cq.Vector(0,0,0),cq.Vector(0,0,1)).translate(tuple(node.origin_mm))
+            except Exception as exc:
+                raise BrainError('STUDIO_INVALID_SOLID','Revolve kernel construction failed; no fallback geometry was used.',
+                                 {'node':node.id,'op':node.op}) from exc
+        elif isinstance(node,SplineLoft):
+            try:
+                wires=[cq.Wire.assembleEdges([cq.Edge.makeSpline([cq.Vector(x,y,section.z_mm) for x,y in section.points_mm],
+                                                                  periodic=True)])
+                       for section in node.sections]
+                body=cq.Solid.makeLoft(wires,ruled=False)
+                if not body.isValid() or len(body.Solids())!=1 or body.Solids()[0].Volume()<=0:
+                    raise ValueError('Spline loft must produce exactly one valid positive-volume solid.')
+            except Exception as exc:
+                raise BrainError('STUDIO_INVALID_SOLID','Spline loft kernel construction failed; no fallback geometry was used.',
+                                 {'node':node.id,'op':node.op}) from exc
+        elif isinstance(node,Shell):
+            src=shapes[node.source]
+            if len(src.Solids())!=1:raise BrainError('STUDIO_SHELL','Shell requires one solid.',{'node':node.id})
+            solid=src.Solids()[0];faces=[]
+            from .measurement import nominal_bounds
+            source_bounds=nominal_bounds(solid)
+            extents=[source_bounds[i+3]-source_bounds[i] for i in range(3)]
+            # Necessary (not sufficient) precondition. Oversized inward offsets
+            # can crash or silently corrupt the OCCT offset algorithm.
+            if 2*node.wall_mm>=min(extents):
+                raise BrainError('STUDIO_SHELL','Wall is too thick for this solid; it was not reduced automatically.',
+                                 {'node':node.id,'wall_mm':node.wall_mm,'source_extents_mm':extents})
+            for selector in node.open_faces:
+                selected=cq.Workplane().add(solid).faces(selector).vals()
+                if not selected:raise BrainError('STUDIO_SHELL','Open-face selector matched no face.',{'node':node.id,'selector':selector})
+                faces.extend(f for f in selected if not any(f.isSame(g) for g in faces))
+            try:
+                # Intersection joins keep inward offsets as plain offset faces;
+                # 'arc' joins on spline skins failed STEP round-trip validity.
+                body=solid.hollow(faces,-node.wall_mm,kind='intersection')
+            except Exception as exc:
+                raise BrainError('STUDIO_SHELL','Shell kernel construction failed; wall thickness was not reduced and no fallback geometry was used.',
+                                 {'node':node.id,'wall_mm':node.wall_mm}) from exc
+            if (not body.isValid() or len(body.Solids())!=1 or
+                    not 0<body.Solids()[0].Volume()<solid.Volume() or
+                    any(abs(a-b)>DELIVERY_BOUNDS_TOLERANCE_MM for a,b in zip(nominal_bounds(body),source_bounds))):
+                raise BrainError('STUDIO_SHELL','Shell must yield one valid solid with less material and the unchanged outer bounds of its source.',
+                                 {'node':node.id,'wall_mm':node.wall_mm})
+        elif isinstance(node,Mirror):
+            body=shapes[node.source].mirror(node.plane,tuple(node.base_point_mm))
+        elif isinstance(node,EdgeFinish):
+            src=shapes[node.source]
+            if len(src.Solids())!=1:raise BrainError('STUDIO_EDGE_FINISH','Edge finishing requires one solid.',{'node':node.id})
+            solid=src.Solids()[0]
+            edges=cq.Workplane().add(solid).edges(node.selector).vals()
+            if not edges:raise BrainError('STUDIO_EDGE_FINISH','Edge selector matched no edge.',{'node':node.id,'selector':node.selector})
+            try:
+                body=(solid.fillet(node.size_mm,edges) if node.op=='fillet_edges'
+                      else solid.chamfer(node.size_mm,None,edges))
+            except Exception as exc:
+                raise BrainError('STUDIO_EDGE_FINISH','Edge finishing kernel construction failed; size was not reduced and no fallback geometry was used.',
+                                 {'node':node.id,'op':node.op,'size_mm':node.size_mm}) from exc
         elif isinstance(node,Transform):
             origin=np.asarray(node.rotation_origin_mm)
             body=shapes[node.source].rotate(tuple(origin),tuple(origin+np.asarray(node.rotation_axis)),node.rotation_deg).translate(tuple(node.translation_mm))
@@ -557,7 +776,7 @@ def execute_recipe(recipe, sources, out_dir):
             'overall_verdict':'unknown','unverified_requirements':recipe.unverified_requirements,
             'assembly':{'relative_path':'assembly.step','sha256':file_hash(out_dir/'assembly.step')},
             'unit_notice':'Target recipe assigns mm explicitly; imported reference scale is a design choice, not proof of original physical units.',
-            'notes':['No global wall thickness or FEA certification.', 'Motion checks use adaptive samples and a conditional Lipschitz distance bound; not formal kernel-error certification.', 'No printer commands or canonical CAD writes were sent.']}
+            'notes':['No global wall thickness or FEA certification; shell wall_mm is the construction offset, not a measured minimum wall.', 'Translation and rotation motion checks use adaptive samples and a conditional Lipschitz distance bound; not formal kernel-error certification.', 'No printer commands or canonical CAD writes were sent.']}
     atomic_json(out_dir/'recipe.json',recipe.model_dump())
     atomic_json(out_dir/'measurements.json',result)
     return result

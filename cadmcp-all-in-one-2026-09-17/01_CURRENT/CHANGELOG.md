@@ -7,6 +7,14 @@
 
 The older `Unreleased` headings below are retained as development-history sections for the same 0.3.3 release.
 
+# Unreleased — Shell, spline surfaces and rotation clearance (2026-10-07)
+
+- Add typed Recipe operations `shell` (inward uniform wall with optional open faces), `revolve`, `spline_loft` (parallel closed periodic-spline sections), `mirror`, and selector-bounded `fillet_edges` / `chamfer_edges`. Kernel failures raise without reducing wall/size or substituting geometry.
+- `shell` rejects walls of at least half the smallest source extent before calling the kernel, and requires one valid solid with less material and unchanged outer bounds. Wall thickness is the construction offset, not a measured minimum wall.
+- Protected hardware cannot be the source of any reshaping operation (transform, fillet, shell, mirror, edge finishing), in both the Recipe contract and owner protection policy.
+- Add `rotation_checks` (`sampled_rotation_clearance`): rigid rotation about one fixed axis with adaptive sampling and a conditional Lipschitz lower bound using the bounding-box corner radius. Not a formal kernel-error certificate; elastic, flexure and hinge-play behavior remain unverified.
+- Freeze rotation checks in correction lineage and autopilot schema-repair guards. Routing tests that used `shell` as an unsupported example now use `surface_loft`, which keeps the same assertions.
+
 # Unreleased — Parallel polygon Loft and evidence limits (2026-09-20)
 
 - Require registered per-part/assembly STEP equivalence in new supplemental verification subjects, within the existing worker budget. Bind the internal delivery manifest, report details and STEP hashes; reject contract downgrade and contradictory results.

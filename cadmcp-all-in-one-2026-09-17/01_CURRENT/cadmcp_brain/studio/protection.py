@@ -9,7 +9,7 @@ from ..errors import BrainError
 from ..models import Project, ProjectProtection
 from ..req2cad.common import file_hash
 from ..util import safe_path
-from .recipe import Boolean, ProjectStep, Transform
+from .recipe import RESHAPING, Boolean, ProjectStep
 
 
 def _environment_ids(name):
@@ -82,8 +82,8 @@ def validate_recipe(project: Project, root: Path, recipe):
             # protected node to survive as an output, without inventing an ID.
             raise BrainError('STUDIO_PROTECTED','Owner-protected hardware must remain present in the output assembly.',{'artifact_id':artifact_id})
         for operation in recipe.operations:
-            if isinstance(operation,Transform) and operation.source==node.id:
-                raise BrainError('STUDIO_PROTECTED','Protected CAD cannot be transformed from its registered placement.',{'artifact_id':artifact_id})
+            if isinstance(operation,RESHAPING) and operation.source==node.id:
+                raise BrainError('STUDIO_PROTECTED','Protected CAD cannot be transformed or reshaped from its registered placement.',{'artifact_id':artifact_id,'op':operation.op})
             if isinstance(operation,Boolean) and node.id in operation.operands and (operation.op=='union' or operation.operands[0]==node.id):
                 raise BrainError('STUDIO_PROTECTED','Protected CAD cannot be a boolean target or fused geometry.',{'artifact_id':artifact_id})
     for node in recipe.operations:
