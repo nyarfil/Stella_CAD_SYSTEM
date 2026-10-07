@@ -28,8 +28,8 @@ from cadmcp_brain.engine import Brain
 from cadmcp_brain.errors import BrainError
 from cadmcp_brain.req2cad.common import atomic_json,file_hash,json_load
 from cadmcp_brain.studio.runtime import ROLES
-from side_button_recipe import (REQUEST,P,P2,P3,angles_v2,angles_v3,press_angle_deg,side_button_recipe,
-                                side_button_recipe_v2,side_button_recipe_v3,stop_angle_deg)
+from side_button_recipe import (REQUEST,P,P2,P3,P4,angles_v2,angles_v3,angles_v4,press_angle_deg,side_button_recipe,
+                                side_button_recipe_v2,side_button_recipe_v3,side_button_recipe_v4,stop_angle_deg)
 
 PROJECT_ID='side-button-flow'
 VERIFICATION_ROOT=(ROOT/'verification').resolve()
@@ -116,7 +116,7 @@ def morphology_matrix():
 
 
 CHOSEN={1:{'B_lever','G_pivot','R_switch','S_hardstop'},2:{'B_lever','G_pivot','R_spring','S_hardstop'},
-        3:{'B_lever','G_pivot','R_spring','S_hardstop'}}
+        3:{'B_lever','G_pivot','R_spring','S_hardstop'},4:{'B_lever','G_pivot','R_spring','S_hardstop'}}
 REASONS={
     1:'Lever on a pin pivot keeps the outer skin unchanged and is fully covered by rigid rotation, '
       'clearance and wall checks; the switch spring avoids an extra part. Flexure options cannot be '
@@ -128,7 +128,11 @@ REASONS={
       '"easier to press".',
     3:'Revision 3 after the five-role review of revision 2: same concept; the stop web, far stop datum, '
       'modeled spring envelope and reamed hinge address the new blockers. The part list is shell, button, '
-      'dowel and spring plus the switch; the translating alternative remains an owner option.'}
+      'dowel and spring plus the switch; the translating alternative remains an owner option.',
+    4:'Revision 4 after the five-role review of revision 3 (no blocking findings): same concept; tilt and axial '
+      'play are checked, the spring and plug are fitted last through a through pocket, and the button has one '
+      'bed plane. Parts: shell, button, dowel, spring, plug, plus the switch. Force-factor hypothesis 17/(x+15) '
+      'is recorded as a designer hypothesis, not a target.'}
 
 
 def engineering_evaluation(candidates,revision=1):
@@ -189,6 +193,11 @@ def run_flow(run_root,design_revision=1):
         steps['8_recipe']={'revision':2,'angles_deg':angles_v2(),'parameters':P2,
                            'lineage':'Separate prototype, not a lineage-verified correction: hinge geometry changes the '
                                      'check angles, and revision 2 adds checks that revision 1 did not carry.'}
+    elif design_revision==4:
+        recipe=side_button_recipe_v4()
+        steps['8_recipe']={'revision':4,'angles_deg':angles_v4(),'parameters':P4,
+                           'lineage':'Separate prototype, not a lineage-verified correction: hinge play, tilt and '
+                                     'assembly checks change the check set.'}
     else:
         recipe=side_button_recipe_v3()
         steps['8_recipe']={'revision':3,'angles_deg':angles_v3(),'parameters':P3,
@@ -198,6 +207,7 @@ def run_flow(run_root,design_revision=1):
     steps['9_10_build_and_verification']={k:build[k] for k in ('subject_digest','folder','assembly_step','recipe_path',
                                                                 'geometry_checks_verdict','report_html')}
     steps['9_10_build_and_verification']['failed_checks']=[c['id'] for c in build['checks'] if c['verdict']!='pass']
+    steps['9_10_build_and_verification']['built_parts']=[o['part_id'] for o in recipe['outputs']]
     packets={}
     for role in ROLES:
         tools.brain_studio_review_packet(PROJECT_ID,revision,build['subject_digest'],role)
@@ -241,7 +251,7 @@ def main(argv=None):
     group=parser.add_mutually_exclusive_group()
     group.add_argument('--submit-reviews',type=Path,help='Directory of reviewer-written Review JSON files.')
     group.add_argument('--delivery',action='store_true',help='Write the hash-bound human handoff for the built subject.')
-    parser.add_argument('--revision',type=int,choices=(1,2,3),default=3,help='Design revision to build (new runs only).')
+    parser.add_argument('--revision',type=int,choices=(1,2,3,4),default=4,help='Design revision to build (new runs only).')
     args=parser.parse_args(argv)
     try:run_root=resolve_run_root(args.run_root,must_exist=bool(args.submit_reviews or args.delivery))
     except ValueError as exc:parser.error(str(exc))

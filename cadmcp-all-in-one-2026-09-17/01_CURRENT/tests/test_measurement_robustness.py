@@ -186,16 +186,25 @@ def test_side_button_flow_brief_and_matrix_are_valid():
 
 
 @kernel
-def test_side_button_revision3_builds_and_passes_every_check(tmp_path):
+def test_side_button_revision4_builds_and_passes_every_check(tmp_path):
     from cadmcp_brain.studio.recipe import execute_recipe
-    from side_button_recipe import side_button_recipe_v3
-    result=execute_recipe(Recipe.model_validate(side_button_recipe_v3()),{},tmp_path/'sb3')
+    from side_button_recipe import side_button_recipe_v4
+    result=execute_recipe(Recipe.model_validate(side_button_recipe_v4()),{},tmp_path/'sb4')
     failed=[c['id'] for c in result['checks'] if c['verdict']!='pass']
     assert result['geometry_checks_verdict']=='pass',failed
     checks={c['id']:c for c in result['checks']}
-    for check_id in ('rest-outward-blocked-within-play','hard-stop-blocks-within-play','stem-contact-by-free-play'):
-        assert checks[check_id]['blocking']['verdict']=='pass' and checks[check_id]['axis_offsets_evaluated']==9
-    assert checks['housing-clear-past-stop']['axis_offsets_evaluated']==9
+    assert checks['hard-stop-blocks-within-play']['start_deg']==-1.
+    assert all(x['first_blocked_angle_deg']<-1. for x in checks['hard-stop-blocks-within-play']['blocking']['per_offset'])
+    assert checks['tilt-down-with-axial-drop']['start_translation_mm'][2]<0<checks['tilt-up-with-axial-rise']['start_translation_mm'][2]
+
+
+def test_side_button_revision4_is_a_valid_contract():
+    from side_button_recipe import angles_v4,side_button_recipe_v4
+    recipe=Recipe.model_validate(side_button_recipe_v4())
+    a=angles_v4()
+    assert 0<a['tilt']<.5 and a['rest_play']>a['stop_play']
+    assert {o.part_id for o in recipe.outputs}>={'shell','button','hinge_pin','return_spring','spring_plug'}
+    assert any('17 / (x+15)' in item for item in recipe.unverified_requirements)
 
 
 def test_side_button_revision3_is_a_valid_contract():
@@ -303,3 +312,27 @@ def test_motion_start_offset_chains_a_second_leg():
         return next(c for c in evaluate_geometry(d,{'tube':tube,'post':post})['checks'] if c['id']=='leg')
     assert leg([0.,0.,0.])['verdict']=='pass'
     assert leg([20.,0.,0.])['verdict']=='fail'
+
+
+@kernel
+def test_rotation_start_angle_and_offset_shift_the_sweep():
+    from cadmcp_brain.studio.recipe import evaluate_geometry
+    from test_recipe_operations import hinge_recipe
+    # From 4.5 deg onward the far corner is already in the stop: a sweep that
+    # starts there is blocked from its first sample.
+    late=hinge_recipe(5.);late['rotation_checks'][0].update(start_deg=4.5,expect='blocked',samples=3,max_samples=3)
+    check=next(c for c in evaluate_geometry(late,_hinge_shapes())['checks'] if c['id']=='press')
+    assert check['blocking']['per_offset'][0]['first_blocked_angle_deg']==4.5
+    # Lifting the button 3 mm first moves it clear of the stop over the same sweep.
+    lifted=hinge_recipe(5.);lifted['rotation_checks'][0].update(start_translation_mm=[0.,0.,3.])
+    check=next(c for c in evaluate_geometry(lifted,_hinge_shapes())['checks'] if c['id']=='press')
+    assert check['verdict']=='pass'
+    unlifted=hinge_recipe(5.)
+    assert next(c for c in evaluate_geometry(unlifted,_hinge_shapes())['checks'] if c['id']=='press')['verdict']=='fail'
+
+
+def test_rotation_needs_a_nonzero_sweep():
+    from pydantic import ValidationError
+    from test_recipe_operations import hinge_recipe
+    data=hinge_recipe(5.);data['rotation_checks'][0]['start_deg']=5.
+    with pytest.raises(ValidationError):Recipe.model_validate(data)

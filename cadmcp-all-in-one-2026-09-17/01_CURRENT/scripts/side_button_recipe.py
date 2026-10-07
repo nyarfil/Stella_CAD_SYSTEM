@@ -647,3 +647,218 @@ def side_button_recipe_v3(request=REQUEST,p=None):
             'Hinge play is covered at eight radial offsets of 0.055 mm; tilt on the pin and axial play are not swept.',
             'Wall checks are sampled minima of the stated parts, not a proof of minimum wall or of strength.'],
     }
+
+
+# ---------------------------------------------------------------------------
+# Revision 4: repairs the revision-3 round-1 major findings.
+# - Pin tilt + axial play reached the window rim -> 0.025 mm radial bore play,
+#   0.15 mm axial gaps, and two tilt checks with axial play taken up.
+# - Spring blocked the slide-in -> through pocket; spring and plug go in after
+#   the button and pin, each with a checked path.
+# - Dowel fit -> line-reamed press fit, no adhesive; dowel protrudes 1 mm below.
+# - Floating face for printing -> barrel, web, rib, plunger and skin share one
+#   bed plane; the link is wider.
+# - Blocked checks start past the rest contact; rest band uses the rest radius.
+# ---------------------------------------------------------------------------
+P4=dict(P3)
+P4.update({'barrel_inner_radius_mm':1.025,'tab_hole_radius_mm':1.005,'hinge_radial_play_mm':.03,'axial_gap_mm':.15,
+           'plunger_z_min_mm':10.,'plug_radius_mm':.795,'plug_length_mm':1.5,'pin_protrusion_mm':1.,
+           'stop_extra_travel_mm':.2,'block_z_max_mm':13.8,'link_z_min_mm':14.,'link_z_max_mm':17.3})
+
+
+def angles_v4(p=P4):
+    a=angles_v3(p)
+    a['rest_play']=_play_angle_deg(p,p['hinge_y_mm']-p['block_y_max_mm'])
+    bore=(p['window_z_max_mm']-.5)-p['window_z_min_mm']
+    a['tilt']=math.degrees(2*(p['barrel_inner_radius_mm']-p['pin_radius_mm'])/bore)
+    return a
+
+
+def side_button_recipe_v4(request=REQUEST,p=None):
+    p=dict(P4 if p is None else p)
+    wl,wh=p['window_x_min_mm'],p['window_x_max_mm'];zl,zh=p['window_z_min_mm'],p['window_z_max_mm'];g=p['window_gap_mm']
+    hx,hy=p['hinge_x_mm'],p['hinge_y_mm'];ag=p['axial_gap_mm'];tt=p['tab_thickness_mm']
+    # One bed plane: barrel, web, rib, plunger and skin all start at the window bottom.
+    bz0=zl;tab_low_top=bz0-ag;bz1=zh-.5;tab_high_bottom=bz1+ag
+    w=p['arm_half_width_mm'];by0,by1,bzt=p['block_y_min_mm'],p['block_y_max_mm'],p['block_z_max_mm']
+    gin=inward_gap_v3(p);ibw=p['inward_block_width_mm']
+    in_face=hx-w-gin;out_face=hx+w
+    spring_z=(tab_low_top+bzt)/2;spring_y=(by0+by1)/2;pocket=p['spring_pocket_depth_mm']
+    tip=p['plunger_tip_y_mm'];stem_top=tip-p['stem_free_play_mm']
+    housing_top=stem_top-p['assumed_stem_operating_travel_mm']-p['housing_margin_after_operating_mm']
+    px0,px1=p['plunger_x_min_mm'],p['plunger_x_max_mm'];pz0,pz1=p['plunger_z_min_mm'],p['plunger_z_max_mm']
+    a=angles_v4(p);pin_z0=tab_low_top-tt-p['pin_protrusion_mm'];pin_z1=tab_high_bottom+tt;play=p['hinge_radial_play_mm']
+    plug=p['plug_length_mm'];bzm=(bz0+bz1)/2;tilt=a['tilt'];tilt_drop=ag-.02
+    ops=[
+        {'id':'outer','op':'spline_loft','function_id':'F6_connect_shell',
+         'reason':'Smooth palm/side skin through closed periodic-spline sections; this outer surface is preserved.',
+         'sections':[{'z_mm':z,'points_mm':_ellipse(aa,bb)} for z,aa,bb in SECTIONS]},
+        {'id':'cavity','op':'spline_loft','function_id':'F6_connect_shell',
+         'reason':'Inner cavity: outer sections inset by the wall; open through the bottom.',
+         'sections':_inset_sections(p['shell_wall_mm'])},
+        {'id':'hollow','op':'difference','function_id':'F6_connect_shell',
+         'reason':'Shell skin = outer volume minus inset cavity.','operands':['outer','cavity']},
+        {'id':'safe_core','op':'spline_loft','function_id':'F2_guide_button',
+         'reason':'Interior region inset further, where hinge parts may live without touching the wall.',
+         'sections':_inset_sections(p['safe_offset_mm'])},
+        _box('window','F1_transmit_force','Button skin region cut from the existing side surface.',[wl,20.,zl],[wh,40.,zh]),
+        _box('window_gap','F6_connect_shell','Window enlarged by the running gap around the button.',[wl-g,20.,zl-g],[wh+g,40.,zh+g]),
+        {'id':'shell_open','op':'difference','function_id':'F6_connect_shell',
+         'reason':'Open the side window in the shell with a running gap.','operands':['hollow','window_gap']},
+        {'id':'skin_piece','op':'intersection','function_id':'F1_transmit_force',
+         'reason':'Button face is the removed piece of the original skin, so the outer shape does not change.',
+         'operands':['hollow','window']},
+        _box('rib_box','F1_transmit_force','Rear rib carrying finger force from the skin piece toward the hinge link.',
+             [wl+1.,20.,bz0],[wl+4.,40.,zh-.5]),
+        {'id':'rib','op':'intersection','function_id':'F1_transmit_force','reason':'Keep the rib inside the outer skin.',
+         'operands':['rib_box','outer']},
+        _box('link_box','F2_guide_button','Link from barrel to rib, kept above the stop blocks for the insertion path.',
+             # Link top stays below the barrel top, so only the barrel end bears on the upper tab under tilt.
+             [hx+p['barrel_outer_radius_mm']-.5,hy-2.,p['link_z_min_mm']],[wl+4.,hy+2.5,p['link_z_max_mm']]),
+        {'id':'link','op':'intersection','function_id':'F2_guide_button','reason':'Link stays inside the safe interior.',
+         'operands':['link_box','safe_core']},
+        {'id':'barrel_outer','op':'cylinder','function_id':'F2_guide_button',
+         'reason':'Hinge barrel over the full height between the tabs; its ends are axial thrust faces.',
+         'radius_mm':p['barrel_outer_radius_mm'],'height_mm':bz1-bz0,'origin_mm':[hx,hy,bz0],'axis':[0.,0.,1.]},
+        _box('stop_arm','F5_limit_overtravel','Full-height stop web, wider than the barrel, running in the stop slot 17 mm from the axis.',
+             [hx-w,p['arm_tip_y_mm'],bz0],[hx+w,hy,bz1]),
+        _box('plunger_box','F3_actuate_switch','Plunger at the face centre toward the switch stem.',[px0,tip,pz0],[px1,40.,pz1]),
+        {'id':'plunger','op':'intersection','function_id':'F3_actuate_switch','reason':'Keep the plunger inside the outer skin.',
+         'operands':['plunger_box','outer']},
+        {'id':'button_solid','op':'union','function_id':'F1_transmit_force',
+         'reason':'One printed button: skin face, rib, link, barrel, stop web and plunger.',
+         'operands':['skin_piece','rib','link','barrel_outer','stop_arm','plunger']},
+        {'id':'barrel_bore','op':'cylinder','function_id':'F2_guide_button','reason':'Reamed bore on the h7 dowel, 0.05 mm radial play.',
+         'radius_mm':p['barrel_inner_radius_mm'],'height_mm':bz1-bz0+2.,'origin_mm':[hx,hy,bz0-1.],'axis':[0.,0.,1.]},
+        {'id':'button','op':'difference','function_id':'F2_guide_button','reason':'Bore the barrel for the pin.',
+         'operands':['button_solid','barrel_bore']},
+        _box('tab_low_box','F6_connect_shell','Lower tab: pin support and stop-slot base, top trimmed to the window gap.',
+             [in_face-ibw-.5,by0-.5,tab_low_top-tt],[p['tab_x_max_mm'],40.,tab_low_top]),
+        {'id':'tab_low','op':'intersection','function_id':'F6_connect_shell','reason':'Lower tab stays inside the outer skin.',
+         'operands':['tab_low_box','outer']},
+        _box('tab_high_box','F6_connect_shell','Upper tab: pin support; bottom is the barrel axial thrust face.',
+             [hx-3.,hy-3.,tab_high_bottom],[p['tab_x_max_mm'],40.,tab_high_bottom+tt]),
+        {'id':'tab_high','op':'intersection','function_id':'F6_connect_shell','reason':'Upper tab stays inside the outer skin.',
+         'operands':['tab_high_box','outer']},
+        _box('block_in_box','F5_limit_overtravel','Inward hard-stop block (vertical face) carrying the spring pocket.',
+             [in_face-ibw,by0,tab_low_top],[in_face,by1,bzt]),
+        {'id':'spring_pocket','op':'cylinder','function_id':'F4_restore_button',
+         'reason':'Through pocket: the spring and its plug go in from the outer side after the button.',
+         'radius_mm':p['spring_pocket_radius_mm'],'height_mm':ibw+1.,'origin_mm':[in_face-ibw-.5,spring_y,spring_z],'axis':[1.,0.,0.]},
+        {'id':'block_in','op':'difference','function_id':'F5_limit_overtravel','reason':'Inward block with its spring pocket.',
+         'operands':['block_in_box','spring_pocket']},
+        _box('block_out','F2_guide_button','Outward rest-stop block (vertical face); the spring holds the arm on it.',
+             [out_face,by0,tab_low_top],[p['tab_x_max_mm'],by1,bzt]),
+        {'id':'shell_tabs','op':'union','function_id':'F6_connect_shell',
+         'reason':'Shell with window, both tabs and both stop blocks as one printed part.',
+         'operands':['shell_open','tab_low','tab_high','block_in','block_out']},
+        {'id':'pin_hole','op':'cylinder','function_id':'F6_connect_shell','reason':'Hole for the dowel through both tabs.',
+         'radius_mm':p['tab_hole_radius_mm'],'height_mm':pin_z1-pin_z0+2.,'origin_mm':[hx,hy,pin_z0-1.],'axis':[0.,0.,1.]},
+        {'id':'shell_part','op':'difference','function_id':'F6_connect_shell','reason':'Drill the pin path through both tabs.',
+         'operands':['shell_tabs','pin_hole']},
+        {'id':'pin','op':'cylinder','function_id':'F2_guide_button',
+         'reason':'Ø2 h7 steel dowel, press fit in line-reamed tab holes, protruding below for extraction (purchased).',
+         'radius_mm':p['pin_radius_mm'],'height_mm':pin_z1-pin_z0,'origin_mm':[hx,hy,pin_z0],'axis':[0.,0.,1.]},
+        {'id':'spring','op':'cylinder','function_id':'F4_restore_button',
+         'reason':'Return spring envelope (placeholder): pocket floor to the arm face, preloading the arm onto the rest block.',
+         'radius_mm':p['spring_radius_mm'],'height_mm':pocket+gin,'origin_mm':[in_face-pocket,spring_y,spring_z],'axis':[1.,0.,0.]},
+        {'id':'plug','op':'cylinder','function_id':'F4_restore_button','reason':'Press-in plug closing the spring pocket (printed).',
+         'radius_mm':p['plug_radius_mm'],'height_mm':plug,'origin_mm':[in_face-pocket-plug,spring_y,spring_z],'axis':[1.,0.,0.]},
+        _box('switch_housing','F3_actuate_switch','ASSUMED switch housing envelope (placeholder, not measured).',
+             [px0-1.5,housing_top-4.,pz0-1.],[px1+1.5,housing_top,pz1+1.]),
+        _box('switch_stem','F3_actuate_switch','ASSUMED switch stem (placeholder).',
+             [px0+.5,housing_top,pz0+1.],[px1-.5,stem_top,pz1-1.]),
+    ]
+    axis={'axis_origin_mm':[hx,hy,0.],'axis_direction':[0.,0.,1.]}
+    sp=a['stop_play']
+    return {
+        'title':'Side button improvement trial, revision 4 (one bed plane, through spring pocket, tilt-checked hinge)',
+        'original_request':request,
+        'design_parameters':{k:float(v) for k,v in p.items()},
+        'parameter_basis':{k:'Proposal for this prototype revision; not measured from a real mouse, switch or PCB.' for k in p},
+        'functions':{
+            'F1_transmit_force':'Transmit thumb force from the unchanged side skin into the button.',
+            'F2_guide_button':'Guide the button on one fixed hinge axis and hold its rest pose on the rest block.',
+            'F3_actuate_switch':'Move the plunger onto the switch stem through its operating travel.',
+            'F4_restore_button':'Return the button to its rest block with a compression spring (placeholder envelope).',
+            'F5_limit_overtravel':'Stop the button at a hard stop before the switch housing is reached.',
+            'F6_connect_shell':'Carry the hinge in the shell without changing the outer surface.'},
+        'protected_constraints':['Outer shell skin is not reshaped; the button face is the removed skin piece.'],
+        'design_basis':{'kind':'first_principles',
+                        'summary':'Pin-hinged flush side button; far slot stops on a full-height web; spring-preloaded rest; centred plunger on an assumed switch.',
+                        'assumptions':['Switch housing, stem position and operating travel are placeholders, not a datasheet.',
+                                       'Return spring: Ø1.5 compression spring, rate and preload not selected (placeholder envelope).',
+                                       'Ø2 h7 steel dowel; button bore reamed to 2.05 mm; tab holes printed undersize and line-reamed together, press fit, no adhesive.',
+                                       'Assembly order: button in from below and slid onto the rest block, dowel up from below, spring and plug into the through pocket, then switch/PCB.',
+                                       'FDM prototype: shell printed rim-down; button printed on its single bed plane (z = window bottom) with the bore vertical.']},
+        'verification_plan':['Single solids, volume agreement, automatic pair overlap and bounds.',
+                             'Rest band: outward motion is blocked within the hinge-play angle at every play offset (flushness bound).',
+                             'Free play: no stem contact within the hinge-play angle inward of rest at every play offset.',
+                             'Actuation: stem contact by the free-play angle at every play offset.',
+                             'Overtravel: the hard stop blocks motion by the stop angle plus the play angle at every play offset, and the housing stays clear up to that angle.',
+                             'Nothing in the shell is touched before the nominal stop angle at the nominal axis.',
+                             'Assembly path (in from below, slide onto the rest block) and dowel path are clear of the shell.',
+                             'Sampled printed wall thickness of shell and button.'],
+        'operations':ops,
+        'outputs':[{'part_id':'shell','node':'shell_part'},{'part_id':'button','node':'button'},{'part_id':'hinge_pin','node':'pin'},
+                   {'part_id':'return_spring','node':'spring'},{'part_id':'spring_plug','node':'plug'},
+                   {'part_id':'switch_housing','node':'switch_housing'},{'part_id':'switch_stem','node':'switch_stem'}],
+        'dimension_checks':[
+            {'id':'shell-length','part':'shell','kind':'bbox','axis':'x','nominal_mm':120.,'tolerance_mm':.5},
+            {'id':'shell-height','part':'shell','kind':'bbox','axis':'z','nominal_mm':34.,'tolerance_mm':1e-3}],
+        'clearance_checks':[
+            {'id':'rest-pin-in-bore','part_a':'button','part_b':'hinge_pin','min_mm':p['barrel_inner_radius_mm']-p['pin_radius_mm']-1e-3},
+            {'id':'rest-button-housing','part_a':'button','part_b':'switch_housing','min_mm':.5}],
+        'motion_checks':[
+            {'id':'button-insertion-slide','moving_part':'button','obstacles':['shell'],
+             # Sample budgets keep the whole build inside the 300 s worker limit;
+             # sliding contact cannot be certified, so these are sampled verdicts.
+             'translation_end_mm':[0.,-p['insertion_slide_mm'],0.],'samples':9,'max_samples':9,'min_mm':0.},
+            {'id':'button-insertion-drop','moving_part':'button','obstacles':['shell'],
+             'start_translation_mm':[0.,-p['insertion_slide_mm'],0.],
+             'translation_end_mm':[0.,0.,-p['insertion_drop_mm']],'samples':9,'max_samples':17,'min_mm':.1},
+            {'id':'pin-insertion-path','moving_part':'hinge_pin','obstacles':['shell'],
+             'translation_end_mm':[0.,0.,-(pin_z1+1.)],'samples':9,'max_samples':17,'min_mm':.001},
+            # Spring and plug are fitted after the button: their paths out of the pocket must be clear.
+            {'id':'plug-insertion-path','moving_part':'spring_plug','obstacles':['shell'],
+             'translation_end_mm':[-8.,0.,0.],'samples':5,'max_samples':9,'min_mm':.001},
+            {'id':'spring-insertion-path','moving_part':'return_spring','obstacles':['shell'],
+             'start_translation_mm':[0.,0.,0.],'translation_end_mm':[-(pocket+gin+plug+6.),0.,0.],'samples':5,'max_samples':9,'min_mm':.001}],
+        'rotation_checks':[
+            {'id':'rest-outward-blocked-within-play','moving_part':'button','obstacles':['shell'],**axis,'end_deg':a['rest_play']+.05,
+             # Blocking is located by the end pose; three samples per offset bound the worker time.
+             'expect':'blocked','samples':3,'max_samples':3,'axis_play_mm':play,'min_blocking_overlap_mm3':1e-5},
+            {'id':'rest-band-stem-free','moving_part':'button','obstacles':['switch_stem'],**axis,'end_deg':-a['rest_play'],
+             'samples':5,'max_samples':17,'min_mm':.05,'axis_play_mm':play},
+            {'id':'stem-contact-by-free-play','moving_part':'button','obstacles':['switch_stem'],**axis,'end_deg':a['contact'],
+             'expect':'blocked','samples':3,'max_samples':3,'axis_play_mm':play,'min_blocking_overlap_mm3':1e-4},
+            {'id':'housing-clear-past-stop','moving_part':'button','obstacles':['switch_housing'],**axis,'end_deg':a['stop']-sp,
+             'samples':5,'max_samples':33,'min_mm':.2,'axis_play_mm':play},
+            # Starts past the rest contact, so only the hard stop can produce the blocking overlap.
+            {'id':'hard-stop-blocks-within-play','moving_part':'button','obstacles':['shell'],**axis,'start_deg':-1.,
+             'end_deg':a['stop']-sp-.05,'expect':'blocked','samples':3,'max_samples':3,'axis_play_mm':play,'min_blocking_overlap_mm3':1e-4},
+            {'id':'shell-clear-until-stop','moving_part':'button','obstacles':['shell'],**axis,'end_deg':a['stop'],
+             'samples':5,'max_samples':9,'min_mm':0.,'end_max_distance_mm':.02},
+            # Pin tilt (bore clearance over bore length) about the vertical-plane axis through the barrel,
+            # combined with axial play: the face ends must stay off the window rim.
+            {'id':'tilt-down-with-axial-drop','moving_part':'button','obstacles':['shell'],
+             'axis_origin_mm':[hx,hy,bzm],'axis_direction':[0.,1.,0.],'start_translation_mm':[-play,0.,-tilt_drop],
+             'end_deg':tilt,'samples':3,'max_samples':3,'min_mm':0.},
+            {'id':'tilt-up-with-axial-rise','moving_part':'button','obstacles':['shell'],
+             'axis_origin_mm':[hx,hy,bzm],'axis_direction':[0.,1.,0.],'start_translation_mm':[-play,0.,tilt_drop],
+             'end_deg':-tilt,'samples':3,'max_samples':3,'min_mm':0.}],
+        'wall_checks':[
+            {'id':'shell-printed-wall','part':'shell','min_mm':p['min_printed_wall_mm'],'samples_per_face':10},
+            {'id':'button-printed-wall','part':'button','min_mm':p['min_printed_wall_mm'],'samples_per_face':10}],
+        'unverified_requirements':[
+            '押しやすさ（押下力・ストローク感・クリック感）は実機試験していない。押す位置による力の倍率は剛体計算の目安にすぎない。',
+            'Switch housing, stem position, operating force and travel are assumed placeholders, not a measured switch.',
+            'PCB position and the real mouse shell were not measured; this is a stand-in shell.',
+            'Return spring rate, preload and its effect on thumb force are not selected or verified; it is an envelope only.',
+            'Dowel press fit in line-reamed tab holes, reamed bore size, print tolerance, link and tab stiffness and wear are not qualified.',
+            'The skin removed by the 0.4 mm running gap around the face (about 38 mm3) and the face standing up to about 0.1 mm proud within hinge play are accepted changes to the outer form.',
+            'Hinge play is covered at eight radial offsets; pin tilt is checked about one horizontal axis with axial play, not every combination.',
+            'The switch is located by the owner PCB; its position relative to the hinge must stay within the measured rest and housing margins (no PCB datum modeled).',
+            '押す位置による押下力の目安（剛体）: 力倍率 = 17 / (x+15)。ヒンジ側端 x=-10 で約3.4倍、中央 x=2 で1.0倍、先端 x=14 で約0.59倍。設計者の仮説であり目標値ではない。',
+            'Wall checks are sampled minima of the stated parts, not a proof of minimum wall or of strength.'],
+    }

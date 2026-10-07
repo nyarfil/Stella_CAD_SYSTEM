@@ -384,10 +384,14 @@ class RotationMotion(Strict):
     min_blocking_overlap_mm3: float = Field(default=1e-3, gt=0, le=1e3)
     # Radial hinge play: the sweep is repeated with the axis shifted this far.
     axis_play_mm: float = Field(default=0., ge=0, le=2)
+    # Optional start of the sweep: angle (e.g. begin past a rest contact) and a
+    # rigid pre-offset of the part and axis (e.g. axial or radial play taken up).
+    start_deg: float = Field(default=0., ge=-360, le=360)
+    start_translation_mm: Vec = Field(default_factory=lambda:[0.,0.,0.])
     @model_validator(mode='after')
     def meaningful_rotation(self):
         if abs(sum(x*x for x in self.axis_direction)-1) > 1e-6:raise ValueError('Rotation axis must be a unit direction.')
-        if self.end_deg==0:raise ValueError('A rotation check needs a nonzero end angle.')
+        if self.end_deg==self.start_deg:raise ValueError('A rotation check needs a nonzero sweep.')
         if self.expect=='blocked' and self.end_max_distance_mm is not None:
             raise ValueError('A blocked-motion check cannot also require end engagement.')
         if self.end_max_distance_mm is not None and self.end_max_distance_mm<self.min_mm:
@@ -721,17 +725,18 @@ def _rotation_sweep(rotation,part_shapes,offset):
     # bound as translation: NOT a formal OCCT error certificate.
     import math
     import numpy as np
-    body=part_shapes[rotation.moving_part].translate(tuple(offset)) if np.any(offset) else part_shapes[rotation.moving_part]
-    origin_vec=np.asarray(rotation.axis_origin_mm)+offset
+    shift=np.asarray(offset)+np.asarray(rotation.start_translation_mm)
+    body=part_shapes[rotation.moving_part].translate(tuple(shift)) if np.any(shift) else part_shapes[rotation.moving_part]
+    origin_vec=np.asarray(rotation.axis_origin_mm)+shift
     origin=tuple(origin_vec);tip=tuple(origin_vec+np.asarray(rotation.axis_direction))
     rho=max_axis_radius_mm(body,list(origin_vec),rotation.axis_direction)
-    sweep_rad=math.radians(abs(rotation.end_deg))
+    sweep_rad=math.radians(abs(rotation.end_deg-rotation.start_deg))
     count=rotation.samples if rotation.expect=='clear' else rotation.max_samples
     cache={};lower_bound=None;certificate=False
     while True:
         samples=[]
         for t in np.linspace(0.,1.,count):
-            angle=float(rotation.end_deg*t)
+            angle=float(rotation.start_deg+(rotation.end_deg-rotation.start_deg)*t)
             moving=body.rotate(origin,tip,angle)
             for obstacle in rotation.obstacles:
                 key=(float(t),obstacle)
@@ -777,6 +782,7 @@ def _rotation_check(rotation,part_shapes):
     certified=rotation.expect=='clear' and all(run[3] for run in runs)
     bounds=[run[2] for run in runs if run[2] is not None]
     return {'id':rotation.id,'kind':'sampled_rotation_clearance','expect':rotation.expect,'samples':samples,
+            'start_deg':rotation.start_deg,'start_translation_mm':list(rotation.start_translation_mm),
             'end_pose_engagement':engagement,'blocking':blocking,'verdict':verdict,
             'axis_play_mm':rotation.axis_play_mm,'axis_offsets_evaluated':len(runs),
             'continuous_swept_motion':('not_applicable_blocking_expected' if rotation.expect=='blocked' else
