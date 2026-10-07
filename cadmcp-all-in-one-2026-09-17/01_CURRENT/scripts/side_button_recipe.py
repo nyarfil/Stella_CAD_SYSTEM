@@ -1419,7 +1419,9 @@ def side_button_recipe_v7(request=REQUEST,p=None):
     zl,zh,g,wl=p['window_z_min_mm'],p['window_z_max_mm'],p['window_gap_mm'],p['window_x_min_mm']
     tab_low_top=zl-p['axial_gap_mm'];by0,by1=p['block_y_min_mm'],p['block_y_max_mm']
     sy,tap,sr=p['screw_y_mm'],p['tap_radius_mm'],p['screw_radius_mm']
-    spring_z=(tab_low_top+p['block_z_max_mm'])/2;stop_z=p['stop_screw_z_mm']
+    spring_z=p.get('spring_z_mm',(tab_low_top+p['block_z_max_mm'])/2);stop_z=p['stop_screw_z_mm']
+    # Revision 8 may place the spring beside, not under, the stop screw.
+    spring_y=p.get('spring_y_mm',sy);rest_z=p.get('rest_screw_z_mm',spring_z)
     tip=stop_screw_tip_x7(p);recess=p['block_recess_mm'];bw=p['inward_block_width_mm']
     in_x1=tip-recess;in_x0=in_x1-bw
     web_out=hx+w;out_x0=web_out+p['rest_recess_mm'];out_x1=p['tab_x_max_mm']
@@ -1438,24 +1440,24 @@ def side_button_recipe_v7(request=REQUEST,p=None):
         'block_in_box':_box('block_in_box','F5_limit_overtravel','Inward block carrying the stop screw and the spring pocket.',
                             [in_x0,by0,tab_low_top],[in_x1,by1,p['block_in_z_max_mm']]),
         'spring_pocket':cyl_x('spring_pocket','F4_restore_button','Tap hole for the spring and its closing grub screw.',
-                              tap,in_x0-.5,bw+1.,sy,spring_z),
+                              tap,in_x0-.5,bw+1.,spring_y,spring_z),
         'stop_hole':cyl_x('stop_hole','F5_limit_overtravel','Tap hole for the adjustable hard-stop screw.',tap,in_x0-.5,bw+1.,sy,stop_z),
         'block_in':{'id':'block_in','op':'difference','function_id':'F5_limit_overtravel',
                     'reason':'Inward block with spring pocket and stop-screw hole.','operands':['block_in_box','spring_pocket','stop_hole']},
         'block_out_box':_box('block_out_box','F2_guide_button','Outward block carrying the adjustable rest screw.',
                              [out_x0,by0,tab_low_top],[out_x1,by1,p['block_z_max_mm']]),
-        'rest_hole':cyl_x('rest_hole','F2_guide_button','Tap hole for the adjustable rest screw.',tap,out_x0-.5,out_x1-out_x0+1.,sy,spring_z),
+        'rest_hole':cyl_x('rest_hole','F2_guide_button','Tap hole for the adjustable rest screw.',tap,out_x0-.5,out_x1-out_x0+1.,sy,rest_z),
         'block_out':{'id':'block_out','op':'difference','function_id':'F2_guide_button',
                      'reason':'Outward block with the rest-screw hole.','operands':['block_out_box','rest_hole']},
         'spring':cyl_x('spring','F4_restore_button',
                        'Return spring envelope (purchased): from the closing screw to the web face, preloading the web onto the rest screw.',
-                       p['spring_radius_mm'],in_x0+p['spring_screw_length_mm'],web_out-2*w-(in_x0+p['spring_screw_length_mm']),sy,spring_z),
+                       p['spring_radius_mm'],in_x0+p['spring_screw_length_mm'],web_out-2*w-(in_x0+p['spring_screw_length_mm']),spring_y,spring_z),
         'spring_screw':cyl_x('spring_screw','F4_restore_button','M2 grub screw closing the spring pocket; its depth sets the preload.',
-                             sr,in_x0,p['spring_screw_length_mm'],sy,spring_z),
+                             sr,in_x0,p['spring_screw_length_mm'],spring_y,spring_z),
         'stop_screw':cyl_x('stop_screw','F5_limit_overtravel','M2 grub screw whose tip is the adjustable hard stop.',
                            sr,in_x0,tip-in_x0,sy,stop_z),
         'rest_screw':cyl_x('rest_screw','F2_guide_button','M2 grub screw whose tip is the adjustable rest stop (sets flushness).',
-                           sr,web_out,p['rest_screw_length_mm'],sy,spring_z),
+                           sr,web_out,p['rest_screw_length_mm'],sy,rest_z),
     }
     out_order=[]
     for node in order:
@@ -1515,4 +1517,166 @@ def side_button_recipe_v7(request=REQUEST,p=None):
         'Switch selection: operating point no deeper than about 0.55 mm and at least about 0.84 mm total travel before bottoming, so the hard stop, not the switch, ends the stroke; the stem must sit within -0.15/+0.05 mm in Y of the modeled position before screw adjustment (assumed placeholder overtravel 0.8 mm).',
         'Return spring selection: solid length below about 2.0 mm (it shortens from about 2.9 mm to about 2.0 mm at the stop); its preload adds to thumb force.',
         'Self-tapped M2 threads in printed plastic: holding torque and wear under repeated hard-stop loads are not qualified.']
+    return r
+
+
+# ---------------------------------------------------------------------------
+# Revision 8: repairs the revision-7 round-1 major findings.
+# - Stop raised on a free-standing post -> stop screw back at z 11.9 beside
+#   the spring (side by side in Y), a 4 mm lower tab, 4 mm-thick inward block.
+# - Printed threads unlocked -> square M2 jam nuts on the outer block faces
+#   lock the stop and rest screws (fitted after the button).
+# - Stop set "until the switch clicks" before the PCB exists -> the stop is
+#   set with a 1.5 mm depth gauge at the face's front edge; the click is only
+#   confirmed after the PCB is fitted.
+# - Switch travel limit unrecorded -> the placeholder housing sits at the
+#   stem's assumed bottoming depth (0.95 mm), and the housing check (with
+#   hinge play, past the stop) proves the push stays at least 0.05 mm short.
+# - Contract text: screw/nut assembly order, spring lengths, no plug.
+# ---------------------------------------------------------------------------
+P8=dict(P7)
+P8.update({'screw_y_mm':9.3,'spring_y_mm':12.4,'stop_screw_z_mm':11.9,'spring_z_mm':11.9,'rest_screw_z_mm':11.9,
+           'block_y_min_mm':7.3,'block_y_max_mm':14.4,'block_in_z_max_mm':14.,'inward_block_width_mm':4.,
+           'tab_thickness_mm':4.,'nut_size_mm':4.,'nut_thickness_mm':1.6,'rest_screw_length_mm':4.,
+           'housing_margin_after_operating_mm':.45,'depth_gauge_mm':1.5})
+
+
+def angles_v8(p=P8):
+    return angles_v7(p)
+
+
+def front_edge_travel_at_stop_mm(p=P8):
+    """Inward travel of the face's front edge at the nominal stop angle (depth-gauge setting)."""
+    r=p['window_x_max_mm']-p['hinge_x_mm']
+    return r*math.sin(math.radians(-angles_v8(p)['stop']))
+
+
+def side_button_recipe_v8(request=REQUEST,p=None):
+    p=dict(P8 if p is None else p)
+    r=side_button_recipe_v7(request,p)
+    ops={o['id']:o for o in r['operations']}
+    hx,hy,w=p['hinge_x_mm'],p['hinge_y_mm'],p['arm_half_width_mm']
+    sy,z=p['screw_y_mm'],p['stop_screw_z_mm'];tap,sr=p['tap_radius_mm'],p['screw_radius_mm']
+    ns,nt=p['nut_size_mm'],p['nut_thickness_mm']
+    in_x0=ops['block_in_box']['center_mm'][0]-ops['block_in_box']['size_mm'][0]/2
+    out_x1=p['tab_x_max_mm'];tip=stop_screw_tip_x7(p);web_out=hx+w
+    def nut(node_id,function_id,reason,x0):
+        return [_box(node_id+'_body',function_id,reason,[x0,sy-ns/2,z-ns/2],[x0+nt,sy+ns/2,z+ns/2]),
+                {'id':node_id+'_hole','op':'cylinder','function_id':function_id,'reason':'Nut thread minor bore.',
+                 'radius_mm':tap,'height_mm':nt+1.,'origin_mm':[x0-.5,sy,z],'axis':[1.,0.,0.]},
+                {'id':node_id,'op':'difference','function_id':function_id,'reason':reason,
+                 'operands':[node_id+'_body',node_id+'_hole']}]
+    stop_len=tip-(in_x0-nt-.5)
+    ops['stop_screw'].update(height_mm=stop_len,origin_mm=[tip-stop_len,sy,z],
+                             reason='M2 x 6 grub screw whose tip is the adjustable hard stop, locked by a jam nut.')
+    ops['rest_screw'].update(reason='M2 x 4 grub screw whose tip is the adjustable rest stop (sets flushness), locked by a jam nut.')
+    order=[o['id'] for o in r['operations']]
+    extra=nut('stop_nut','F5_limit_overtravel','Square M2 jam nut locking the stop screw on the outer face of the inward block.',in_x0-nt)
+    extra+=nut('rest_nut','F2_guide_button','Square M2 jam nut locking the rest screw on the outer face of the outward block.',out_x1)
+    for o in extra:ops[o['id']]=o
+    order+= [o['id'] for o in extra]
+    r['operations']=[ops[n] for n in order]
+    ops_skin=ops['skin_piece'];ops_skin['reason']='Button face is the removed piece of the skin; only the running gap around it is lost.'
+    r['title']='Side button improvement trial, revision 8 (low stop with jam-nut screws, gauge-set stroke)'
+    r['design_parameters']={k:float(v) for k,v in p.items()}
+    r['parameter_basis']={k:'Proposal for this prototype revision; not measured from a real mouse, switch or PCB.' for k in p}
+    for o in r['outputs']:
+        if o['part_id']=='stop_screw':o['manufacturing_process']='Purchased M2 x 6 grub screw, flat point, self-tapped into a 1.6 mm printed hole'
+        if o['part_id']=='rest_screw':o['manufacturing_process']='Purchased M2 x 4 grub screw, flat point, self-tapped into a 1.6 mm printed hole'
+    r['outputs']+=[{'part_id':'stop_nut','node':'stop_nut','manufacturing_process':'Purchased M2 square nut (jam nut)'},
+                   {'part_id':'rest_nut','node':'rest_nut','manufacturing_process':'Purchased M2 square nut (jam nut)'}]
+    thread=math.pi*(sr**2-tap**2)*nt
+    r['press_fits']=[f for f in r['press_fits'] if f['id']!='stop-screw-thread']+[
+        {'id':'stop-screw-thread','part_a':'stop_screw','part_b':'shell','min_overlap_mm3':.7*math.pi*(sr**2-tap**2)*p['inward_block_width_mm'],
+         'max_overlap_mm3':1.3*math.pi*(sr**2-tap**2)*p['inward_block_width_mm'],'basis':'M2 thread engaged over the inward block width, modeled as an interference annulus.'},
+        {'id':'stop-nut-thread','part_a':'stop_screw','part_b':'stop_nut','min_overlap_mm3':.7*thread,'max_overlap_mm3':1.3*thread,
+         'basis':'M2 thread engaged in the square jam nut, modeled as an interference annulus.'},
+        {'id':'rest-nut-thread','part_a':'rest_screw','part_b':'rest_nut','min_overlap_mm3':.7*thread,'max_overlap_mm3':1.3*thread,
+         'basis':'M2 thread engaged in the square jam nut, modeled as an interference annulus.'}]
+    motion={m['id']:m for m in r['motion_checks']}
+    motion['stop-screw-path'].update(start_translation_mm=[-(stop_len+.1),0.,0.])
+    motion['button-insertion-slide'].update(samples=7,max_samples=7)
+    motion['rest-screw-path'].update(start_translation_mm=[out_x1+nt-web_out+.1,0.,0.])
+    motion['stop-nut-path']={'id':'stop-nut-path','moving_part':'stop_nut','obstacles':['shell'],'start_translation_mm':[-.1,0.,0.],
+                             'translation_end_mm':[-6.,0.,0.],'samples':5,'max_samples':5,'min_mm':.05}
+    motion['rest-nut-path']={'id':'rest-nut-path','moving_part':'rest_nut','obstacles':['shell'],'start_translation_mm':[.1,0.,0.],
+                             'translation_end_mm':[6.,0.,0.],'samples':5,'max_samples':5,'min_mm':.05}
+    r['motion_checks']=list(motion.values())
+    rot={c['id']:c for c in r['rotation_checks']}
+    a=angles_v8(p)
+    rot['housing-clear-past-stop'].update(end_deg=a['stop']-a['stop_play']-.05,min_mm=.05)
+    gap=rot.pop('window-gap-kept-until-stop')
+    gap['id']='nearest-shell-gap-until-stop'
+    # End and mid poses carry the information; the rest pose is covered by the rest checks.
+    gap.update(samples=2,max_samples=2)
+    rot['nearest-shell-gap-until-stop']=gap
+    r['rotation_checks']=list(rot.values())
+    travel=front_edge_travel_at_stop_mm(p)
+    spring_rest=ops['spring']['height_mm'];spring_stop=spring_rest-(hy-p['spring_y_mm'])*math.sin(math.radians(-a['stop']))
+    basis=r['design_basis']
+    basis['assumptions']=[x for x in basis['assumptions'] if not x.startswith(('Finishing:','Assembly order:','Adjustment:'))]+[
+        'Finishing: the upper-tab underside and lower-tab top are sanded to an 8.0 mm gauge block (barrel 7.6 mm + 0.2 mm each side); dowel holes are reamed (lower 2.02 mm clearance, upper 1.98 mm blind press fit); screw holes stay as printed 1.6 mm tap holes.',
+        'Assembly order: button in from below and slid into the slot; dowel pressed up into the upper tab; spring then spring screw into the inward block; stop screw and its jam nut; rest screw and its jam nut; adjust; then switch/PCB.',
+        f'Adjustment (no switch needed): turn the rest screw until the face is flush, lock its nut; press the face and turn the stop screw until a {p["depth_gauge_mm"]:.1f} mm depth gauge at the front edge just touches at the stop (nominal front-edge travel {travel:.2f} mm), lock its nut; then fit the PCB and confirm the click.']
+    r['verification_plan']=[x for x in r['verification_plan'] if 'window running gap' not in x]+[
+        'Stops are the screw tips; nearest shell feature stays at least 0.15 mm away up to the stop at every play offset (this includes the 0.2 mm axial tab gap, so it bounds the window gap from below).',
+        'Placeholder housing at the assumed stem bottoming depth: the plunger stays at least 0.05 mm short of it past the stop at every play offset.']
+    r['unverified_requirements']=[x for x in r['unverified_requirements'] if not x.startswith(('Switch selection','Return spring selection'))]+[
+        'Switch selection: operating point no deeper than about 0.55 mm and total travel to bottoming of at least 0.95 mm (the placeholder bottoming depth checked with hinge play); stem within -0.15/+0.05 mm in Y of the modeled position before adjustment.',
+        f'Return spring selection: installed length about {spring_rest:.2f} mm, about {spring_stop:.2f} mm at the stop; solid length must be below that. Its preload adds to thumb force and is set by the spring screw depth.']
+    return r
+
+
+# ---------------------------------------------------------------------------
+# Revision 9: repairs the revision-8 round-1 major findings.
+# - Stop jam nut could not turn: the lower tab overhung the inward block face
+#   under the nut -> tab trimmed to the block face; both nuts are spun 90 deg
+#   on their seats by a check.
+# - Return spring dragging in a 0.05 mm bore clearance -> Ø1.2 spring in the
+#   Ø1.6 bore (0.2 mm radial clearance), stated as a maximum spring OD.
+# - Stop screw modeled at its bought length (M2 x 6); gauge reference and a
+#   no-click recovery step are stated; contract numbers refreshed.
+# ---------------------------------------------------------------------------
+P9=dict(P8)
+P9.update({'spring_radius_mm':.6,'stop_screw_bought_length_mm':6.})
+
+
+def angles_v9(p=P9):
+    return angles_v8(p)
+
+
+def side_button_recipe_v9(request=REQUEST,p=None):
+    p=dict(P9 if p is None else p)
+    r=side_button_recipe_v8(request,p)
+    ops={o['id']:o for o in r['operations']}
+    in_x0=ops['block_in_box']['center_mm'][0]-ops['block_in_box']['size_mm'][0]/2
+    tab=ops['tab_low_box'];lo=tab['center_mm'][0]-tab['size_mm'][0]/2;hi=tab['center_mm'][0]+tab['size_mm'][0]/2
+    lo=in_x0  # end the tab at the inward block's outer face, under nothing but the block
+    tab.update(size_mm=[hi-lo,tab['size_mm'][1],tab['size_mm'][2]],center_mm=[(hi+lo)/2,tab['center_mm'][1],tab['center_mm'][2]],
+               reason='Lower tab: pin support and stop-slot base; ends at the inward block face so the jam nut can turn.')
+    stop=ops['stop_screw'];tip=stop['origin_mm'][0]+stop['height_mm'];length=p['stop_screw_bought_length_mm']
+    stop.update(height_mm=length,origin_mm=[tip-length,stop['origin_mm'][1],stop['origin_mm'][2]])
+    r['title']='Side button improvement trial, revision 9 (turnable jam nuts, free-running spring)'
+    r['design_parameters']={k:float(v) for k,v in p.items()}
+    r['parameter_basis']={k:'Proposal for this prototype revision; not measured from a real mouse, switch or PCB.' for k in p}
+    sy,z=p['screw_y_mm'],p['stop_screw_z_mm']
+    rot={c['id']:c for c in r['rotation_checks']}
+    for nut_id in ('stop_nut','rest_nut'):
+        rot[nut_id+'-turns-on-seat']={'id':nut_id+'-turns-on-seat','moving_part':nut_id,'obstacles':['shell'],
+                                      'axis_origin_mm':[0.,sy,z],'axis_direction':[1.,0.,0.],'end_deg':90.,
+                                      'samples':3,'max_samples':3,'min_mm':0.}
+    gap=rot['nearest-shell-gap-until-stop']
+    # End past the deepest play-shifted stop contact, not at the nominal stop.
+    gap['end_deg']=angles_v9(p)['stop']-angles_v9(p)['stop_play']
+    r['rotation_checks']=list(rot.values())
+    r['motion_checks']=[dict(m,start_translation_mm=[-(length+.1),0.,0.]) if m['id']=='stop-screw-path' else m for m in r['motion_checks']]
+    r['verification_plan']=[x.replace('up to the stop at every play offset','at rest and at the stop at every play offset') for x in r['verification_plan']]+[
+        'Both jam nuts can be turned a quarter turn while seated on their block faces.']
+    basis=r['design_basis']
+    basis['assumptions']=[x for x in basis['assumptions'] if not x.startswith('Adjustment')]+[
+        'Adjustment (no switch needed): turn the rest screw until the face is flush with the skin beside the window front edge, lock its nut; press the face and turn the stop screw until a 1.53 mm depth gauge referenced on that skin just touches the face front edge at the stop (accept 1.48-1.58 mm), lock its nut; fit the PCB and confirm the click. If there is no click, back the stop screw out 1/8 turn (about 0.05 mm) at a time, at most 0.15 mm, keeping the housing margin.']
+    r['unverified_requirements']=[x for x in r['unverified_requirements'] if not x.startswith(('Switch selection','Return spring selection','Outer-form changes'))]+[
+        'Switch selection: operating point no deeper than 0.50 mm and total travel to bottoming of at least 0.95 mm; at the gauge setting the plunger pushes the stem about 0.68-0.70 mm, so the stem must sit within -0.15/+0.05 mm in Y of the modeled position.',
+        f'Return spring selection: outside diameter at most 1.2 mm (0.2 mm radial clearance in the printed 1.6 mm bore); installed length about {ops["spring"]["height_mm"]:.2f} mm; solid length below the stop length. Its preload adds to thumb force and is set by the spring screw depth.',
+        'Outer-form changes awaiting owner acceptance: the 0.4 mm running gap removes about 38 mm3 of skin; after flush adjustment hinge play lets the face stand proud by about 0.1 mm at the free edge.']
     return r

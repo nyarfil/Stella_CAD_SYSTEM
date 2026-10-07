@@ -1,0 +1,163 @@
+{
+ "schema_version": 1,
+ "subject_digest": "59f15ee7c87546fcced598d31b653c211b35fa504bf3b3080ef3db327d2e0523",
+ "role": "requirements",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (requirements role, rev8)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "no_blocker_found",
+ "findings": [
+  {
+   "id": "R8-switch-operating-limit-not-matched-to-gauge-stop",
+   "severity": "minor",
+   "claim": "Rev 8 changes how the stroke is set. The stop is now set with a 1.5 mm depth gauge at the front edge, and the switch is fitted afterwards. The owner-facing switch-selection line was not re-derived for this, and it now has zero or negative margin at its own tolerance corner. (1) The line keeps the rev-7 wording 'stem within -0.15/+0.05 mm in Y of the modeled position before adjustment'. In rev 7 the stop was set to the click, so it absorbed stem position. In rev 8 the adjustment never references the switch, so nothing absorbs a stem offset. The tolerance now applies to the final installed position, and 'before adjustment' is misleading. (2) The gauge sets front-edge travel to 1.5 mm, not the nominal 1.53 mm, so the stop angle is 2.965 deg instead of the CAD-checked 3.033 deg. At the stem centreline (x = 2, lever 17) the stem push at the stop is then 0.679 mm (0.700 at nominal). With the stem at the allowed -0.15 mm (farther away) the push is 0.529 mm, which is less than the allowed operating point of 'no deeper than about 0.55 mm'. Even at the nominal stop it is exactly 0.55, with no margin. At the modelled stem's far edge (x = 3) the push is 0.581 mm, a margin of only 0.03 mm. (3) No recorded check covers the operating-point side. stem-contact-by-free-play proves contact only at free play + 0.1 mm at the modelled stem position. The procedure ends with 'confirm the click' but gives no step for the case where there is no click. The bottoming side is now correctly backed: the housing at 0.95 mm, checked to -3.2034 deg at 9 offsets with a certified 0.053 mm bound. This fixes r7 V7-1 and the switch half of R7-selection-limits.",
+   "evidence": [
+    "unverified_requirements[14]: 'operating point no deeper than about 0.55 mm and total travel to bottoming of at least 0.95 mm ...; stem within -0.15/+0.05 mm in Y of the modeled position before adjustment.'",
+    "design_basis Adjustment: '...turn the stop screw until a 1.5 mm depth gauge at the front edge just touches at the stop (nominal front-edge travel 1.53 mm), lock its nut; then fit the PCB and confirm the click.'",
+    "side_button_recipe.py front_edge_travel_at_stop_mm(P8) = 29*sin(3.0333 deg) = 1.5346 mm; asin(1.5/29) = 2.9649 deg.",
+    "Probe /tmp/claude-0/probes-v8-requirements/probe3.py: stem push (plunger travel - 0.2 free play) at nominal stop: 0.700 (x=2), 0.752 (x=3); at gauge 1.5 mm: 0.679 (x=2), 0.731 (x=3).",
+    "switch_stem STEP box x 1..3, y 22.85..23.8; housing top y 22.85 (0.95 mm below stem top).",
+    "measurements: stem-contact-by-free-play is blocked at -1.0111 deg (free play + 0.1 mm), and no check relates stop pose to operating travel with stem offset."
+   ],
+   "proposed_change": "Re-derive the switch line from the gauge-set stop. Either tighten it (for example operating point no deeper than about 0.50 mm with stem -0.15/+0.05, or keep 0.55 with stem -0.10/+0.05), or raise depth_gauge_mm (for example 1.6 mm), keeping the 0.05 mm housing margin, which is checked to -3.2034 deg (front edge 1.62 mm). Drop 'before adjustment' and say the stem tolerance applies to the final PCB position. Add one step to the Adjustment line: if there is no click after the PCB is fitted, how far the stop screw may be backed out (limit set by the housing check), and whether that is possible with the PCB in place.",
+   "required_test": "Recompute the stem push at the gauge-set stop for stem offsets -0.15 and +0.05 mm at the stem centreline and edges, and show that push minus operating point is at least a stated margin (for example 0.05 mm) and push is below 0.95 - 0.05 mm. Preferably record it as a rotation check: switch_stem shifted -0.15 mm in Y, blocked by the gauge angle plus the operating travel."
+  },
+  {
+   "id": "R8-gap-check-thinned-to-endpoints",
+   "severity": "minor",
+   "claim": "The r7 window-gap check was renamed nearest-shell-gap-until-stop, and the plan text now honestly says it bounds the window gap only from below via the 0.2 mm tab gap. That fixes the misleading part of R7-window-gap-check. But rev 8 also cut the check from 3 samples to 2. The code comment says 'End and mid poses carry the information', but the runtime uses linspace(0,1,samples), so 2 samples are only the rest pose and the stop pose. There is no mid-stroke pose. The recorded continuous bound is -0.697 mm (not_proven). verification_plan still says the nearest shell feature 'stays at least 0.15 mm away up to the stop at every play offset', which these 2 samples do not establish. The owner-visible running gap, which is the only accepted outer-form change, is still not measured by any recorded check. My cropped-rim probe (shell cut at x > -10.55, which excludes the tabs and blocks at x <= -10.6) gives a worst window gap over 9 play offsets of 0.365 mm at rest, 0.345 mm at -1.0 deg, 0.333 mm at -2.0 deg, 0.331 mm at -3.033 deg and 0.344 mm at -3.203 deg. So the geometry is fine and only the evidence is weak.",
+   "evidence": [
+    "side_button_recipe_v8: gap.update(samples=2,max_samples=2) with comment '# End and mid poses carry the information'.",
+    "recipe.py _rotation_sweep: np.linspace(0.,1.,count), so with count 2 the angles are start_deg and end_deg only.",
+    "measurements nearest-shell-gap-until-stop: final_samples 2, continuous_distance_lower_bound_mm -0.6970, continuous_swept_motion not_proven.",
+    "verification_plan[7]: 'nearest shell feature stays at least 0.15 mm away up to the stop at every play offset'.",
+    "Probe /tmp/claude-0/probes-v8-requirements/probe1.py: cropped rim vs button, minimum over 9 offsets 0.365/0.345/0.333/0.331/0.344 mm at 0/-1/-2/-3.033/-3.203 deg."
+   ],
+   "proposed_change": "Restore refinement (for example samples 5, max_samples 17 or more) so that the 'up to the stop' wording is backed by a certified bound, or reword the plan line to 'at rest and at the stop'. Fix the code comment. Add a window-only obstacle (shell cut at x > -10.55 or a rim sub-part) with min_mm set to a value near the stated 0.4 mm gap minus play (for example 0.3 mm), so the owner-visible gap is measured. Do not lower any existing threshold.",
+   "required_test": "Re-run with refinement and show the certified lower bound is at least 0.15 mm for the nearest-shell check and at least the chosen value (for example 0.3 mm) for the window-only check, at all 9 offsets from 0 to -3.2034 deg."
+  },
+  {
+   "id": "R8-contract-residue",
+   "severity": "minor",
+   "claim": "Most R7-contract-text-residue items are fixed. The plug wording is gone, the assembly order names the screws and nuts, finishing says the tap holes stay at 1.6 mm, and the skin_piece reason no longer claims an unchanged outer shape. The spring lengths (3.69 mm installed, 3.02 mm at the stop) now match the STEP. Three residues remain. (a) The stop screw is bought as 'M2 x 6' but modelled 6.4 mm long (STEP volume 20.106 mm3 = pi x 1^2 x 6.4). This is the same model/purchase mismatch r7 MFG-SCREW-SPEC asked to fix, now at a new length. With a real 6 mm screw, the tail would stand only about 0.1 mm proud of the 1.6 mm jam nut at the nominal setting, so backing the screw out to lengthen the stroke immediately reduces nut engagement. (b) The outer-form declaration still says the face 'may stand proud by up to about 0.14 mm at the free edge', a rev-6 figure. My probe of rev 8 (bisected first rest-screw contact at 9 offsets, sampled skin points against the outer loft) gives at most about 0.094 mm. The text is conservative, but it is stale. (c) The CAD-checked stop pose (-3.033 deg, front edge 1.53 mm) is not the pose the written procedure produces (1.5 mm gauge, -2.965 deg). The difference is small, but the contract should say which one is the design value.",
+   "evidence": [
+    "outputs: stop_screw 'Purchased M2 x 6 grub screw'; side_button_recipe_v8 stop_len = tip-(in_x0-nt-.5) = 6.4 mm; measurements _system-volume-agreement-stop_screw 20.106 mm3.",
+    "stop_nut x -24.29..-22.69; modelled stop screw x -24.79..-18.39; a 6.0 mm screw with the same tip would end at x -24.39.",
+    "unverified_requirements[5] proud bound 0.14 mm; probe /tmp/claude-0/probes-v8-requirements/probe2.py worst 0.094 mm (offset -0.035,0, outward limit 0.120 deg).",
+    "design_basis Adjustment: 1.5 mm gauge vs nominal 1.53 mm; rotation check stop-screw-reached ends at -3.0333 deg."
+   ],
+   "proposed_change": "Model the stop screw at a stocked length that gives full nut engagement plus adjustment reserve (for example M2 x 8), or state 6.4 mm as a cut length. Update the proud bound to the rev-8 figure. State that the gauge value is the build setting and that the CAD stop pose is its nominal, or set the gauge equal to the nominal.",
+   "required_test": "Rebuild: the stop_screw STEP length equals the purchased length, and the stop-nut-thread overlap stays in its band at the nominal and at the longest-stroke adjustment allowed by the housing check. Re-run the rest-outward check and quote its proud figure in the declaration."
+  }
+ ],
+ "remaining_uncertainties": [
+  "What 'もっと押しやすく' means to the owner (lighter force, shorter or longer travel, where on the face, click feel) is still not stated. There is no baseline button and no target value. The design's interpretation (rigid force factor 17/(x+15): about 3.4x at the hinge end, 1.0 at x=2, 0.59 at x=14, front-edge stroke about 1.5 mm) is an inference that only the owner can accept. The spring preload adds to thumb force everywhere.",
+  "Owner acceptance of the outer-form change. The 0.4 mm running gap (stated as about 38 mm3 of skin removed; my independent spline-loft replica gives about 40.6 mm3, within loft-parametrisation differences) and a face standing proud by up to about 0.09 mm within hinge play (my probe). Flushness depends on the rest-screw setting. human_approval is false, and 'このマウス' is not identified: the shell is a stand-in, and 2_reference_inspection is not_available.",
+  "As the request asks, the real switch dimensions, operating force, travel and click feel remain undetermined. The housing and stem are placeholders, and no PCB datum is modelled. Every stem margin moves with the real switch and PCB, and in rev 8 the gauge-set stop no longer compensates for stem position.",
+  "Whether the owner accepts an added return spring and six purchased fasteners (3 grub screws, 2 jam nuts, 1 dowel) in place of the switch's own return.",
+  "Physical tests not done: press force and travel at x=-10, 2 and 14; return against friction; self-tapped M2 holding and jam-nut locking in printed plastic under repeated stop loads; dowel retention; FDM hole accuracy; stop and skin stiffness under a firm press; whether the depth-gauge setting is repeatable on a curved skin; whether the stop screw can be reached for re-setting once the PCB is fitted.",
+  "Status of the r7 requirements findings: R7-selection-limits is fixed for the spring numbers and the bottoming limit, and partly open for the operating side (see R8-switch-operating-limit-not-matched-to-gauge-stop). R7-window-gap-check is fixed in wording, but its sample count regressed (see R8-gap-check-thinned-to-endpoints). R7-contract-text-residue is mostly fixed (see R8-contract-residue). The r7 major findings of the other roles (stop on a free-standing post, unlocked printed threads, a switch-dependent adjustment) are addressed in the contract text and geometry, but their structural and manufacturing adequacy is for those roles to judge.",
+  "My probes use rigid STEP solids at sampled angles and at 9 play offsets. They are not continuous sweeps, and they exclude tilt about X, deformation and print tolerance. The proudness probe samples 13x13 UV points per button face against a replica outer loft (rest-pose residual 0.0008 mm)."
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "539ad12029ebf04a5b325760f0508cb5c55798118e1f3d04da82072d1683551d",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/assembly.png",
+   "status": "viewed",
+   "observation": "Assembly iso: the stand-in elliptical shell with the tan button face set flush in the side skin. A thin, even running gap shows on all four sides, and no outer-form change other than the gap is visible. The internal screws, nuts, spring and switch cannot be seen, so the v8 stop layout cannot be judged from this image."
+  },
+  {
+   "attachment_sha256": "2ab39c59c74e34378adf0718b3cac45e92afbbdf1e28c60c8f65816b80814192",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/build-record.json",
+   "status": "viewed",
+   "observation": "Build record for attempt 589c9e6e. The context recipe has the rev-8 title, the original Japanese request, one protected constraint (outer skin changed only by the 0.4 mm gap, awaiting owner acceptance), 16 unverified_requirements and the new gauge-based Adjustment line (1.5 mm gauge, nominal 1.53 mm). It lists 11 outputs including stop_nut and rest_nut. lineage.is_correction is false. The file hashes include every part STEP and PNG."
+  },
+  {
+   "attachment_sha256": "c6c7daf38f77bc63a78477fc327505450e70f448c82952d0f1f4102b7aed74a7",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/button/iso.png",
+   "status": "viewed",
+   "observation": "Button iso: the curved skin piece, the rear rib, the link to the vertical barrel with its through bore, and the full-height web/arm extending inward. The plunger is visible as a step on the inner side. The geometry matches the v7 button. Nothing in this view shows the stop or rest contact areas in detail."
+  },
+  {
+   "attachment_sha256": "7a27aec709ac4d6cb724dc8962e62653c8dedb013c5ec0f561af1d98b96edf29",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Hinge pin iso: a plain cylinder (Ø2 dowel stand-in). The ends have no chamfer or rounding."
+  },
+  {
+   "attachment_sha256": "9062fca3ecb013c122243beb350508faafaecb74ee8b56a95c80b57b7244de88",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/measurements.json",
+   "status": "viewed",
+   "observation": "103 checks, geometry_checks_verdict pass, overall_verdict unknown. Key results: housing-clear-past-stop to -3.2034 deg, 33 samples, certified bound 0.053 mm; hard-stop-blocks-within-play blocked at -3.2034 deg at all 9 offsets; stop-screw-reached end gap 0.002 mm at -3.0333 deg. nearest-shell-gap-until-stop has only 2 samples, a continuous bound of -0.697 and not_proven. overlap-shell-button is 0.2000 mm, which is the tab axial gap. shell-printed-wall sampled minimum 1.19999 mm at the spring pocket (-22.49, 13.2, 11.9). overlap-spring_screw-stop_nut is 0.1 mm."
+  },
+  {
+   "attachment_sha256": "5ea8ab38ef850bfa8b90f97851242fb569f79326219d3838925a9bfd2ab89f93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/rest_nut/iso.png",
+   "status": "viewed",
+   "observation": "Rest nut iso: a square block, 4 x 4 mm by 1.6 mm, with a central Ø1.6 minor-diameter bore. It has no thread or chamfer and is a plain envelope of a square jam nut."
+  },
+  {
+   "attachment_sha256": "dad9e60ede08194c8bdf93e104ed3ef906d27da262e822ebcd7179c8fe5bbaac",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/rest_screw/iso.png",
+   "status": "viewed",
+   "observation": "Rest screw iso: a plain Ø2 x 4 mm cylinder (M2 x 4 envelope) with no socket, thread or point geometry. The modelled length matches the stated M2 x 4."
+  },
+  {
+   "attachment_sha256": "076c1da2a68e83ba0f726af2c3a93cc20b2cc4f1ba8b916b2cc527e8a219dd0c",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Return spring iso: a solid Ø1.5 cylinder envelope, about 3.69 mm long, with no coils. It is consistent with the \"envelope only, rate not selected\" statement."
+  },
+  {
+   "attachment_sha256": "ae71d06d3acfcc810a2a789bada72ff48380a7a4ca1436d830122ffaddd8f96d",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell iso: the stand-in shell with the side window open and an internal tab/block visible through it. The outer skin is otherwise continuous and unchanged. The far window edge is close to vertical in this view."
+  },
+  {
+   "attachment_sha256": "cae67ebfbebb02e1c098f2aff67635f7ec2f88e241bd7e04c24f41ef9f4c56d1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/spring_screw/iso.png",
+   "status": "viewed",
+   "observation": "Spring screw iso: a plain Ø2 x 1.5 mm cylinder (M2 x 1.5 grub screw envelope) with no socket shown."
+  },
+  {
+   "attachment_sha256": "96d45587337c023e156725d2ddbed206300fa16012b17a241184437ea0fb10b8",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/stop_nut/iso.png",
+   "status": "viewed",
+   "observation": "Stop nut iso: identical to the rest nut, a 4 x 4 x 1.6 mm square block with a Ø1.6 bore."
+  },
+  {
+   "attachment_sha256": "e4c0b87be579e8a3c4c28d54b9e54c28ae263709b959880d9036ff21327a298d",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/stop_screw/iso.png",
+   "status": "viewed",
+   "observation": "Stop screw iso: a plain Ø2 cylinder. Its proportions and the STEP volume (20.106 mm3 = pi x 1^2 x 6.4) show a modelled length of 6.4 mm, while the contract buys an M2 x 6."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Switch housing iso: a plain 6 x 4 x 8 mm box placeholder. Its top face is at y 22.85, the assumed stem-bottoming depth of 0.95 mm."
+  },
+  {
+   "attachment_sha256": "1d4f98e6ffd629c862bfd1c63862d273d24e6f603569dd8dc6bc246eef48ff93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Switch stem iso: a plain 2 x 0.95 x 4 mm box placeholder (x 1..3, y 22.85..23.8), sitting on the housing top. It is not a real stem shape."
+  }
+ ]
+}

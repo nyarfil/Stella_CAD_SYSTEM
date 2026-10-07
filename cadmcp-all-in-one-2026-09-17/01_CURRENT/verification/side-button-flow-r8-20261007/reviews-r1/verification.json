@@ -1,0 +1,179 @@
+{
+ "schema_version": 1,
+ "subject_digest": "59f15ee7c87546fcced598d31b653c211b35fa504bf3b3080ef3db327d2e0523",
+ "role": "verification",
+ "reviewer_label": "Claude subagent (verification role, rev8)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "V8-1-stop-jam-nut-blocked-by-tab-ledge",
+   "severity": "major",
+   "claim": "The new stop jam nut (the r8 fix for the r7 major MFG-PRINTED-THREADS) cannot be turned while it sits on the inward-block face, so it cannot be jammed. tab_low was not trimmed when block_in moved in r7/r8. It ends at x -22.896, which is 0.206 mm beyond the block face at x -22.69 (block_in_box x0), and it carries its 9.8 mm top under the nut. The seated square nut (y 7.3-11.3, z 9.9-13.9, x -24.29..-22.69) clears the ledge by only 0.1 mm at its flat. Its corners (half-diagonal 2.83 mm about the screw axis at z 11.9) sweep down to z 9.07. I rotated the exported stop_nut STEP about its screw axis against the exported shell: no overlap at 0-3 deg; overlap 0.005 mm3 at 5 deg, 0.028 at 10, 0.069 at 20, 0.095 at 30 and 0.109 at 45 deg. Overlap is zero again at 90 deg (the square is symmetric). Backed off 0.1 mm the overlap is still 0.056 mm3. It is zero only once the nut is backed off at least 0.21 mm, which is more than half a turn of M2 x 0.4. So the last half turn that would jam the nut is blocked. The rest nut has no such ledge: 0 overlap at every angle up to 90 deg. The recipe checks cannot see this. stop-nut-path and rest-nut-path translate the nut along -x/+x only and never rotate it, and their sampled minimum is satisfied by the translation. This is a collision that no recorded test covers, in the part that holds the hard-stop setting.",
+   "evidence": [
+    "Exported shell STEP sliced over x[-22.9,-22.69], y 5-15, z 5-15: material x -22.896..-22.69, y 6.8-15, volume 6.77 mm3, i.e. the 0.206 x 8.2 x 4 mm tab_low strip; nothing in the shell at x < -22.9.",
+    "Recipe op tab_low_box: center x -16.748, size 12.296, so x0 = -22.896. block_in_box: center -20.690, size 4.0, so in_x0 = -22.690. stop_nut_body x -24.29..-22.69, z 9.9..13.9.",
+    "Probe /tmp/claude-0/probes-v8-verification/p1_nuts.py: stop_nut rotated 0/2/3/5/10/20/30/45/60/90 deg about (y 9.3, z 11.9, dir +x) with pair_clearance against the shell gives overlap 0/0/0/0.0053/0.0283/0.0687/0.0949/0.1091/0.0949/0 mm3. rest_nut gives 0 at every angle.",
+    "Probe p2_ledge.py: stop_nut backed off 0.1 / 0.21 / 0.25 mm in -x, worst overlap over 15-45 deg = 0.056 / 0 / 0 mm3.",
+    "measurements.json stop-nut-path: x-translation only, start -0.1, end -6.0, continuous lower bound -0.65 (not_proven); no rotational sweep of either nut exists.",
+    "side_button_recipe_v7 keeps the v6 tab_low_box (built from the v6 in_face) while moving block_in to the stop-screw tip; v8 does not revisit tab_low."
+   ],
+   "proposed_change": "Trim tab_low so that its -x edge stops at or inside the inward-block face (x >= in_x0) under the nut footprint. Or lower or notch the ledge so the nut's 2.83 mm corner radius about the screw axis clears it by a stated margin, e.g. ledge top <= z 8.9. Equivalent: move the nut seat out to where nothing lies within 2.9 mm of the screw axis. Then add a recorded check that rotates each jam nut 0-90 deg about its screw axis at the seated pose and at 0.1 mm back-off against the shell (expect clear, min about 0.05 mm).",
+   "required_test": "Rotational sweep of stop_nut and rest_nut, seated and backed off 0.1 mm, 0-90 deg in 5 deg steps, against the shell: zero overlap and at least 0.05 mm minimum distance. Re-run the stop-nut-path translation and the shell wall check after the tab change."
+  },
+  {
+   "id": "V8-2-nearest-shell-gap-check-endpoints-only",
+   "severity": "minor",
+   "claim": "The v8 rework of the window/shell gap check reduces its coverage, and its comment misstates what it samples. side_button_recipe_v8 sets samples=2, max_samples=2 with the comment 'End and mid poses carry the information'. Two uniform samples are t=0 and t=1 (0 and -3.0333 deg), and no mid pose is sampled; r7 had 3 samples. The continuous bound is -0.697 (not_proven). The sweep still ends at the nominal stop -3.0333 deg. My bisection puts the stop-screw contact between -2.921 and -3.159 deg across the 9 offsets, so at offsets 1, 2, 7 and 8 the last part of the stroke is not covered. The obstacle is still the whole shell, so the reported 0.19999 mm is the constant axial tab gap, as r7 V7-3 found. The plan text now says so honestly, but the window gap itself is still not in the evidence. Physically there is no problem. A 13-pose sweep from 0 to -3.2034 deg at all 9 offsets gives window-only gap >= 0.3306 mm (offset +x, -2.67 deg), whole-shell minimum 0.200 mm, and zero overlap.",
+   "evidence": [
+    "measurements.json nearest-shell-gap-until-stop: samples only at angle 0.0 and -3.0333 deg per offset, distance 0.1999999999999975 everywhere, continuous_distance_lower_bound_mm -0.6970, continuous_swept_motion not_proven.",
+    "side_button_recipe_v8: gap.update(samples=2,max_samples=2) with comment 'End and mid poses carry the information'.",
+    "Probe p3_gap.py: window-only obstacle (shell ∩ box x>-10.55, y 26-40, z 8-20), 13 angles 0..-3.2034 deg x 9 offsets: min 0.3306 mm at offset (+0.035,0) -2.67 deg; whole-shell min 0.200; max overlap 0.",
+    "Probe p3_gap.py bisection of first stop_screw contact per offset (deg): -3.040, -3.159, -3.120, -3.034, -2.952, -2.921, -2.960, -3.046, -3.129."
+   ],
+   "proposed_change": "Give this check a window-only obstacle (a shell ∩ window-rim node that leaves out the tabs and blocks) with min_mm 0.3. End it at stop - stop_play - 0.05 (-3.2034, the same as the blocking and housing checks). Allow refinement (max_samples > samples) or use at least 9 samples. Fix the comment.",
+   "required_test": "Recorded window-gap sweep 0 to -3.2034 deg at 9 offsets against a window-only obstacle, with a proven continuous lower bound >= 0.3 mm."
+  },
+  {
+   "id": "V8-3-gauge-set-stop-has-no-tolerance-or-check",
+   "severity": "minor",
+   "claim": "The stop is now set by procedure: a 1.5 mm depth gauge at the front edge. The recorded checks, however, are made at the CAD screw-tip position, which corresponds to 1.53 mm of nominal front-edge travel at -3.0333 deg. The gauge pose is about -2.964 deg (asin(1.5/29)). Measured along the skin normal at x=14 (about 8 deg from Y), 1.53 mm of Y travel reads as about 1.49 mm, so the gauge reading and the modelled stop differ by a few hundredths. No tolerance is stated for the gauge setting, and no check is made at the gauge pose. The rigid margins are thin. The plunger reaches about 0.88 mm at the gauge pose, against the 0.95 mm placeholder bottoming depth. The recorded housing lower bound with play is 0.053 mm. A front-edge setting error of about +0.06 mm uses up the remaining switch-bottoming margin. No recorded check shows that the 0.5 mm operating travel (0.7 mm at the plunger) is reached before the stop at every offset. It holds by arithmetic: the earliest stop contact is -2.921 deg at offset -x, which gives about 0.87 mm.",
+   "evidence": [
+    "design_basis Adjustment text: 1.5 mm gauge, nominal front-edge travel 1.53 mm; front_edge_travel_at_stop_mm uses r = 29 mm, the Y component only.",
+    "measurements.json housing-clear-past-stop continuous lower bound 0.0532 mm (min_mm 0.05) at end -3.2034 deg; stem-contact-by-free-play proves contact only at -1.011 deg (0.3 mm at the plunger).",
+    "Probe bisection: stop contact spans -2.921..-3.159 deg over the 9 play offsets."
+   ],
+   "proposed_change": "State the gauge tolerance (e.g. 1.50 +0/-0.05 mm, measured normal to the adjacent skin) and the datum. Add a rotation check at the gauge pose ± tolerance with hinge play, covering housing clearance >= 0.05 mm and the plunger past the operating depth (0.7 mm). Alternatively, derive the gauge value from the housing margin rather than from the CAD tip.",
+   "required_test": "Rotation checks at asin((1.5±tol)/29) with 9 offsets: housing clear >= 0.05 mm, and stem overlap at least the assumed operating travel (blocked check against a stem shortened by 0.5 mm, or a measured plunger depth)."
+  },
+  {
+   "id": "V8-4-carryover-evidence-gaps",
+   "severity": "minor",
+   "claim": "Several r7 verification items are still open or have regressed slightly. (a) button-insertion-slide drops from 9 to 7 samples (3.67 mm spacing), with max_samples = samples, so it cannot refine. The bound is -1.633 (not_proven), and drop is -1.775. My 45-step slide and 39-step drop give minimums of 0.200 and 0.600 mm with no overlap, so the evidence is weaker than the geometry. (b) pin-insertion-path still lists only the shell, so the dowel through the button bore is not checked. (c) rest-outward-blocked-within-play still reports first_blocked_angle 0.0 at three +x offsets, which means the start pose already overlaps the rest screw. No negative control (check without stop_screw/rest_screw must fail) exists. (d) The shell sampled wall minimum is 1.1999999999999993 against 1.2, which passes only through the 1e-8 comparison slack, at a wall that is 1.2 by construction. (e) F2 and F4 still say 'rest block', but the rest is now the rest-screw tip. spring_pocket_depth_mm and spring_pocket_radius_mm are still listed but unused. (f) The tilt checks rotate only about Y, as disclosed. Resolved in r8: V7-1, where the housing now sits at the 0.95 mm bottoming depth and is checked with play to the blocking end with a proven 0.053 mm margin. V7-2, where the finishing and assembly-order text is current and has no plug. V7-4, where the housing range now matches the blocking end. V7-5, where the spring lengths of 3.69 and 3.03 mm match the exported envelope and my rotation of the web face.",
+   "evidence": [
+    "measurements.json button-insertion-slide final_samples 7, bound -1.633; button-insertion-drop bound -1.775; pin-insertion-path obstacles [shell].",
+    "Probe p4_insert.py: slide 0..-22 mm in 45 steps min 0.200 mm at y -20.5; drop 0..-19 mm in 39 steps min 0.600 mm; no overlap.",
+    "rest-outward-blocked-within-play per_offset first_blocked_angle_deg 0.0 at offsets (+0.035,0), (+0.0247,+0.0247), (+0.0247,-0.0247).",
+    "shell-printed-wall sampled_min_mm 1.1999999999999993, required 1.2.",
+    "functions F2/F4 text; design_parameters spring_pocket_depth_mm 2.0, spring_pocket_radius_mm 0.8 not referenced by v7/v8 ops."
+   ],
+   "proposed_change": "Allow refinement on the insertion sweeps (max_samples above samples). Add the button to the pin-path obstacles. Start the rest-outward check from a clear pose, and add negative controls. Give the dowel cap real wall margin. Replace \"rest block\" with \"rest-screw tip\", and drop the unused parameters. Label not_proven passes as sampled in the owner summary.",
+   "required_test": "Re-run with refined insertion sweeps reaching a proven bound, a pin path including the button, and negative controls that fail when the stop or rest screw is removed."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "539ad12029ebf04a5b325760f0508cb5c55798118e1f3d04da82072d1683551d",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/assembly.png",
+   "status": "viewed",
+   "observation": "Exterior assembly render: stand-in elliptical shell with the orange button face flush in a rectangular side window and a thin running gap visible around it. No internal parts are visible from this view, so this image says nothing about the stops, nuts or switch."
+  },
+  {
+   "attachment_sha256": "2ab39c59c74e34378adf0718b3cac45e92afbbdf1e28c60c8f65816b80814192",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/build-record.json",
+   "status": "viewed",
+   "observation": "recipe_build record, subject_digest 59f15ee7...e0523, attempt 589c9e6e. It embeds the r8 recipe context and the file_hashes; its assembly.png hash matches the attachment. The measurements block repeats measurements.json, with the assembly STEP hash ad378a6b...."
+  },
+  {
+   "attachment_sha256": "c6c7daf38f77bc63a78477fc327505450e70f448c82952d0f1f4102b7aed74a7",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/button/iso.png",
+   "status": "viewed",
+   "observation": "Button ISO: curved skin piece with the back spine, rib/link to a vertical bored barrel with a chamfered top, and the full-height stop web running toward -y. It is one solid with no floating fragments."
+  },
+  {
+   "attachment_sha256": "7a27aec709ac4d6cb724dc8962e62653c8dedb013c5ec0f561af1d98b96edf29",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Hinge pin ISO: a plain cylinder (Ø2 x 14.8 mm dowel) with no chamfer or lead-in at either end."
+  },
+  {
+   "attachment_sha256": "9062fca3ecb013c122243beb350508faafaecb74ee8b56a95c80b57b7244de88",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/measurements.json",
+   "status": "viewed",
+   "observation": "geometry_checks_verdict pass, overall_verdict unknown. housing-clear-past-stop runs to -3.2034 deg at 9 offsets with a proven lower bound of 0.0532 mm. nearest-shell-gap-until-stop has only 2 samples (0 and -3.0333 deg): the minimum is 0.19999 at every offset and the lower bound is -0.697 (not_proven). button-insertion-slide has 7 samples, lower bound -1.633, not_proven. stop-nut-path and rest-nut-path are x-translations only, with lower bound -0.65. Shell sampled wall minimum 1.1999999999999993."
+  },
+  {
+   "attachment_sha256": "5ea8ab38ef850bfa8b90f97851242fb569f79326219d3838925a9bfd2ab89f93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/rest_nut/iso.png",
+   "status": "viewed",
+   "observation": "Rest nut ISO: a plain square block (4 x 4 x 1.6) with a Ø1.6 minor bore. No chamfers or thread are modeled; it is an envelope."
+  },
+  {
+   "attachment_sha256": "dad9e60ede08194c8bdf93e104ed3ef906d27da262e822ebcd7179c8fe5bbaac",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/rest_screw/iso.png",
+   "status": "viewed",
+   "observation": "Rest screw ISO: a plain Ø2 cylinder (4 mm long) with a sharp-rimmed flat end. No hex socket and no flat-point diameter are modeled."
+  },
+  {
+   "attachment_sha256": "076c1da2a68e83ba0f726af2c3a93cc20b2cc4f1ba8b916b2cc527e8a219dd0c",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Return spring ISO: a solid Ø1.5 cylinder envelope (3.69 mm). It has no coils and no rate, so it is an envelope only, as the contract says."
+  },
+  {
+   "attachment_sha256": "ae71d06d3acfcc810a2a789bada72ff48380a7a4ca1436d830122ffaddd8f96d",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell ISO: the stand-in shell with the side window cut and the internal tab/web edges visible through it. The tab_low ledge beside the inward block cannot be seen at this scale."
+  },
+  {
+   "attachment_sha256": "cae67ebfbebb02e1c098f2aff67635f7ec2f88e241bd7e04c24f41ef9f4c56d1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/spring_screw/iso.png",
+   "status": "viewed",
+   "observation": "Spring screw ISO: a short Ø2 x 1.5 cylinder envelope with no socket modeled."
+  },
+  {
+   "attachment_sha256": "96d45587337c023e156725d2ddbed206300fa16012b17a241184437ea0fb10b8",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/stop_nut/iso.png",
+   "status": "viewed",
+   "observation": "Stop nut ISO: a square 4 x 4 x 1.6 block with a Ø1.6 bore, the same as the rest nut. Its 5.66 mm diagonal is what sweeps into the tab_low ledge when it is turned (see V8-1)."
+  },
+  {
+   "attachment_sha256": "e4c0b87be579e8a3c4c28d54b9e54c28ae263709b959880d9036ff21327a298d",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/stop_screw/iso.png",
+   "status": "viewed",
+   "observation": "Stop screw ISO: a plain Ø2 x 6.4 cylinder with a sharp flat end. The flat-point diameter of the purchased screw is not represented."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Switch housing ISO: a plain 6 x 4 x 8 box placeholder, consistent with the \"assumed placeholder, not a part\" wording."
+  },
+  {
+   "attachment_sha256": "1d4f98e6ffd629c862bfd1c63862d273d24e6f603569dd8dc6bc246eef48ff93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r8-20261007/workspace/studio/side-button-flow/59f15ee7c87546fc-fe6f406d/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Switch stem ISO: a plain 2 x 0.95 x 4 box placeholder whose height equals the assumed 0.95 mm bottoming depth."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Real switch: operating point, total travel to bottoming (>= 0.95 mm assumed), force and click feel are unknown. Only the owner can supply the part or datasheet.",
+  "Real mouse shell and PCB datum are not modeled. The stem must sit within -0.15/+0.05 mm in Y of the modeled position, which only the owner hardware can confirm.",
+  "What \"easier to press\" means (lower force, shorter travel, a larger sweet spot) is not defined by the owner. The 17/(x+15) force factor is a rigid-body designer hypothesis, not a measurement.",
+  "Return-spring rate, preload and its addition to thumb force are not selected. Spring drag in an unreamed Ø1.6 printed hole with 0.05 mm radial clearance is untested.",
+  "Self-tapped M2 thread holding torque and jam-nut retention in FDM, and stop-setting creep under repeated presses, need a physical cycle test.",
+  "The accuracy of a hand depth gauge on a curved FDM skin (whether the 1.5 mm setting can be held to about ±0.05 mm) needs a physical trial.",
+  "Dowel press-fit retention in a printed blind hole, reamed bore size and print tolerances are verified only as rigid overlap bands.",
+  "Skin, link, tab and block bending under a firm press beyond the stop is not analysed (no FEA).",
+  "Hinge play is sampled at 8 radial offsets only. Pin tilt about X combined with axial play is not checked (r7 ASM7-3 reported web-on-tab contact in that case).",
+  "All motion verdicts are sampled. Several have not_proven continuous bounds, and kernel distance error is an assumption, not a certificate.",
+  "No independent human, vendor or physical test was performed. This review is by a same-family model in a separate context."
+ ]
+}

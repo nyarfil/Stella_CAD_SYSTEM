@@ -186,16 +186,25 @@ def test_side_button_flow_brief_and_matrix_are_valid():
 
 
 @kernel
-def test_side_button_revision7_builds_and_passes_every_check(tmp_path):
+def test_side_button_revision8_builds_and_passes_every_check(tmp_path):
     from cadmcp_brain.studio.recipe import execute_recipe
-    from side_button_recipe import side_button_recipe_v7
-    result=execute_recipe(Recipe.model_validate(side_button_recipe_v7()),{},tmp_path/'sb7')
+    from side_button_recipe import side_button_recipe_v8
+    result=execute_recipe(Recipe.model_validate(side_button_recipe_v8()),{},tmp_path/'sb8')
     failed=[c['id'] for c in result['checks'] if c['verdict']!='pass']
     assert result['geometry_checks_verdict']=='pass',failed
     checks={c['id']:c for c in result['checks']}
-    assert checks['stop-screw-reached']['end_pose_engagement']['end_min_distance_mm']<=.02
-    assert checks['hard-stop-blocks-within-play']['blocking']['per_offset'][0]['first_blocking_obstacle']=='stop_screw'
-    assert checks['window-gap-kept-until-stop']['axis_offsets_evaluated']==9
+    assert checks['housing-clear-past-stop']['axis_offsets_evaluated']==9
+    assert {c['press_fit_id'] for c in result['checks'] if c['kind']=='declared_press_fit_interference'}>={'stop-nut-thread','rest-nut-thread'}
+
+
+def test_side_button_revision8_is_a_valid_contract():
+    from side_button_recipe import P8,front_edge_travel_at_stop_mm,side_button_recipe_v8
+    recipe=Recipe.model_validate(side_button_recipe_v8())
+    assert 1.<front_edge_travel_at_stop_mm()<2.
+    assert {'stop_nut','rest_nut'}<={o.part_id for o in recipe.outputs}
+    stop=next(op for op in recipe.operations if op.id=='stop_screw')
+    assert abs(stop.origin_mm[2]-P8['spring_z_mm'])<1e-9  # stop screw low, beside the spring
+    assert not any('plug' in a.lower() for a in recipe.design_basis.assumptions)
 
 
 def test_side_button_revision7_is_a_valid_contract():
