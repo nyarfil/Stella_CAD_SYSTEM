@@ -1,4 +1,6 @@
 from unittest.mock import patch
+import importlib
+import importlib.util
 import json
 import os
 import subprocess
@@ -18,9 +20,18 @@ def probe(backend='freecad', operations=None, **overrides):
                 cost='free', **overrides)
 
 
+_real_import = importlib.import_module
+
+
+def _kernel_loads(name, *args, **kwargs):
+    # Simulate a loadable kernel for routing-logic tests only; other imports stay real.
+    return object() if name == 'cadquery' else _real_import(name, *args, **kwargs)
+
+
 @pytest.fixture(autouse=True)
 def native_available():
-    with patch('cadmcp_brain.studio.backend_routing.geometry.available', return_value=True):
+    with patch('cadmcp_brain.studio.backend_routing.geometry.available', return_value=True), \
+         patch('cadmcp_brain.studio.backend_routing.importlib.import_module', side_effect=_kernel_loads):
         yield
 
 
@@ -107,6 +118,8 @@ def test_mcp_route_readonly_and_schema(brain):
     assert tools.call('brain_cad_route', {'request': {'mode': 'auto', 'required_operations': ['box']}})['status'] == 'ready'
 
 
+@pytest.mark.skipif(importlib.util.find_spec('cadquery') is None,
+                    reason='Actual CAD kernel not installed; real stdio routing dispatch not claimed executed.')
 def test_real_stdio_dispatch_in_isolated_workspace(tmp_path):
     workspace = tmp_path / 'isolated 日本語'
     messages = [

@@ -1,5 +1,6 @@
 """No model calls: verify planning controls and real-kernel original-design route."""
 import copy
+import importlib.util
 import pytest
 from cadmcp_brain.api import Tools
 from cadmcp_brain.engine import Brain
@@ -7,6 +8,9 @@ from cadmcp_brain.errors import BrainError
 from cadmcp_brain.studio.planning import capabilities,recovery_for
 from cadmcp_brain.studio.autopilot import Autopilot
 from test_studio import review
+
+requires_kernel=pytest.mark.skipif(importlib.util.find_spec('cadquery') is None,
+    reason='Actual CAD kernel not installed; real-kernel planning route tests are not claimed executed.')
 
 REQUEST='幅20 mm、奥行き10 mm、厚さ2 mmの検査用プレートを新規設計する。'
 
@@ -59,6 +63,7 @@ def test_capability_boundaries(tmp_path):
     assert next(x for x in t.list() if x['name']=='brain_studio_capabilities')['annotations']['readOnlyHint']
 
 
+@requires_kernel
 def test_invalid_matrix_is_replanned_once_with_frozen_brief(tmp_path):
     t=Tools(Brain(tmp_path/'workspace'));t.brain_open('matrix-correction',REQUEST)
     class InvalidPair(OriginalFixture):
@@ -108,6 +113,7 @@ def test_matrix_validation_failure_respects_shared_replanning_budget(tmp_path,mo
     assert run.state['rejected_matrix']['incompatibilities'][0]['option_a']=='missing_a'
 
 
+@requires_kernel
 @pytest.mark.parametrize('route',['original','auto'])
 def test_original_design_without_catalog_shape(tmp_path,monkeypatch,route):
     t=Tools(Brain(tmp_path/'workspace'));t.brain_open('original-test',REQUEST)
@@ -122,6 +128,7 @@ def test_original_design_without_catalog_shape(tmp_path,monkeypatch,route):
     assert not result['physical_performance_certified'] and len(provider.calls)==14
 
 
+@requires_kernel
 def test_schema_correction_resolves_check_to_output_part_id(tmp_path):
     t=Tools(Brain(tmp_path/'workspace'));t.brain_open('check-target-test',REQUEST)
 
