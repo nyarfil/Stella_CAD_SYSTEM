@@ -1,0 +1,146 @@
+{
+ "schema_version": 1,
+ "subject_digest": "075c873ae78986ae2a6fc54055dc099d946bae1152dd56270c75f211d19edb1c",
+ "role": "verification",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (verification role, rev6)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "no_blocker_found",
+ "findings": [
+  {
+   "id": "V6-1-stop-actuation-contact-not-recorded",
+   "severity": "minor",
+   "claim": "F3 and F5 hold on my measurements, but the build evidence still does not show them (carried from r4 V4-3 and r5 V5-4). (1) hard-stop-blocks-within-play and rest-outward-blocked-within-play count any shell overlap as 'blocked'. They record neither the contact feature nor a negative control. At three +x offsets, rest-outward reports 'first blocked at 0.0 deg', which only shows that the pose already overlaps block_out. (2) No recorded check shows that the assumed 0.5 mm operating travel is reached before the stop. stem-contact-by-free-play proves contact only. (3) housing-clear-past-stop still ends at -3.1513 deg, while hard-stop blocking is recorded only at -3.2013 deg. I measured the +x-offset stop at about -3.148 deg, so the gap is covered by a few thousandths of a degree, and the housing margin is about 0.47 mm. (4) pin-insertion-path still lists only the shell as obstacle, although the dowel passes through the button bore.",
+   "evidence": [
+    "My probe (CadQuery 2.8, read-only STEP, /tmp/claude-0/probes-v6-verification/pA.py): at -3.2013 deg the shell overlap lies only on the block_in face x -18.396..-18.48, y 8.13-9.68, z 10.32-14.0, at all 9 axis offsets (overlap 0.0067-0.201 mm3).",
+    "pD.py bisection: stop angle -2.910 deg at (-0.035,0), -2.945 at (-0.025,-0.025), -3.032 nominal, -3.148 at (+0.035,0). Stem first contact is at about -0.55 to -0.64 deg.",
+    "pD.py: stem overlap depth along y at the actual stop is 0.718 mm (worst, -x offset), 0.753-0.790 mm elsewhere. That is at least 0.5 assumed travel + 0.218 mm.",
+    "pA.py: rest-outward overlap is on the block_out face x -12.5, y 8.0-11.7, z 10.34-14.0 (0.47-0.72 mm3).",
+    "pC.py: dowel translated down -1.9..-20.7 mm against the button: min distance 0.025 mm, no overlap.",
+    "measurements.json housing-clear-past-stop end_deg -3.151267873219527; hard-stop-blocks-within-play end_deg -3.201267873219527."
+   ],
+   "proposed_change": "Record per offset: the first-contact angle, the contacting feature (block_in or block_out) or its face bbox, and the stem overtravel at that angle. Add an operating-travel check: a phantom stem shifted 0.5 mm along -y that must be blocked before the stop at every offset. Extend housing-clear-past-stop to -3.2013 deg. Add the button to the pin-insertion obstacles. Add negative controls: the shell without block_in or block_out must fail the blocked checks.",
+   "required_test": "Rebuild and confirm that the blocked checks report the block_in and block_out faces, that phantom-stem contact precedes the stop at all 9 offsets, and that the housing check reaches -3.2013 deg. The negative-control builds must fail."
+  },
+  {
+   "id": "V6-2-rise-check-window-and-sampled-only-passes",
+   "severity": "minor",
+   "claim": "Several clear-type passes are still sampled-only, with negative continuous bounds (carried from r4 V4-4 and r5 V5-5). The recipe sets max_samples equal to samples for the insertion checks, so adaptive refinement cannot run. button-insertion-slide is 9 samples over 22 mm at 0.0 mm sliding contact (bound -1.375). button-insertion-drop has bound -1.775 against its own min_mm 0.1. The new rise-with-play-clear-of-skin sweeps only -0.5 to -0.6 deg, and its 0.005 mm minimum is the tab_high face (0.2 axial gap - 0.195 rise), not the skin. The barrel-rim-to-skin fix (r5 V5-1) is therefore not shown by the recorded check over the stroke. My probe does support it: I found no unexpected contact.",
+   "evidence": [
+    "measurements.json: continuous_swept_motion 'not_proven' for button-insertion-slide (-1.375), button-insertion-drop (-1.775), pin (-0.578), plug (-0.400), spring (-0.600), shell-clear-until-stop (-0.222), rise-with-play (-0.024), tilt-down (-0.034), tilt-up (-0.036).",
+    "recipe motion_checks: button-insertion-slide samples 9 / max_samples 9; button-insertion-drop 5 / 5.",
+    "pB.py: rise and drop of ±0.195 mm at 9 axis offsets and angles 0, -0.15, -1, -2, -3 deg. Overlap occurs only on block_out at rest (+x offsets) and on block_in at -3 deg (-x offsets, the early stop). Min distance elsewhere is 0.005 mm (tab faces). No barrel-rim or skin overlap.",
+    "pA.py: press stroke at 0.2 deg steps, 9 offsets. Mid-stroke shell distance is 0.2 mm. The first zero distance is at the stop (-3.0 deg at -x offsets, -3.2 elsewhere). Nothing is touched before the stop."
+   ],
+   "proposed_change": "Extend rise-with-play to the full 0 to -3.03 deg stroke and add the +y (wall-ward) offset explicitly. Exclude tab_high, or report the barrel-to-skin distance separately. Allow refinement (max_samples above samples) for the insertion checks, or run them outside the worker budget. Label all remaining not_proven passes as 'sampled' in the owner summary.",
+   "required_test": "Rerun with refinement and confirm that each clear check either reaches distance_bound_satisfied or is explicitly labelled sampled-only. A full-stroke rise/tilt sweep must show no skin or barrel-rim overlap at any offset."
+  },
+  {
+   "id": "V6-3-wall-threshold-met-by-construction-at-dowel-cap",
+   "severity": "minor",
+   "claim": "The pocket wall that sat exactly at the threshold in r3-r5 is fixed: block_y_min is now 7.3, which leaves a 1.4 mm wall. The shell-printed-wall minimum has moved to a new by-construction value. It is 1.2000000000000028 mm at (-15.41, 24.56, 20.8): the cap over the new blind dowel hole (hole top z 19.6, tab_high top 20.8 = exactly min_printed_wall_mm 1.2). The cap is also the declared dowel depth stop, so it takes the press-in force. A 6-layer FDM cap at the threshold, reached only through float rounding, is not margin.",
+   "evidence": [
+    "measurements.json shell-printed-wall sampled_min_mm 1.2000000000000028, location [-15.41, 24.562, 20.8].",
+    "recipe pin_hole_high origin z 17.7 + height 1.9 = 19.6; tab_high_box z 17.8..20.8.",
+    "design_basis: 'Blind reamed press-fit hole in the upper tab; the remaining cap is the dowel depth stop.'"
+   ],
+   "proposed_change": "Give the cap real margin, for example tab_high top at 21.0 if the inner dome allows it, or a shallower blind hole. State that the press tool must stop on the protrusion and not on the cap.",
+   "required_test": "Rebuild and confirm that shell-printed-wall sampled_min is clearly above 1.2 mm (not at float equality) and that the cap location is no longer the minimum."
+  },
+  {
+   "id": "V6-4-contract-text-vs-model",
+   "severity": "minor",
+   "claim": "A few contract texts still do not match the model. (a) unverified_requirements still says 'Dowel press fit in line-reamed tab holes', although the upper hole is reamed Ø1.98 (press) and the lower is Ø2.02 (clearance), so they are not line-reamed. (b) The plug press fit is stated as 'Ø1.6 steel dowel in a pocket reamed to 1.58 mm', but the CAD models a Ø1.62 plug in a Ø1.60 pocket. The interference volume matches, but neither modelled diameter is the stated size, and the spring-path clearance is measured against Ø1.60, not 1.58. (c) design_parameters spring_pocket_depth_mm 2.0 is unused (the pocket is a 4.5 mm through hole). hinge_radial_play_mm 0.035 differs from the 0.025 bore play, without a stated reason (bore 0.025 + lower-hole 0.01).",
+   "evidence": [
+    "recipe unverified_requirements[4]; pin_hole_low r1.01, pin_hole_high r0.99.",
+    "press_fits plug-in-pocket basis vs ops spring_pocket r0.8 and plug r0.81.",
+    "ops spring_pocket height_mm 4.5; design_parameters spring_pocket_depth_mm 2.0, hinge_radial_play_mm 0.035, barrel_inner_radius_mm 1.025."
+   ],
+   "proposed_change": "Correct the line-reamed text. Model the plug and pocket at the stated sizes (pocket r0.79, plug r0.80), or state the sizes that are modelled. Remove or explain the unused or renamed parameters.",
+   "required_test": "Text-to-geometry diff: every stated diameter or play in assumptions and press_fits equals the modelled op radius ×2 (or the stated combination)."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "d7c9bc8cc99681775bfc4bc1cab68ad1ba637b8395b54a6a8c61e6e09ec4f78d",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/assembly.png",
+   "status": "viewed",
+   "observation": "Shaded preview of the stand-in shell with the button (yellow) flush in the side window. A thin running gap shows along the top and bottom edges. No internal hinge, stop or switch features are visible from outside. It is a tessellation preview, so it gives no measurement."
+  },
+  {
+   "attachment_sha256": "7567cb540e12df8b4571f3c4f3b7c890de7619c4a38250617e88c38299c5d280",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/build-record.json",
+   "status": "viewed",
+   "observation": "The build record matches subject_digest 075c873a... It embeds the revision-6 recipe (P6 values: barrel chamfer 0.5, block_y 7.3-11.7, link_y_min 20, blind upper hole r0.99 to z 19.6, plug r0.81 in pocket r0.80) and the same 56 checks as measurements.json. Its file_hashes match the ten attachments, which I sha256-checked. overall_verdict is 'unknown'."
+  },
+  {
+   "attachment_sha256": "310dd870d6bb2f03c2965fca5ac92a4fc646c2ace26729b92af52b0eb9a5eedf",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/button/iso.png",
+   "status": "viewed",
+   "observation": "Iso view of the one-piece button. It shows the curved skin face, the rear rib, the link to the bored barrel (the top chamfer is visible), the long stop web and the plunger and spine block. Preview only."
+  },
+  {
+   "attachment_sha256": "562ca66e8007272cd5fd7b8c247bc4132fa14d91f772d2fc3484a302bc9e3a79",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain cylinder, the Ø2 dowel (z 5.8-19.6 in my STEP read). It has no head, flange or chamfer."
+  },
+  {
+   "attachment_sha256": "358b0058e4a4cc5436646dac29a399f092cce4e2e94aef731970e7ef97ea0028",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/measurements.json",
+   "status": "viewed",
+   "observation": "56 checks, geometry_checks_verdict 'pass', overall_verdict 'unknown'. Ten clear-type motion checks: four are certified under the Lipschitz assumption (rest-band-stem-free bound 0.1066, housing-clear-past-stop 0.2184 ...); button-insertion-slide/drop, pin/plug/spring paths, shell-clear-until-stop, rise-with-play and both tilt checks are 'not_proven' with negative bounds. shell-printed-wall sampled_min 1.2000000000000028 at (-15.41,24.56,20.8); the press fits measure 0.1125 and 0.0759 mm3."
+  },
+  {
+   "attachment_sha256": "1197b6bc6558047bbc2bbad676adc48bb7f54ee273c078082cd236a731647d2f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Plain solid cylinder: the spring envelope (Ø1.5 x 2.9 mm). It has no coils and no rate. It only reserves space."
+  },
+  {
+   "attachment_sha256": "1cfb3a5503546f2981b55d1c06f1ce630ceaeb3d3938c5aad7747d1e76c477de",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/shell/iso.png",
+   "status": "viewed",
+   "observation": "Stand-in shell with the side window open. Part of a tab or stop block shows through the window. The curved lintel above the window is visible. Preview only."
+  },
+  {
+   "attachment_sha256": "fa573248f940ae549ee1ecad1edc459670bd0cf5967ca1acc2c6f6bfa5357f9a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/spring_plug/iso.png",
+   "status": "viewed",
+   "observation": "Short plain cylinder, the plug (r0.81 x 1.5 as modelled). It has no chamfer or barb."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Plain rectangular box, the placeholder switch housing (6 x 4 x 8). It is not a real part."
+  },
+  {
+   "attachment_sha256": "269790e02304a1521b5881b73ce5730093d356b24797aa0c9d79ba1e489987e1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Plain rectangular box, the placeholder stem (2 x 1.3 x 4). Its top is at y 23.8, 0.2 mm below the plunger tip."
+  }
+ ],
+ "remaining_uncertainties": [
+  "The real switch (stem position, operating force, operating travel, click feel) is unknown. All F3 margins (stem overtravel at the stop of 0.72-0.79 mm, housing gap 0.43-0.52 mm, rest free play 0.12-0.24 mm) are relative to the placeholder.",
+  "The real mouse shell and the PCB datum are not available. The stand-in shell and the -0.15/+0.05 mm stem window cannot be checked against the owner's hardware.",
+  "What 'easier to press' means for the owner (lower force, shorter travel, larger face, position) is not defined. The 17/(x+15) factor is a rigid estimate, not a measurement. The spring rate and preload are unselected and add to thumb force.",
+  "The press fits (dowel 0.01 mm, plug 0.01 mm radial interference) are verified only as nominal rigid overlap. Retention force, reamed printed-hole accuracy and creep need a physical pull-out test.",
+  "The 0.4 mm running gap and the up to ~0.14 mm proud face within hinge play are outer-form changes that await owner acceptance.",
+  "Printed accuracy of block_in, block_out, tab faces and the rest-face sanding calibration is not modelled. The stop and rest angles in this review assume nominal printed faces.",
+  "Link, skin, stiffener and stop-corner stiffness, wear and impact are not analysed (no FEA), and no physical press test has been run.",
+  "My probes are sampled at 0.2 deg steps (stroke) and 5 angles (rise/drop), not continuous proofs. Pin tilt combined with radial play is checked only by the designer's two tilt checks, about one axis."
+ ]
+}

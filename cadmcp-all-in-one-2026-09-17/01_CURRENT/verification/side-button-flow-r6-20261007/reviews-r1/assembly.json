@@ -1,0 +1,164 @@
+{
+ "schema_version": 1,
+ "subject_digest": "075c873ae78986ae2a6fc54055dc099d946bae1152dd56270c75f211d19edb1c",
+ "role": "assembly",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (assembly role, rev6)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "ASM6-1-rest-calibration-not-executable",
+   "severity": "major",
+   "claim": "The new calibration step does not close ASM5-1 as written. (1) Sanding only works one way. Sanding the block_out -x rest face moves it toward +x, so the web rests further out (positive rotation): free play grows and the face stands further proud. But the CAD puts the rest face exactly at nominal (block_out x -12.5 = web +x face, plunger-stem gap exactly 0.20). So there is no sanding stock. Any print in which the face is not proud already gives free play of 0.20 or more, and sanding cannot fix it. The calibration therefore covers only about half of the print-error spread it claims to absorb. (2) The order cannot be carried out. The feeler measurement needs the switch fitted, and the order puts it last. Sanding needs the web out of the slot, so the button must come out. That means removing the PCB, spring and plug, and pulling the press-fit dowel out of a blind hole by its 1.0 mm stub, then pressing it again. A 0.01 mm radial interference in a reamed FDM hole will not survive repeated pressing. Each loop also changes the rest pose that the checks were run at. (3) Sanding the rest outward also raises the face above the 0.14 mm proud bound in the contract. That bound is only checked at the nominal rest face.",
+   "evidence": [
+    "recipe op block_out: box x -12.5..-10.6, y 7.3..11.7, z 9.8..14.0; stop_arm_box x -17.5..-12.5 (rest contact at zero stock)",
+    "overlap-button-switch_stem distance 0.2000 mm at nominal = the stated 0.20 feeler target",
+    "design_basis.assumptions: \"Calibration: after assembly the rest face ... is sanded until a 0.20 mm feeler fits\"; \"Assembly order: ... then switch/PCB\"",
+    "rest-outward-blocked-within-play: outward rotation (+deg) is blocked by the shell, so the rest face sets the outward limit; sanding moves it outward",
+    "pin_hole_high is blind (z 17.7..19.6); pin z 5.8..19.6; tab_low bottom z 6.8, so the only grip for extraction is a 1.0 mm stub",
+    "Lever arm: rest contact about 13.3-17.7 mm from the axis; 0.1 mm sanded is about 0.37 deg, which is about 0.19 mm more proud at the face tip (x=14, r about 29 mm)"
+   ],
+   "proposed_change": "Model block_out with stated stock (for example 0.2-0.3 mm proud on the -x face, on the 0.2 mm grid) and say that it is sanded only toward nominal. Calibrate before the final dowel is pressed. Use a slip-fit Ø2 gauge pin through the tab holes and bore. Fit the placeholder or real switch on its PCB (or a fixture that locates the stem from the tab holes). Measure, remove the button, sand, and repeat. Press the real dowel once, at the end. Or replace the printed rest face with an adjustable stop (set screw or shim stack) that can be reached with the button installed. State the proud limit the owner accepts after calibration.",
+   "required_test": "Rebuild with the stock and run the rest-outward and rest-band checks at the stock pose and at the fully sanded pose. Physically: print a shell, check whether the 0.20 feeler fits as printed, and run the stated loop with a gauge pin. Record how many loops were needed and the dowel retention force after the final press."
+  },
+  {
+   "id": "ASM6-2-hard-stop-face-outside-budget",
+   "severity": "major",
+   "claim": "The switch window in the contract (stem top within -0.15/+0.05 mm in Y of the model, relative to the dowel) is computed against a nominal hard-stop face. That face, the block_in +x face at x -18.396, is a printed face. It gets no finishing, gauging or calibration (the 8.0 gauge block covers only the tab faces). The hard stop acts about 17 mm from the axis. A 0.1 mm error in the face position moves the stop angle by about 0.34 deg, and the plunger tip (about 17.5 mm out) by about 0.10 mm. So one ordinary FDM face error takes up about 2/3 of the -0.15 mm side of the window (stem not driven through its 0.5 mm operating travel), or eats into the housing margin (lower bound 0.218 against a 0.2 requirement). The rest calibration in ASM6-1 does not affect this, because the stop face is a separate datum. This is the second half of ASM5-1, and it is still open.",
+   "evidence": [
+    "recipe op block_in_box: x -21.896..-18.396; web -x face at -17.5; gap 0.896 mm",
+    "hard-stop-blocks-within-play: first_blocked_angle -3.2013 deg at all 9 offsets",
+    "housing-clear-past-stop continuous_distance_lower_bound_mm 0.2184 with min_mm 0.2",
+    "unverified_requirements: \"stem top must sit within -0.15/+0.05 mm in Y ... (rest-band margin and stem travel at the hard stop)\"",
+    "design_basis finishing covers the tab faces (8.0 mm gauge) and reamed holes only; there is no finishing step for the block_in face"
+   ],
+   "proposed_change": "Add the hard-stop face to the process plan. Print it proud and sand it to a gauge set from the dowel hole, or check the stop with a second feeler (plunger-to-housing gap at full press). Or state the face tolerance and cut the stated -0.15 window by that amount. Add a check at a hard-stop face offset of plus and minus the stated tolerance: stem contact must be reached through the 0.5 operating travel, and the housing must stay clear.",
+   "required_test": "Rerun stem-contact, hard-stop and housing-clear-past-stop with block_in shifted by plus and minus 0.1 mm. On a print, measure the block_in face position from the reamed tab hole and the plunger-housing gap at full press."
+  },
+  {
+   "id": "ASM6-3-web-underside-thrust-under-x-tilt",
+   "severity": "minor",
+   "claim": "ASM5-3 is not addressed. The tilt checks still rotate only about the y axis. With the pin cocked about the x axis by the same bore-clearance angle (0.377 deg), the full web underside, out to y 8 (17 mm from the axis), reaches tab_low before the barrel end does. With a 0.17 drop the overlap is 2.04 mm3, and with the full 0.2 gravity drop it is 3.88 mm3. This happens at every stroke angle I tried (0, -1, -2, -3 deg). So the contract statement that the barrel ends are the axial thrust faces is wrong under this moment. The printed web slides on printed tab_low over the whole stroke, which adds friction and wear that affect press feel.",
+   "evidence": [
+    "probe /tmp/claude-0/probes-v6-assembly/probe1.py, probe2.py on the exported STEP: rotate button +0.377 deg about the x axis through (-15,25,13.8), translate z -0.17: overlap with shell 2.0371 mm3; common bbox x -17.18..-12.82, y 8.35..20.45, z 9.72..9.80 (web underside on tab_low)",
+    "same with z -0.20: 3.8834 mm3; -0.377 deg with z -0.20: 0.0543 mm3 near the barrel",
+    "rotation_checks tilt-down/up-with-axial-drop/rise use axis_direction [0,1,0] only",
+    "unverified_requirements discloses: \"pin tilt is checked about one horizontal axis\""
+   ],
+   "proposed_change": "Relieve the tab_low top under the web sweep (y about 7.3..22) by 0.2-0.4 mm and keep full height under the barrel. Or state the web underside as an intended thrust and sliding face. Add tilt checks about the x axis with axial drop.",
+   "required_test": "Add rotation checks about axis [1,0,0] through the barrel mid-point at plus and minus the tilt, with a -0.17 and +0.17 axial start, at rest and at the stop angle; expect clear except at the barrel end."
+  },
+  {
+   "id": "ASM6-4-pin-path-ignores-bore-and-lead-in",
+   "severity": "minor",
+   "claim": "The pin-insertion-path check has the shell as its only obstacle, so the dowel passing through the button bore is never checked. When the dowel goes in, the spring is not yet fitted. The button floats: nothing stops it in y, and the web has 0.9 mm of room toward block_in. It must still be aligned to within 0.025 mm radial with the tab holes. The model has no lead-in on the bore, the tab holes or the dowel ends. The bore bottom is the button bed layer (z 10), where first-layer flare closes the hole. The order works only if the purchased dowel has chamfered ends and the bore is reamed through, and the contract does not say either. Extraction relies on the same 1.0 mm stub (ASM5-4 extraction part still open).",
+   "evidence": [
+    "motion_checks pin-insertion-path obstacles [\"shell\"]",
+    "hinge_pin/iso.png: square ends; barrel_bore r 1.025 vs pin r 1.0; pin_hole_low r 1.01",
+    "design_basis assembly order: button, then dowel, then spring and plug",
+    "pin_protrusion_mm 1.0 (unchanged from r5)"
+   ],
+   "proposed_change": "State a dowel with chamfered or rounded ends (standard ISO 8734 form). Add a 0.2-0.3 mm lead-in chamfer at the bore entry and the tab_low hole entry, or state that they are countersunk after reaming. Add the button as an obstacle to the pin path, at nominal and at the play offsets. Give a stub of 2 mm or more, or an extraction method.",
+   "required_test": "Pin-insertion path with obstacles [shell, button]. Physical trial: insert the dowel with the button held only by hand, and record whether it needs a guide fixture."
+  },
+  {
+   "id": "ASM6-5-pcb-keepout-and-plug-dims",
+   "severity": "minor",
+   "claim": "ASM5-5 is still open. There is no keep-out solid or PCB placeholder for the hinge region below the switch base: tab_low z 6.8..9.8, the dowel stub to z 5.8, and the -x tool corridor at z 11.9 for the spring, plug and reamer. So the instruction \"then switch/PCB\" cannot be checked against any PCB. Separately, the modelled plug (Ø1.62) and pocket (Ø1.6) do not match the stated purchased Ø1.6 dowel in a Ø1.58 ream. The interference is the same, but the modelled spring clearance in the reamed pocket (Ø1.5 in Ø1.58, 0.04 radial) is not what the model shows.",
+   "evidence": [
+    "recipe ops tab_low_box z 6.8..9.8, pin origin z 5.8, spring_pocket axis x at z 11.9",
+    "plug radius_mm 0.81, spring_pocket radius_mm 0.8, versus op reason \"Ø1.6 steel dowel ... reamed to 1.58 mm\"",
+    "No keep-out or PCB output in outputs[]"
+   ],
+   "proposed_change": "Add a named keep-out solid (hinge, tab_low, dowel stub plus extraction space, and the plug and reamer corridor), or a PCB slab with pair checks. Model the plug at r 0.80 in a pocket of r 0.79 so that the CAD matches the stated purchased and reamed sizes.",
+   "required_test": "Pair checks of a PCB placeholder against shell, button, pin, spring and plug. Re-measure the plug-in-pocket band with the corrected radii, and the spring-to-pocket clearance."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "d7c9bc8cc99681775bfc4bc1cab68ad1ba637b8395b54a6a8c61e6e09ec4f78d",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/assembly.png",
+   "status": "viewed",
+   "observation": "Assembly preview: a stand-in ellipsoidal shell with the orange button face set flush in a curved side window, and a thin running gap visible all round. No internal parts, tabs, blocks or switch are visible, so this image says nothing about the mating interfaces."
+  },
+  {
+   "attachment_sha256": "7567cb540e12df8b4571f3c4f3b7c890de7619c4a38250617e88c38299c5d280",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/build-record.json",
+   "status": "viewed",
+   "observation": "Build record for attempt 48e7752a. It holds the full rev6 recipe, with the assembly order (button from below, slide, dowel, spring+plug, then switch/PCB) and the calibration assumption (rest face sanded until a 0.20 mm feeler fits). block_out spans x -12.5..-10.6, exactly at the web +x face (zero sanding stock). The tilt checks use axis_direction [0,1,0] only. pin_protrusion_mm is still 1.0."
+  },
+  {
+   "attachment_sha256": "310dd870d6bb2f03c2965fca5ac92a4fc646c2ace26729b92af52b0eb9a5eedf",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/button/iso.png",
+   "status": "viewed",
+   "observation": "Button iso view: curved skin piece with the rear rib, the spine, the plunger block and the link to the vertical barrel with its bore. The top chamfer on the barrel is visible. The full-height stop web is hidden behind the barrel in this view, and the bore has no visible lead-in chamfer."
+  },
+  {
+   "attachment_sha256": "562ca66e8007272cd5fd7b8c247bc4132fa14d91f772d2fc3484a302bc9e3a79",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Hinge pin: a plain cylinder (Ø2 x 13.8) with square ends. No end chamfer or lead-in is modelled, and there is no head, shoulder or extraction feature."
+  },
+  {
+   "attachment_sha256": "358b0058e4a4cc5436646dac29a399f092cce4e2e94aef731970e7ef97ea0028",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/measurements.json",
+   "status": "viewed",
+   "observation": "All checks pass. Press-fit bands: dowel 0.1125 mm3, plug 0.0759 mm3. The translation insertion paths pass on samples only, with negative continuous lower bounds (slide -1.375, drop -1.775, pin -0.578), so they are not_proven. The pin path has the shell as its only obstacle, not the button bore. tilt-down/up checks rotate about the y axis only. The hard stop first blocks at -3.20 deg at every play offset."
+  },
+  {
+   "attachment_sha256": "1197b6bc6558047bbc2bbad676adc48bb7f54ee273c078082cd236a731647d2f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Return spring is a plain Ø1.5 cylinder envelope (installed length about 2.9 mm). It shows no coils, so free length and solid height cannot be read from it."
+  },
+  {
+   "attachment_sha256": "1cfb3a5503546f2981b55d1c06f1ce630ceaeb3d3938c5aad7747d1e76c477de",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell iso view: the side window is cut through the wall. A tab or bracket is faintly visible inside the window at the hinge end. Blocks, pocket and tab holes are not legible at this scale, and the bottom is not shown."
+  },
+  {
+   "attachment_sha256": "fa573248f940ae549ee1ecad1edc459670bd0cf5967ca1acc2c6f6bfa5357f9a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/spring_plug/iso.png",
+   "status": "viewed",
+   "observation": "Plug: a short plain cylinder with no chamfer or flange. The model is r 0.81 (Ø1.62), but the contract text says a Ø1.6 dowel in a Ø1.58 reamed pocket."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Placeholder switch housing: a plain rectangular box (6 x 4 x 8). It has no mounting, PCB or datum features."
+  },
+  {
+   "attachment_sha256": "269790e02304a1521b5881b73ce5730093d356b24797aa0c9d79ba1e489987e1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Placeholder stem: a plain rectangular box (2 x 1.3 x 4). Its top face is the 0.20 mm free-play target for the plunger."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Real switch: the stem position, operating travel, pretravel and overtravel, and the force are placeholders. The -0.15/+0.05 mm window can only be checked against the owner PCB, and the CAD has no PCB datum.",
+  "Real shell: this is a stand-in. Whether the tabs, blocks and window fit the real mouse wall and its ribs is unknown.",
+  "The owner must accept the outer-form change: the 0.4 mm running gap (about 0.2/0.6 under gravity) and a face that may stand proud by about 0.14 mm from play, plus any outward rest calibration.",
+  "What \"easier to press\" (押しやすく) means to the owner is not defined. The rigid factor 17/(x+15) is a designer estimate.",
+  "Return spring free length, rate and solid height are not chosen. At the hard stop the spring line closes from about 2.9 mm to about 2.0 mm, so the spring must have a solid height below that, and the plug retention must be checked against the preload.",
+  "Insertion paths are sampled translations only (continuous_swept_motion not_proven). My denser sweep (45 slide samples, 39 drop samples, nominal orientation) found no overlap: the slide minimum distance is 0.0 along block_out (sliding contact), and the drop minimum is 0.6 mm. Slides with the button rotated inward were not finished within the compute budget.",
+  "The upper-tab press (dowel pressed up into the blind hole) loads the cantilevered tab_high with no stated backing; the tab and side-wall deflection under the press force is not analysed.",
+  "Feeler access to the plunger-stem gap with the PCB fitted is not shown in CAD.",
+  "Physical tests not done: press-feel comparison, cycle life of the hinge, stops and plug, dowel and plug retention, drop test, achieved FDM face and hole accuracy after finishing.",
+  "Fixed since r5 (verified in the geometry): the dowel depth is now set by the floor of the blind upper hole, and the plug is now a purchased steel dowel in a reamed pocket. ASM5-1 is only partly addressed (see ASM6-1 and ASM6-2). ASM5-3 and ASM5-5 are not addressed.",
+  "This review ran in a separate Claude subagent context, not as an independent human or vendor review."
+ ]
+}

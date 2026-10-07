@@ -1,0 +1,135 @@
+{
+ "schema_version": 1,
+ "subject_digest": "075c873ae78986ae2a6fc54055dc099d946bae1152dd56270c75f211d19edb1c",
+ "role": "requirements",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (requirements role, rev6)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "no_blocker_found",
+ "findings": [
+  {
+   "id": "R6-calibration-moves-face-proud",
+   "severity": "minor",
+   "claim": "The calibration step (design_basis.assumptions[6]: sand the outward-block rest face until a 0.20 mm feeler fits between plunger and stem) changes the outer form. The owner is asked to accept that outer form, and the contract does not mention this effect. Sanding the rest face can only rotate the rest pose outward. Each 0.01 mm of extra free play gained at the plunger (17 mm lever) moves the face free edge (about 29 mm from the axis) outward by about 0.017 mm. The stated switch window allows the stem to sit +0.05 mm toward the plunger. At that edge the as-built gap is about 0.15 mm, and calibrating it to 0.20 mm makes the free edge stand about 0.085 mm further proud, which takes it from about 0.14 mm to about 0.23 mm. unverified_requirements[5] tells the owner the bound is about 0.14 mm. The same rest face therefore sets two owner-visible properties, flushness (from 外形はできるだけ変えないで) and free play, and the procedure tunes only the second one. Sanding also cannot fix a gap that is too large, for example with the stem at -0.15 mm.",
+   "evidence": [
+    "design_basis.assumptions[6]: 'rest face of the outward block is sanded until a 0.20 mm feeler fits between plunger and stem'",
+    "unverified_requirements[5]: face 'may stand proud by up to about 0.14 mm at the free edge'",
+    "unverified_requirements[7]: stem window -0.15/+0.05 mm in Y",
+    "Geometry: hinge x -15, plunger centre x 2 (17 mm lever), face free edge x 14 (about 29.3 mm radius). Ratio about 1.72",
+    "measurements.json rest-band-stem-free sampled min 0.1176 mm at offset -Y; nominal rest gap 0.20 mm"
+   ],
+   "proposed_change": "Separate the two adjustments, or state how they are coupled. One option: (1) sand the rest face only until the face is flush with the surrounding skin (gauge or straight-edge), then (2) set the 0.20 mm free play by sanding the plunger tip or shimming the switch. Otherwise, add to unverified_requirements[5] that calibration can add up to about 1.7x the free-play correction to the proud bound (about +0.085 mm at the +0.05 window edge), and make the post-calibration flushness an owner acceptance item.",
+   "required_test": "After assembly and calibration of the printed prototype, measure the face step to the skin at x=-10, 2 and 14 (feeler or dial gauge) and the plunger-stem gap. Record both against the stated 0.14 mm proud bound and the 0.20 mm free play. In CAD: rotate the button outward by the angle that adds 0.05 mm at the plunger and report the free-edge offset."
+  },
+  {
+   "id": "R6-placeholder-selection-limits-unstated",
+   "severity": "minor",
+   "claim": "The request leaves the real switch and its force undetermined, which is correct. The design still imposes numeric limits on the parts the owner must buy, and the contract gives only the stem position window. My probe found the hard-stop angle at each hinge-play offset by bisection against the shell (8 of the 9 offsets finished; the run timed out on the ninth). Modelled stem travel at the hard stop then ranges from 0.705 to 0.791 mm. A real switch therefore needs an operating point no deeper than about 0.55 mm at the -0.15 window edge (0.705-0.15). It must also accept about 0.84 mm of travel at the +0.05 edge (0.791+0.05) without bottoming. If it bottoms first, the switch becomes the stop, which defeats F5. The 0.8 mm 'housing margin after operating' was raised in rev 6 'so the stated switch window stays inside the design's own margins'. That makes it a requirement on the switch's overtravel, but it is not stated as one. In the same way, the Ø1.5 spring is compressed from 2.90 mm installed to about 2.04-2.08 mm at the stop, so its solid length must be below about 2.0 mm. The contract states neither limit.",
+   "evidence": [
+    "Probe /tmp/claude-0/probes-v6-requirements/stop_probe.py on button/shell/switch_stem STEP: stop angle -2.915 to -3.153 deg, stem travel 0.705-0.791 mm, housing gap at stop 0.484-0.574 mm (8 of 9 offsets)",
+    "scripts/side_button_recipe.py rev-6 comment: 'Placeholder switch housing deeper (assumed overtravel), so the stated switch window stays inside the design's own margins'; housing_margin_after_operating_mm 0.6 -> 0.8",
+    "operations: spring cylinder length 2.896 mm from x -20.396; web face at y 9.5 moves about 0.82-0.86 mm toward the plug at the stop angle (15.5 mm radius)",
+    "unverified_requirements[1],[3],[7] give no pretravel, total-travel or spring solid-length limits"
+   ],
+   "proposed_change": "Add one owner-facing line of selection limits, labelled as derived from this geometry and not as a chosen switch. For example: 'Real switch: operating point at most 0.55 mm stem travel; at least 0.85 mm travel before the stem bottoms or the housing is reached; stem top within -0.15/+0.05 mm. Return spring: OD at most 1.5 mm, installed length 2.9 mm, solid length at most 2.0 mm.' Keep force and click feel undetermined, as the request asks.",
+   "required_test": "Re-run the stop-angle and stem-overlap probe at all 9 offsets with the stem moved -0.15 and +0.05 mm, and report the minimum and maximum stem travel. When a candidate switch or spring is named, check its datasheet pretravel, total travel and solid length against these limits before printing."
+  },
+  {
+   "id": "R6-pressability-and-text-residue",
+   "severity": "minor",
+   "claim": "Rev 5 findings are only partly closed. Fixed: the bore reason (0.025 mm radial), the F1/F6 wording, the manufacturing_process labels, the 0.14 mm proud bound, and a 'Pressing intent' assumption that names the targeted aspect (lower force over the front half, at the cost of the hinge end). Still open: (a) unverified_requirements[12] gives the force factor 17/(x+15) for the stem only. The spring term, about (17*F_stem+15.5*F_spring)/(x+15), is described only in words, so the owner cannot see that the added spring works against もっと押しやすく everywhere on the face. (b) No owner-facing text says plainly that there is no baseline button, so 'easier' cannot be compared. (c) unverified_requirements[11] still repeats [7] with no numbers. (d) The skin_piece reason still says 'so the outer shape does not change'. The FLOW_RESULT concept records still say 'Outer shell skin is not reshaped', 'plunger near the free end' (B_lever) and 'Printed pin' (G_pivot), yet 7_engineering_evaluation claims 'corrected contract text'. None of this changes geometry verdicts.",
+   "evidence": [
+    "design_basis.assumptions[7] (new in rev 6) and unverified_requirements[12]",
+    "unverified_requirements[11]: 'must stay within the measured rest and housing margins (no PCB datum modeled)'",
+    "operations[skin_piece].reason; FLOW_RESULT.json steps.5_6 candidates e79bfb3e/3f843ccf protected_constraints and option principles",
+    "FLOW_RESULT.json steps.7_engineering_evaluation.reason 'corrected contract text'",
+    "Prior review side-button-flow-r5-20261007/reviews-r1/requirements.json findings R5-contract-text-stale and R5-pressability-basis-incomplete"
+   ],
+   "proposed_change": "Extend unverified_requirements[12] with the spring term and add 'no baseline button exists; easier is a designer hypothesis to be judged by the owner'. Delete [11] or merge it into [7]. Change the skin_piece reason to '... the outer shape changes only by the running gap'. Update the concept records (protected_constraints, B_lever 'centred plunger, 17 mm lever', G_pivot 'purchased steel dowel'), or mark them as historical concept text.",
+   "required_test": "Text review: search recipe and FLOW_RESULT for 'not reshaped', 'does not change', 'free end', 'Printed pin'. Confirm that the force line has the spring term and that the baseline statement is present."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "d7c9bc8cc99681775bfc4bc1cab68ad1ba637b8395b54a6a8c61e6e09ec4f78d",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/assembly.png",
+   "status": "viewed",
+   "observation": "Whole stand-in shell, ISO view. The orange button face sits in the side window and follows the skin curvature; a thin running gap is visible along its lower edge. No other change to the outer form is visible. The image does not show the hinge, stop or switch."
+  },
+  {
+   "attachment_sha256": "7567cb540e12df8b4571f3c4f3b7c890de7619c4a38250617e88c38299c5d280",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/build-record.json",
+   "status": "viewed",
+   "observation": "Build record for subject 075c873a. lineage.is_correction false, no baseline subject. The recipe context matches the packet (P6 parameters, 14 unverified_requirements, protected_constraints naming the 0.4 mm gap as awaiting owner acceptance). file_hashes list the per-part STEP files that I probed."
+  },
+  {
+   "attachment_sha256": "310dd870d6bb2f03c2965fca5ac92a4fc646c2ace26729b92af52b0eb9a5eedf",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/button/iso.png",
+   "status": "viewed",
+   "observation": "Button ISO view: curved skin face with the rear rib, the deeper link to the barrel (bore visible at the top), the full-height stop web, and the spine/plunger block behind the face. It is one printed body. The chamfer on the barrel top rim can be seen."
+  },
+  {
+   "attachment_sha256": "562ca66e8007272cd5fd7b8c247bc4132fa14d91f772d2fc3484a302bc9e3a79",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 cylinder (13.8 mm long) with no head or groove, as expected for a purchased dowel. Axial retention depends only on the blind press-fit hole."
+  },
+  {
+   "attachment_sha256": "358b0058e4a4cc5436646dac29a399f092cce4e2e94aef731970e7ef97ea0028",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/measurements.json",
+   "status": "viewed",
+   "observation": "geometry_checks_verdict pass, overall_verdict unknown. Per-offset samples: rest-band stem distance min 0.1176 mm (offset -Y). housing-clear sampled min 0.4495 mm at -3.151 deg (the reported lower bound is 0.218 mm). The hard stop blocks at -3.201 deg for all 9 offsets. shell-printed-wall 1.2000 mm sampled, minimum_proven false."
+  },
+  {
+   "attachment_sha256": "1197b6bc6558047bbc2bbad676adc48bb7f54ee273c078082cd236a731647d2f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Solid cylinder about Ø1.5 x 2.9 mm. It is an envelope only, with no coils, free length or solid length, so spring selection limits cannot be read from it."
+  },
+  {
+   "attachment_sha256": "1cfb3a5503546f2981b55d1c06f1ce630ceaeb3d3938c5aad7747d1e76c477de",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell with the button removed: a rectangular side window following the skin. Internal tab and block features are only partly visible through the window. Apart from the window, the outer skin looks unchanged."
+  },
+  {
+   "attachment_sha256": "fa573248f940ae549ee1ecad1edc459670bd0cf5967ca1acc2c6f6bfa5357f9a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/spring_plug/iso.png",
+   "status": "viewed",
+   "observation": "Short plain cylinder about Ø1.6 x 1.5 mm (purchased dowel as plug). No features. Consistent with the press-fit overlap of 0.076 mm3 recorded for plug-in-pocket."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Plain rectangular block, 6 x 4 x 8 mm placeholder. No datum, terminals or mounting features, so it carries no real-switch information. Rev 6 placed its top deeper (housing_margin_after_operating 0.8 mm)."
+  },
+  {
+   "attachment_sha256": "269790e02304a1521b5881b73ce5730093d356b24797aa0c9d79ba1e489987e1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Plain rectangular block, 2 x 1.3 x 4 mm placeholder stem. It is fixed in the model; stem travel is inferred from overlap depth, not modelled as motion."
+  }
+ ],
+ "remaining_uncertainties": [
+  "What 'もっと押しやすく' means to the owner (lighter force, shorter travel, larger face, position, click feel) is not stated. There is no target value and no baseline button, so 'easier' cannot be verified in CAD. The lever layout makes the hinge-side third of the face up to 3.4x harder (rigid estimate). Where the thumb lands is an owner question.",
+  "Owner acceptance of the outer-form change: the 0.4 mm running gap (about 38 mm3 of skin removed), the face standing proud by up to about 0.14 mm within hinge play, and any extra proud from rest-face calibration. human_approval is false. 'このマウス' is not identified. The shell is a stand-in (2_reference_inspection not_available), so flushness holds only relative to that stand-in.",
+  "As the request asked, the real switch dimensions, operating force, travel and click feel remain undetermined. The housing and stem are placeholders, and a real switch changes every angle and margin. No PCB datum is modelled.",
+  "Whether the owner accepts an added return spring, which adds thumb force, or prefers to rely on the switch's own return (candidate 3f843ccf).",
+  "Physical tests not done: actuation force and travel per position, return against dowel friction, press-fit retention of the dowel and plug, FDM hole accuracy, stop and skin stiffness under a firm press, wear.",
+  "My probe covered 8 of the 9 hinge-play offsets before its 900 s timeout. The missing offset is (+0.025,-0.025), which by symmetry should lie within the observed range, but it was not measured. The probe is rigid geometry only.",
+  "Earlier findings checked: the rev-5 switch window is now -0.15/+0.05 and consistent with measured margins (rest-band sampled min 0.118 mm against 0.05 required; housing gap at the actual stop at least 0.48 mm). The proud bound is corrected to 0.14 mm, and the bore text is corrected. The open items are listed in R6-pressability-and-text-residue.",
+  "This review is one Claude subagent of the same model family as the designer. It is not an independent human or vendor review, and no physical test was run."
+ ]
+}

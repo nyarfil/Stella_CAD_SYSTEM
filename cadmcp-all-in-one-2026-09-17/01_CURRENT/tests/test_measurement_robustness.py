@@ -186,15 +186,25 @@ def test_side_button_flow_brief_and_matrix_are_valid():
 
 
 @kernel
-def test_side_button_revision5_builds_and_passes_every_check(tmp_path):
+def test_side_button_revision6_builds_and_passes_every_check(tmp_path):
     from cadmcp_brain.studio.recipe import execute_recipe
-    from side_button_recipe import side_button_recipe_v5
-    result=execute_recipe(Recipe.model_validate(side_button_recipe_v5()),{},tmp_path/'sb5')
+    from side_button_recipe import side_button_recipe_v6
+    result=execute_recipe(Recipe.model_validate(side_button_recipe_v6()),{},tmp_path/'sb6')
     failed=[c['id'] for c in result['checks'] if c['verdict']!='pass']
     assert result['geometry_checks_verdict']=='pass',failed
-    fits=[c for c in result['checks'] if c['kind']=='declared_press_fit_interference']
-    assert {c['press_fit_id'] for c in fits}=={'dowel-in-upper-tab','plug-in-pocket'}
-    assert all(c['min_overlap_mm3']<=c['overlap_mm3']<=c['max_overlap_mm3'] for c in fits)
+    rise=next(c for c in result['checks'] if c['id']=='rise-with-play-clear-of-skin')
+    assert rise['axis_offsets_evaluated']==9 and rise['start_deg']==-.5
+    fits={c['press_fit_id']:c for c in result['checks'] if c['kind']=='declared_press_fit_interference'}
+    assert set(fits)=={'dowel-in-upper-tab','plug-in-pocket'}
+
+
+def test_side_button_revision6_is_a_valid_contract():
+    from side_button_recipe import side_button_recipe_v6
+    recipe=Recipe.model_validate(side_button_recipe_v6())
+    assert len(recipe.rotation_checks)>8
+    processes={o.part_id:o.manufacturing_process for o in recipe.outputs}
+    assert processes['hinge_pin'].startswith('Purchased') and 'Placeholder' in processes['switch_stem']
+    assert not any('0.05 mm radial play' in op.reason for op in recipe.operations)
 
 
 def test_side_button_revision5_is_a_valid_contract():

@@ -28,9 +28,9 @@ from cadmcp_brain.engine import Brain
 from cadmcp_brain.errors import BrainError
 from cadmcp_brain.req2cad.common import atomic_json,file_hash,json_load
 from cadmcp_brain.studio.runtime import ROLES
-from side_button_recipe import (REQUEST,P,P2,P3,P4,P5,angles_v2,angles_v3,angles_v4,angles_v5,press_angle_deg,
-                                side_button_recipe,side_button_recipe_v2,side_button_recipe_v3,side_button_recipe_v4,
-                                side_button_recipe_v5,stop_angle_deg)
+from side_button_recipe import (REQUEST,P,P2,P3,P4,P5,P6,angles_v2,angles_v3,angles_v4,angles_v5,angles_v6,
+                                press_angle_deg,side_button_recipe,side_button_recipe_v2,side_button_recipe_v3,
+                                side_button_recipe_v4,side_button_recipe_v5,side_button_recipe_v6,stop_angle_deg)
 
 PROJECT_ID='side-button-flow'
 VERIFICATION_ROOT=(ROOT/'verification').resolve()
@@ -118,7 +118,7 @@ def morphology_matrix():
 
 CHOSEN={1:{'B_lever','G_pivot','R_switch','S_hardstop'},2:{'B_lever','G_pivot','R_spring','S_hardstop'},
         3:{'B_lever','G_pivot','R_spring','S_hardstop'},4:{'B_lever','G_pivot','R_spring','S_hardstop'},
-        5:{'B_lever','G_pivot','R_spring','S_hardstop'}}
+        5:{'B_lever','G_pivot','R_spring','S_hardstop'},6:{'B_lever','G_pivot','R_spring','S_hardstop'}}
 REASONS={
     1:'Lever on a pin pivot keeps the outer skin unchanged and is fully covered by rigid rotation, '
       'clearance and wall checks; the switch spring avoids an extra part. Flexure options cannot be '
@@ -137,7 +137,10 @@ REASONS={
       'is recorded as a designer hypothesis, not a target.',
     5:'Revision 5 after the five-role review of revision 4 (no blocking findings): same concept; declared press '
       'fits replace clearance-modeled "press fits", gaps lie on a 0.2 mm layer grid, the stop web bed edges are '
-      'chamfered, a back stiffener carries a firm press to the hinge-side stop, and the switch window is stated.'}
+      'chamfered, a back stiffener carries a firm press to the hinge-side stop, and the switch window is stated.',
+    6:'Revision 6 after the five-role review of revision 5 (no blocking findings): same concept; barrel rim kept '
+      'off the skin under full rise and play, purchased dowel plug, stated support/finishing/calibration process, '
+      'deeper link, blind dowel hole as depth stop, corrected contract text.'}
 
 
 def engineering_evaluation(candidates,revision=1):
@@ -199,6 +202,10 @@ def run_flow(run_root,design_revision=1):
         steps['8_recipe']={'revision':2,'angles_deg':angles_v2(),'parameters':P2,
                            'lineage':'Separate prototype, not a lineage-verified correction: hinge geometry changes the '
                                      'check angles, and revision 2 adds checks that revision 1 did not carry.'}
+    elif design_revision==6:
+        recipe=side_button_recipe_v6()
+        steps['8_recipe']={'revision':6,'angles_deg':angles_v6(),'parameters':P6,
+                           'lineage':'Separate prototype, not a lineage-verified correction: checks and parts changed.'}
     elif design_revision==5:
         recipe=side_button_recipe_v5()
         steps['8_recipe']={'revision':5,'angles_deg':angles_v5(),'parameters':P5,
@@ -262,7 +269,7 @@ def main(argv=None):
     group=parser.add_mutually_exclusive_group()
     group.add_argument('--submit-reviews',type=Path,help='Directory of reviewer-written Review JSON files.')
     group.add_argument('--delivery',action='store_true',help='Write the hash-bound human handoff for the built subject.')
-    parser.add_argument('--revision',type=int,choices=(1,2,3,4,5),default=5,help='Design revision to build (new runs only).')
+    parser.add_argument('--revision',type=int,choices=(1,2,3,4,5,6),default=6,help='Design revision to build (new runs only).')
     args=parser.parse_args(argv)
     try:run_root=resolve_run_root(args.run_root,must_exist=bool(args.submit_reviews or args.delivery))
     except ValueError as exc:parser.error(str(exc))
