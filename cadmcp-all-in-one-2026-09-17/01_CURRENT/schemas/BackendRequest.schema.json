@@ -1,0 +1,137 @@
+{
+  "$defs": {
+    "BackendProbe": {
+      "additionalProperties": false,
+      "description": "Host observations of the actual adapter, never a product feature catalogue.",
+      "properties": {
+        "backend": {
+          "enum": [
+            "cadquery",
+            "build123d",
+            "freecad",
+            "classcad",
+            "fusion"
+          ],
+          "title": "Backend",
+          "type": "string"
+        },
+        "installed": {
+          "title": "Installed",
+          "type": "boolean"
+        },
+        "ready": {
+          "title": "Ready",
+          "type": "boolean"
+        },
+        "operations": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 128,
+          "title": "Operations",
+          "type": "array"
+        },
+        "evidence": {
+          "maxLength": 2048,
+          "minLength": 1,
+          "title": "Evidence",
+          "type": "string"
+        },
+        "cost": {
+          "default": "unknown",
+          "enum": [
+            "free",
+            "owned_perpetual",
+            "subscription",
+            "unknown"
+          ],
+          "title": "Cost",
+          "type": "string"
+        }
+      },
+      "required": [
+        "backend",
+        "installed",
+        "ready",
+        "evidence"
+      ],
+      "title": "BackendProbe",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "required_operations": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 128,
+      "minItems": 1,
+      "title": "Required Operations",
+      "type": "array"
+    },
+    "required_checks": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 128,
+      "title": "Required Checks",
+      "type": "array"
+    },
+    "mode": {
+      "default": "explicit",
+      "enum": [
+        "explicit",
+        "auto"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "selected_backend": {
+      "anyOf": [
+        {
+          "enum": [
+            "cadquery",
+            "build123d",
+            "freecad",
+            "classcad",
+            "fusion"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Selected Backend"
+    },
+    "allowed_backends": {
+      "items": {
+        "enum": [
+          "cadquery",
+          "build123d",
+          "freecad",
+          "classcad",
+          "fusion"
+        ],
+        "type": "string"
+      },
+      "title": "Allowed Backends",
+      "type": "array"
+    },
+    "probes": {
+      "items": {
+        "$ref": "#/$defs/BackendProbe"
+      },
+      "maxItems": 5,
+      "title": "Probes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "required_operations"
+  ],
+  "title": "BackendRequest",
+  "type": "object"
+}

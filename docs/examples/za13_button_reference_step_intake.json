@@ -1,0 +1,22 @@
+{
+  "source_name": "button-reference.step",
+  "source_sha256": "030afa790275050198011f6677177f9df066203edfb1837698d4e6a7da64ce9a",
+  "source_bytes": 1641891,
+  "header": "ISO-10303-21;\r\nHEADER;\r\nFILE_DESCRIPTION(('Unchanged binary STL reference triangles'),'2;1');\r\nFILE_NAME('reference.step','',(''),(''),'Stella reference serializer','','');\r\nFILE_SCHEMA(('CONFIG_CONTROL_DESIGN'));\r\n",
+  "unit_declarations": [
+    "#9=(LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.));",
+    "#10=(NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.));",
+    "#11=(NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT());"
+  ],
+  "coordinate_basis": "CadQuery STEP reader normalized millimetres; declarations listed separately, not scanner calibration",
+  "reader_target_unit": "MM",
+  "solid_count": 0,
+  "solids": [],
+  "role": "candidate hardware CAD; not registered ready pack",
+  "limits": [
+    "No physical hardware version confirmed.",
+    "No scan origin declared for this CAD.",
+    "No functional identity, switch specification, optical datum or accepted placement inferred.",
+    "Shape validity alone does not certify manufactured part or completed mouse."
+  ]
+}

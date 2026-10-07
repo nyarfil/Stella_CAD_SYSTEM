@@ -30,3 +30,12 @@ LLM_cad_Projects/.python/
 .DS_Store
 Thumbs.db
 .merge_file_*
+
+# CAD integration runtime and generated probes
+integration/*/verification/
+integration/fusion-community/vendor/
+integration/fusion-community/.venv/
+
+# Per-project owner CAD selection and FreeCAD local evidence
+.stella/cad-backend.json
+integration/freecad/verification/

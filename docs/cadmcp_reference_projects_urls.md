@@ -534,3 +534,15 @@ hankaiuu/Req2CAD                QianzhiJing/Req2CAD
 
              Geometry / Topology
 ```
+
+---
+
+## 14. マウス設計の参考事例
+
+### ZS-F1 / G305 軽量ワイヤレスマウス
+
+マウス設計の用語・構造を整理する際は、参照ノートの「一体型・分割型の用語と構造（ユーザー補足、2026-10-03）」も参照する。本案件の一体型はトップシェルがクリック板を兼ねる構造で、ミッドシェルとボトムシェルを持つ。3DP設計ではサポートなし造形を最優先する。知識は既存ノートへ集約し、補足ごとのスキル・MCP新設を避ける。
+
+ユーザー提供STLと作者公開ページから整理した機能分解、測定値、未確定事項、利用条件は [ZS-F1/G305 マウス参照ノート](REFERENCE_ZS_F1_G305_MOUSE_JA.md) を参照。スキーマ準拠の機能分解例は同ノートから [FunctionBriefサンプル](examples/zs_f1_g305_function_brief.example.json) を参照してください。これは機能・インターフェースの参考で、StellaCAD用の再利用可能なCAD形状として登録したものではありません。
+
+公開元: https://www.printables.com/model/796395-zs-f1-3d-printed-finalmouse-ultralight-2-x-starlig

@@ -1,0 +1,151 @@
+{
+  "status": "reference_board_pose_candidate_not_fit_verified",
+  "unit_assumption": "One source STEP mm is treated as one ZS-F1 STL coordinate unit for this comparison only.",
+  "board_step_sha256": "efd955a61c99290ab946f075e769cd0279802535fc72e52697031d0c41635028",
+  "bottom_stl_sha256": "4644f8b1710aafb17add0c848c76124595503fafd73f088d9b00db99ee79453e",
+  "board_stl_sha256": "0bf89671f8413b02f178a65613ad51e4ace1531a6a9dd8bf5d3fa40eadad0585",
+  "source_board_selector": "#o1.s1",
+  "source_features": [
+    {
+      "center": [
+        11.5402186551709,
+        -7.90127417943725,
+        0.0
+      ],
+      "radius": 1.45,
+      "length": 9.1106186954104,
+      "full_circle": true
+    },
+    {
+      "center": [
+        7.44021865517095,
+        18.8987265744124,
+        0.0
+      ],
+      "radius": 1.45,
+      "length": 9.1106186954104,
+      "full_circle": true
+    },
+    {
+      "center": [
+        0.29021865517095,
+        -42.6512741794373,
+        0.0
+      ],
+      "radius": 1.45,
+      "length": 4.5553093477052,
+      "full_circle": false
+    },
+    {
+      "center": [
+        -11.359781344829,
+        -1.15127417943726,
+        0.0
+      ],
+      "radius": 1.45,
+      "length": 4.5553093477052,
+      "full_circle": false
+    }
+  ],
+  "matched_target_rims": [
+    {
+      "axis": "Z",
+      "center": [
+        -11.509881910938988,
+        3.137312533510727,
+        5.159756660461426
+      ],
+      "radius": 0.6499999268184353,
+      "max_radial_fit_error": 5.937181934312363e-06,
+      "boundary_vertices": 36,
+      "largest_angular_gap_radians": 0.17454697803559174,
+      "classification": "circular planar boundary; bore versus outer perimeter not classified"
+    },
+    {
+      "axis": "Z",
+      "center": [
+        -7.517862040916182,
+        -23.367261910939057,
+        5.159756660461426
+      ],
+      "radius": 0.6499994732408897,
+      "max_radial_fit_error": 4.478732697377197e-06,
+      "boundary_vertices": 36,
+      "largest_angular_gap_radians": 0.1745469722923021,
+      "classification": "circular planar boundary; bore versus outer perimeter not classified"
+    },
+    {
+      "axis": "Z",
+      "center": [
+        -0.03153318553176778,
+        38.109931910940446,
+        5.159756660461426
+      ],
+      "radius": 0.6499995012386846,
+      "max_radial_fit_error": 6.3489872931254965e-06,
+      "boundary_vertices": 36,
+      "largest_angular_gap_radians": 0.17454699327027523,
+      "classification": "circular planar boundary; bore versus outer perimeter not classified"
+    },
+    {
+      "axis": "Z",
+      "center": [
+        11.494568922394315,
+        -3.3716879590862865,
+        5.159756660461426
+      ],
+      "radius": 0.6499999543654631,
+      "max_radial_fit_error": 5.0196238339239585e-06,
+      "boundary_vertices": 36,
+      "largest_angular_gap_radians": 0.17454675641256445,
+      "classification": "circular planar boundary; bore versus outer perimeter not classified"
+    }
+  ],
+  "rotation": [
+    [
+      -0.9999936834127277,
+      -0.003554312119896414,
+      0.0
+    ],
+    [
+      0.003554312119896436,
+      -0.9999936834127274,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "translation": [
+    0.0573792214455946,
+    -4.581177972691305,
+    5.159756660461426
+  ],
+  "xy_rotation_degrees": 179.79635248767178,
+  "xy_center_residuals": [
+    0.23045947927400937,
+    0.1096338427979198,
+    0.06322719046844856,
+    0.12291314631180189
+  ],
+  "xy_rms_residual": 0.14511759905735627,
+  "xy_maximum_residual": 0.23045947927400937,
+  "next_best_correspondence_rms": 8.323692382336903,
+  "assumptions": [
+    "Two closed circular holes and two open semicircular fixing slots are paired by their circular centers.",
+    "All four features receive equal weight in a visualization fit, not a tolerance analysis.",
+    "Reference PCB underside is placed at the measured screw-boss top level."
+  ],
+  "not_verified": [
+    "actual G305 revision and source CAD accuracy",
+    "STL physical unit declaration",
+    "fastener dimensions and fit",
+    "whole-board and component interference",
+    "lens optical working height",
+    "wheel support and motion",
+    "physical assembly"
+  ],
+  "preview_stl": "V:\\DevCache\\Temp\\zs_mouse_stl\\board-mounting-pose-candidate.stl"
+}

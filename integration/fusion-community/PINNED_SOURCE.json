@@ -1,0 +1,23 @@
+{
+  "source_repository": "https://github.com/faust-machines/fusion360-mcp-server",
+  "commit": "ba8560f321656aa493cdc775bc2fa7b2e7d8f005",
+  "pinned_at": "2026-10-03",
+  "license": "MIT",
+  "upstream_version": "0.1.0",
+  "local_changes": [
+    "stella_fusion_mcp.py",
+    "probe_stella_wrapper.py",
+    "probe_live_wrapper.py",
+    "README_STELLA_JA.md",
+    "addon/Fusion360MCP.py",
+    "addon/server/__init__.py",
+    "addon/server/command_handler.py"
+  ],
+  "verification": {
+    "upstream_pytest": "363 passed with PYTHONUTF8=1",
+    "wrapper_mock": "inspection 13 tools; modeling 79 tools; raw execution and mock writes denied",
+    "live_sandbox": "2026-10-03: named unsaved document only; 20x10x5 mm history box; 1000 mm3; STEP exported",
+    "live_guard": "2026-10-03: no allowlist blocked create_sketch before Fusion dispatch",
+    "known_unit_basis": "Fusion transport values are centimeters; Stella-facing dimensions must convert to millimeters"
+  }
+}

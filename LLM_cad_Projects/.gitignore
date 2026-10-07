@@ -1,5 +1,6 @@
 # Python
 .venv/
+.venv-backup-*/
 .buildvenv/
 __pycache__/
 *.py[cod]
@@ -9,7 +10,7 @@ __pycache__/
 .ruff_cache/
 
 # AgentCAD / Stella runtime
-projects/
+/projects/
 .stella/
 .cache/
 dist/

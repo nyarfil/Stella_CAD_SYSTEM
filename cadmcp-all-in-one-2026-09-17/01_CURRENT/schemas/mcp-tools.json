@@ -102,6 +102,30 @@
     }
   },
   {
+    "name": "brain_cad_route",
+    "description": "Choose one CAD adapter by required operations, observed readiness, project selection and free/owned cost policy. Read-only host dispatch plan; external probes are host observations. No CAD execution, settings writes or failure fallback.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "additionalProperties": true,
+          "title": "Request",
+          "type": "object"
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "title": "brain_cad_route_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "brain_doctor",
     "description": "Report local capabilities without pretending to test a remote CAD backend or a Windows/Cursor installation.",
     "inputSchema": {
@@ -690,6 +714,177 @@
         "relative_paths"
       ],
       "title": "brain_mouse_inspect_inputs_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_knowledge_brief",
+    "description": "Create a draft; call brain_mouse_knowledge_schema before validation.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "requirements": {
+          "additionalProperties": true,
+          "title": "Requirements",
+          "type": "object"
+        }
+      },
+      "required": [
+        "requirements"
+      ],
+      "title": "brain_mouse_knowledge_brief_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_knowledge_click_window",
+    "description": "Evaluate compression bounds; read schema(click_window). Not a physical acceptance gate.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "assessment": {
+          "additionalProperties": true,
+          "title": "Assessment",
+          "type": "object"
+        }
+      },
+      "required": [
+        "assessment"
+      ],
+      "title": "brain_mouse_knowledge_click_window_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_knowledge_get",
+    "description": "Read one complete mouse knowledge entry and its evidence.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "record_id": {
+          "title": "Record Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "record_id"
+      ],
+      "title": "brain_mouse_knowledge_get_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_knowledge_plan",
+    "description": "Create CAD-agnostic staged guidance; call brain_mouse_knowledge_schema first.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "requirements": {
+          "additionalProperties": true,
+          "title": "Requirements",
+          "type": "object"
+        }
+      },
+      "required": [
+        "requirements"
+      ],
+      "title": "brain_mouse_knowledge_plan_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_knowledge_schema",
+    "description": "Return the standalone requirements schema and library metadata.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "default": "requirements",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "title": "brain_mouse_knowledge_schema_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_knowledge_search",
+    "description": "Search source-grounded mouse knowledge; results are not fit evidence.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "query": {
+          "title": "Query",
+          "type": "string"
+        },
+        "subsystem": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Subsystem"
+        },
+        "limit": {
+          "default": 8,
+          "title": "Limit",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "title": "brain_mouse_knowledge_search_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_knowledge_status",
+    "description": "Read mouse-library coverage and evidence state; never opens CAD.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {},
+      "title": "brain_mouse_knowledge_status_arguments",
       "type": "object"
     },
     "annotations": {

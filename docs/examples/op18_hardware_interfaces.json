@@ -1,0 +1,2806 @@
+{
+  "status": "fixed_op18k_v2_measured_interfaces_not_operationally_accepted",
+  "scope": "Fixed OP18K v2 source only. No arbitrary-hardware generalization, CAD generation, source edit, mirroring, or pose mutation occurred.",
+  "coordinate_frame": "Native assembly world frame after XCAF occurrence placements; values are Cadgen/OCP imported STEP coordinates in declared mm. +X/+Y/+Z are source axes, with no left/right human-use convention inferred.",
+  "source": {
+    "path": "V:\\mouse\\op18kv2pcb_251212.step",
+    "sha256": "94e3e7bcd46503b0c135d2e229bf7d35d33ca935456e67450282dceb3cc9be4f",
+    "step_file_name": "op18kv2pcb_251212.step",
+    "step_timestamp": "2025-12-12T04:33:33+09:00",
+    "declared_length_unit": "mm",
+    "products": [
+      {
+        "id": "op18kv2pcb",
+        "description": "op18kv2pcb v17"
+      },
+      {
+        "id": "lens",
+        "description": "lens"
+      },
+      {
+        "id": "around lens",
+        "description": "around lens"
+      },
+      {
+        "id": "sensor",
+        "description": "sensor"
+      },
+      {
+        "id": "main_pcb",
+        "description": "main_pcb"
+      },
+      {
+        "id": "wheel",
+        "description": "wheel"
+      },
+      {
+        "id": "main_switch",
+        "description": "main_switch"
+      },
+      {
+        "id": "side_switch",
+        "description": "side_switch"
+      },
+      {
+        "id": "bush",
+        "description": "bush"
+      }
+    ]
+  },
+  "source_lineage_limit": "The STEP header supplies a filename and timestamp only. It does not certify physical OP18K v2 revision, electrical population, or hardware provenance.",
+  "reader": {
+    "runtime": "C:/Users/nikis/.codex/user-runtimes/cadgen-0.6.5/Scripts/python.exe",
+    "method": "cadgen.read_scene XCAF occurrence traversal plus build123d/OCP BRep faces"
+  },
+  "assembly_membership": [
+    {
+      "occurrence_ref": "#o1.1",
+      "occurrence_label": "lens:1",
+      "prototype_id": "p4",
+      "shape_records": [
+        {
+          "selector": "#o1.1.s1",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -4.05,
+              -7.68,
+              0.0
+            ],
+            "maximum_mm": [
+              4.05,
+              8.27,
+              7.4
+            ],
+            "extent_mm": [
+              8.1,
+              15.95,
+              7.4
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 11,
+          "edge_count": 24,
+          "volume_mm3": 724.0883968363171
+        }
+      ]
+    },
+    {
+      "occurrence_ref": "#o1.2",
+      "occurrence_label": "around lens:1",
+      "prototype_id": "p1",
+      "shape_records": [
+        {
+          "selector": "#o1.2.s1",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -10.0,
+              -10.0,
+              0.499999999999998
+            ],
+            "maximum_mm": [
+              10.0,
+              10.0,
+              2.9000000000000004
+            ],
+            "extent_mm": [
+              20.0,
+              20.0,
+              2.400000000000002
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 29,
+          "edge_count": 72,
+          "volume_mm3": 806.865698894652
+        }
+      ]
+    },
+    {
+      "occurrence_ref": "#o1.3",
+      "occurrence_label": "sensor:1",
+      "prototype_id": "p3",
+      "shape_records": [
+        {
+          "selector": "#o1.3.s1",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -5.45,
+              -8.440000000000001,
+              4.8
+            ],
+            "maximum_mm": [
+              5.45,
+              8.82,
+              9.81
+            ],
+            "extent_mm": [
+              10.9,
+              17.26,
+              5.010000000000001
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 20,
+          "edge_count": 48,
+          "volume_mm3": 386.0354000000001
+        }
+      ]
+    },
+    {
+      "occurrence_ref": "#o1.4",
+      "occurrence_label": "main_pcb:1",
+      "prototype_id": "p6",
+      "shape_records": [
+        {
+          "selector": "#o1.4.s1",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -13.8,
+              -33.6,
+              6.6
+            ],
+            "maximum_mm": [
+              14.000000000000012,
+              39.3,
+              7.4
+            ],
+            "extent_mm": [
+              27.80000000000001,
+              72.9,
+              0.8000000000000007
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 44,
+          "edge_count": 126,
+          "volume_mm3": 924.017269212542
+        },
+        {
+          "selector": "#o1.4.s2",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              10.14999999999999,
+              6.05000000000001,
+              4.4
+            ],
+            "maximum_mm": [
+              13.750000000000012,
+              12.050000000000004,
+              12.4
+            ],
+            "extent_mm": [
+              3.6000000000000227,
+              5.999999999999995,
+              8.0
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 11,
+          "edge_count": 24,
+          "volume_mm3": 113.089048622548
+        },
+        {
+          "selector": "#o1.4.s3",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              10.45,
+              -7.3,
+              4.4
+            ],
+            "maximum_mm": [
+              15.45,
+              1.7000000000000002,
+              12.4
+            ],
+            "extent_mm": [
+              5.0,
+              9.0,
+              8.0
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 10,
+          "edge_count": 24,
+          "volume_mm3": 234.58904862254806
+        },
+        {
+          "selector": "#o1.4.s4",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -13.5,
+              6.05,
+              4.4
+            ],
+            "maximum_mm": [
+              -9.9,
+              12.05,
+              12.4
+            ],
+            "extent_mm": [
+              3.5999999999999996,
+              6.000000000000001,
+              8.0
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 11,
+          "edge_count": 24,
+          "volume_mm3": 113.08904862254808
+        },
+        {
+          "selector": "#o1.4.s5",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -13.8,
+              -9.24999999999999,
+              4.4
+            ],
+            "maximum_mm": [
+              -10.199999999999996,
+              -1.7499999999999898,
+              12.4
+            ],
+            "extent_mm": [
+              3.600000000000005,
+              7.5,
+              8.0
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 11,
+          "edge_count": 24,
+          "volume_mm3": 142.33904862254815
+        },
+        {
+          "selector": "#o1.4.s6",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -14.0,
+              19.15,
+              5.6
+            ],
+            "maximum_mm": [
+              -11.9,
+              21.25,
+              6.6
+            ],
+            "extent_mm": [
+              2.0999999999999996,
+              2.1000000000000014,
+              1.0
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 6,
+          "edge_count": 12,
+          "volume_mm3": 4.410000000000002
+        },
+        {
+          "selector": "#o1.4.s7",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              3.65,
+              -25.8,
+              4.9
+            ],
+            "maximum_mm": [
+              7.05,
+              -22.4,
+              6.6
+            ],
+            "extent_mm": [
+              3.4,
+              3.400000000000002,
+              1.6999999999999993
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 8,
+          "edge_count": 15,
+          "volume_mm3": 13.148860484553047
+        },
+        {
+          "selector": "#o1.4.s8",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              5.263020957627229,
+              21.532759768911927,
+              4.2
+            ],
+            "maximum_mm": [
+              12.51420693527481,
+              35.0264899943406,
+              14.75
+            ],
+            "extent_mm": [
+              7.251185977647581,
+              13.493730225428674,
+              10.55
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 16,
+          "edge_count": 36,
+          "volume_mm3": 439.77079999999904
+        },
+        {
+          "selector": "#o1.4.s9",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -12.4,
+              24.299999999999958,
+              3.899999999999981
+            ],
+            "maximum_mm": [
+              -8.0,
+              36.10000000000004,
+              20.0
+            ],
+            "extent_mm": [
+              4.4,
+              11.800000000000079,
+              16.10000000000002
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 37,
+          "edge_count": 98,
+          "volume_mm3": 502.2709835066438
+        }
+      ]
+    },
+    {
+      "occurrence_ref": "#o1.5",
+      "occurrence_label": "wheel:1",
+      "prototype_id": "p5",
+      "shape_records": [
+        {
+          "selector": "#o1.5.s1",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -10.6,
+              20.799999999999997,
+              6.999999999999998
+            ],
+            "maximum_mm": [
+              10.4,
+              39.6,
+              25.799999999999997
+            ],
+            "extent_mm": [
+              21.0,
+              18.800000000000004,
+              18.799999999999997
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 22,
+          "edge_count": 39,
+          "volume_mm3": 1671.372669082004
+        },
+        {
+          "selector": "#o1.5.s2",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -2.5,
+              19.525,
+              5.724999999999998
+            ],
+            "maximum_mm": [
+              2.5,
+              40.875,
+              27.075
+            ],
+            "extent_mm": [
+              5.0,
+              21.35,
+              21.35
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 4,
+          "edge_count": 6,
+          "volume_mm3": 720.8875217513908
+        }
+      ]
+    },
+    {
+      "occurrence_ref": "#o1.6",
+      "occurrence_label": "main_switch:1",
+      "prototype_id": "p2",
+      "shape_records": [
+        {
+          "selector": "#o1.6.s1",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -23.9,
+              15.199999999999992,
+              6.6
+            ],
+            "maximum_mm": [
+              -16.1,
+              42.6,
+              7.4
+            ],
+            "extent_mm": [
+              7.799999999999997,
+              27.40000000000001,
+              0.8000000000000007
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 12,
+          "edge_count": 30,
+          "volume_mm3": 125.89745024562359
+        },
+        {
+          "selector": "#o1.6.s2",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -22.9,
+              23.6,
+              4.2
+            ],
+            "maximum_mm": [
+              -17.1,
+              36.4,
+              14.75
+            ],
+            "extent_mm": [
+              5.799999999999997,
+              12.799999999999997,
+              10.55
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 16,
+          "edge_count": 36,
+          "volume_mm3": 499.6747999999995
+        },
+        {
+          "selector": "#o1.6.s3",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -22.6,
+              15.2,
+              1.5999999999999996
+            ],
+            "maximum_mm": [
+              -17.4,
+              18.0,
+              9.1
+            ],
+            "extent_mm": [
+              5.200000000000003,
+              2.8000000000000007,
+              7.5
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 11,
+          "edge_count": 24,
+          "volume_mm3": 77.04087385212344
+        }
+      ]
+    },
+    {
+      "occurrence_ref": "#o1.7",
+      "occurrence_label": "side_switch:1",
+      "prototype_id": "p7",
+      "shape_records": [
+        {
+          "selector": "#o1.7.s1",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -18.4,
+              -20.0,
+              7.4
+            ],
+            "maximum_mm": [
+              -14.8,
+              14.3,
+              19.8
+            ],
+            "extent_mm": [
+              3.599999999999998,
+              34.3,
+              12.4
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 28,
+          "edge_count": 72,
+          "volume_mm3": 434.9159999999997
+        },
+        {
+          "selector": "#o1.7.s2",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -24.55,
+              0.4,
+              8.1
+            ],
+            "maximum_mm": [
+              -14.0,
+              13.2,
+              13.9
+            ],
+            "extent_mm": [
+              10.55,
+              12.799999999999999,
+              5.800000000000001
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 16,
+          "edge_count": 36,
+          "volume_mm3": 499.6748
+        },
+        {
+          "selector": "#o1.7.s3",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -24.55,
+              -17.5,
+              11.4
+            ],
+            "maximum_mm": [
+              -14.0,
+              -4.7,
+              17.2
+            ],
+            "extent_mm": [
+              10.55,
+              12.8,
+              5.799999999999999
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 16,
+          "edge_count": 36,
+          "volume_mm3": 499.67479999999983
+        }
+      ]
+    },
+    {
+      "occurrence_ref": "#o1.8",
+      "occurrence_label": "bush:1",
+      "prototype_id": "p8",
+      "shape_records": [
+        {
+          "selector": "#o1.8.s1",
+          "valid": true,
+          "bbox": {
+            "minimum_mm": [
+              -7.400000000000001,
+              40.0,
+              0.8999999999999644
+            ],
+            "maximum_mm": [
+              7.4,
+              57.0,
+              7.400000000000004
+            ],
+            "extent_mm": [
+              14.8,
+              17.0,
+              6.500000000000039
+            ]
+          },
+          "solid_count": 1,
+          "face_count": 25,
+          "edge_count": 64,
+          "volume_mm3": 748.6574994999985
+        }
+      ]
+    }
+  ],
+  "main_pcb_support": {
+    "occurrence_label": "main_pcb:1",
+    "plate_selector": "#o1.4.s1",
+    "plate_support_planes": [
+      {
+        "area_mm2": 1155.0215861513595,
+        "center_mm": [
+          0.10111137323025543,
+          6.789354975172875,
+          6.6
+        ],
+        "normal": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -13.8,
+            -33.6,
+            6.6
+          ],
+          "maximum_mm": [
+            14.000000000000012,
+            39.3,
+            6.6
+          ],
+          "extent_mm": [
+            27.80000000000001,
+            72.9,
+            0.0
+          ]
+        },
+        "source_selector": "#o1.4.s1"
+      },
+      {
+        "area_mm2": 1155.0215872249992,
+        "center_mm": [
+          0.10111137322922326,
+          6.789354991356763,
+          7.4
+        ],
+        "normal": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -13.8,
+            -33.6,
+            7.4
+          ],
+          "maximum_mm": [
+            14.000000000000012,
+            39.3,
+            7.4
+          ],
+          "extent_mm": [
+            27.80000000000001,
+            72.9,
+            0.0
+          ]
+        },
+        "source_selector": "#o1.4.s1"
+      }
+    ],
+    "cylindrical_pattern": {
+      "selection_rule": "Repeated near-Z cylindrical face group with requested count; ties resolve by the greatest count of BRep full-circle rims. Rim closure is subsequently separated from radial material classification.",
+      "nominal_radius_mm": 1.4,
+      "pattern_face_count": 4,
+      "closed_circular_rims": [
+        {
+          "radius_mm": 1.4,
+          "axis_point_mm": [
+            12.0,
+            15.4,
+            0.0
+          ],
+          "axis_direction": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "axis_tilt_from_z_degrees": 0.0,
+          "area_mm2": 7.037167544041143,
+          "bbox": {
+            "minimum_mm": [
+              10.6,
+              14.0,
+              6.6
+            ],
+            "maximum_mm": [
+              13.4,
+              16.8,
+              7.4
+            ],
+            "extent_mm": [
+              2.8000000000000007,
+              2.8000000000000007,
+              0.8000000000000007
+            ]
+          },
+          "edge_lengths_mm": [
+            {
+              "geometry": "GeomType.LINE",
+              "length_mm": 0.8000000000000007
+            },
+            {
+              "geometry": "GeomType.CIRCLE",
+              "length_mm": 8.79645943005142
+            },
+            {
+              "geometry": "GeomType.CIRCLE",
+              "length_mm": 8.79645943005142
+            }
+          ],
+          "source_selector": "#o1.4.s1",
+          "full_circular_boundary_count": 2,
+          "has_full_circular_rims": true,
+          "radial_material": {
+            "classification": "cavity-wall: material is radially outside; closed rim may be a through-hole or blind cavity, not distinguished by this probe",
+            "probe_mm": 0.05,
+            "inward_probe_mm": [
+              13.35,
+              15.4,
+              7.0
+            ],
+            "outward_probe_mm": [
+              13.45,
+              15.4,
+              7.0
+            ],
+            "inward_probe_in_material": false,
+            "outward_probe_in_material": true,
+            "face_normal_radial_dot": -1.0
+          }
+        },
+        {
+          "radius_mm": 1.4,
+          "axis_point_mm": [
+            0.0,
+            -14.4,
+            0.0
+          ],
+          "axis_direction": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "axis_tilt_from_z_degrees": 0.0,
+          "area_mm2": 7.037167544041143,
+          "bbox": {
+            "minimum_mm": [
+              -1.4,
+              -15.8,
+              6.6
+            ],
+            "maximum_mm": [
+              1.4,
+              -13.0,
+              7.4
+            ],
+            "extent_mm": [
+              2.8,
+              2.8000000000000007,
+              0.8000000000000007
+            ]
+          },
+          "edge_lengths_mm": [
+            {
+              "geometry": "GeomType.LINE",
+              "length_mm": 0.8000000000000007
+            },
+            {
+              "geometry": "GeomType.CIRCLE",
+              "length_mm": 8.79645943005142
+            },
+            {
+              "geometry": "GeomType.CIRCLE",
+              "length_mm": 8.79645943005142
+            }
+          ],
+          "source_selector": "#o1.4.s1",
+          "full_circular_boundary_count": 2,
+          "has_full_circular_rims": true,
+          "radial_material": {
+            "classification": "cavity-wall: material is radially outside; closed rim may be a through-hole or blind cavity, not distinguished by this probe",
+            "probe_mm": 0.05,
+            "inward_probe_mm": [
+              1.3499999999999999,
+              -14.4,
+              7.0
+            ],
+            "outward_probe_mm": [
+              1.45,
+              -14.4,
+              7.0
+            ],
+            "inward_probe_in_material": false,
+            "outward_probe_in_material": true,
+            "face_normal_radial_dot": -1.0
+          }
+        },
+        {
+          "radius_mm": 1.4,
+          "axis_point_mm": [
+            2.05262163855116e-15,
+            -31.8,
+            0.0
+          ],
+          "axis_direction": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "axis_tilt_from_z_degrees": 0.0,
+          "area_mm2": 7.037167544041143,
+          "bbox": {
+            "minimum_mm": [
+              -1.4,
+              -33.2,
+              6.6
+            ],
+            "maximum_mm": [
+              1.400000000000002,
+              -30.400000000000002,
+              7.4
+            ],
+            "extent_mm": [
+              2.8000000000000016,
+              2.8000000000000007,
+              0.8000000000000007
+            ]
+          },
+          "edge_lengths_mm": [
+            {
+              "geometry": "GeomType.LINE",
+              "length_mm": 0.8000000000000007
+            },
+            {
+              "geometry": "GeomType.CIRCLE",
+              "length_mm": 8.79645943005142
+            },
+            {
+              "geometry": "GeomType.CIRCLE",
+              "length_mm": 8.79645943005142
+            }
+          ],
+          "source_selector": "#o1.4.s1",
+          "full_circular_boundary_count": 2,
+          "has_full_circular_rims": true,
+          "radial_material": {
+            "classification": "cavity-wall: material is radially outside; closed rim may be a through-hole or blind cavity, not distinguished by this probe",
+            "probe_mm": 0.05,
+            "inward_probe_mm": [
+              1.3500000000000019,
+              -31.8,
+              7.0
+            ],
+            "outward_probe_mm": [
+              1.450000000000002,
+              -31.8,
+              7.0
+            ],
+            "inward_probe_in_material": false,
+            "outward_probe_in_material": true,
+            "face_normal_radial_dot": -1.0
+          }
+        }
+      ],
+      "nonfull_cylindrical_faces": [
+        {
+          "radius_mm": 1.4,
+          "axis_point_mm": [
+            -12.8,
+            15.4,
+            0.0
+          ],
+          "axis_direction": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "axis_tilt_from_z_degrees": 0.0,
+          "area_mm2": 5.3007343878259,
+          "bbox": {
+            "minimum_mm": [
+              -13.8,
+              14.0,
+              6.6
+            ],
+            "maximum_mm": [
+              -11.4,
+              16.8,
+              7.4
+            ],
+            "extent_mm": [
+              2.4000000000000004,
+              2.8000000000000007,
+              0.8000000000000007
+            ]
+          },
+          "edge_lengths_mm": [
+            {
+              "geometry": "GeomType.CIRCLE",
+              "length_mm": 6.625917984782367
+            },
+            {
+              "geometry": "GeomType.LINE",
+              "length_mm": 0.8000000000000007
+            },
+            {
+              "geometry": "GeomType.CIRCLE",
+              "length_mm": 6.625917984782367
+            },
+            {
+              "geometry": "GeomType.LINE",
+              "length_mm": 0.8000000000000007
+            }
+          ],
+          "source_selector": "#o1.4.s1",
+          "full_circular_boundary_count": 0,
+          "has_full_circular_rims": false,
+          "radial_material": {
+            "classification": "cavity-wall: material is radially outside; closed rim may be a through-hole or blind cavity, not distinguished by this probe",
+            "probe_mm": 0.05,
+            "inward_probe_mm": [
+              -11.450000000000001,
+              15.4,
+              7.0
+            ],
+            "outward_probe_mm": [
+              -11.350000000000001,
+              15.4,
+              7.0
+            ],
+            "inward_probe_in_material": false,
+            "outward_probe_in_material": true,
+            "face_normal_radial_dot": -1.0
+          }
+        }
+      ],
+      "slot_classification": "No elongated slot is asserted. A non-full cylinder is reported as an edge-clipped cylindrical face unless tangent-wall topology is separately measured."
+    },
+    "protected_source_pose": "Preserve the exact XCAF occurrence placement and source shape; do not mirror main_pcb:1 or substitute a global-solid identity."
+  },
+  "main_click_roof_support": {
+    "occurrence_label": "main_switch:1",
+    "plate_selector": "#o1.6.s1",
+    "plate_support_planes": [
+      {
+        "area_mm2": 157.37181280702936,
+        "center_mm": [
+          -20.0,
+          28.161894139360797,
+          6.6000000000000005
+        ],
+        "normal": [
+          -0.0,
+          -0.0,
+          -1.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -23.9,
+            15.199999999999992,
+            6.6
+          ],
+          "maximum_mm": [
+            -16.1,
+            42.6,
+            6.6
+          ],
+          "extent_mm": [
+            7.799999999999997,
+            27.40000000000001,
+            0.0
+          ]
+        },
+        "source_selector": "#o1.6.s1"
+      },
+      {
+        "area_mm2": 157.37181280702936,
+        "center_mm": [
+          -20.0,
+          28.161894139360797,
+          7.4
+        ],
+        "normal": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -23.9,
+            15.199999999999992,
+            7.4
+          ],
+          "maximum_mm": [
+            -16.1,
+            42.6,
+            7.4
+          ],
+          "extent_mm": [
+            7.799999999999997,
+            27.40000000000001,
+            0.0
+          ]
+        },
+        "source_selector": "#o1.6.s1"
+      }
+    ],
+    "cylindrical_pattern": {
+      "selection_rule": "Repeated near-Z cylindrical face group with requested count; ties resolve by the greatest count of BRep full-circle rims. Rim closure is subsequently separated from radial material classification.",
+      "nominal_radius_mm": 2.325,
+      "pattern_face_count": 2,
+      "closed_circular_rims": [
+        {
+          "radius_mm": 2.325,
+          "axis_point_mm": [
+            -20.0,
+            39.1,
+            7.4
+          ],
+          "axis_direction": [
+            0.0,
+            0.0,
+            -1.0
+          ],
+          "axis_tilt_from_z_degrees": 0.0,
+          "area_mm2": 11.686724671354042,
+          "bbox": {
+            "minimum_mm": [
+              -22.325,
+              36.775,
+              6.6
+            ],
+            "maximum_mm": [
+              -17.675,
+              41.425000000000004,
+              7.4
+            ],
+            "extent_mm": [
+              4.649999999999999,
+              4.650000000000006,
+              0.8000000000000007
+            ]
+          },
+          "edge_lengths_mm": [
+            {
+              "geometry": "GeomType.LINE",
+              "length_mm": 0.8000000000000007
+            },
+            {
+              "geometry": "GeomType.CIRCLE",
+              "length_mm": 14.608405839192539
+            },
+            {
+              "geometry": "GeomType.CIRCLE",
+              "length_mm": 14.608405839192539
+            }
+          ],
+          "source_selector": "#o1.6.s1",
+          "full_circular_boundary_count": 2,
+          "has_full_circular_rims": true,
+          "radial_material": {
+            "classification": "cavity-wall: material is radially outside; closed rim may be a through-hole or blind cavity, not distinguished by this probe",
+            "probe_mm": 0.05,
+            "inward_probe_mm": [
+              -17.725,
+              39.1,
+              7.0
+            ],
+            "outward_probe_mm": [
+              -17.625,
+              39.1,
+              7.0
+            ],
+            "inward_probe_in_material": false,
+            "outward_probe_in_material": true,
+            "face_normal_radial_dot": -1.0
+          }
+        },
+        {
+          "radius_mm": 2.325,
+          "axis_point_mm": [
+            -20.0,
+            20.9,
+            7.4
+          ],
+          "axis_direction": [
+            0.0,
+            0.0,
+            -1.0
+          ],
+          "axis_tilt_from_z_degrees": 0.0,
+          "area_mm2": 11.686724671354042,
+          "bbox": {
+            "minimum_mm": [
+              -22.325,
+              18.575,
+              6.6
+            ],
+            "maximum_mm": [
+              -17.675,
+              23.224999999999998,
+              7.4
+            ],
+            "extent_mm": [
+              4.649999999999999,
+              4.649999999999999,
+              0.8000000000000007
+            ]
+          },
+          "edge_lengths_mm": [
+            {
+              "geometry": "GeomType.LINE",
+              "length_mm": 0.8000000000000007
+            },
+            {
+              "geometry": "GeomType.CIRCLE",
+              "length_mm": 14.608405839192539
+            },
+            {
+              "geometry": "GeomType.CIRCLE",
+              "length_mm": 14.608405839192539
+            }
+          ],
+          "source_selector": "#o1.6.s1",
+          "full_circular_boundary_count": 2,
+          "has_full_circular_rims": true,
+          "radial_material": {
+            "classification": "cavity-wall: material is radially outside; closed rim may be a through-hole or blind cavity, not distinguished by this probe",
+            "probe_mm": 0.05,
+            "inward_probe_mm": [
+              -17.725,
+              20.9,
+              7.0
+            ],
+            "outward_probe_mm": [
+              -17.625,
+              20.9,
+              7.0
+            ],
+            "inward_probe_in_material": false,
+            "outward_probe_in_material": true,
+            "face_normal_radial_dot": -1.0
+          }
+        }
+      ],
+      "nonfull_cylindrical_faces": [],
+      "slot_classification": "No elongated slot is asserted. A non-full cylinder is reported as an edge-clipped cylindrical face unless tangent-wall topology is separately measured."
+    },
+    "primary_contacts": [
+      {
+        "occurrence_label": "main_pcb:1",
+        "housing_signature": {
+          "selector": "#o1.4.s8",
+          "bbox": {
+            "minimum_mm": [
+              5.263020957627229,
+              21.532759768911927,
+              4.2
+            ],
+            "maximum_mm": [
+              12.51420693527481,
+              35.0264899943406,
+              14.75
+            ],
+            "extent_mm": [
+              7.251185977647581,
+              13.493730225428674,
+              10.55
+            ]
+          },
+          "top_upward_face": {
+            "area_mm2": 3.480000000000146,
+            "center_mm": [
+              8.550000000000026,
+              30.19999999999999,
+              14.750000000000002
+            ],
+            "normal": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "bbox": {
+              "minimum_mm": [
+                7.017839851532156,
+                29.357325490575576,
+                14.75
+              ],
+              "maximum_mm": [
+                10.082160148467905,
+                31.042674509424426,
+                14.75
+              ],
+              "extent_mm": [
+                3.0643202969357484,
+                1.68534901884885,
+                0.0
+              ]
+            },
+            "source_selector": "#o1.4.s8",
+            "classification": "large primary-housing top contact candidate; functional click role remains unverified by BRep",
+            "proposed_roof_approach_direction": [
+              0.0,
+              0.0,
+              -1.0
+            ]
+          },
+          "bottom_downward_face": {
+            "area_mm2": 4.424000000000225,
+            "center_mm": [
+              8.888613946451034,
+              28.2796248816264,
+              4.2
+            ],
+            "normal": [
+              0.0,
+              0.0,
+              -1.0
+            ],
+            "bbox": {
+              "minimum_mm": [
+                7.731377973350448,
+                22.798908371935298,
+                4.2
+              ],
+              "maximum_mm": [
+                10.045849919551603,
+                33.760341391317105,
+                4.2
+              ],
+              "extent_mm": [
+                2.314471946201155,
+                10.961433019381808,
+                0.0
+              ]
+            },
+            "source_selector": "#o1.4.s8"
+          },
+          "z_span_mm": 10.55
+        },
+        "roof_contact_face": {
+          "area_mm2": 3.480000000000146,
+          "center_mm": [
+            8.550000000000026,
+            30.19999999999999,
+            14.750000000000002
+          ],
+          "normal": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "bbox": {
+            "minimum_mm": [
+              7.017839851532156,
+              29.357325490575576,
+              14.75
+            ],
+            "maximum_mm": [
+              10.082160148467905,
+              31.042674509424426,
+              14.75
+            ],
+            "extent_mm": [
+              3.0643202969357484,
+              1.68534901884885,
+              0.0
+            ]
+          },
+          "source_selector": "#o1.4.s8",
+          "classification": "large primary-housing top contact candidate; functional click role remains unverified by BRep",
+          "proposed_roof_approach_direction": [
+            0.0,
+            0.0,
+            -1.0
+          ]
+        },
+        "role": "large primary-housing candidate carried by protected main PCB"
+      },
+      {
+        "occurrence_label": "main_switch:1",
+        "housing_signature": {
+          "selector": "#o1.6.s2",
+          "bbox": {
+            "minimum_mm": [
+              -22.9,
+              23.6,
+              4.2
+            ],
+            "maximum_mm": [
+              -17.1,
+              36.4,
+              14.75
+            ],
+            "extent_mm": [
+              5.799999999999997,
+              12.799999999999997,
+              10.55
+            ]
+          },
+          "top_upward_face": {
+            "area_mm2": 3.4799999999999858,
+            "center_mm": [
+              -20.0,
+              31.95,
+              14.75
+            ],
+            "normal": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "bbox": {
+              "minimum_mm": [
+                -21.45,
+                31.35,
+                14.75
+              ],
+              "maximum_mm": [
+                -18.55,
+                32.55,
+                14.75
+              ],
+              "extent_mm": [
+                2.8999999999999986,
+                1.1999999999999957,
+                0.0
+              ]
+            },
+            "source_selector": "#o1.6.s2",
+            "classification": "large primary-housing top contact candidate; functional click role remains unverified by BRep",
+            "proposed_roof_approach_direction": [
+              0.0,
+              0.0,
+              -1.0
+            ]
+          },
+          "bottom_downward_face": {
+            "area_mm2": 4.423999999999984,
+            "center_mm": [
+              -20.0,
+              30.000000000000004,
+              4.2
+            ],
+            "normal": [
+              0.0,
+              0.0,
+              -1.0
+            ],
+            "bbox": {
+              "minimum_mm": [
+                -20.2,
+                24.47,
+                4.2
+              ],
+              "maximum_mm": [
+                -19.8,
+                35.53,
+                4.2
+              ],
+              "extent_mm": [
+                0.3999999999999986,
+                11.060000000000002,
+                0.0
+              ]
+            },
+            "source_selector": "#o1.6.s2"
+          },
+          "z_span_mm": 10.55
+        },
+        "roof_contact_face": {
+          "area_mm2": 3.4799999999999858,
+          "center_mm": [
+            -20.0,
+            31.95,
+            14.75
+          ],
+          "normal": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "bbox": {
+            "minimum_mm": [
+              -21.45,
+              31.35,
+              14.75
+            ],
+            "maximum_mm": [
+              -18.55,
+              32.55,
+              14.75
+            ],
+            "extent_mm": [
+              2.8999999999999986,
+              1.1999999999999957,
+              0.0
+            ]
+          },
+          "source_selector": "#o1.6.s2",
+          "classification": "large primary-housing top contact candidate; functional click role remains unverified by BRep",
+          "proposed_roof_approach_direction": [
+            0.0,
+            0.0,
+            -1.0
+          ]
+        },
+        "role": "large primary-housing candidate carried by the dedicated daughterboard occurrence"
+      }
+    ],
+    "large_housing_geometry_alignment": {
+      "method": "Selected independently from BRep signature: largest unique upward planar contact face in non-plate main_switch children, then closest main_pcb child by top/bottom plane areas and Z positions plus Z span.",
+      "main_pcb_selector": "#o1.4.s8",
+      "dedicated_daughterboard_selector": "#o1.6.s2",
+      "residuals": {
+        "top_face_area_difference_mm2": 1.603162047558726e-13,
+        "top_face_z_difference_mm": 1.7763568394002505e-15,
+        "bottom_face_area_difference_mm2": 2.4069635173873394e-13,
+        "bottom_face_z_difference_mm": 0.0,
+        "z_span_difference_mm": 0.0
+      },
+      "interpretation": "Matching top-contact area, lower contact area, Z extrema, and height are measured geometry evidence for a large-housing pair. Electrical terminal function and physical left/right naming remain unverified."
+    },
+    "aux_contact": {
+      "occurrence_label": "main_switch:1",
+      "selector": "#o1.6.s3",
+      "contact_face": {
+        "area_mm2": 1.6963495408493618,
+        "center_mm": [
+          -20.0,
+          16.599999999999998,
+          9.1
+        ],
+        "normal": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -21.75,
+            16.35,
+            9.1
+          ],
+          "maximum_mm": [
+            -18.25,
+            16.85,
+            9.1
+          ],
+          "extent_mm": [
+            3.5,
+            0.5,
+            0.0
+          ]
+        },
+        "source_selector": "#o1.6.s3",
+        "classification": "auxiliary top contact candidate; not a second primary click; functional click role remains unverified by BRep",
+        "proposed_roof_approach_direction": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      "role": "auxiliary candidate only"
+    },
+    "roof_support_proposal": {
+      "source_pose_rule": "Keep main_pcb:1 protected in its recorded XCAF pose. Keep main_switch:1 as its own source occurrence and do not mirror either occurrence. This is asymmetric: the large housing in main_pcb:1 moves only with the protected main board, while the large housing in main_switch:1 is carried by the separate thin-plate occurrence. XCAF grouping alone is not proof of electrical membership or of a physical left/right role.",
+      "measured_roof_mating_plane": "Use the measured +Z plane of the selected thin click-board as the source-side datum; a new roof mate must face -Z. Its final roof location is a target-shell design decision.",
+      "measured_cylindrical_boundaries": "The report records two radius-2.325 mm closed circular rims (diameter 4.650 mm) together with material-side probes. Carrier use is prohibited until those probes establish cavity-wall material rather than external cylindrical material; clearance, fastener type, and production tolerance are unspecified.",
+      "contact_axis_rule": "For the two measured large-housing +Z faces, a roof feature would approach along -Z. The auxiliary face is kept separate. Stroke, preload, force, and physical left/right click labels remain unknown."
+    }
+  },
+  "wheel_and_bush": {
+    "wheel_occurrence_label": "wheel:1",
+    "wheel_x_axis_cylinders": [
+      {
+        "radius_mm": 1.8,
+        "axis_point_mm": [
+          0.0,
+          30.2,
+          16.4
+        ],
+        "axis_direction": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 71.53406472223958,
+        "bbox": {
+          "minimum_mm": [
+            4.075,
+            28.4,
+            14.599999999999998
+          ],
+          "maximum_mm": [
+            10.4,
+            32.0,
+            18.2
+          ],
+          "extent_mm": [
+            6.325,
+            3.6000000000000014,
+            3.6000000000000014
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 11.309733552923253
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 6.325
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 11.309733552923253
+          }
+        ],
+        "source_selector": "#o1.5.s1"
+      },
+      {
+        "radius_mm": 1.075,
+        "axis_point_mm": [
+          0.0,
+          30.2,
+          16.4
+        ],
+        "axis_direction": [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 10.975939333479339,
+        "bbox": {
+          "minimum_mm": [
+            -5.7,
+            29.125,
+            15.325
+          ],
+          "maximum_mm": [
+            -4.075,
+            31.275,
+            17.474999999999998
+          ],
+          "extent_mm": [
+            1.625,
+            2.1499999999999986,
+            2.1499999999999986
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 6.754424205218055
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 1.625
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 6.754424205218055
+          }
+        ],
+        "source_selector": "#o1.5.s1"
+      },
+      {
+        "radius_mm": 2.15,
+        "axis_point_mm": [
+          0.0,
+          30.2,
+          16.4
+        ],
+        "axis_direction": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 9.118472677044377,
+        "bbox": {
+          "minimum_mm": [
+            3.4,
+            28.05,
+            14.249999999999998
+          ],
+          "maximum_mm": [
+            4.075,
+            32.35,
+            18.549999999999997
+          ],
+          "extent_mm": [
+            0.6750000000000003,
+            4.300000000000001,
+            4.299999999999999
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 13.50884841043611
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 0.6750000000000003
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 13.50884841043611
+          }
+        ],
+        "source_selector": "#o1.5.s1"
+      },
+      {
+        "radius_mm": 2.15,
+        "axis_point_mm": [
+          0.0,
+          30.2,
+          16.4
+        ],
+        "axis_direction": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 9.118472677044377,
+        "bbox": {
+          "minimum_mm": [
+            -4.075,
+            28.05,
+            14.249999999999998
+          ],
+          "maximum_mm": [
+            -3.4,
+            32.35,
+            18.549999999999997
+          ],
+          "extent_mm": [
+            0.6750000000000003,
+            4.300000000000001,
+            4.299999999999999
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 13.50884841043611
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 0.6750000000000003
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 13.50884841043611
+          }
+        ],
+        "source_selector": "#o1.5.s1"
+      },
+      {
+        "radius_mm": 8.25,
+        "axis_point_mm": [
+          0.0,
+          30.2,
+          16.4
+        ],
+        "axis_direction": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 259.18139392115785,
+        "bbox": {
+          "minimum_mm": [
+            -2.5,
+            21.95,
+            8.149999999999999
+          ],
+          "maximum_mm": [
+            2.5,
+            38.45,
+            24.65
+          ],
+          "extent_mm": [
+            5.0,
+            16.500000000000004,
+            16.5
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 51.83627878423159
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 5.0
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 51.83627878423159
+          }
+        ],
+        "source_selector": "#o1.5.s1"
+      },
+      {
+        "radius_mm": 9.4,
+        "axis_point_mm": [
+          0.0,
+          30.2,
+          16.4
+        ],
+        "axis_direction": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 53.15574769873929,
+        "bbox": {
+          "minimum_mm": [
+            2.5,
+            20.799999999999997,
+            6.999999999999998
+          ],
+          "maximum_mm": [
+            3.4,
+            39.6,
+            25.799999999999997
+          ],
+          "extent_mm": [
+            0.8999999999999999,
+            18.800000000000004,
+            18.799999999999997
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 59.061941887488125
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 0.8999999999999999
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 59.061941887488125
+          }
+        ],
+        "source_selector": "#o1.5.s1"
+      },
+      {
+        "radius_mm": 9.4,
+        "axis_point_mm": [
+          0.0,
+          30.2,
+          16.4
+        ],
+        "axis_direction": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 53.15574769873929,
+        "bbox": {
+          "minimum_mm": [
+            -3.4,
+            20.799999999999997,
+            6.999999999999998
+          ],
+          "maximum_mm": [
+            -2.5,
+            39.6,
+            25.799999999999997
+          ],
+          "extent_mm": [
+            0.8999999999999999,
+            18.800000000000004,
+            18.799999999999997
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 59.061941887488125
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 0.8999999999999999
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 59.061941887488125
+          }
+        ],
+        "source_selector": "#o1.5.s1"
+      },
+      {
+        "radius_mm": 8.25,
+        "axis_point_mm": [
+          0.0,
+          30.2,
+          16.4
+        ],
+        "axis_direction": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 259.18139392115785,
+        "bbox": {
+          "minimum_mm": [
+            -2.5,
+            21.95,
+            8.149999999999999
+          ],
+          "maximum_mm": [
+            2.5,
+            38.45,
+            24.65
+          ],
+          "extent_mm": [
+            5.0,
+            16.500000000000004,
+            16.5
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 5.0
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 51.83627878423159
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 51.83627878423159
+          }
+        ],
+        "source_selector": "#o1.5.s2"
+      },
+      {
+        "radius_mm": 10.675,
+        "axis_point_mm": [
+          0.0,
+          30.2,
+          16.4
+        ],
+        "axis_direction": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 335.36501577071044,
+        "bbox": {
+          "minimum_mm": [
+            -2.5,
+            19.525,
+            5.724999999999998
+          ],
+          "maximum_mm": [
+            2.5,
+            40.875,
+            27.075
+          ],
+          "extent_mm": [
+            5.0,
+            21.35,
+            21.35
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 67.07300315414209
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 5.0
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 67.07300315414209
+          }
+        ],
+        "source_selector": "#o1.5.s2"
+      }
+    ],
+    "wheel_coaxial_x_axis_evidence": {
+      "axis": "X",
+      "mean_axis_point_mm": [
+        0.0,
+        30.200000000000003,
+        16.4
+      ],
+      "maximum_perpendicular_axis_point_deviation_mm": 3.552713678800501e-15,
+      "radii_mm": [
+        1.075,
+        1.8,
+        2.15,
+        8.25,
+        9.4,
+        10.675
+      ],
+      "face_count": 9
+    },
+    "bush_occurrence_label": "bush:1",
+    "bush_y_axis_cylinders": [
+      {
+        "radius_mm": 2.5,
+        "axis_point_mm": [
+          -3.1,
+          46.0,
+          4.9
+        ],
+        "axis_direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 21.502260965580923,
+        "bbox": {
+          "minimum_mm": [
+            -5.6,
+            46.0,
+            4.8999999999999995
+          ],
+          "maximum_mm": [
+            -3.1,
+            52.0,
+            7.400000000000002
+          ],
+          "extent_mm": [
+            2.4999999999999996,
+            6.0,
+            2.5000000000000027
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.ELLIPSE",
+            "length_mm": 4.236198507938545
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 4.556624327025901
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 3.9269908169872405
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 6.0
+          }
+        ],
+        "source_selector": "#o1.8.s1"
+      },
+      {
+        "radius_mm": 2.5,
+        "axis_point_mm": [
+          3.1,
+          46.0,
+          4.9
+        ],
+        "axis_direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 21.50226107966351,
+        "bbox": {
+          "minimum_mm": [
+            3.0999999999999996,
+            46.0,
+            4.8999999999999995
+          ],
+          "maximum_mm": [
+            5.6000000000000005,
+            52.0,
+            7.400000000000002
+          ],
+          "extent_mm": [
+            2.500000000000001,
+            6.0,
+            2.5000000000000027
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.ELLIPSE",
+            "length_mm": 4.236198507938546
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 6.0
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 3.9269908169872405
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 4.556624327025901
+          }
+        ],
+        "source_selector": "#o1.8.s1"
+      },
+      {
+        "radius_mm": 1.0,
+        "axis_point_mm": [
+          6.4,
+          46.0,
+          3.9
+        ],
+        "axis_direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 6.827979343915021,
+        "bbox": {
+          "minimum_mm": [
+            6.4,
+            46.0,
+            3.9
+          ],
+          "maximum_mm": [
+            7.4,
+            50.55662432702592,
+            4.9
+          ],
+          "extent_mm": [
+            1.0,
+            4.556624327025922,
+            1.0000000000000004
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.ELLIPSE",
+            "length_mm": 1.6944794031754167
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 4.556624327025901
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 1.5707963267948966
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 3.9792740578362995
+          }
+        ],
+        "source_selector": "#o1.8.s1"
+      },
+      {
+        "radius_mm": 1.0,
+        "axis_point_mm": [
+          -6.4,
+          46.0,
+          3.9
+        ],
+        "axis_direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 6.827979325661752,
+        "bbox": {
+          "minimum_mm": [
+            -7.4,
+            46.0,
+            3.9
+          ],
+          "maximum_mm": [
+            -6.4,
+            50.55662432702592,
+            4.9
+          ],
+          "extent_mm": [
+            1.0,
+            4.556624327025922,
+            1.0000000000000004
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.ELLIPSE",
+            "length_mm": 1.6944794031754162
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 3.9792740578362995
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 1.5707963267948966
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 4.556624327025901
+          }
+        ],
+        "source_selector": "#o1.8.s1"
+      },
+      {
+        "radius_mm": 3.25,
+        "axis_point_mm": [
+          0.0,
+          52.0,
+          4.15
+        ],
+        "axis_direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 140.41825598448395,
+        "bbox": {
+          "minimum_mm": [
+            -3.25,
+            48.24722325026741,
+            0.8999999999999972
+          ],
+          "maximum_mm": [
+            3.25,
+            57.0,
+            7.400000000000004
+          ],
+          "extent_mm": [
+            6.5,
+            8.75277674973259,
+            6.500000000000007
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 20.420352248333657
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 6.876388374866302
+          },
+          {
+            "geometry": "GeomType.ELLIPSE",
+            "length_mm": 5.50705806032011
+          },
+          {
+            "geometry": "GeomType.ELLIPSE",
+            "length_mm": 11.014116120264786
+          },
+          {
+            "geometry": "GeomType.ELLIPSE",
+            "length_mm": 5.50705806032011
+          }
+        ],
+        "source_selector": "#o1.8.s1"
+      },
+      {
+        "radius_mm": 1.25,
+        "axis_point_mm": [
+          0.0,
+          42.5,
+          4.15
+        ],
+        "axis_direction": [
+          0.0,
+          -1.0,
+          0.0
+        ],
+        "axis_tilt_from_z_degrees": 90.0,
+        "area_mm2": 19.634954084936208,
+        "bbox": {
+          "minimum_mm": [
+            -1.25,
+            40.0,
+            2.9000000000000004
+          ],
+          "maximum_mm": [
+            1.25,
+            42.5,
+            5.4
+          ],
+          "extent_mm": [
+            2.5,
+            2.5,
+            2.5
+          ]
+        },
+        "edge_lengths_mm": [
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 7.853981633974483
+          },
+          {
+            "geometry": "GeomType.LINE",
+            "length_mm": 2.5
+          },
+          {
+            "geometry": "GeomType.CIRCLE",
+            "length_mm": 7.853981633974483
+          }
+        ],
+        "source_selector": "#o1.8.s1"
+      }
+    ],
+    "bush_coaxial_y_axis_evidence": {
+      "axis": "Y",
+      "mean_axis_point_mm": [
+        0.0,
+        46.416666666666664,
+        4.316666666666667
+      ],
+      "maximum_perpendicular_axis_point_deviation_mm": 6.413549026171946,
+      "radii_mm": [
+        1.0,
+        1.25,
+        2.5,
+        3.25
+      ],
+      "face_count": 6
+    },
+    "middle_click_note": "The named wheel occurrence and its X-coaxial BRep surfaces establish a geometric axis. They do not establish encoder coupling, detent, middle-click switch, travel, force, or an allowable support clearance."
+  },
+  "side_switch": {
+    "occurrence_label": "side_switch:1",
+    "top_upward_face_candidates": [
+      {
+        "area_mm2": 26.759999999999984,
+        "center_mm": [
+          -16.6,
+          -6.85,
+          19.8
+        ],
+        "normal": [
+          0.0,
+          -0.0,
+          1.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -17.2,
+            -18.0,
+            19.8
+          ],
+          "maximum_mm": [
+            -16.0,
+            4.300000000000001,
+            19.8
+          ],
+          "extent_mm": [
+            1.1999999999999993,
+            22.3,
+            0.0
+          ]
+        },
+        "source_selector": "#o1.7.s1",
+        "classification": "topmost +Z planar face; contact function is unverified"
+      },
+      {
+        "area_mm2": 83.19999999999999,
+        "center_mm": [
+          -20.45,
+          6.8,
+          13.899999999999999
+        ],
+        "normal": [
+          0.0,
+          -0.0,
+          1.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -23.7,
+            0.4,
+            13.9
+          ],
+          "maximum_mm": [
+            -17.2,
+            13.2,
+            13.9
+          ],
+          "extent_mm": [
+            6.5,
+            12.799999999999999,
+            0.0
+          ]
+        },
+        "source_selector": "#o1.7.s2",
+        "classification": "topmost +Z planar face; contact function is unverified"
+      },
+      {
+        "area_mm2": 83.2,
+        "center_mm": [
+          -20.45,
+          -11.1,
+          17.2
+        ],
+        "normal": [
+          0.0,
+          -0.0,
+          1.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -23.7,
+            -17.5,
+            17.2
+          ],
+          "maximum_mm": [
+            -17.2,
+            -4.7,
+            17.2
+          ],
+          "extent_mm": [
+            6.5,
+            12.8,
+            0.0
+          ]
+        },
+        "source_selector": "#o1.7.s3",
+        "classification": "topmost +Z planar face; contact function is unverified"
+      }
+    ],
+    "x_normal_face_candidates": [
+      {
+        "area_mm2": 320.4300000000002,
+        "center_mm": [
+          -16.0,
+          -4.406446025653027,
+          13.7036393804159
+        ],
+        "normal": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -16.0,
+            -20.0,
+            7.4
+          ],
+          "maximum_mm": [
+            -16.0,
+            14.3,
+            19.8
+          ],
+          "extent_mm": [
+            0.0,
+            34.3,
+            12.4
+          ]
+        },
+        "source_selector": "#o1.7.s1"
+      },
+      {
+        "area_mm2": 320.43,
+        "center_mm": [
+          -17.2,
+          -4.406446025653029,
+          13.703639380415902
+        ],
+        "normal": [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -17.2,
+            -20.0,
+            7.4
+          ],
+          "maximum_mm": [
+            -17.2,
+            14.3,
+            19.8
+          ],
+          "extent_mm": [
+            0.0,
+            34.3,
+            12.4
+          ]
+        },
+        "source_selector": "#o1.7.s1"
+      },
+      {
+        "area_mm2": 14.0,
+        "center_mm": [
+          -18.4,
+          -11.1,
+          9.0
+        ],
+        "normal": [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -18.4,
+            -14.6,
+            8.0
+          ],
+          "maximum_mm": [
+            -18.4,
+            -7.6,
+            10.0
+          ],
+          "extent_mm": [
+            0.0,
+            7.0,
+            2.0
+          ]
+        },
+        "source_selector": "#o1.7.s1"
+      },
+      {
+        "area_mm2": 14.0,
+        "center_mm": [
+          -14.8,
+          -11.1,
+          9.0
+        ],
+        "normal": [
+          1.0,
+          -0.0,
+          0.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -14.8,
+            -14.6,
+            8.0
+          ],
+          "maximum_mm": [
+            -14.8,
+            -7.6,
+            10.0
+          ],
+          "extent_mm": [
+            0.0,
+            7.0,
+            2.0
+          ]
+        },
+        "source_selector": "#o1.7.s1"
+      },
+      {
+        "area_mm2": 70.75999999999998,
+        "center_mm": [
+          -23.7,
+          6.704098360655736,
+          11.0
+        ],
+        "normal": [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -23.7,
+            0.4,
+            8.1
+          ],
+          "maximum_mm": [
+            -23.7,
+            13.2,
+            13.9
+          ],
+          "extent_mm": [
+            0.0,
+            12.799999999999999,
+            5.800000000000001
+          ]
+        },
+        "source_selector": "#o1.7.s2"
+      },
+      {
+        "area_mm2": 69.81600000000002,
+        "center_mm": [
+          -17.2,
+          6.799999999999999,
+          11.0
+        ],
+        "normal": [
+          1.0,
+          -0.0,
+          -0.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -17.2,
+            0.4,
+            8.1
+          ],
+          "maximum_mm": [
+            -17.2,
+            13.2,
+            13.9
+          ],
+          "extent_mm": [
+            0.0,
+            12.799999999999999,
+            5.800000000000001
+          ]
+        },
+        "source_selector": "#o1.7.s2"
+      },
+      {
+        "area_mm2": 4.4239999999999835,
+        "center_mm": [
+          -14.0,
+          6.8,
+          11.0
+        ],
+        "normal": [
+          1.0,
+          -0.0,
+          0.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -14.0,
+            1.27,
+            10.8
+          ],
+          "maximum_mm": [
+            -14.0,
+            12.33,
+            11.2
+          ],
+          "extent_mm": [
+            0.0,
+            11.06,
+            0.3999999999999986
+          ]
+        },
+        "source_selector": "#o1.7.s2"
+      },
+      {
+        "area_mm2": 3.480000000000027,
+        "center_mm": [
+          -24.55,
+          8.750000000000005,
+          11.0
+        ],
+        "normal": [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -24.55,
+            8.15,
+            9.55
+          ],
+          "maximum_mm": [
+            -24.55,
+            9.35000000000001,
+            12.45
+          ],
+          "extent_mm": [
+            0.0,
+            1.20000000000001,
+            2.8999999999999986
+          ]
+        },
+        "source_selector": "#o1.7.s2"
+      },
+      {
+        "area_mm2": 70.75999999999993,
+        "center_mm": [
+          -23.7,
+          -11.195901639344262,
+          14.3
+        ],
+        "normal": [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -23.7,
+            -17.5,
+            11.4
+          ],
+          "maximum_mm": [
+            -23.7,
+            -4.7,
+            17.2
+          ],
+          "extent_mm": [
+            0.0,
+            12.8,
+            5.799999999999999
+          ]
+        },
+        "source_selector": "#o1.7.s3"
+      },
+      {
+        "area_mm2": 69.81599999999995,
+        "center_mm": [
+          -17.2,
+          -11.099999999999998,
+          14.3
+        ],
+        "normal": [
+          1.0,
+          -0.0,
+          -0.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -17.2,
+            -17.5,
+            11.4
+          ],
+          "maximum_mm": [
+            -17.2,
+            -4.7,
+            17.2
+          ],
+          "extent_mm": [
+            0.0,
+            12.8,
+            5.799999999999999
+          ]
+        },
+        "source_selector": "#o1.7.s3"
+      },
+      {
+        "area_mm2": 4.423999999999975,
+        "center_mm": [
+          -14.0,
+          -11.100000000000005,
+          14.300000000000002
+        ],
+        "normal": [
+          1.0,
+          -0.0,
+          0.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -14.0,
+            -16.63,
+            14.1
+          ],
+          "maximum_mm": [
+            -14.0,
+            -5.57000000000001,
+            14.500000000000004
+          ],
+          "extent_mm": [
+            0.0,
+            11.059999999999988,
+            0.4000000000000039
+          ]
+        },
+        "source_selector": "#o1.7.s3"
+      },
+      {
+        "area_mm2": 3.480000000000026,
+        "center_mm": [
+          -24.55,
+          -9.150000000000006,
+          14.300000000000015
+        ],
+        "normal": [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "bbox": {
+          "minimum_mm": [
+            -24.55,
+            -9.75000000000001,
+            12.85
+          ],
+          "maximum_mm": [
+            -24.55,
+            -8.55,
+            15.750000000000018
+          ],
+          "extent_mm": [
+            0.0,
+            1.20000000000001,
+            2.900000000000018
+          ]
+        },
+        "source_selector": "#o1.7.s3"
+      }
+    ],
+    "relocation_rule": "If repositioned for a left-handed target, use one rigid transform of the source occurrence and transform both points and normals. Mirroring is prohibited by this evidence package.",
+    "unknown": "No functional metadata identifies which face is the button actuation face, reaction face, travel direction, or allowable enclosure. The BRep records candidate faces only."
+  },
+  "lens": {
+    "occurrence_label": "lens:1",
+    "extent_only": [
+      {
+        "selector": "#o1.1.s1",
+        "valid": true,
+        "bbox": {
+          "minimum_mm": [
+            -4.05,
+            -7.68,
+            0.0
+          ],
+          "maximum_mm": [
+            4.05,
+            8.27,
+            7.4
+          ],
+          "extent_mm": [
+            8.1,
+            15.95,
+            7.4
+          ]
+        },
+        "solid_count": 1,
+        "face_count": 11,
+        "edge_count": 24,
+        "volume_mm3": 724.0883968363171
+      }
+    ],
+    "limit": "The lens bbox is geometry only. It is not an optical datum and does not certify sensor focus, lens seating, or clearance."
+  },
+  "topology_and_unknowns": {
+    "validity": "Each source-bound shape record reports BRep validity. The assembly contains 8 named XCAF occurrences and 21 source-bound leaf solids.",
+    "functional_unknowns": [
+      "Click, wheel, and side-button travel; preload; force; contact sequence; and required clearances.",
+      "Electrical, optical, fastener, and tolerance specifications.",
+      "Mapping of named main_switch child shapes to physical left/right click functions.",
+      "ZA13 roof, sidewall, and shell datum relationship; these must be established against the separate shell geometry."
+    ]
+  }
+}

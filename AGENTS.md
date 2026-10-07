@@ -12,6 +12,16 @@ Factory OSが分類・予算・モデル・委譲を管理し、cadMCPは下位�
 
 このファイルは Cursor / Codex 共通の入口です。Cursor は `.cursor/skills/cadmcp-cursor/SKILL.md`、Codex は `.agents/skills/cadmcp-design-brain/SKILL.md` を参照します。
 
+## 正式CADバックエンド選択（2026-10-04）
+
+FreeCADはStellaCADの正式な外部CAD選択肢。CAD生成・編集はユーザーが選んだ経路（FreeCAD / ClassCAD / Fusion / CadQuery）だけを使い、能力や接続失敗を理由に自動で切り替えない。選択は案件ディレクトリごとに保存し、未選択なら設計開始時に一度確認する。環境整備・読取診断では選択を要求しない。
+
+自動選択を依頼された案件は `integration/freecad/route_backend.py auto` で案件内の許可CADを記録し、`plan` または `brain_cad_route` で要求操作・現在の工具能力・費用条件から一つを選ぶ。明示的な既存選択が優先。`plan --activate` は選択とMCP設定を保存し、実形状操作は選んだ既存ホスト工具が実行する。失敗時の別CADへの自動切替はしない。詳細は `docs/CAD_BACKEND_ROUTING_JA.md`。Build123dは別runtimeのcadgen CLI経路で、ネイティブRecipe工具の拡張ではない。
+
+FreeCADは `integration/freecad` の選択・準備手順と `docs/FREECAD_INTEGRATION_JA.md` に従う。上流 neka-nat/freecad-mcp を専用profileで使い、独自CADエンジンを追加しない。OP1-LHDは `V:/mouse/OP1-LHD` の案件設定、FreeCAD実行環境は `E:/aiwork/FreeCAD_OP1_LHD`。文書名は `MouseB_OP1_LHD_*`。旧左利き版08は比較専用、右利き未変更STEPから作り直す。
+
+cadMCPは要求・参考検索・証拠の管理に使い、選択CADとは分ける。外部STEPは既存brain_import_step経路で取り込んで検査する。FCStdはFreeCADの編集正本として保持する。FusionのZA13、共有cad-session、既存許可文書ガードを変更しない。
+
 ## これは何か
 
 ユーザーの意図を汲み、機能から実例CADを探し、面を測り、型付きレシピで試作し、検査するシステムです。
@@ -19,6 +29,7 @@ Factory OSが分類・予算・モデル・委譲を管理し、cadMCPは下位�
 - **Cursor / Codex のモデル**: 考える（要求整理、構造案、5役レビュー）
 - **cadMCP (`cadmcp-design-brain`)**: 作業順・証拠・状態・検査を管理する
 - **CadQuery**: 実形状を計算する
+- **ClassCAD / community Fusion MCP**: ユーザー指定の外部生成・編集経路。`docs/CLASSCAD_FUSION_INTEGRATION_JA.md` を読み、新規セッション／許可した新規文書を使う。STEP を登録して既存の検査と証拠管理へ渡す。
 
 旧エンジンは `LLM_cad_Projects/` です。本家 n3r/AgentCAD の MCP 名は使いません。cadMCP が繋がっているときは、まず cadMCP の Skill と工具に従います。
 

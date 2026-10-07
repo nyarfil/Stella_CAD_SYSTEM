@@ -1,0 +1,121 @@
+{
+  "status": "mounting_pose_candidate_not_fit_verified",
+  "units": "unspecified STL coordinate units",
+  "sources": {
+    "E:\\WINDOWS\\Y\\Download\\zs-f1-3d-printed-finalmouse-ultralight-2-x-starlight-small-mouse-g305-model_files\\Solid\\top-solid.stl": "da1c9f4f28617c1dc19278b5d23d13bdd95b81d66fa425a2fa447403d298144a",
+    "E:\\WINDOWS\\Y\\Download\\zs-f1-3d-printed-finalmouse-ultralight-2-x-starlight-small-mouse-g305-model_files\\Solid\\triggers-solid.stl": "ba0385cc2e404c23aaefd58a81d399f633a67e0282d7dc303ce9b519b83c7304"
+  },
+  "rotation": [
+    [
+      1.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      -1.0
+    ],
+    [
+      0.0,
+      1.0,
+      0.0
+    ]
+  ],
+  "translation": [
+    0.0,
+    -50.353187967264546,
+    71.85085868835449
+  ],
+  "coordinate_rule": "assembled = rotation @ saved + translation; X-axis rotation +90 degrees",
+  "target_top_rims": [
+    {
+      "axis": "Z",
+      "center": [
+        -13.35820562500499,
+        -1.8244700000000005,
+        27.1685848236084
+      ],
+      "radius": 1.0999994132573603,
+      "max_radial_fit_error": 4.961737650965858e-06,
+      "boundary_vertices": 48,
+      "classification": "circular planar boundary; bore versus outer perimeter not classified"
+    },
+    {
+      "axis": "Z",
+      "center": [
+        13.358205625004993,
+        -1.82447,
+        27.1685848236084
+      ],
+      "radius": 1.0999994132573596,
+      "max_radial_fit_error": 4.9617376480792785e-06,
+      "boundary_vertices": 48,
+      "classification": "circular planar boundary; bore versus outer perimeter not classified"
+    }
+  ],
+  "moving_trigger_rims": [
+    {
+      "axis": "Y",
+      "center": [
+        -13.358205454546612,
+        -44.682273864746094,
+        -48.52871796726455
+      ],
+      "radius": 0.9249988619114252,
+      "max_radial_fit_error": 7.544983015472795e-06,
+      "boundary_vertices": 44,
+      "classification": "circular planar boundary; bore versus outer perimeter not classified"
+    },
+    {
+      "axis": "Y",
+      "center": [
+        13.358205454546615,
+        -44.682273864746094,
+        -48.52871796726455
+      ],
+      "radius": 0.9249988619114251,
+      "max_radial_fit_error": 7.5449830168050624e-06,
+      "boundary_vertices": 44,
+      "classification": "circular planar boundary; bore versus outer perimeter not classified"
+    }
+  ],
+  "mounting_center_residuals": [
+    [
+      1.7045837807927455e-07,
+      2.4424906541753444e-15,
+      0.0
+    ],
+    [
+      -1.7045837807927455e-07,
+      1.9984014443252818e-15,
+      0.0
+    ]
+  ],
+  "maximum_center_residual": 1.7045837807927458e-07,
+  "assembled_trigger_minimum": [
+    -30.130342483520508,
+    -59.83909225463867,
+    12.487592697143555
+  ],
+  "assembled_trigger_maximum": [
+    30.127267837524414,
+    1.1357074975967407,
+    36.93962860107422
+  ],
+  "preview_stl": "V:\\DevCache\\Temp\\zs_mouse_stl\\click-mounting-pose-candidate.stl",
+  "preview_sha256": "f3ea40a8e38f1c5333288bfe3bd6c95290d0a5c02e3d367e8873184b0e4ce5a6",
+  "assumptions": [
+    "Rim pair selected from matching X centers and photo-supported rear retention features.",
+    "The lower trigger tab face is placed flush on the top-shell boss face.",
+    "No fastener, washer or stand-off thickness has been inserted."
+  ],
+  "not_verified": [
+    "full bore profiles",
+    "source physical units",
+    "shell/trigger collision or operational clearance",
+    "switch contact and preload",
+    "elastic deformation and return",
+    "fasteners and physical assembly"
+  ]
+}

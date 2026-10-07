@@ -12,9 +12,11 @@ from ..errors import BrainError
 def studio_schemas():
     """Single registry for runtime discovery and published schema generation."""
     from .acceptance import AcceptanceSpec
+    from .backend_routing import BackendRequest, BackendProbe
     return {'FunctionBrief':FunctionBrief,'Matrix':Matrix,'Recipe':Recipe,'Review':Review,
             'Reply':Reply,'BoardPack':BoardPack,'ShellPack':ShellPack,
-            'FusionHandoff':FusionHandoff,'FusionReport':FusionReport,'AcceptanceSpec':AcceptanceSpec}
+            'FusionHandoff':FusionHandoff,'FusionReport':FusionReport,'AcceptanceSpec':AcceptanceSpec,
+            'BackendRequest':BackendRequest,'BackendProbe':BackendProbe}
 
 class StudioToolsMixin:
     def _studio(self):return Studio(self.brain,self._fs())

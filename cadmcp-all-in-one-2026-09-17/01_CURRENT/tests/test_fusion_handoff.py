@@ -115,7 +115,7 @@ def test_studio_schema_lists_fusion_handoff(tmp_path):
     assert allow.get('const') is False or allow.get('enum') == [False]
     names = {row['name'] for row in tools.list()}
     assert 'brain_fusion_handoff' in names and 'brain_fusion_ingest' in names
-    assert len(names) == 50
+    assert len(names) == 58
 
 
 @pytest.mark.skipif(not HAS_CQ, reason='Actual CAD kernel not installed; remesure not claimed executed.')

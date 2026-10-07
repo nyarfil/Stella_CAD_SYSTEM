@@ -1,0 +1,381 @@
+{
+  "hardware_id": "Generic board Alpha; hypothetical switch",
+  "coordinate_basis": "One common u=0 reference and downward plunger axis; g excludes closure error already included in u.",
+  "input_sha256": "f087bf4cf3bcb78ce8b9d6dfdb203b69594669b1c2d8c5dbe7f10b5b027e29f8",
+  "inputs": {
+    "hardware_id": "Generic board Alpha; hypothetical switch",
+    "coordinate_basis": "One common u=0 reference and downward plunger axis; g excludes closure error already included in u.",
+    "state_context": {
+      "rest_closure": "After actuation and release, at returned rest; no return-force proof.",
+      "pre_stop_closure": "Immediately before lower-stop contact.",
+      "post_stop_closure": "After lower-stop contact at supplied 2 N design load; hypothetical relative support deflection included."
+    },
+    "quantities": {
+      "gap": {
+        "min": 0.15,
+        "max": 0.2,
+        "unit": "mm",
+        "source": {
+          "kind": "proposed",
+          "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+          "hardware_scope": "Generic board Alpha; hypothetical switch"
+        }
+      },
+      "rest_closure": {
+        "min": 0,
+        "max": 0,
+        "unit": "mm",
+        "source": {
+          "kind": "proposed",
+          "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+          "hardware_scope": "Generic board Alpha; hypothetical switch"
+        }
+      },
+      "pre_stop_closure": {
+        "min": 0.65,
+        "max": 0.7,
+        "unit": "mm",
+        "source": {
+          "kind": "proposed",
+          "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+          "hardware_scope": "Generic board Alpha; hypothetical switch"
+        }
+      },
+      "post_stop_closure": {
+        "min": 0.75,
+        "max": 0.8,
+        "unit": "mm",
+        "source": {
+          "kind": "proposed",
+          "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+          "hardware_scope": "Generic board Alpha; hypothetical switch"
+        }
+      },
+      "on_compression": {
+        "min": 0.35,
+        "max": 0.4,
+        "unit": "mm",
+        "source": {
+          "kind": "proposed",
+          "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+          "hardware_scope": "Generic board Alpha; hypothetical switch"
+        }
+      },
+      "off_compression": {
+        "min": 0.15,
+        "max": 0.2,
+        "unit": "mm",
+        "source": {
+          "kind": "proposed",
+          "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+          "hardware_scope": "Generic board Alpha; hypothetical switch"
+        }
+      },
+      "allowable_compression": {
+        "min": 0.7,
+        "max": 0.8,
+        "unit": "mm",
+        "source": {
+          "kind": "proposed",
+          "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+          "hardware_scope": "Generic board Alpha; hypothetical switch"
+        },
+        "definition": "maximum_permitted_compression_not_minimum_overtravel"
+      },
+      "on_margin": {
+        "min": 0.05,
+        "max": 0.05,
+        "unit": "mm",
+        "source": {
+          "kind": "proposed",
+          "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+          "hardware_scope": "Generic board Alpha; hypothetical switch"
+        }
+      },
+      "release_margin": {
+        "min": 0.02,
+        "max": 0.02,
+        "unit": "mm",
+        "source": {
+          "kind": "proposed",
+          "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+          "hardware_scope": "Generic board Alpha; hypothetical switch"
+        }
+      },
+      "safety_margin": {
+        "min": 0.05,
+        "max": 0.05,
+        "unit": "mm",
+        "source": {
+          "kind": "proposed",
+          "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+          "hardware_scope": "Generic board Alpha; hypothetical switch"
+        }
+      },
+      "design_load": {
+        "min": 2,
+        "max": 2,
+        "unit": "N",
+        "source": {
+          "kind": "proposed",
+          "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+          "hardware_scope": "Generic board Alpha; hypothetical switch"
+        }
+      }
+    }
+  },
+  "evidence_verification": "Caller-declared sources retained, not independently validated or matched to hardware.",
+  "assumption_inputs": [
+    "gap",
+    "rest_closure",
+    "pre_stop_closure",
+    "post_stop_closure",
+    "on_compression",
+    "off_compression",
+    "allowable_compression",
+    "on_margin",
+    "release_margin",
+    "safety_margin",
+    "design_load"
+  ],
+  "model": "delta=max(0,closure-gap); independent interval extrema; Decimal arithmetic on JSON numeric values",
+  "physical_design_complete": false,
+  "fit_claim": "none",
+  "not_verified": [
+    "full-path return force and friction",
+    "contact/lateral motion and kinematics",
+    "support deflection at design load",
+    "actual threshold bounds and source applicability",
+    "assembly, print variability, optical datum, fatigue and hardware operation",
+    "opposite button crosstalk, stop/PCB strength, plunger lateral load, adjustment range and retention"
+  ],
+  "coordinate_contract": "g is the signed reference clearance at common u=0; u_rest is closure after release history. Use one axis/sign/datum; do not double-count the same gap error in u.",
+  "motion_order": "Rest/pre-stop/post-stop must be consistent per physical tolerance realization; independent interval endpoint ordering alone does not verify it.",
+  "status": "interval_conditions_hold",
+  "missing_inputs": [],
+  "conditions": [
+    {
+      "id": "on_before_stop",
+      "status": "holds",
+      "holds_for_supplied_bounds": true,
+      "slack_mm": 0.0,
+      "slack_decimal_mm": "0.00"
+    },
+    {
+      "id": "off_after_return",
+      "status": "holds",
+      "holds_for_supplied_bounds": true,
+      "slack_mm": 0.13,
+      "slack_decimal_mm": "0.13"
+    },
+    {
+      "id": "compression_after_stop",
+      "status": "holds",
+      "holds_for_supplied_bounds": true,
+      "slack_mm": 0.0,
+      "slack_decimal_mm": "0.00"
+    }
+  ],
+  "gap_window": {
+    "feasible_for_supplied_bounds": true,
+    "algebraic_window_nonempty": true,
+    "lower_mm": 0.15,
+    "upper_mm": 0.2,
+    "lower_decimal_mm": "0.15",
+    "upper_decimal_mm": "0.20",
+    "reason": "Bounds admit a gap interval; supplied gap may still lie outside it",
+    "meaning": "Every actual gap must remain within this window, including tolerances. A nominal center alone is insufficient."
+  },
+  "model_checks": [
+    {
+      "id": "threshold_order",
+      "status": "guaranteed"
+    },
+    {
+      "id": "monotonic_compression_budget",
+      "status": "holds",
+      "required_on_mm": 0.45,
+      "safe_available_mm": 0.65,
+      "assumption": "Compression does not decrease from actuation to maximum depression; independent extrema are conservative."
+    },
+    {
+      "id": "pre_post_motion_order",
+      "status": "not_independently_verified",
+      "meaning": "Only rejects fully reversed envelopes under nondecreasing closure assumption; overlap does not prove physical motion order."
+    }
+  ],
+  "threshold_order_status": "guaranteed",
+  "post_stop_load_context": {
+    "design_load_interval_N": [
+      2.0,
+      2.0
+    ],
+    "scope": "Post-stop closure must envelop relative deflection at design_load.max; relationship is caller-declared, not independently verified."
+  },
+  "threshold_order_guaranteed_by_independent_bounds": true,
+  "compression_extrema_mm": {
+    "rest_max": 0.0,
+    "on_min": 0.45,
+    "post_stop_max": 0.65
+  },
+  "comparison": "Exact Decimal inequalities; equality allowed. Required engineering margins must be supplied explicitly.",
+  "limitations": [
+    "Not satisfying a conservative condition does not prove all physical tolerance combinations fail.",
+    "Closure values must already include actual kinematics and relative deflection; this tool does not compute them.",
+    "OFF after reaching rest does not prove the mechanism returns to rest.",
+    "Input/source digest identifies the calculation; it is not CAD or physical acceptance evidence."
+  ],
+  "library_provenance": {
+    "schema_version": "1.0",
+    "library_version": "0.1.4",
+    "content_sha256": "8c1abe7603c3339e5f279c5f505f662e31f1bb31dbd004a12d6fed61e42cbc53",
+    "sources": [
+      {
+        "id": "engineering",
+        "title": "StellaCADで整理した一般設計原理",
+        "kind": "engineering_reasoning",
+        "authority": "設計上の考え方。機種固有の測定値・メーカー仕様ではない。",
+        "license": "この原理解説は本プロジェクトの記述。第三者形状を含まない。"
+      },
+      {
+        "id": "zs_f1_guide",
+        "title": "ZoroSeerus ZS-F1組立ガイド",
+        "kind": "author_assembly_guide",
+        "url": "https://www.instructables.com/ZS-F1-Wireless-3D-Printed-Finalmouse-Ultralight-2-/",
+        "authority": "作者の組立説明。2021年ガイドと更新STLの完全な版対応は未確認。",
+        "license": "掲載画像CC BY-NC-ND 4.0。画像は収録しない。",
+        "observed_on": "2026-10-03",
+        "photographic_observations": {
+          "published_on": "2021-02-12",
+          "observed_on": "2026-10-03",
+          "step3_image2": "https://content.instructables.com/FCS/HZ7I/KL2AVT3L/FCSHZ7IKL2AVT3L.png",
+          "step3_image3": "https://content.instructables.com/F04/1KJ8/KL2AVT4E/F041KJ8KL2AVT4E.png",
+          "scope": "Photographed author hardware only; no switch operating specifications certified."
+        }
+      },
+      {
+        "id": "zs_f1_model",
+        "title": "ZS-F1公開モデルとユーザー提供STL",
+        "kind": "source_mesh",
+        "url": "https://www.printables.com/model/796395-zs-f1-3d-printed-finalmouse-ultralight-2-x-starlig",
+        "authority": "単位を持たないSTL。ファイル・形状の解析結果を実例として使用。原形状は収録しない。",
+        "license": "CC BY-NC-SA 4.0。将来形状を利用する際は別途条件を確認。",
+        "observed_on": "2026-10-03"
+      },
+      {
+        "id": "local_measurements",
+        "title": "ZS-F1/G305インターフェース解析",
+        "kind": "derived_geometry_measurements",
+        "authority": "ハッシュに結び付いた座標解析。選択した穴中心の一致は実物適合を証明しない。",
+        "artifact": "同梱data/measurements.json。元レポートのハッシュとパス正規化を明示。原形状・プレビューは同梱しない。",
+        "artifact_uri": "mouse-library://measurements",
+        "observed_on": "2026-10-03",
+        "input_sha256": {
+          "top-solid.stl": "da1c9f4f28617c1dc19278b5d23d13bdd95b81d66fa425a2fa447403d298144a",
+          "triggers-solid.stl": "ba0385cc2e404c23aaefd58a81d399f633a67e0282d7dc303ce9b519b83c7304",
+          "bottom-solid.stl": "4644f8b1710aafb17add0c848c76124595503fafd73f088d9b00db99ee79453e",
+          "G305_PCB.step": "efd955a61c99290ab946f075e769cd0279802535fc72e52697031d0c41635028"
+        },
+        "measurement_records": [
+          {
+            "id": "click_pose",
+            "method": "対応する左右固定円境界中心の剛体照合。下側固定面の直接支持を仮定。",
+            "units": "STL coordinate units; physical unit unspecified",
+            "rotation": [
+              [
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                -1
+              ],
+              [
+                0,
+                1,
+                0
+              ]
+            ],
+            "translation": [
+              0,
+              -50.353187967264546,
+              71.85085868835449
+            ],
+            "rule": "assembled = rotation @ saved + translation",
+            "maximum_center_residual": 1.7045837807927458e-07,
+            "status": "mounting_pose_candidate_not_fit_verified"
+          },
+          {
+            "id": "board_pose",
+            "method": "基板の閉円2個と開放半円2個を底ケースの4軸候補へ全24対応でXY剛体照合。拡縮なし。",
+            "unit_assumption": "One STEP mm treated as one STL coordinate unit for comparison only",
+            "rms_xy_residual": 0.1451175991,
+            "maximum_xy_residual": 0.2304594793,
+            "status": "reference_board_pose_candidate_not_fit_verified"
+          },
+          {
+            "id": "click_vertical_chords",
+            "method": "候補姿勢の6本のX線・14箇所のY位置で鉛直線と三角形を交差。閉じた自己交差のない境界を仮定し、偶数交点を区間にする。",
+            "units": "unspecified STL coordinate units",
+            "sample_count": 84,
+            "odd_crossing_count": 0,
+            "status": "reference_vertical_chords_not_flexure_verification",
+            "not_verified": [
+              "normal wall thickness",
+              "pivot or flexure line",
+              "force and travel",
+              "return and fatigue"
+            ]
+          },
+          {
+            "id": "zs_f1_g305_click_normal_chords",
+            "units": "unspecified STL coordinate units",
+            "status": "reference_normal_chords_not_flexure_verification",
+            "original_report_sha256": "c8fe9b7cb8b48d57f0eb4f9c1e6aa98285402d126ef713f6390e4a642d0527e4",
+            "method": "84 source-bound local normal-ray material intervals; not force, flexure, global minimum thickness or fit verification.",
+            "artifact_uri": "mouse-library://measurements"
+          },
+          {
+            "id": "zs_f1_g305_primary_click_mount_pattern",
+            "method": "Enumerate all six pairs; distance comparison and theoretical equal-weight two-point RMS lower bound only.",
+            "status": "reference_pattern_mismatch_not_fit_verified",
+            "unit_assumption": "One STEP mm equals one STL coordinate unit for comparison only.",
+            "original_report_sha256": "03e0f619606f959a6cf434cf985509c808eccf4ffd5e13fbcd591c747e87a5b0"
+          },
+          {
+            "id": "zs_f1_g305_updated_primary_click_mount_pattern",
+            "method": "Enumerate all six pairs; distance comparison and theoretical equal-weight two-point RMS lower bound only.",
+            "status": "reference_pattern_mismatch_not_fit_verified",
+            "unit_assumption": "One STEP mm equals one STL coordinate unit for comparison only.",
+            "original_report_sha256": "f964dd536636068d795114ce69590b29d0e8ba6b2f0fe59987b6d18b6734ac1b"
+          }
+        ]
+      },
+      {
+        "id": "g305_primary_click_reference",
+        "title": "133TOM G305 Main Buttons PCB (STEP)",
+        "kind": "third_party_reference_cad",
+        "url": "https://www.thingiverse.com/thing:5031791",
+        "authority": "作者のノギス測定による2021年の参考CAD。左右各スイッチと小基板。ユーザー個体、型番、組立姿勢、作動特性は未確認。",
+        "license": "作者ページのCC BY 4.0リンクとZIPの作者・Attribution記載を確認。原形状は図書館に同梱しない。",
+        "observed_on": "2026-10-03",
+        "input_sha256": {
+          "G305_SWL_PCB.step": "c9b40690e40803fec7afe4209c8cbb1644f39f96bb19bd8617d3d2934b1dac10",
+          "G305_SWR_PCB.step": "ff4f496d8a89e19b472c7d60f8e6cd67b30c0cf2189398b533cbd6016f81211c"
+        }
+      }
+    ],
+    "data_artifacts": [
+      {
+        "uri": "mouse-library://measurements",
+        "schema_version": "1.0",
+        "content_sha256": "b28a5b65037687f4bc2dd64a6f514a274cc4ae05a57f11cccbc03f2f2b9444ff",
+        "scope": "Derived reference geometry reports; not hardware fit certification. STL units are unspecified."
+      }
+    ]
+  },
+  "calculation_code_sha256": "e640eb4aadfb1d2a190d638787ca32ab563e5b2303859bdbcf41924656a53de5",
+  "calculation_schema_version": "click_window/1"
+}

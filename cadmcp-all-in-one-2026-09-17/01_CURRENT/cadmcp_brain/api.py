@@ -17,8 +17,10 @@ from .req2cad.mixin import Req2CADToolsMixin
 
 from .studio.mixin import StudioToolsMixin
 from .studio.mouse import BoardRegistry, ShellRegistry, MouseToolsMixin, structure_gate
+from .mouse_knowledge import MouseKnowledgeToolsMixin
+from .studio.backend_routing import BackendRoutingToolsMixin
 
-class Tools(MouseToolsMixin,StudioToolsMixin,Req2CADToolsMixin):
+class Tools(BackendRoutingToolsMixin,MouseKnowledgeToolsMixin,MouseToolsMixin,StudioToolsMixin,Req2CADToolsMixin):
     def __init__(self,brain: Brain,backend: AgentCADClient | None=None):
         self.brain=brain
         self.backend=backend or AgentCADClient(None)
@@ -32,8 +34,8 @@ class Tools(MouseToolsMixin,StudioToolsMixin,Req2CADToolsMixin):
             self.registry[name]={"handler":fn,"model":model,"description":inspect.getdoc(fn) or name}
 
     def list(self):
-        readonly={"brain_get","brain_task","brain_schema","brain_patterns","brain_history","brain_backend_probe","brain_doctor","brain_fs_status","brain_fs_search","brain_fs_case","brain_fs_evidence","brain_fs_compare","brain_fs_portfolio","brain_studio_schema","brain_fs_search_tasks","brain_fs_interfaces","brain_studio_review_status","brain_mouse_inspect_inputs","brain_mouse_get_board_pack","brain_mouse_list_board_packs","brain_mouse_get_shell_pack","brain_mouse_list_shell_packs","brain_mouse_structure_gate"}
-        readonly.update({'brain_projects', 'brain_studio_attempts', 'brain_studio_capabilities', 'brain_get_project_protection'})
+        readonly={"brain_get","brain_task","brain_schema","brain_patterns","brain_history","brain_backend_probe","brain_doctor","brain_fs_status","brain_fs_search","brain_fs_case","brain_fs_evidence","brain_fs_compare","brain_fs_portfolio","brain_studio_schema","brain_fs_search_tasks","brain_fs_interfaces","brain_studio_review_status","brain_mouse_inspect_inputs","brain_mouse_get_board_pack","brain_mouse_list_board_packs","brain_mouse_get_shell_pack","brain_mouse_list_shell_packs","brain_mouse_structure_gate","brain_mouse_knowledge_status","brain_mouse_knowledge_schema","brain_mouse_knowledge_search","brain_mouse_knowledge_get","brain_mouse_knowledge_plan","brain_mouse_knowledge_brief"}
+        readonly.update({'brain_projects', 'brain_studio_attempts', 'brain_studio_capabilities', 'brain_get_project_protection', 'brain_mouse_knowledge_click_window', 'brain_cad_route'})
         return [{"name":name,"description":t["description"],"inputSchema":t["model"].model_json_schema(),"annotations":{"readOnlyHint":name in readonly,"destructiveHint":name in {"brain_backend_call", "brain_set_project_protection"},"openWorldHint":name in {"brain_backend_probe","brain_backend_call"}}} for name,t in sorted(self.registry.items())]
 
     def call(self,name: str,arguments: dict[str,Any]):

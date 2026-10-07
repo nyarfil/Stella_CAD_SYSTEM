@@ -2,7 +2,7 @@
 
 ユーザーの意図を汲んで、実例CADを見ながら機械部品を設計する作業リポです。
 
-本体は **cadMCP Design Studio 0.3.3（正式版）** です。考えるのは Cursor / Codex のモデル、探す・測る・検査するのは共通の cadMCP、形を計算するのは CadQuery です。
+本体は **cadMCP Design Studio 0.3.3（正式版）** です。考えるのは Cursor / Codex のモデル、探す・測る・検査するのは共通の cadMCP です。2026-10-03から、形状生成に ClassCAD、Fusion 内の編集にコミュニティ Fusion MCP を追加しました。CadQuery は既存レシピと独立した幾何検査で使います。設定と実動作の検証範囲は [ClassCAD / Fusion 統合](docs/CLASSCAD_FUSION_INTEGRATION_JA.md) を参照してください。
 
 ## リリース状態
 
@@ -12,7 +12,7 @@ CodexのプロジェクトMCPとFactory OSの下位能力登録を含みます�
 
 Codexの導入状況と初回操作は `CODEX_GUIDE_JA.md`、受入状況と残作業は `IMPLEMENTATION_PLAN_JA.md` を参照してください。
 
-旧エンジン（AgentCAD / AI-CAD / text-to-cad / ForgeCAD）は `LLM_cad_Projects/` に隔離してあります。混ぜません。
+旧エンジン（AgentCAD / AI-CAD / text-to-cad / ForgeCAD）は `LLM_cad_Projects/` に配置しています。AI-CAD は最新上流を確認し、不足ファイルと起動用リンクを復旧しました。新しい主経路への自動接続はしていません。
 
 ## いま使えること
 
@@ -21,6 +21,8 @@ Codexの導入状況と初回操作は `CODEX_GUIDE_JA.md`、受入状況と残�
 - Codex設計 Skill: `.agents/skills/cadmcp-design-brain/SKILL.md`
 - Cursorコマンド: `/cad-check` `/cad-design` `/cad-review`（Codexへ同名コマンドは移植していません）
 - CAD カーネル: CadQuery 2.8.0（導入済み）
+- 外部形状生成: ClassCAD MCP 0.2.0（WASM、プロジェクト設定済み）
+- Fusion 操作: `stella-fusion-community`（許可文書名を限定した高水準ツール）
 - データ置き場: `cadmcp-workspace/`（Git に入れない）
 
 2026-09-19のこのPCでの診断ではReq2CAD 175,978件、CAD対応175,978件、Qwen意味索引は `semantic_ready: true` でした。これは配置確認であり検索品質の合格判定ではありません。他環境では必ず再診断し、デモ4件を全件データの代わりに扱わないでください。
@@ -43,9 +45,16 @@ Stella_CAD_SYSTEM/
   .cursor/                 この Cursor 用 MCP / Skill / 5役
   .codex/                  プロジェクト限定Codex MCP設定
   .agents/skills/          Codex用設計Skill
+  integration/            ClassCAD / Fusion community の固定依存と接続検証
   cadmcp-all-in-one-2026-09-17/   設計図と 0.3.3 本体
   cadmcp-workspace/        実行時データ（未追跡）
   LLM_cad_Projects/        旧エンジン置き場（隔離）
 ```
 
 詳細は `cadmcp-all-in-one-2026-09-17/START_HERE_JA.md`、`01_CURRENT/CURSOR_GUIDE_JA.md`、`CODEX_GUIDE_JA.md` です。
+
+## FreeCAD正式統合
+
+FreeCAD / ClassCAD / Fusion / CadQueryはユーザーが案件ごとに選びます。選択・起動・OP1-LHDの専用環境は [FreeCAD統合手順](docs/FREECAD_INTEGRATION_JA.md) を参照してください。
+
+必要操作・観測済み工具能力・無料／所有済み買切り条件からCADを選ぶ `brain_cad_route` と案件限定の自動選択CLIを追加しました。明示選択を優先し、自動モードでは一つの生成経路をホストへ渡します。Build123dは既存cadgen CLI経路です。[能力別CAD選択](docs/CAD_BACKEND_ROUTING_JA.md) を参照してください。

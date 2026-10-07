@@ -1,0 +1,1532 @@
+{
+  "schema_version": 1,
+  "status": "reference_vertical_chords_not_flexure_verification",
+  "source_file": "triggers-solid.stl",
+  "source_sha256": "ba0385cc2e404c23aaefd58a81d399f633a67e0282d7dc303ce9b519b83c7304",
+  "measurement_script_sha256": "f457fae7cb35c08f80964858550df21f50cadea1af6c6a5a00b34c7eb9083529",
+  "units": "unspecified STL coordinate units",
+  "rotation": [
+    [
+      1.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      -1.0
+    ],
+    [
+      0.0,
+      1.0,
+      0.0
+    ]
+  ],
+  "translation": [
+    0.0,
+    -50.353187967264546,
+    71.85085868835449
+  ],
+  "method": "Vertical line intersections with XY-projected triangles; deduplicate Z crossings within 1e-5; pair even crossings under a closed non-self-intersecting mesh assumption.",
+  "sampling": "Six fixed X lines and 14 Y stations in the mounting-pose candidate; not an exhaustive minimum-thickness analysis.",
+  "assumptions": [
+    "The supplied candidate mounting transform is used, not a physically verified assembly.",
+    "Closed non-self-intersecting material boundaries are required for crossing parity."
+  ],
+  "not_verified": [
+    "normal wall thickness",
+    "flexure or pivot location",
+    "material stiffness or fatigue",
+    "click force or travel",
+    "switch contact and physical fit"
+  ],
+  "samples": [
+    {
+      "x": -17.3,
+      "y": 0.0,
+      "z_intersections": [
+        26.71858787536621,
+        28.46858787536621
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          28.46858787536621
+        ]
+      ],
+      "vertical_chords": [
+        1.75
+      ]
+    },
+    {
+      "x": -17.3,
+      "y": -2.0,
+      "z_intersections": [
+        26.71858787536621,
+        28.46858787536621
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          28.46858787536621
+        ]
+      ],
+      "vertical_chords": [
+        1.75
+      ]
+    },
+    {
+      "x": -17.3,
+      "y": -4.0,
+      "z_intersections": [
+        26.71858787536621,
+        28.46858787536621
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          28.46858787536621
+        ]
+      ],
+      "vertical_chords": [
+        1.75
+      ]
+    },
+    {
+      "x": -17.3,
+      "y": -6.0,
+      "z_intersections": [
+        32.40268028257826,
+        34.258081182473845
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          32.40268028257826,
+          34.258081182473845
+        ]
+      ],
+      "vertical_chords": [
+        1.855400899895585
+      ]
+    },
+    {
+      "x": -17.3,
+      "y": -8.0,
+      "z_intersections": [
+        32.221555195633854,
+        34.076189906908795
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          32.221555195633854,
+          34.076189906908795
+        ]
+      ],
+      "vertical_chords": [
+        1.8546347112749402
+      ]
+    },
+    {
+      "x": -17.3,
+      "y": -10.0,
+      "z_intersections": [
+        31.946836986488023,
+        33.806054528658485
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          31.946836986488023,
+          33.806054528658485
+        ]
+      ],
+      "vertical_chords": [
+        1.8592175421704624
+      ]
+    },
+    {
+      "x": -17.3,
+      "y": -12.0,
+      "z_intersections": [
+        31.575644304657978,
+        33.44228416195703
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          31.575644304657978,
+          33.44228416195703
+        ]
+      ],
+      "vertical_chords": [
+        1.866639857299056
+      ]
+    },
+    {
+      "x": -17.3,
+      "y": -16.0,
+      "z_intersections": [
+        30.57593228869644,
+        32.46517125360782
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          30.57593228869644,
+          32.46517125360782
+        ]
+      ],
+      "vertical_chords": [
+        1.8892389649113817
+      ]
+    },
+    {
+      "x": -17.3,
+      "y": -20.0,
+      "z_intersections": [
+        29.299362528286974,
+        31.211197027479223
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          29.299362528286974,
+          31.211197027479223
+        ]
+      ],
+      "vertical_chords": [
+        1.9118344991922491
+      ]
+    },
+    {
+      "x": -17.3,
+      "y": -26.0,
+      "z_intersections": [
+        26.985630463082103,
+        28.928003705721782
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.985630463082103,
+          28.928003705721782
+        ]
+      ],
+      "vertical_chords": [
+        1.942373242639679
+      ]
+    },
+    {
+      "x": -17.3,
+      "y": -34.0,
+      "z_intersections": [
+        19.812097549438477,
+        25.329617790828465
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          19.812097549438477,
+          25.329617790828465
+        ]
+      ],
+      "vertical_chords": [
+        5.517520241389988
+      ]
+    },
+    {
+      "x": -17.3,
+      "y": -42.0,
+      "z_intersections": [
+        19.226884888789932,
+        21.254857102435935
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          19.226884888789932,
+          21.254857102435935
+        ]
+      ],
+      "vertical_chords": [
+        2.0279722136460023
+      ]
+    },
+    {
+      "x": -17.3,
+      "y": -50.0,
+      "z_intersections": [
+        14.78560265292799,
+        16.853547576325848
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          14.78560265292799,
+          16.853547576325848
+        ]
+      ],
+      "vertical_chords": [
+        2.0679449233978584
+      ]
+    },
+    {
+      "x": -17.3,
+      "y": -56.0,
+      "z_intersections": [],
+      "status": "no_hit",
+      "material_intervals": [],
+      "vertical_chords": []
+    },
+    {
+      "x": -15.0,
+      "y": 0.0,
+      "z_intersections": [
+        27.1685848236084,
+        28.46858787536621
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          27.1685848236084,
+          28.46858787536621
+        ]
+      ],
+      "vertical_chords": [
+        1.3000030517578125
+      ]
+    },
+    {
+      "x": -15.0,
+      "y": -2.0,
+      "z_intersections": [
+        27.1685848236084,
+        28.46858787536621
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          27.1685848236084,
+          28.46858787536621
+        ]
+      ],
+      "vertical_chords": [
+        1.3000030517578125
+      ]
+    },
+    {
+      "x": -15.0,
+      "y": -4.0,
+      "z_intersections": [
+        26.71858787536621,
+        28.46858787536621
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          28.46858787536621
+        ]
+      ],
+      "vertical_chords": [
+        1.75
+      ]
+    },
+    {
+      "x": -15.0,
+      "y": -6.0,
+      "z_intersections": [
+        26.71858787536621,
+        34.957446307720495
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          34.957446307720495
+        ]
+      ],
+      "vertical_chords": [
+        8.238858432354284
+      ]
+    },
+    {
+      "x": -15.0,
+      "y": -8.0,
+      "z_intersections": [
+        26.71858787536621,
+        34.737830118714555
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          34.737830118714555
+        ]
+      ],
+      "vertical_chords": [
+        8.019242243348344
+      ]
+    },
+    {
+      "x": -15.0,
+      "y": -10.0,
+      "z_intersections": [
+        32.58850601964787,
+        34.4343240726891
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          32.58850601964787,
+          34.4343240726891
+        ]
+      ],
+      "vertical_chords": [
+        1.8458180530412278
+      ]
+    },
+    {
+      "x": -15.0,
+      "y": -12.0,
+      "z_intersections": [
+        32.18627775985434,
+        34.04431430053719
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          32.18627775985434,
+          34.04431430053719
+        ]
+      ],
+      "vertical_chords": [
+        1.8580365406828463
+      ]
+    },
+    {
+      "x": -15.0,
+      "y": -16.0,
+      "z_intersections": [
+        31.145525315514398,
+        33.03502969190197
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          31.145525315514398,
+          33.03502969190197
+        ]
+      ],
+      "vertical_chords": [
+        1.8895043763875705
+      ]
+    },
+    {
+      "x": -15.0,
+      "y": -20.0,
+      "z_intersections": [
+        29.844225615007776,
+        31.766317082302425
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          29.844225615007776,
+          31.766317082302425
+        ]
+      ],
+      "vertical_chords": [
+        1.9220914672946492
+      ]
+    },
+    {
+      "x": -15.0,
+      "y": -26.0,
+      "z_intersections": [
+        27.50827957521098,
+        29.478897399255725
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          27.50827957521098,
+          29.478897399255725
+        ]
+      ],
+      "vertical_chords": [
+        1.9706178240447443
+      ]
+    },
+    {
+      "x": -15.0,
+      "y": -34.0,
+      "z_intersections": [
+        17.812097549438477,
+        25.905234580694216
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          17.812097549438477,
+          25.905234580694216
+        ]
+      ],
+      "vertical_chords": [
+        8.09313703125574
+      ]
+    },
+    {
+      "x": -15.0,
+      "y": -42.0,
+      "z_intersections": [
+        19.815508340997592,
+        21.894442170911574
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          19.815508340997592,
+          21.894442170911574
+        ]
+      ],
+      "vertical_chords": [
+        2.078933829913982
+      ]
+    },
+    {
+      "x": -15.0,
+      "y": -50.0,
+      "z_intersections": [
+        15.461842345741902,
+        17.57892623726441
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          15.461842345741902,
+          17.57892623726441
+        ]
+      ],
+      "vertical_chords": [
+        2.11708389152251
+      ]
+    },
+    {
+      "x": -15.0,
+      "y": -56.0,
+      "z_intersections": [
+        13.034815329375666,
+        14.366847431508099
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          13.034815329375666,
+          14.366847431508099
+        ]
+      ],
+      "vertical_chords": [
+        1.3320321021324322
+      ]
+    },
+    {
+      "x": -13.0,
+      "y": 0.0,
+      "z_intersections": [
+        27.1685848236084,
+        28.46858787536621
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          27.1685848236084,
+          28.46858787536621
+        ]
+      ],
+      "vertical_chords": [
+        1.3000030517578125
+      ]
+    },
+    {
+      "x": -13.0,
+      "y": -2.0,
+      "z_intersections": [],
+      "status": "no_hit",
+      "material_intervals": [],
+      "vertical_chords": []
+    },
+    {
+      "x": -13.0,
+      "y": -4.0,
+      "z_intersections": [
+        26.71858787536621,
+        28.46858787536621,
+        33.81347099237702,
+        35.27023458861824
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          28.46858787536621
+        ],
+        [
+          33.81347099237702,
+          35.27023458861824
+        ]
+      ],
+      "vertical_chords": [
+        1.75,
+        1.4567635962412169
+      ]
+    },
+    {
+      "x": -13.0,
+      "y": -6.0,
+      "z_intersections": [
+        26.71858787536621,
+        35.45780873817463
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          35.45780873817463
+        ]
+      ],
+      "vertical_chords": [
+        8.739220862808416
+      ]
+    },
+    {
+      "x": -13.0,
+      "y": -8.0,
+      "z_intersections": [
+        26.71858787536621,
+        35.21403946191786
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          35.21403946191786
+        ]
+      ],
+      "vertical_chords": [
+        8.495451586551646
+      ]
+    },
+    {
+      "x": -13.0,
+      "y": -10.0,
+      "z_intersections": [
+        33.061168209628946,
+        34.89421071153377
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          33.061168209628946,
+          34.89421071153377
+        ]
+      ],
+      "vertical_chords": [
+        1.8330425019048278
+      ]
+    },
+    {
+      "x": -13.0,
+      "y": -12.0,
+      "z_intersections": [
+        32.65013221854287,
+        34.49565643001997
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          32.65013221854287,
+          34.49565643001997
+        ]
+      ],
+      "vertical_chords": [
+        1.8455242114770982
+      ]
+    },
+    {
+      "x": -13.0,
+      "y": -16.0,
+      "z_intersections": [
+        31.61573139361103,
+        33.494201365963555
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          31.61573139361103,
+          33.494201365963555
+        ]
+      ],
+      "vertical_chords": [
+        1.8784699723525264
+      ]
+    },
+    {
+      "x": -13.0,
+      "y": -20.0,
+      "z_intersections": [
+        30.34608663080703,
+        32.25948469900372
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          30.34608663080703,
+          32.25948469900372
+        ]
+      ],
+      "vertical_chords": [
+        1.9133980681966918
+      ]
+    },
+    {
+      "x": -13.0,
+      "y": -26.0,
+      "z_intersections": [
+        28.080831429549107,
+        30.056315979551606
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          28.080831429549107,
+          30.056315979551606
+        ]
+      ],
+      "vertical_chords": [
+        1.9754845500024985
+      ]
+    },
+    {
+      "x": -13.0,
+      "y": -34.0,
+      "z_intersections": [
+        24.538824123806585,
+        26.596724167376426
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          24.538824123806585,
+          26.596724167376426
+        ]
+      ],
+      "vertical_chords": [
+        2.057900043569841
+      ]
+    },
+    {
+      "x": -13.0,
+      "y": -42.0,
+      "z_intersections": [
+        20.538248489772737,
+        22.653299572658504
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          20.538248489772737,
+          22.653299572658504
+        ]
+      ],
+      "vertical_chords": [
+        2.115051082885767
+      ]
+    },
+    {
+      "x": -13.0,
+      "y": -50.0,
+      "z_intersections": [
+        16.219638238922876,
+        18.368637727141994
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          16.219638238922876,
+          18.368637727141994
+        ]
+      ],
+      "vertical_chords": [
+        2.1489994882191183
+      ]
+    },
+    {
+      "x": -13.0,
+      "y": -56.0,
+      "z_intersections": [
+        12.999878922906888,
+        15.178871242728325
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          12.999878922906888,
+          15.178871242728325
+        ]
+      ],
+      "vertical_chords": [
+        2.178992319821438
+      ]
+    },
+    {
+      "x": 13.0,
+      "y": 0.0,
+      "z_intersections": [
+        27.1685848236084,
+        28.46858787536621
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          27.1685848236084,
+          28.46858787536621
+        ]
+      ],
+      "vertical_chords": [
+        1.3000030517578125
+      ]
+    },
+    {
+      "x": 13.0,
+      "y": -2.0,
+      "z_intersections": [],
+      "status": "no_hit",
+      "material_intervals": [],
+      "vertical_chords": []
+    },
+    {
+      "x": 13.0,
+      "y": -4.0,
+      "z_intersections": [
+        26.71858787536621,
+        28.46858787536621,
+        33.82578931770654,
+        35.27125134248292
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          28.46858787536621
+        ],
+        [
+          33.82578931770654,
+          35.27125134248292
+        ]
+      ],
+      "vertical_chords": [
+        1.75,
+        1.4454620247763827
+      ]
+    },
+    {
+      "x": 13.0,
+      "y": -6.0,
+      "z_intersections": [
+        26.71858787536621,
+        35.45831441179778
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          35.45831441179778
+        ]
+      ],
+      "vertical_chords": [
+        8.739726536431569
+      ]
+    },
+    {
+      "x": 13.0,
+      "y": -8.0,
+      "z_intersections": [
+        26.71858787536621,
+        35.21448964018693
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          35.21448964018693
+        ]
+      ],
+      "vertical_chords": [
+        8.495901764820722
+      ]
+    },
+    {
+      "x": 13.0,
+      "y": -10.0,
+      "z_intersections": [
+        33.069659301379524,
+        34.89470717991741
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          33.069659301379524,
+          34.89470717991741
+        ]
+      ],
+      "vertical_chords": [
+        1.8250478785378874
+      ]
+    },
+    {
+      "x": 13.0,
+      "y": -12.0,
+      "z_intersections": [
+        32.65774829512415,
+        34.496293301604965
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          32.65774829512415,
+          34.496293301604965
+        ]
+      ],
+      "vertical_chords": [
+        1.838545006480814
+      ]
+    },
+    {
+      "x": 13.0,
+      "y": -16.0,
+      "z_intersections": [
+        31.62224047646888,
+        33.494673799004964
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          31.62224047646888,
+          33.494673799004964
+        ]
+      ],
+      "vertical_chords": [
+        1.8724333225360859
+      ]
+    },
+    {
+      "x": 13.0,
+      "y": -20.0,
+      "z_intersections": [
+        30.352113497184593,
+        32.26033085946271
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          30.352113497184593,
+          32.26033085946271
+        ]
+      ],
+      "vertical_chords": [
+        1.9082173622781191
+      ]
+    },
+    {
+      "x": 13.0,
+      "y": -26.0,
+      "z_intersections": [
+        28.08722123539506,
+        30.05702774030416
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          28.08722123539506,
+          30.05702774030416
+        ]
+      ],
+      "vertical_chords": [
+        1.9698065049091014
+      ]
+    },
+    {
+      "x": 13.0,
+      "y": -34.0,
+      "z_intersections": [
+        24.54704173436514,
+        26.597073084628086
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          24.54704173436514,
+          26.597073084628086
+        ]
+      ],
+      "vertical_chords": [
+        2.0500313502629446
+      ]
+    },
+    {
+      "x": 13.0,
+      "y": -42.0,
+      "z_intersections": [
+        20.547378076657743,
+        22.653340367161412
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          20.547378076657743,
+          22.653340367161412
+        ]
+      ],
+      "vertical_chords": [
+        2.105962290503669
+      ]
+    },
+    {
+      "x": 13.0,
+      "y": -50.0,
+      "z_intersections": [
+        16.228709532027146,
+        18.368528491522927
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          16.228709532027146,
+          18.368528491522927
+        ]
+      ],
+      "vertical_chords": [
+        2.1398189594957806
+      ]
+    },
+    {
+      "x": 13.0,
+      "y": -56.0,
+      "z_intersections": [
+        12.994262582254231,
+        15.178980600692038
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          12.994262582254231,
+          15.178980600692038
+        ]
+      ],
+      "vertical_chords": [
+        2.184718018437806
+      ]
+    },
+    {
+      "x": 15.0,
+      "y": 0.0,
+      "z_intersections": [
+        27.1685848236084,
+        28.46858787536621
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          27.1685848236084,
+          28.46858787536621
+        ]
+      ],
+      "vertical_chords": [
+        1.3000030517578125
+      ]
+    },
+    {
+      "x": 15.0,
+      "y": -2.0,
+      "z_intersections": [
+        27.1685848236084,
+        28.46858787536621
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          27.1685848236084,
+          28.46858787536621
+        ]
+      ],
+      "vertical_chords": [
+        1.3000030517578125
+      ]
+    },
+    {
+      "x": 15.0,
+      "y": -4.0,
+      "z_intersections": [
+        26.71858787536621,
+        28.46858787536621
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          28.46858787536621
+        ]
+      ],
+      "vertical_chords": [
+        1.75
+      ]
+    },
+    {
+      "x": 15.0,
+      "y": -6.0,
+      "z_intersections": [
+        26.71858787536621,
+        34.957575302348545
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          34.957575302348545
+        ]
+      ],
+      "vertical_chords": [
+        8.238987426982334
+      ]
+    },
+    {
+      "x": 15.0,
+      "y": -8.0,
+      "z_intersections": [
+        26.71858787536621,
+        34.738254966241335
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          34.738254966241335
+        ]
+      ],
+      "vertical_chords": [
+        8.019667090875124
+      ]
+    },
+    {
+      "x": 15.0,
+      "y": -10.0,
+      "z_intersections": [
+        32.59890870454277,
+        34.43469934060985
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          32.59890870454277,
+          34.43469934060985
+        ]
+      ],
+      "vertical_chords": [
+        1.835790636067081
+      ]
+    },
+    {
+      "x": 15.0,
+      "y": -12.0,
+      "z_intersections": [
+        32.19543419613608,
+        34.04465626147049
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          32.19543419613608,
+          34.04465626147049
+        ]
+      ],
+      "vertical_chords": [
+        1.8492220653344162
+      ]
+    },
+    {
+      "x": 15.0,
+      "y": -16.0,
+      "z_intersections": [
+        31.152822374184037,
+        33.035454050217886
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          31.152822374184037,
+          33.035454050217886
+        ]
+      ],
+      "vertical_chords": [
+        1.8826316760338493
+      ]
+    },
+    {
+      "x": 15.0,
+      "y": -20.0,
+      "z_intersections": [
+        29.85062371784695,
+        31.766841529332623
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          29.85062371784695,
+          31.766841529332623
+        ]
+      ],
+      "vertical_chords": [
+        1.916217811485673
+      ]
+    },
+    {
+      "x": 15.0,
+      "y": -26.0,
+      "z_intersections": [
+        27.513748135697124,
+        29.47923003166802
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          27.513748135697124,
+          29.47923003166802
+        ]
+      ],
+      "vertical_chords": [
+        1.9654818959708962
+      ]
+    },
+    {
+      "x": 15.0,
+      "y": -34.0,
+      "z_intersections": [
+        17.812097549438477,
+        25.90536777268969
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          17.812097549438477,
+          25.90536777268969
+        ]
+      ],
+      "vertical_chords": [
+        8.093270223251213
+      ]
+    },
+    {
+      "x": 15.0,
+      "y": -42.0,
+      "z_intersections": [
+        19.82161726918463,
+        21.894666308063947
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          19.82161726918463,
+          21.894666308063947
+        ]
+      ],
+      "vertical_chords": [
+        2.073049038879315
+      ]
+    },
+    {
+      "x": 15.0,
+      "y": -50.0,
+      "z_intersections": [
+        15.468365434920043,
+        17.578978707770688
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          15.468365434920043,
+          17.578978707770688
+        ]
+      ],
+      "vertical_chords": [
+        2.110613272850644
+      ]
+    },
+    {
+      "x": 15.0,
+      "y": -56.0,
+      "z_intersections": [
+        13.029454984778917,
+        14.367236099459841
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          13.029454984778917,
+          14.367236099459841
+        ]
+      ],
+      "vertical_chords": [
+        1.337781114680924
+      ]
+    },
+    {
+      "x": 17.3,
+      "y": 0.0,
+      "z_intersections": [
+        26.71858787536621,
+        28.46858787536621
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          28.46858787536621
+        ]
+      ],
+      "vertical_chords": [
+        1.75
+      ]
+    },
+    {
+      "x": 17.3,
+      "y": -2.0,
+      "z_intersections": [
+        26.71858787536621,
+        28.46858787536621
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          28.46858787536621
+        ]
+      ],
+      "vertical_chords": [
+        1.75
+      ]
+    },
+    {
+      "x": 17.3,
+      "y": -4.0,
+      "z_intersections": [
+        26.71858787536621,
+        28.46858787536621
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.71858787536621,
+          28.46858787536621
+        ]
+      ],
+      "vertical_chords": [
+        1.75
+      ]
+    },
+    {
+      "x": 17.3,
+      "y": -6.0,
+      "z_intersections": [
+        32.41980912816584,
+        34.25834657273651
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          32.41980912816584,
+          34.25834657273651
+        ]
+      ],
+      "vertical_chords": [
+        1.8385374445706688
+      ]
+    },
+    {
+      "x": 17.3,
+      "y": -8.0,
+      "z_intersections": [
+        32.23660833173173,
+        34.07627530978297
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          32.23660833173173,
+          34.07627530978297
+        ]
+      ],
+      "vertical_chords": [
+        1.8396669780512411
+      ]
+    },
+    {
+      "x": 17.3,
+      "y": -10.0,
+      "z_intersections": [
+        31.960013107992374,
+        33.80631861469626
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          31.960013107992374,
+          33.80631861469626
+        ]
+      ],
+      "vertical_chords": [
+        1.8463055067038852
+      ]
+    },
+    {
+      "x": 17.3,
+      "y": -12.0,
+      "z_intersections": [
+        31.58677318757344,
+        33.44245134119787
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          31.58677318757344,
+          33.44245134119787
+        ]
+      ],
+      "vertical_chords": [
+        1.855678153624428
+      ]
+    },
+    {
+      "x": 17.3,
+      "y": -16.0,
+      "z_intersections": [
+        30.584334358865217,
+        32.46541904675392
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          30.584334358865217,
+          32.46541904675392
+        ]
+      ],
+      "vertical_chords": [
+        1.8810846878887055
+      ]
+    },
+    {
+      "x": 17.3,
+      "y": -20.0,
+      "z_intersections": [
+        29.305670196341975,
+        31.211159089288547
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          29.305670196341975,
+          31.211159089288547
+        ]
+      ],
+      "vertical_chords": [
+        1.9054888929465719
+      ]
+    },
+    {
+      "x": 17.3,
+      "y": -26.0,
+      "z_intersections": [
+        26.988685406555092,
+        28.928302220047897
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          26.988685406555092,
+          28.928302220047897
+        ]
+      ],
+      "vertical_chords": [
+        1.9396168134928047
+      ]
+    },
+    {
+      "x": 17.3,
+      "y": -34.0,
+      "z_intersections": [
+        19.812097549438477,
+        25.32993432499858
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          19.812097549438477,
+          25.32993432499858
+        ]
+      ],
+      "vertical_chords": [
+        5.517836775560102
+      ]
+    },
+    {
+      "x": 17.3,
+      "y": -42.0,
+      "z_intersections": [
+        19.226849674324903,
+        21.255249468138246
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          19.226849674324903,
+          21.255249468138246
+        ]
+      ],
+      "vertical_chords": [
+        2.0283997938133425
+      ]
+    },
+    {
+      "x": 17.3,
+      "y": -50.0,
+      "z_intersections": [
+        14.78701166221683,
+        16.853883706403792
+      ],
+      "status": "even_crossings_candidate",
+      "material_intervals": [
+        [
+          14.78701166221683,
+          16.853883706403792
+        ]
+      ],
+      "vertical_chords": [
+        2.0668720441869617
+      ]
+    },
+    {
+      "x": 17.3,
+      "y": -56.0,
+      "z_intersections": [],
+      "status": "no_hit",
+      "material_intervals": [],
+      "vertical_chords": []
+    }
+  ],
+  "pose_report_sha256": "c2efae074957718e659d10421cbee6b2dbb1eead8345f0cb8df24ec6d60f750a"
+}
