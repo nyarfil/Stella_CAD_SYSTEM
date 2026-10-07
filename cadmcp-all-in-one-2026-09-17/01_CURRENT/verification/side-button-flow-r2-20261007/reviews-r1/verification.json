@@ -1,0 +1,141 @@
+{
+ "schema_version": 1,
+ "subject_digest": "a089471ed2e0975ae806c80497f335289be7080b68e096b182f742e0dd0f05d3",
+ "role": "verification",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (verification role, rev2)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "V1-stop-arm-root-unchecked",
+   "severity": "blocking",
+   "claim": "The stop arm reaches the rest of the button only through a sliver overlap with the barrel, and no check covers this load path. The arm box (x -14..-12, y 15..23.5, z 9.8..13.4) shares only 0.663 mm3 with the barrel cylinder (r 2.4, z>=13). That is a 1.66 mm2 footprint, 0.4 mm tall, sitting on the z=13 plane, which is a layer interface in the stated print orientation (bore vertical). The arm's own section is 7.2 mm2 at y=22. Every rest-preload and hard-stop reaction passes through this joint. The stop face is 10 mm from the hinge, while thumb load at the far face edge acts about 27 mm from it, so the joint load is up to about 2.7x the thumb force. If the joint fails, both the rest stop (F2) and the overtravel stop (F5) are lost at once. Revision 1 was faulted for the same class of defect (MFG-TONGUE-ROOT, a 0.5x1.0 mm strip). The round-2 review required a connectivity and minimum-section check, and revision 2 carries neither.",
+   "evidence": [
+    "Independent CadQuery 2.8 on button/model.step: arm∩barrel volume 0.6629 mm3, footprint 1.657 mm2 (z 13.0..13.4)",
+    "Horizontal slice of the button in the arm footprint at z=12.99: 17.0 mm2 (arm only). At z=13.01: 17.69 mm2 (arm plus 0.69 mm2 of barrel). The barrel starts at z=13.",
+    "Vertical slice at y=22.0: 7.2 mm2, z 9.8..13.4 (arm alone, not joined to the barrel)",
+    "side_button_recipe.py stop_arm box y_max = hinge_y - barrel_inner_radius - 0.4 = 23.5. barrel_z_min 13.0. stop_arm_z_max 13.4.",
+    "design_basis: 'button printed with the bore vertical' (layers parallel to the z=13 joint)",
+    "No wall_check, section or connectivity check names the stop arm. button-printed-wall samples only 10 points per face (min 1.30 mm)."
+   ],
+   "proposed_change": "Root the stop arm into the barrel over its full height. For example, start the barrel at the arm's z_min, or extend the arm up the barrel side with a gusset to the link, so the stop reaction does not cross a single 0.4 mm layer band. State a minimum root section.",
+   "required_test": "Add a section check: the minimum cross-section of the button between the stop-arm contact face (x=-14 / x=-12 faces at y 15..18.5) and the barrel bore must be >= a stated value (for example >= the 7.2 mm2 arm section), with no single horizontal plane carrying less than that value. Negative control: the current geometry must fail it (1.66 mm2)."
+  },
+  {
+   "id": "V2-housing-sweep-truncated-under-play",
+   "severity": "major",
+   "claim": "Under hinge play, the 'housing stays clear until the stop angle at every hinge-play offset' claim is not verified. housing-clear-until-stop sweeps every offset only to the nominal stop angle (-3.438 deg). The real stop angle moves with the play. I re-measured the first shell contact (always on the inward block face x=-14.6) at each offset: from -2.87 deg (-x) to -4.03 deg (+x). At the actual stop, the housing gap is 0.121 mm at offset (+0.0707,-0.0707) and 0.144 mm at (+0.1,0). Both are below the recipe's own min_mm of 0.2. The +x offsets overlap block_out at rest, but once the arm leaves block_out they are reachable during a press, because the 0.1 mm bore clearance is free. The reported 'pass' also already carries a continuous lower bound of 0.185 < 0.2 (not_proven).",
+   "evidence": [
+    "Re-measurement (button translated by the offset, then rotated about the shifted axis, bisection on shell overlap >1e-6 mm3): nominal stop -3.449 deg, housing gap 0.309. (+0.1,0): stop -4.028, gap 0.144. (+0.0707,+0.0707): -3.858, gap 0.263. (+0.0707,-0.0707): -3.858, gap 0.121. (0,-0.1): -3.449, gap 0.209. (-0.1,0): -2.872, gap 0.474.",
+    "Stop contact point is at x=-14.60 (block_in face), y 14.98..15.18, z 9.80 for every offset: the hard stop is the named feature, not the window edge.",
+    "measurements.json housing-clear-until-stop: continuous_distance_lower_bound_mm 0.18539951547437747, continuous_swept_motion not_proven, end_deg -3.4377 for all 9 offsets",
+    "shell-clear-until-stop and hard-stop-blocks-past-stop: axis_play_mm 0.0"
+   ],
+   "proposed_change": "Either increase the housing margin, or tighten the stop so that housing clearance is >= 0.2 mm at the worst-case play stop angle. Also make the housing and shell-stop checks use the same play envelope, sweeping each offset to its own blocked angle.",
+   "required_test": "For each of the 9 axis offsets, find the hard-stop angle against the shell (expect blocked, play 0.1). Then check housing distance >= 0.2 mm over 0..that angle plus a small increment. The current geometry should fail at (+0.0707,-0.0707) with 0.121 mm."
+  },
+  {
+   "id": "V3-flushness-under-play-unmeasured",
+   "severity": "major",
+   "claim": "Nothing measures flush rest within the stated hinge play. rest-outward-blocked runs only at the nominal axis (play 0). With 0.1 mm radial bore play, the arm can leave block_out: at offset (-0.1,0) the button rotates outward 0.574 deg before the arm meets block_out again, and the face vertices then stand up to 0.270 mm proud of their nominal position. At (-0.0707,+0.0707) the button turns 0.406 deg with a 0.262 mm displacement, and a pure +y offset gives 0.100 mm. Which pose the button takes depends on the unmodeled preload spring's line of action. 'Outer skin unchanged' is the protected request ('外形はできるだけ変えないで'), and round-2 review V1 required an outward-flushness check that revision 2 does not carry.",
+   "evidence": [
+    "Re-measurement on button/model.step vs shell/model.step: outward first-contact angle and maximum +y displacement of the 22 skin vertices with y>28, per offset: (0,0) 0.000 deg/0.000 mm. (0,+0.1) 0/0.100. (-0.0707,+0.0707) 0.406/0.262. (-0.1,0) 0.574/0.270. (-0.0707,-0.0707) 0.406/0.120. (0,-0.1) 0/-0.100. The +x offsets are infeasible at rest (overlap 0.53-0.77 mm3).",
+    "Recipe rotation_checks rest-outward-blocked: axis_play_mm 0.0, end_deg 0.5",
+    "design_basis assumption: return/preload spring 'not modeled'"
+   ],
+   "proposed_change": "State a flushness tolerance and either reduce the bore play, or move the rest stop so the outward stop holds the face within tolerance across the play envelope (for example, a rest stop far from the hinge near the free face edge). Give the preload direction so the rest pose is defined.",
+   "required_test": "outward-flushness: at each play offset, rotate outward to first shell contact. The maximum outward displacement of the skin-piece outer surface must be <= the stated tolerance. Negative control: the current geometry with tolerance 0.1 mm must fail at (-0.1,0) with 0.27 mm."
+  },
+  {
+   "id": "V4-actuation-depth-not-a-recipe-check",
+   "severity": "minor",
+   "claim": "Actuation (F3) is still inferred from analytic angles. No recorded check measures stem displacement at the stop, so round-2 V3 is not carried. My re-measurement shows that the rigid placeholder stem must retract 0.584..0.947 mm at the actual stop across the play envelope (0.766 nominal). That is >= the 0.5 mm assumed operating travel, but only 0.084 mm above it at offset (-0.0707,+0.0707), and below the 1.1 mm at which the housing would be reached. So the stated contract holds in my measurement with a thin margin. It is not a blocker, but it should not stay unmeasured.",
+   "evidence": [
+    "Re-measurement: minimum stem translation in -y that removes overlap with the button at each offset's stop angle: nominal 0.766. (-0.0707,+0.0707) 0.584. (-0.1,0) 0.609. (0,+0.1) 0.666. (+0.0707,-0.0707) 0.947.",
+    "stem-contact-by-free-play only shows contact begins (first blocked -0.46..-1.15 deg). It does not measure depth."
+   ],
+   "proposed_change": "Promote actuation depth and overtravel budget to recipe checks and record them in measurements.json.",
+   "required_test": "actuation-depth: stem displacement at each offset's stop angle >= assumed_stem_operating_travel_mm. overtravel-budget: <= operating + housing margin - 0.2. Negative control: a stem shifted -0.2 mm in y must fail actuation-depth at (-0.0707,+0.0707)."
+  },
+  {
+   "id": "V5-certificates-and-controls",
+   "severity": "minor",
+   "claim": "Several passes are sampled only, and no negative controls are run. shell-clear-until-stop (lower bound -0.108), button-insertion-slide (-0.469, zero-gap sliding on block_out) and pin-insertion-path (-0.658, 0.02 mm radial clearance) are all not_proven. housing-clear passes sampled yet its bound is below its min. No check is shown to fail on a known-bad variant: for example the rev-1 geometry for the rest stop, or a pinless button for capture. Axial play (0.2 mm per thrust face) is not swept. Separately, stem-contact and housing-clear include +x offsets that are infeasible at rest, which is harmless but not explained.",
+   "evidence": [
+    "measurements.json continuous_swept_motion not_proven for shell-clear-until-stop, housing-clear-until-stop, button-insertion-slide and pin-insertion-path",
+    "Recipe axial_gap_mm 0.2. No translation check along z at the rest or stop pose.",
+    "Re-measurement: rest overlap 0.770 mm3 at (+0.1,0), 0.533 at (+0.0707,+0.0707), 0.555 at (+0.0707,-0.0707)"
+   ],
+   "proposed_change": "Split the stop check into a certified sweep to 0.99 of the stop angle plus an end-pose engagement that names the feature. Add axial ±0.2 mm poses to the shell and stem checks. Add a negative control for each new check.",
+   "required_test": "The shell sweep to 0.99*stop must reach distance_bound_satisfied. Axial-offset runs of shell-clear and stem-contact must pass. Each negative control must fail as predicted."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "5e0f3932f9c12e15593d71bf0e0fa7dfd5886c2baaf541def2b82f053db97183",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/assembly.png",
+   "status": "viewed",
+   "observation": "Assembly preview: stand-in ellipsoidal shell with the orange skin-piece button flush in a side window with a thin visible gap. The internal stop arm, blocks, pin and switch are hidden, so the image cannot show the stop or hinge geometry."
+  },
+  {
+   "attachment_sha256": "c3f3cc1c1098879a0d2051360aa2de7f68918eaabee08c9eb999c24cc770a990",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/build-record.json",
+   "status": "viewed",
+   "observation": "Build record (170 KB) with the same subject_digest a089471e..., recipe context and measurements. It has 5 rotation checks: only stem-contact and housing-clear use axis_play_mm 0.1. The rest-outward, shell-clear and hard-stop checks use axis_play 0. There are no actuation-depth, flushness, stop-arm-root or negative-control checks."
+  },
+  {
+   "attachment_sha256": "1d15ca598cdd6b7ea1914cf9411779ab1505a1fd949b5498ee95c9c376891639",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/button/iso.png",
+   "status": "viewed",
+   "observation": "Button ISO: curved skin face with rib, link and plunger blocks, and the bored barrel at the hinge end. The stop arm under the barrel is not visible from this view, so the image does not show how it joins the barrel (measured separately: 1.66 mm2 overlap)."
+  },
+  {
+   "attachment_sha256": "c780216c913acf1c7a9836582897a3bf918e8239aa68d6637fd107d2e278414f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain cylindrical pin (Ø2, about 14.1 mm long: z 6.6 to 20.7 per recipe) with no head, groove or retention feature, consistent with the 'slip fit, may need adhesive' assumption."
+  },
+  {
+   "attachment_sha256": "d6180faf232b318453e6e23cdefbee29c318678b520599e05f69f7b9977231c0",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/measurements.json",
+   "status": "viewed",
+   "observation": "geometry_checks_verdict pass, overall_verdict unknown. Results: shell-clear-until-stop has continuous_distance_lower_bound -0.108 and not_proven; housing-clear-until-stop has a lower bound of 0.185 mm, below its own min_mm of 0.2 (not_proven); button-insertion-slide and pin-insertion-path are not_proven (-0.469 and -0.658). The stem-contact check evaluates +x play offsets that overlap the shell at rest. Wall sampled minima are 1.236 and 1.300 mm, minimum_proven false."
+  },
+  {
+   "attachment_sha256": "e4d8d26a57e146a31593f4a8202f1c285b4ef197852073c6e105f3c876f15d7e",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell ISO: open side window with the upper tab and pin hole visible at the hinge end. The outer skin otherwise looks continuous. The lower tab and the stop blocks are not visible from this view."
+  },
+  {
+   "attachment_sha256": "c1d58522c820403fb6bfa08f24bbc769a4b277476e814bb46e3033eec0fc4a58",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Plain rectangular block (6x4x6 mm, 144 mm3 volume). It is clearly a placeholder envelope, not a datasheet switch."
+  },
+  {
+   "attachment_sha256": "b86a4169fec7e56e7af5756340b2d11bfe3a0a113dbdb26343bd08cacfdf7f2a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Plain rectangular stem block (2x1.1x2 mm, 4.4 mm3). Modeled as a fixed obstacle, so stem travel can only be inferred from overlap depth, not simulated."
+  }
+ ],
+ "remaining_uncertainties": [
+  "All re-measurements used the same OCCT/CadQuery kernel on the same exported STEP files. They are not independent physical proof, and no print, assembly or load test was run.",
+  "The switch housing, stem, operating travel and force are placeholders, so V2 and V4 margins depend on assumed values. The real mouse shell and PCB are unknown (stand-in shell).",
+  "Root strength (V1) is judged from section geometry only. No FEA, material data or print test was run.",
+  "The return spring is not modeled, so the actual rest pose within the play envelope (V3) depends on its line of action.",
+  "Press ease ('押しやすく') still has no metric or baseline. The plunger is now at a 15 mm lever (about 1:1 at the face centre), but force and travel feel are owner-only questions.",
+  "Hinge play was sampled at 8 radial offsets of 0.1 mm plus nominal. Intermediate positions and combined axial/radial play were not checked."
+ ]
+}

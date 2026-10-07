@@ -1,0 +1,166 @@
+{
+ "schema_version": 1,
+ "subject_digest": "a089471ed2e0975ae806c80497f335289be7080b68e096b182f742e0dd0f05d3",
+ "role": "manufacturing",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (manufacturing role, rev2)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "MFG-ARM-ROOT",
+   "severity": "blocking",
+   "claim": "The stop arm, which carries both the rest stop (F2) and the hard overtravel stop (F5), joins the button only through a tiny layer-line joint. The arm (x -14..-12, y 15..23.5, z 9.8..13.4) is a separate island below the barrel: a section at z 12.95 has 2 solids, and the arm joins at z 13.0. The joint is the horizontal arm-on-barrel overlap of 1.657 mm2 (z 13.0-13.4), plus a curved side patch of roughly 0.8 mm2. The arm's own section is 7.2 mm2. The declared orientation prints the bore vertical, which makes this joint an interlayer bond whichever end is down. The stop contact is the arm corner at y about 15, z 9.8-12, roughly 8 mm along y and 2 mm down from the joint. The x-direction stop reaction therefore twists and peels that layer joint. The arm sits at radius 10 mm and the face centre at lever 15 mm, so the arm reaction is about 1.5x the thumb force at the face centre and up to 2.7x at the far end of the face. A simple rectangular-section torsion estimate gives tens of MPa of interlayer shear per newton of arm force. On that estimate the hard stop would shear off on ordinary presses. After that, nothing designed limits overtravel into the switch.",
+   "evidence": [
+    "Recipe v2 stop_arm box z 9.8..13.4 versus barrel_outer z 13.0..17.5; link_box starts at x -11.1 and does not reach the arm (x <= -12).",
+    "My CadQuery section of button/model.step: z=12.95 gives 2 solids (the arm is an island); z=13.05 gives 1 solid.",
+    "Area of arm footprint intersected with the barrel annulus at z=13: 1.657 mm2. Vertical section of the arm at y 16-22.5: 7.2 mm2.",
+    "Recipe design_basis: 'button printed with the bore vertical', so the joint plane z=13 is a layer plane.",
+    "Rotation checks rest-outward-blocked and hard-stop-blocks-past-stop both depend on this arm; no check measures its root section or strength.",
+    "The r1 and r2 manufacturing reviews raised the same failure mode (MFG-TONGUE-ROOT, root about 3.75 mm2). Revision 2 moved the stop to a new arm whose root is smaller still."
+   ],
+   "proposed_change": "Join the stop arm to the barrel along a vertical interface over the full barrel height. For example, extend stop_arm z_max to the barrel top (17.5, or the common top plane if the button top faces are levelled, see MFG-BUTTON-ORIENT). The arm then sits in the barrel's layers rather than hanging under it. Keep y_max at 23.5 so the 0.4 mm bore wall stays intact, and check against tab_high (bottom 17.7, y >= 22). Alternatively add a gusset from the arm's top face to the barrel side up to z 17.5. Do not reduce the arm or stop loads to pass.",
+   "required_test": "Re-section the revised button: the arm region must be connected at every z with no island, and the minimal cut between arm and barrel must be at least the arm's own 7.2 mm2 section, mostly on vertical planes in the declared orientation. Re-run all rotation, motion and wall checks unchanged. Physical test: print the button in the declared orientation and material, mount it on the pin in a printed shell, and load the stop arm through repeated full presses plus a stated overload at the face end. Record the failure load and mode."
+  },
+  {
+   "id": "MFG-BUTTON-ORIENT",
+   "severity": "major",
+   "claim": "'Bore vertical' does not give the button a usable flat bed face, and the declared orientation puts support against functional surfaces. Top-down (skin top z 18 on the bed): the bed contact is only the 1.5 mm wide skin strip. The barrel, link and rib tops (z 17.5, about 45 mm2) sit 0.5 mm above the bed and need support. That includes the barrel top, which the recipe calls an axial thrust face with a 0.2 mm gap to tab_high. The plunger underside (2 mm up) and the arm cantilever (about 15 mm2, 4.6 mm up) also need support. Bottom-up: the arm (z 9.8) is the only bed contact. The skin bottom is 0.2 mm up, the rib bottom 0.7 mm, and the plunger, link and barrel undersides 2.2-3.2 mm up, about 100 mm2 of downward-facing area in total. The r2 MFG-ORIENT-SUPPORT request to level the button top faces was not applied.",
+   "evidence": [
+    "Mesh overhang scan of button/model.step (>45 deg downward faces): top-down 75.5 mm2, of which 44.7 mm2 is at 0.5 mm height (z 17.5 faces); bottom-up 99.6 mm2, including 33.2 mm2 of skin bottom at 0.2 mm and 30.1 mm2 at 0.7 mm.",
+    "Recipe: barrel z 13..17.5, link/rib to zh-0.5=17.5, skin to 18; tab_high bottom = barrel top + axial_gap 0.2 = 17.7.",
+    "Design basis states only 'button printed with the bore vertical' and does not say which end is on the bed."
+   ],
+   "proposed_change": "Declare which end goes on the bed. Preferred: level the barrel, link, rib and (per MFG-ARM-ROOT) the arm to the skin top plane z 18 and raise tab_high to keep the stated axial gap. tab_high's x max of -10.6 stays outside the window gap (x >= -10.4). Then print top-down with no support under the thrust face. State the axial gap as a whole number of the chosen layer height.",
+   "required_test": "Run an overhang scan of the revised button in the declared orientation: no downward-facing area below about 1 mm height on the barrel thrust face, link or rib. Re-run the insertion, rotation and clearance checks. Print one button and measure the barrel height and the axial play between the tabs."
+  },
+  {
+   "id": "MFG-STOP-TOLERANCE",
+   "severity": "major",
+   "claim": "The rest pose and the hard-stop travel are set by XY gaps between two separately printed parts, and the lever ratio amplifies them at the plunger. No calibration or adjustment route exists. The arm touches block_out with zero gap at rest, and block_in is 0.6 mm away. The arm contact radius is 10 mm, against 15 mm (centre) and 16.5 mm (corner) at the plunger, so each 0.1 mm error in arm width, block position, pin-hole or bore position moves the plunger about 0.15-0.17 mm. The nominal stem free play is 0.2 mm and the housing margin at the stop is 0.4 mm at the plunger centre (measured lower bound 0.185 mm). A printed-gap error of about 0.13 mm at the arm removes the free play, and about 0.25 mm removes the housing margin. Both are within the range a nominal FDM slot can deviate by without calibration. The stop is also a corner/edge contact: the arm face is 3.44 deg off the block face at the stop, so the edge will crush and the stop position will drift with use.",
+   "evidence": [
+    "Recipe: block_out x min = hx+arm_w = -12 = arm x max (zero gap at rest); inward_block_gap_mm = 10*sin(3.4377 deg) = 0.60 mm.",
+    "angles_v2: stop = -(0.2+0.5+0.2)/15 rad = -3.44 deg; contact radius for the gap = hinge_y - stop_arm_y_min = 10 mm.",
+    "measurements.json housing-clear-until-stop continuous lower bound 0.185 mm; stem-contact-by-free-play first contact -0.80 to -1.15 deg depending on axis offset.",
+    "No parameter_basis entry is a measured print value: all say 'Proposal ... not measured'."
+   ],
+   "proposed_change": "Make the two stop gaps settable after printing. Print block faces (or the arm sides) slightly proud and file or sand them to a feeler gauge, or use a shim or a set screw. Alternatively, derive the gap parameters from a measured coupon of the printer: a printed slot and arm pair with the same geometry. Angle block_in's face 3.44 deg so the stop is a face contact, not an edge.",
+   "required_test": "Print a stop-slot coupon in the declared orientations and measure the gaps. Feed the measured gaps into the existing rotation checks and confirm stem contact by the free-play angle and housing clearance until the stop. On the printed assembly, measure rest free play and stop travel at the plunger with a dial gauge before and after repeated presses."
+  },
+  {
+   "id": "MFG-PIN-OPTION",
+   "severity": "major",
+   "claim": "The hinge contract offers a pin the verification does not cover, and gives no fit process for the barrel bore. The pin node says 'steel dowel or 1.75 filament per owner choice', but the model and all play checks assume an r 1.0 pin. With 1.75 mm filament the radial play becomes 1.1-0.875 = 0.225 mm in the bore and 1.02-0.875 = 0.145 mm in the tab holes. That is up to about 0.37 mm of axis shift, against the 0.1 mm used in stem-contact-by-free-play and housing-clear-until-stop. For the Ø2 option, the printed vertical bore (Ø2.2) and tab holes (Ø2.04) are nominal FDM holes. Their real size relative to the pin is not calibrated, and only the tab holes have a stated reaming or adhesive remedy. The pin is also not retained: both tab holes are through holes, the pin path check shows it slides freely along -z out of the open bottom, and nothing stops it moving up into the cavity.",
+   "evidence": [
+    "Recipe node 'pin' reason text; pin_radius_mm 1.0; barrel_inner_radius_mm 1.1; tab_hole_radius_mm 1.02; hinge_radial_play_mm 0.1 used as axis_play_mm.",
+    "pin_hole spans z 5.6..21.7, through tab_low (6.6-9.6) and tab_high (17.7-20.7).",
+    "pin-insertion-path check passes with the pin translating -21.7 mm out of the shell.",
+    "Design basis: 'tab holes are slip fits that may need reaming or adhesive'; nothing on the barrel bore."
+   ],
+   "proposed_change": "Pick one pin stock and model it at its real diameter, or verify both options. State the hole finishing process: drill or ream the barrel bore and tab holes to the chosen pin after printing, then record the measured play and use it as axis_play_mm. Retain the pin, for example with a blind (closed-top) hole in tab_high plus an interference fit or a cap at tab_low, or name an adhesive and where it goes.",
+   "required_test": "Re-run stem-contact-by-free-play and housing-clear-until-stop with axis_play_mm equal to the measured (or worst-case stock) play, 0.225+0.145 mm for the filament option. On a printed part, measure the bore and hole sizes after finishing and check that the pin cannot fall out with the shell upside down."
+  },
+  {
+   "id": "MFG-SPRING-BOM",
+   "severity": "major",
+   "claim": "The prototype part list cannot be built as stated. F4 and the rest preload rely on 'a separate small spring' that has no part, no specification and no seat in the CAD. The only space next to the arm is the 0.6 mm stop gap. The buildable set is therefore the shell, the button and the pin, with an unplaced spring. Without preload the button can rattle between the rest stop and the 0.2 mm stem free play.",
+   "evidence": [
+    "design_basis assumption: 'A separate small spring preloads the stop arm against the outward block (not modeled).'",
+    "unverified_requirements: 'The return/preload spring is a placeholder and is not modeled'.",
+    "No recipe operation creates a spring pocket, post or seat; outputs list 5 parts, 2 of them switch placeholders."
+   ],
+   "proposed_change": "Add a spring seat and specify the spring (type, free length, wire size, or a printed flexure, stated as an assumption) so the prototype is buildable. Or state explicitly that the prototype relies on the switch stem return and accepts rest-pose free play, and remove the spring from the contract.",
+   "required_test": "Add the spring envelope as a part and run the clearance and insertion checks with it. On the printed assembly, check that the button returns to the rest stop from the hard stop in every orientation."
+  },
+  {
+   "id": "MFG-BLOCK-ROOT",
+   "severity": "minor",
+   "claim": "block_in, the hard stop on the shell, is a 1.4 x 4 x 2.4 mm post standing on a horizontal layer joint (z 9.6) at the free end of tab_low. tab_low is a 3 mm plate cantilevered about 15 mm from the side wall. With the shell printed rim-down, the stop load (x-direction at z about 10.9) bends the post across layer lines. Simple bending gives about 1 MPa per newton of arm force at the post root, and the arm force is 1.5-2.7x the thumb force. It is less critical than the arm root but sits on the same load path.",
+   "evidence": [
+    "Recipe block_in box x -16.0..-14.6, y 14.5..18.5, z 9.6..12.0; tab_low_box y 14..40, z 6.6..9.6, joined to the wall at y about 29-31 (section at x=-13 shows tab y 14.0-23.98 plus wall 26.02-31.25 at z 6.6).",
+    "Section modulus b*h^2/6 = 4*1.4^2/6 = 1.31 mm3, with the load about 1.3 mm above the root."
+   ],
+   "proposed_change": "Widen block_in in x away from the arm and add a fillet or ramp at its outer root (the side away from the arm, so the slot is unchanged). This keeps the stop face but puts the load into more layers.",
+   "required_test": "Use the same physical stop-load test as MFG-ARM-ROOT on the printed shell. Inspect block_in for cracking at the z 9.6 layer and measure any drift of the stop travel."
+  },
+  {
+   "id": "MFG-SHELL-SUPPORT",
+   "severity": "minor",
+   "claim": "Rim-down printing keeps the outer skin support-free, which I confirmed: the outer surface has no downward faces. The internal support, however, is large and undeclared. It covers the flat cavity roof (about 1790 mm2 at z 32.5 plus curved roof regions, about 3880 mm2 of downward faces in total), the tab_low underside (about 105 mm2 at z 6.6, a 15 mm cantilever), and the tab_high underside (z 17.7). Support under tab_high must stand on tab_low's top surface around the pin hole, between the stop blocks' region and the wall. It can plug the pin holes or scar the arm's sliding surface (0.2 mm gap above tab_low). The 24.8 mm window top edge at z 18.4 is a bridge in an inclined 1.5 mm wall directly above the 0.4 mm running gap, and its sag is unmeasured.",
+   "evidence": [
+    "Mesh overhang scan of shell/model.step, rim-down: 3879 mm2 of >45 deg downward faces; 1786.8 mm2 at z 32.5; 104.9 mm2 at z 6.6.",
+    "Section x=2: the wall above the window spans y 28.31-29.83 at z 18.45, inclined inward about 23 deg from vertical.",
+    "Stop arm bottom z 9.8 versus tab_low top z 9.6 (0.2 mm)."
+   ],
+   "proposed_change": "State the shell support plan: support from the build plate under tab_low, support blockers on the pin holes and the stop slot, and how support between the tabs is removed. Optionally put a 45-degree chamfer where tab_low meets the wall underneath, if the insertion-drop check still passes.",
+   "required_test": "Slice preview or a print of the shell rim-down: confirm the pin holes are open and the tab_low top is unscarred after support removal, and measure the window top edge sag against the 0.4 mm gap."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "5e0f3932f9c12e15593d71bf0e0fa7dfd5886c2baaf541def2b82f053db97183",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/assembly.png",
+   "status": "viewed",
+   "observation": "Iso view of the assembly: closed stand-in shell with the flush orange button face in a rectangular side window and a thin running gap. Internal hinge, stop arm, stop blocks and tabs are not visible, so the image cannot show any manufacturing detail beyond the flush outer face."
+  },
+  {
+   "attachment_sha256": "c3f3cc1c1098879a0d2051360aa2de7f68918eaabee08c9eb999c24cc770a990",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/build-record.json",
+   "status": "viewed",
+   "observation": "Build record for attempt 923067be...; subject_digest a089471e... matches the packet; recipe context includes the design-basis assumptions 'shell printed rim-down, button printed with the bore vertical' and 'tab holes are slip fits that may need reaming or adhesive'. Outputs mark all parts 'FDM prototype; parameters not qualified'. Measurements overall_verdict is 'unknown', geometry_checks_verdict 'pass'."
+  },
+  {
+   "attachment_sha256": "1d15ca598cdd6b7ea1914cf9411779ab1505a1fd949b5498ee95c9c376891639",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/button/iso.png",
+   "status": "viewed",
+   "observation": "Top iso of the button: curved skin face, rear rib, link to the hinge barrel with a vertical bore, and a short plunger stub. The stop arm under the barrel (z 9.8-13.4) is hidden from this view, so its thin attachment to the barrel underside is not visible in any supplied image; I checked it by sectioning the STEP instead."
+  },
+  {
+   "attachment_sha256": "c780216c913acf1c7a9836582897a3bf918e8239aa68d6637fd107d2e278414f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain cylinder, the stock pin (modeled r 1.0, length 14.1 mm, z 6.6-20.7). It is a separate part, so the r1 captive printed pin is gone. The image does not show which stock is meant; the recipe allows a steel dowel or 1.75 mm filament."
+  },
+  {
+   "attachment_sha256": "d6180faf232b318453e6e23cdefbee29c318678b520599e05f69f7b9977231c0",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/measurements.json",
+   "status": "viewed",
+   "observation": "All geometry checks pass. Wall checks are sampled only (shell min 1.236 mm, button 1.30 mm, minimum_proven false). The oblique-exit minima (shell 0.025 mm at 14.4,30.70,10.92; button 0.005 mm at 14.0,29.03,12.8) are sampler artefacts: my sections there give a shell wall of y 29.30-30.70 and a button skin of y 29.03-30.44, about 1.4 mm. Hinge play is checked only at 0.1 mm radial. Housing clearance until the stop has a 0.185 mm lower bound. No check covers part strength, root sections or print orientation."
+  },
+  {
+   "attachment_sha256": "e4d8d26a57e146a31593f4a8202f1c285b4ef197852073c6e105f3c876f15d7e",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell iso with the open side window (about 24.8 x 8.8 mm) and, through it, an internal tab with the pin hole near the window's rear edge. The top edge of the window is an unsupported span in the thin wall when the shell is printed rim-down. The outer skin leans inward above z 18 and has no downward-facing outer surface."
+  },
+  {
+   "attachment_sha256": "c1d58522c820403fb6bfa08f24bbc769a4b277476e814bb46e3033eec0fc4a58",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Plain 6 x 4 x 6 mm box. It is the assumed switch housing envelope, a placeholder and not a manufactured part. No printing review applies; it serves only as the clearance target for the hard stop."
+  },
+  {
+   "attachment_sha256": "b86a4169fec7e56e7af5756340b2d11bfe3a0a113dbdb26343bd08cacfdf7f2a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Plain 2 x 1.1 x 2 mm box, the assumed switch stem placeholder. It is not a manufactured part. The 0.2 mm free play to the plunger depends on the printed rest-stop position (see the stop tolerance finding)."
+  }
+ ],
+ "remaining_uncertainties": [
+  "No printer, material, nozzle or layer height is stated, so the interlayer strength, hole shrinkage and XY accuracy behind the stress and tolerance estimates are not calibrated. The stress figures are simple hand estimates, not FEA, and no physical print or load test was run.",
+  "Thumb force, switch operating force and spring force are unknown. The stop loads are given only as ratios to thumb force (1.5x at the face centre, up to 2.7x at the far end).",
+  "Earlier blocking findings checked: the r1/r2 captive printed pin is fixed (stock pin, through holes, pin and button insertion paths checked). The r2 outward rest stop is fixed in geometry (block_out vertical XY face, rest-outward-blocked passes). The r1/r2 sublayer step is fixed (tab_low top coplanar with the window-gap bottom at 9.6; tab_high x max -10.6 outside the gap at -10.4). The r1/r2 root concern recurs at the new stop arm (MFG-ARM-ROOT).",
+  "The wall-check oblique-exit minima (0.025 mm shell, 0.005 mm button) are sampler artefacts: sections give about 1.4 mm. Wall minima are still sampled, not proven.",
+  "Switch housing and stem are placeholders. The real switch can change the stop margins this review relies on.",
+  "This is one subagent of the same model family as the designer, not an independent review."
+ ]
+}

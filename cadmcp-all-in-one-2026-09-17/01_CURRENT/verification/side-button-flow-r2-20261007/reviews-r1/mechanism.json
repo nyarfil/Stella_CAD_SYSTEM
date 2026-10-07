@@ -1,0 +1,157 @@
+{
+ "schema_version": 1,
+ "subject_digest": "a089471ed2e0975ae806c80497f335289be7080b68e096b182f742e0dd0f05d3",
+ "role": "mechanism",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (mechanism role, rev2)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "M1-play-vs-short-stop-radius",
+   "severity": "major",
+   "claim": "The stated 0.1 mm hinge radial play is checked only by translating the axis and rotating to fixed nominal angles. The rest and stop poses themselves are not re-solved for each play offset. The rest face (block_out) and stop face (block_in) act at only about 6.5-10 mm from the axis, while the plunger acts at about 15 mm and the face tip at about 27 mm, so the play is amplified. When I solve the contact pose per offset: (a) with +X offsets the arm can only clear block_out at -0.34 to -0.88 deg. At that rest pose the plunger touches the stem (distance 0, overlap 0.11-0.20 mm3), so the 0.2 mm free play that rest-plunger-free-play certifies is gone. (b) With -X offsets the button rests at +0.41 to +0.58 deg: free play grows to 0.34-0.37 mm and the far face edge stands about 0.2-0.3 mm proud. (c) With +X offsets the hard stop is reached only at -3.68 to -4.04 deg, not the nominal -3.44 deg. There the housing clearance is 0.114-0.141 mm, below the 0.2 mm that housing-clear-until-stop requires. Stem overlap is about 3.5 mm3 against 2.44 nominal, roughly 0.9 mm of stem displacement on a placeholder switch. The delivered checks pass only because they stop at the nominal angles.",
+   "evidence": [
+    "Own read-only probe: CadQuery 2.8 on the exported button/shell/switch STEP files; button rotated about Z through the hinge axis shifted by the stated 0.1 mm radial play; contact angle found by bisection on intersection volume >1e-4 mm3 (0.005 deg tolerance).",
+    "Nominal pose: rest overlap 0, outward first contact at 0 deg, inward stop at -3.461 deg (matches the recipe's -3.438).",
+    "Offset (+0.100,0): rest -0.875 deg, stem distance 0.000, stem overlap 0.1107 mm3; stop -4.038 deg, housing distance 0.141 mm, stem overlap 3.418 mm3.",
+    "Offset (+0.071,-0.071): rest -0.625 deg, stem overlap 0.1345 mm3; stop -3.870 deg, housing distance 0.118 mm, stem overlap 3.532 mm3.",
+    "Offset (+0.092,-0.038): rest -0.812 deg, stem overlap 0.1993 mm3; stop -3.995 deg, housing distance 0.114 mm.",
+    "Offset (-0.100,0): outward rest +0.578 deg, stem distance 0.342 mm; inward stop -2.883 deg (earliest); stem overlap 2.247 mm3 at stop, still about 0.6 mm push at x=3 (above the 0.5 mm assumption).",
+    "measurements.json housing-clear-until-stop: axis_play_mm 0.1 but end_deg fixed at -3.4377; rest-plunger-free-play is a nominal-pose static clearance (0.19999 mm).",
+    "recipe: block_out face at x=-12 spans y 14.5-18.5 (radius 6.5-10.5 mm from the hinge at y=25); plunger centre lever 15 mm."
+   ],
+   "proposed_change": "Either cut the play-to-stop-radius ratio or bias the play. Options: move the rest and hard-stop faces to a larger radius (for example at the plunger or rib, at 15 mm or more) so 0.1 mm of play changes the angle by 0.4 deg or less; or tighten the bore (reamed, 0.03-0.05 mm radial); or let the return spring's force line push the barrel to one defined side of the pin, and solve the poses for that side. Then re-derive the free play, operating travel and housing margin from the worst-case solved poses. Do not lower the 0.2 mm housing requirement.",
+   "required_test": "For each hinge-play offset (at least 8 on the 0.1 mm circle plus the centre), solve the rest angle (outward contact with the shell) and the stop angle (inward contact) by bisection. At the solved rest pose, require stem clearance of 0.2 mm or the stated free play. At the solved stop pose, require stem displacement of at least the operating travel, housing clearance of 0.2 mm or more, and stem displacement at or below the switch's allowed total travel once it is known."
+  },
+  {
+   "id": "M2-bore-cocking-window-edge-guides",
+   "severity": "major",
+   "claim": "The guide is short for its play. The bore is 4.5 mm long with 0.1 mm radial play, which allows about 2.55 deg of cocking about axes normal to the pin. Over the 27 mm reach of the face, that tilt is much larger than the 0.4 mm window gap. From a mid-press pose, about 1 deg of tilt about Y already drives the far end of the face (x 9.9-14.05) into the window-gap edge (z 9.6 or 18.4). Under any thumb force with a Z component, the window lip, not the pin, becomes the guide surface, so the press rubs against the cosmetic edge. This tilt is inside the clearance the design allows and no check covers it: axis_play only translates the axis.",
+   "evidence": [
+    "Own read-only probe: CadQuery 2.8 on the exported button/shell/switch STEP files; button rotated about Z through the hinge axis shifted by the stated 0.1 mm radial play; contact angle found by bisection on intersection volume >1e-4 mm3 (0.005 deg tolerance). Tilt about the barrel mid-point (-13,25,15.25), applied after a -1.5 deg press rotation.",
+    "Tilt about Y +1.0 deg: shell overlap 0.101 mm3 at x 9.87-14.05, y 29.5-30.8, z 9.53-9.60 (lower window edge).",
+    "Tilt about Y -1.0 deg: shell overlap 0.152 mm3 at x 9.89-14.05, z 18.40-18.47 (upper window edge).",
+    "Tilt about X +1.25 deg: stop arm lands on tab_low (z 9.58-9.60). Tilt about X -2.55 deg: clear.",
+    "Pin-limited tilt is about 2*0.1/4.5 rad = 2.55 deg; the 0.2 mm axial thrust gaps do not limit Y-tilt first (barrel-end lift 2.4 mm x 0.0445 rad = 0.11 mm).",
+    "Axial location itself is fixed compared with revision 1: dz of +/-0.2 mm gives 0 overlap and +/-0.25 mm overlaps, so the barrel and arm thrust faces locate it."
+   ],
+   "proposed_change": "Make the bearing length-to-play ratio stop cocking before the face reaches the window edge: 2*c/L should be below about 0.6 x (0.4 mm / 27 mm). For example, extend the barrel engagement on the pin (or add a second barrel boss) and reduce radial play (for example L of 8 mm or more with c of 0.05 mm or less). Alternatively add a dedicated Z-guide pad near the free end with defined clearance, so the cosmetic edge is not the bearing.",
+   "required_test": "Tilt check: from rest, mid-press and stop poses, apply the bore-limited tilt cone (about X and about Y, both signs) and require no contact between the button skin and the shell window edges. Contact is allowed only on designated guide faces."
+  },
+  {
+   "id": "M3-return-spring-has-no-geometry",
+   "severity": "major",
+   "claim": "F4 (return) and the rest half of F2 depend on a preload spring that has no seat, anchor, envelope or force line in the CAD. The slot leaves only about 0.6 mm between the arm and block_in, which is not enough room for a spring there. Without the spring, the switch stem can push the button back only to the stem top, so the button rattles through the free play (0.2-0.37 mm at the plunger, about 0.4-0.7 mm at the face tip). The spring's direction also decides where in the hinge play the button rests (see M1), so leaving it unmodeled leaves the rest pose undefined.",
+   "evidence": [
+    "recipe design_basis: 'A separate small spring preloads the stop arm against the outward block (not modeled)'; F4 is listed as placeholder.",
+    "Operations list: no spring, seat or keep-out body; outputs list five parts, none a spring.",
+    "block_in inner face to arm face gap 0.6 mm (inward_block_gap_mm, nominal).",
+    "Probe: free play at the rest pose varies from 0 to 0.37 mm across the 0.1 mm play (M1)."
+   ],
+   "proposed_change": "Choose and model a return element: for example a torsion spring on the pin between the barrel and a tab, a printed flexure tongue, or a compression-spring pocket between the rib and a shell boss. Give it a keep-out envelope, its line of action and its preload direction, and add it to the clearance and motion checks.",
+   "required_test": "Show by clearance check that the spring envelope is clear at rest and at the stop. Show by statics that the preload holds the arm on block_out against gravity in any orientation, and that it biases the hinge play to the side used in M1's solved poses."
+  },
+  {
+   "id": "M4-stop-reaction-compliance",
+   "severity": "minor",
+   "claim": "The hard-stop reaction is about 2.7-3.2x the thumb force for a press at the far end (face radius about 27 mm against a stop radius of 8.5-10 mm). It goes into block_in, which sits about 1.5-3.9 mm above the mid-plane of tab_low, a 3 mm plate cantilevered roughly 14 mm from the shell wall. Bending and torsion of the tab add rotation past the stop. Combined with M1's 0.114 mm worst rigid housing margin, the margin to the housing is not shown.",
+   "evidence": [
+    "recipe: block_in x -16.0..-14.6, y 14.5-18.5, z 9.6-12.0 on tab_low (z 6.6-9.6, y 14 to the wall at about 30).",
+    "Stop contact at y 15-18.5 gives radius 6.5-10 mm; face reaches x=14, 27 mm from the hinge.",
+    "unverified_requirements already lists stop stiffness as not qualified."
+   ],
+   "proposed_change": "Stiffen the stop path (gusset block_in to the wall or to tab_high, or move the stop to a larger radius per M1). Alternatively, set an explicit housing allowance that includes the stop deflection.",
+   "required_test": "Estimate or measure the stop deflection under a stated worst thumb force (for example 20 N at the face tip), on a printed sample or by FEA. Check that rigid worst-case travel plus deflection stays clear of the housing and within the switch total travel."
+  },
+  {
+   "id": "M5-pin-axial-retention",
+   "severity": "minor",
+   "claim": "The Ø2 pin sits in 1.02 mm slip holes, with its bottom flush with the open underside of the tab and its top flush with tab_high. Nothing retains it axially, so it can walk out of the bottom and release the button. The 'reaming or adhesive' remark is not a retention feature.",
+   "evidence": [
+    "recipe: pin z 6.6-20.7, tab_low z 6.6-9.6, tab_high z 17.7-20.7, pin_hole radius 1.02 mm through both.",
+    "pin-insertion-path drops the pin out the bottom along -Z with no obstacle (passes)."
+   ],
+   "proposed_change": "Make the top hole blind (insert from below to a shoulder) and retain the bottom with a printed clip, a cover boss or a defined interference fit. Model the chosen retention.",
+   "required_test": "Clearance and interference check of the retention feature, plus a physical push-out test of the pin on the printed tabs."
+  },
+  {
+   "id": "M6-near-hinge-force-factor",
+   "severity": "minor",
+   "claim": "With the plunger at 15 mm lever, the force a thumb needs relative to the stem force is 15/r, where r is the press point's distance from the hinge. That is about 5x at the near window edge (x=-10), 2.1x at x=-6, 1.0 at the centre and 0.56 at the far end. This improves on revision 1 (21.5/r), but the near-hinge fifth of the face is still stiff, with little travel.",
+   "evidence": [
+    "recipe: hinge x=-13, window x -10..14, plunger x 0.5-3.5.",
+    "Revision-1 reviews R2-M5 asked for the plunger at the face centroid; done in revision 2."
+   ],
+   "proposed_change": "No geometry change is required before owner review. State the press-location force map in the owner-facing summary, or trim or mask the face within about 3 mm of the near edge if the owner wants uniform feel.",
+   "required_test": "Test on a printed sample: press force needed to actuate at x = -8, 2 and 12 on a real switch."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "5e0f3932f9c12e15593d71bf0e0fa7dfd5886c2baaf541def2b82f053db97183",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/assembly.png",
+   "status": "viewed",
+   "observation": "Assembly ISO: the gold button face sits flush in the side skin with a narrow uniform gap all around. Internal hinge, stops and switch are not visible in this view."
+  },
+  {
+   "attachment_sha256": "c3f3cc1c1098879a0d2051360aa2de7f68918eaabee08c9eb999c24cc770a990",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/build-record.json",
+   "status": "viewed",
+   "observation": "Build record (kind recipe_build) carries the full v2 recipe: hinge (-13,25) about Z, bore r1.1 on pin r1.0, barrel z 13-17.5, blocks at x -16..-14.6 and -12..-10.6. It also holds the file hashes matching the attachments and a measurements copy whose geometry_checks pass."
+  },
+  {
+   "attachment_sha256": "1d15ca598cdd6b7ea1914cf9411779ab1505a1fd949b5498ee95c9c376891639",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/button/iso.png",
+   "status": "viewed",
+   "observation": "Button ISO: curved skin piece with the rear rib, the link to a short open barrel with a through bore, and the plunger block at mid-face. The barrel is short relative to the 24 mm face span (relevant to M2)."
+  },
+  {
+   "attachment_sha256": "c780216c913acf1c7a9836582897a3bf918e8239aa68d6637fd107d2e278414f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 x 14.1 mm cylinder with no head, groove or shoulder, so it has no axial retention feature (M5)."
+  },
+  {
+   "attachment_sha256": "d6180faf232b318453e6e23cdefbee29c318678b520599e05f69f7b9977231c0",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/measurements.json",
+   "status": "viewed",
+   "observation": "geometry_checks_verdict pass, overall unknown. housing-clear-until-stop uses axis_play 0.1 but a fixed end of -3.4377 deg, lower bound 0.185. shell-clear-until-stop lower bound -0.108 (not_proven), end distance 0.0018. Insertion-slide samples are at 0.0 mm (sliding contact on block_out). rest-plunger-free-play is 0.19999 mm at the nominal pose only."
+  },
+  {
+   "attachment_sha256": "e4d8d26a57e146a31593f4a8202f1c285b4ef197852073c6e105f3c876f15d7e",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell ISO: side window opening and the upper pin tab with its hole visible near the rear window corner. The lower tab, the stop blocks and the open bottom are not visible from this angle."
+  },
+  {
+   "attachment_sha256": "c1d58522c820403fb6bfa08f24bbc769a4b277476e814bb46e3033eec0fc4a58",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Plain 6 x 4 x 6 mm box placeholder for the switch housing, with no mounting or PCB reference, consistent with the 'ASSUMED' label."
+  },
+  {
+   "attachment_sha256": "b86a4169fec7e56e7af5756340b2d11bfe3a0a113dbdb26343bd08cacfdf7f2a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Plain 2 x 1.1 x 2 mm rigid box placeholder for the stem. It has no travel limit or spring, so overtravel against it cannot be judged."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Revision-1 blockers re-checked on revision-2 geometry: the outward rest stop now exists (nominal outward contact at 0 deg); actuation under hinge play holds (the earliest stop, -2.88 deg, still pushes the stem about 0.6 mm); the pin is a separate part; and axial play is located by the thrust faces at +/-0.2 mm. These are resolved in the rigid model.",
+  "The real switch's pretravel, total travel and force are unknown. The stem is displaced about 0.76 mm nominally and about 0.9 mm in the worst play case at the stop, which may exceed a real side switch's total travel.",
+  "My probe is sampled bisection with 0.005 deg resolution on 8 play offsets plus the centre; it is not a continuous certificate.",
+  "Thumb force magnitude and direction (including its Z component) are not specified, so the friction consequence of M2 and the deflection in M4 are not quantified.",
+  "No physical print or press test was performed; FDM hole and pin tolerances may make the real play larger or smaller than 0.1 mm.",
+  "Whether the owner accepts a non-uniform force map across the face (M6) is an owner decision."
+ ]
+}

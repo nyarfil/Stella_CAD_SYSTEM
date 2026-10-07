@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "subject_digest": "bc37a85d6af1cace9690e466bc6aa947fa55862b559444eec5dfaf387056472b",
+  "role": "assembly",
+  "discussion_round": 1,
+  "challenged_review_ids": [],
+  "reviewer_label": "Claude subagent (assembly role)",
+  "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+  "conclusion": "revise",
+  "findings": [
+    {
+      "id": "ASM1-no-insertion-path",
+      "severity": "blocking",
+      "claim": "The button cannot be assembled onto the shell. The hinge pin is fused to the shell at BOTH ends (lower tab and upper tab), and the button barrel is a closed ring around it, so the button is captive. The selected concept's stated assembly method ('Button barrel slides over the pin from below before the PCB is fitted'; 'Pin is part of the shell; barrel slides on') is geometrically impossible because the lower tab blocks the barrel. Shell and button are delivered as separate single-solid parts, so print-in-place is not the declared method either, and it would not work as modelled: the button floats with its lowest face (tongue z=7.8) 0.3 mm above the stop shelf (z=7.5) and the barrel 0.8 mm above the lower tab, so it would need support material inside sub-millimetre gaps.",
+      "evidence": [
+        "side_button_recipe.py: pin cylinder from z = bz0-tg-3 = 6.7 to bz1+tg+3 = 21.3; tab_low_box z 6.7..9.7 and tab_high_box z 18.3..21.3 at the pin location; shell_part = union(shell_open, tab_low, tab_high, pin, stop_shelf, stop_post).",
+        "button = button_solid minus barrel_bore (radius 1.3, z 9.5..18.5); barrel_outer radius 2.6, z 10.5..17.5, so a closed ring surrounds the pin. Visible as a closed eye in button/iso.png.",
+        "measurements.json solid-count-shell = 1 (pin and tabs fused); my re-import: shell volume inside a 4x4x15 box around the pin (z 6.5..21.5) = 123.7 mm3.",
+        "My CadQuery translation test on the exported STEP files: moving the button 1 mm along -z gives 26.93 mm3 overlap with the shell, +z 19.93 mm3, +x 14.97, -x 15.14, +y 10.25, -y 8.79 mm3; 3 mm moves overlap 13.6..112.8 mm3. No straight escape direction exists.",
+        "FLOW_RESULT.json step 5_6: options B_lever assembly_method 'Button barrel slides over the pin from below before the PCB is fitted.' and G_pivot 'Pin is part of the shell; barrel slides on.' contradict the built geometry.",
+        "Recipe outputs declare shell and button as separate parts (expected_solids 1 each); no assembly-sequence or insertion-path check exists in verification_plan."
+      ],
+      "proposed_change": "Give the hinge a real assembly path while keeping the outer skin unchanged: e.g. (a) make the pin open at its lower end (remove the pin-to-tab_low connection and keep the lower tab only as an axial thrust face with an entry gap, adding a separate retention clip), or (b) replace the printed pin with through-holes in both tabs and a separate pin/dowel inserted after placing the button, or (c) a C-shaped snap barrel with a stated snap interference. Then state the assembly sequence explicitly in the recipe (button before/after switch/PCB, from which direction).",
+      "required_test": "Add a translation/insertion-path check: sweep the button (and any separate pin) along the declared insertion vector from a pose fully outside the shell interior to the rest pose with zero overlap against the shell (or a declared, bounded snap interference), plus a retention check that the button cannot leave along that vector once the retainer is fitted. Re-run all existing clearance and rotation checks on the revised geometry."
+    },
+    {
+      "id": "ASM2-rest-pose-not-located",
+      "severity": "major",
+      "claim": "Nothing locates the button at its nominal rest pose. There is no outward stop: the button can rotate outward about the pin by about 3.7 deg before an incidental edge contact at the hinge-side window edge, which puts the far edge of the skin piece about 1.7 mm proud of the shell skin and the plunger about 1.6 mm from the stem. Because the stem has 0.2 mm free play at rest, the switch spring (the chosen return element R_switch) does not hold the button either. The 'flush, unchanged outer surface' protected constraint and all rest-pose clearances therefore hold only in an unconstrained nominal pose. Every rotation check runs only in the negative (press) direction, so the outward direction was never examined.",
+      "evidence": [
+        "recipe rotation_checks: press-swept-clearance end -1.865 deg, overtravel-stop-engages and housing-clear-until-stop end -2.665 deg. No check covers positive angles.",
+        "My CadQuery rotation about axis (-12,25,z), positive direction: shell distance 0.272 mm at +0.5 and +1 deg, 0.183 at +2, 0.075 at +3, first contact at about +3.70 deg (bisection) at button point (-10.4, 31.25, 10.0), i.e. the window_gap edge on the hinge side; overlap 0.33 mm3 at +5 deg.",
+        "Lever arm from the hinge to the far skin edge is about 26.7 mm, so 3.7 deg is about 1.7 mm of outward displacement; the plunger-to-stem gap grows to about 1.6 mm (my estimate from the 21.5 mm plunger lever).",
+        "measurements.json rest-plunger-free-play distance 0.2 mm: no preload contact between the stem and the plunger at rest.",
+        "assembly.png shows the button face flush in the window only in the nominal modelled pose."
+      ],
+      "proposed_change": "Add a designed outward rest stop (e.g. a lip or tab on the button that bears on the inner face of the shell next to the window edge, or a second face on the tongue/stop post), placing rest contact at 0 deg, and either preload the button against it (stem in light contact, or a separate return spring) or accept and state the rattle range. Keep the stop inside the skin so the outer surface is unchanged, and check that it does not block the insertion path from ASM1.",
+      "required_test": "Add a positive-direction rotation check from 0 deg to e.g. +1 deg with end_max_distance around 0.02 mm, showing designed contact at the rest stop at 0..+0.1 deg, and repeat the rest-pose flushness check (skin-piece outer surface deviation from the original skin) at that stop pose."
+    },
+    {
+      "id": "ASM3-hinge-play-and-switch-datum-stack",
+      "severity": "major",
+      "claim": "The tolerance stack-up was not analysed, and nominal clearances do not survive the designed hinge play. The bore is 2.6 mm on a 2.0 mm pin, which gives 0.3 mm radial play. That play alone closes every running clearance: the barrel to the inner shell wall (0.272 mm rest minimum), the window gap, and the 0.2 mm plunger free play, so the stem can be pre-travelled by up to about 0.1 mm at rest. The switch also has no datum to the hinge. The placeholder housing and stem float 1.6 mm from the shell, with no locating feature or modelled PCB. The tolerance window on switch position along the press direction is only about -0.2 mm (preload or false actuation at rest) to +0.3 mm (the hard stop engages before the operating point). That window is the same size as the hinge play and typical FDM error, so a real build may never click or may be pre-actuated. The stop contact is also a tongue corner edge, so its position moves with the same play.",
+      "evidence": [
+        "design_parameters: pin_radius 1.0, barrel_inner_radius 1.3 (radial play 0.3), stem_free_play 0.2, stop_extra_travel 0.3, window_gap 0.4.",
+        "measurements.json rest-button-shell distance 0.2720 mm; my closest-point query places it between the barrel (-12.33,27.58,17.5) and the inner shell wall (-12.37,27.83,17.59).",
+        "My translation test: moving the button 0.3 mm in any of +/-x, +/-y, +/-z reduces the shell distance to 0.0; a 0.3 mm move in -y also brings the plunger into contact with the stem (distance 0.0), and 0.1 mm gives 0.1 mm.",
+        "measurements.json overlap-shell-switch_housing distance 1.6 mm, so the switch is not mounted to or located by the shell; recipe has no PCB part and no switch datum.",
+        "My stop check: at -2.665 deg the contact is at the tongue corner (13.47, 23.81, 7.8..9.4) against the stop post. At -2.8 deg overlap is 0.059 mm3, so the stop position depends on the corner location and the hinge play.",
+        "Declaration ordinal 3 ('Hinge play, wear, print tolerance ... not qualified') records the play as unqualified but does not resolve the stack-up; all checks exclude hinge play by scope ('Deformation, hinge play, wear and tolerance variation are excluded')."
+      ],
+      "proposed_change": "Make the radial hinge clearance smaller than the smallest running clearance it must protect (or increase the barrel-to-wall and window clearances accordingly), add an axial/radial datum chain from the hinge to the switch (e.g. a shell boss or a PCB locating feature referenced to the pin axis), and choose free play and stop_extra_travel from a written worst-case stack (hinge play + FDM error + switch placement) rather than from nominal values.",
+      "required_test": "Run the existing static and rotation checks at perturbed poses: button offset by the full radial play in +/-x, +/-y, and switch/stem offset by its placement tolerance in +/-y. Require (a) no stem contact at rest, (b) the operating point reached before stop contact in the worst case, and (c) no shell contact other than the designed stops. Report the stack table in the recipe."
+    },
+    {
+      "id": "ASM4-stop-swept-not-proven",
+      "severity": "minor",
+      "claim": "The overtravel stop check passes only on its end-pose criterion. Its continuous swept-motion bound is reported as not_proven, with a negative lower bound (-0.078 mm) over the sweep. The check also does not assert which feature makes contact, so 'stop engages' means 'the button touches the shell somewhere'. I confirmed that the contact is tongue on stop_post here, but the recipe does not enforce it.",
+      "evidence": [
+        "measurements.json overtravel-stop-engages: continuous_swept_motion 'not_proven', continuous_distance_lower_bound_mm -0.0781, final_samples 9 (max_samples capped at 9), verdict pass via end_pose_engagement end_min_distance 0.0.",
+        "Sampled distances fall from 0.148 mm at -2.33 deg to 0.0 at -2.665 deg. My probe found contact at the tongue corner (13.47, 23.81, z 7.8..9.4)."
+      ],
+      "proposed_change": "Split the check: prove continuous clearance to the shell up to just before the stop angle (e.g. end at stop-0.1 deg with min_mm > 0), and assert the end-pose contact pair (tongue face vs stop_post face) rather than any shell contact.",
+      "required_test": "Re-run with a sweep ending slightly before the stop that reaches continuous_swept_motion 'distance_bound_satisfied', plus an end-pose check that names the contacting features or checks the contact location within the stop_post box."
+    }
+  ],
+  "evidence_inspections": [
+    {
+      "attachment_sha256": "310545a72cb7d655e14ee55dfc228a1999757b7fd33dae1c8cce6b88c4cfe04f",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/assembly.png",
+      "status": "viewed",
+      "observation": "Exterior iso of the assembled shell (blue) with the button skin piece (orange) sitting flush in a rectangular side window, with a thin visible gap line along its lower edge. The hinge, pin, tabs, switch and any assembly direction are not visible from outside, so the image cannot show how the button gets in or what holds it at rest."
+    },
+    {
+      "attachment_sha256": "72c2be9fa1560b14591bd4eb6aa4e50d942f0e2dc76f2e510c008e8e87a04bf0",
+      "kind": "json",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/build-record.json",
+      "status": "viewed",
+      "observation": "Build record kind recipe_build, subject_digest bc37a85d..., with the full recipe context (pin z 6.7..21.3 fused via tab_low/tab_high into shell_part), file hashes matching the attachments, and embedded measurements. It contains no assembly-sequence, insertion-path or positive-rotation check."
+    },
+    {
+      "attachment_sha256": "bb5a6506f7224708bc248429c07f3b13ad0aa6ed7db385a836fe5da345d1ef18",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/button/iso.png",
+      "status": "viewed",
+      "observation": "Button single solid: curved skin piece, a rear rib at the hinge end, an arm ending in a closed cylindrical barrel eye with a round through-bore (top right), a block plunger at mid-span and a downward tongue at the far end. The barrel is a full closed ring, so it can only go onto the pin axially."
+    },
+    {
+      "attachment_sha256": "d0c9c0eaa9e20461552c4b2c6b086a0b1121912c9e534deb1536822e1f6bf00b",
+      "kind": "json",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/measurements.json",
+      "status": "viewed",
+      "observation": "overall_verdict 'unknown', geometry_checks_verdict 'pass'. Rest clearances: button-shell 0.272 mm, plunger-stem 0.200 mm, button-housing 1.300 mm. Shell to switch housing is 1.6 mm (switch not located). The press sweep has a continuous bound of 0.113 mm. overtravel-stop-engages has continuous_swept_motion 'not_proven' (lower bound -0.078 mm) but passes on end-pose contact 0.0. All rotation checks are in the negative direction only. The scope text excludes hinge play and tolerance."
+    },
+    {
+      "attachment_sha256": "d2a8de1ef4c619b19ab874db3adc48e90518f40cf7799225ab14f754f0cbf833",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/shell/iso.png",
+      "status": "viewed",
+      "observation": "Shell with the side window open. Through the window, at its hinge-side end, a vertical pin runs between a lower tab/block and an upper tab, both joined to the shell wall. This confirms the pin is supported at both ends and leaves no open end for the barrel to slide onto."
+    },
+    {
+      "attachment_sha256": "c1d58522c820403fb6bfa08f24bbc769a4b277476e814bb46e3033eec0fc4a58",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/switch_housing/iso.png",
+      "status": "viewed",
+      "observation": "Plain rectangular block, the placeholder switch housing (6 x 4 x 6 mm bbox in my re-import). It has no mounting pins, PCB interface or locating features, so its position relative to the hinge datum is undefined."
+    },
+    {
+      "attachment_sha256": "b86a4169fec7e56e7af5756340b2d11bfe3a0a113dbdb26343bd08cacfdf7f2a",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/switch_stem/iso.png",
+      "status": "viewed",
+      "observation": "Plain rectangular block, the placeholder stem (2 x 1.1 x 2 mm bbox in my re-import), sitting on top of the housing (housing-stem distance 0). It has no spring or travel modelled, so its return function and preload are assumed, not geometric."
+    }
+  ],
+  "remaining_uncertainties": [
+    "Real switch, PCB and mouse shell were not provided; switch position, stem travel and force are placeholders, so the stack-up in ASM3 can only be stated relative to the assumed values.",
+    "Achievable FDM hole/pin accuracy and the real hinge play are unknown; the 0.3 mm radial play may shrink or grow after printing.",
+    "I did not evaluate how the shell itself mounts to a base/PCB or how the PCB and switch are inserted through the open bottom relative to the button; that sequence is undefined in the recipe.",
+    "My translation and rotation probes are point samples on the exported STEP (BRepExtrema distance and boolean overlap), not continuous certificates; the outward contact angle (about 3.7 deg) comes from bisection.",
+    "Stop impact, wear and corner-edge contact stress on the printed tongue/stop post are not assessed (mechanism and manufacturing scope)."
+  ]
+}

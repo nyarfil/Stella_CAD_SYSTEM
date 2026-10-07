@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "subject_digest": "bc37a85d6af1cace9690e466bc6aa947fa55862b559444eec5dfaf387056472b",
+  "role": "requirements",
+  "discussion_round": 1,
+  "challenged_review_ids": [],
+  "reviewer_label": "Claude subagent (requirements role)",
+  "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+  "conclusion": "revise",
+  "findings": [
+    {
+      "id": "REQ-pressability-undefined-and-lever-penalty",
+      "severity": "major",
+      "claim": "The only explicit requirement, 'もっと押しやすく', has no stated geometric proxy and no baseline, and nothing in the contract argues that the chosen layout makes pressing easier. The geometry itself suggests the opposite over most of the face. The hinge axis is at x=-12 and the plunger centroid is at x=9.5, giving a plunger lever of 21.5 mm. The thumb face spans x=-10..14, so thumb lever arms run from 2 to 26 mm. With rigid statics, thumb force = F_switch * 21.5 / r_thumb. That exceeds the switch force everywhere left of x=9.5, which is about 81% of the 24 mm face width. It is about 1.5x at the window centre (x=2), about 3.6x at x=-6 and about 10.8x at the hinge-side edge. Thumb travel to actuation is also position-dependent: about 0.46 mm at the centre and 0.85 mm at the far edge. These are derived from the recipe parameters and are not measured forces. Whether the result beats the user's existing button cannot be judged because no baseline exists.",
+      "evidence": [
+        "recipe.design_parameters: hinge_x_mm=-12.0, plunger_x_min/max_mm=8.0/11.0, window_x_min/max_mm=-10.0/14.0",
+        "FLOW_RESULT 8_recipe: press_angle_deg=-1.8654, stop_angle_deg=-2.6649 (0.7 mm and 1.0 mm plunger travel / 21.5 mm lever)",
+        "FLOW_RESULT 1_intent.explicit=['もっと押しやすく']; unknown includes 'target force', 'travel'",
+        "recipe.unverified_requirements[0]: 押しやすさ（押下力・ストローク感・クリック感）は実機試験していない",
+        "lineage.correction_guarantee: no baseline subject was supplied",
+        "button/iso.png: barrel at one end of the curved face strip, plunger block at the opposite end"
+      ],
+      "proposed_change": "Before owner review, either (a) state an explicit geometric proxy for 'easier to press' (for example usable press area where thumb-force ratio <= 1.0, actuation travel at the face centroid, or face area) and the assumption behind it, and mark it as a design inference and not a user requirement, or (b) ask the owner what 'easier' means (lighter force, shorter travel, larger or better-placed target). If the hinge layout is kept, consider moving the pivot beyond the far end of the window or the switch nearer the face centroid, so the likely thumb zone is not at a mechanical disadvantage. Do not fix a target force, because the user explicitly left press force undetermined.",
+      "required_test": "Compute, from the built geometry, the ratio r_plunger/r_thumb over a grid of points on the button outer face (using the actual hinge axis and plunger contact point) and report the area fraction with ratio <= 1 and the actuation travel at the face centroid. Then compare against the same metrics for the alternative candidate (A_direct + G_rails + R_switch) or against owner-supplied baseline geometry."
+    },
+    {
+      "id": "REQ-selection-not-tied-to-intent",
+      "severity": "major",
+      "claim": "Concept selection was driven by what the current checks can verify, not by the user's goal. The direct-plunger candidate 59ae5a17 (A_direct, G_rails, R_switch, S_hardstop) has the same rating as the chosen 3f843ccf: verifiable_with_current_checks=true and part_count=3. It also keeps the skin unchanged, because its button is also the cut skin piece. The stated reason ('keeps the outer skin unchanged... switch spring avoids an extra part') therefore does not discriminate between the two. The reason also rejects flexures because return would be UNKNOWN, yet the chosen R_switch return depends on an assumed placeholder spring overcoming printed-hinge friction, so its return is also not established.",
+      "evidence": [
+        "FLOW_RESULT 7_engineering_evaluation.rows: 59ae5a17 and 3f843ccf both verifiable_with_current_checks=true, part_count=3",
+        "FLOW_RESULT 7_engineering_evaluation.kind='host_engineering_judgement_not_measurement'",
+        "FLOW_RESULT 5_6 ordering: 'Not a strength/quality ranking'",
+        "recipe.functions.F4_restore_button: 'Return the button using the switch stem spring (assumed)'",
+        "recipe.unverified_requirements: no item states that F4 return is unverified"
+      ],
+      "proposed_change": "Record a selection rationale that compares the candidates against the user's goal (pressability proxy from REQ-pressability-undefined-and-lever-penalty) and against outer-form preservation, and state that checkability was a tie-breaker, not the goal. Add an explicit unverified item: 'F4 return by the placeholder switch spring against printed-pin friction is not verified.'",
+      "required_test": "A side-by-side table, for at least the chosen and the direct-plunger candidates, of the pressability proxy, outer-surface change and verifiability, recorded in the flow before owner review."
+    },
+    {
+      "id": "REQ-standin-shell-not-this-mouse",
+      "severity": "major",
+      "claim": "The request says 'このマウス' and allows only the switch to be provisional ('試作では仮のスイッチ外形を使い'). The prototype substitutes an invented ellipsoidal shell (120 x 64 x 34 mm lofts) and an invented button location (x=-10..14, z=10..18 on the +Y side). As a result, the protected 'outer form unchanged' constraint is satisfied only against geometry the designer made up, and says nothing about the user's mouse or its current side-button position. This is declared, not silent, but it is a substitution beyond what the user authorised and must be put to the owner as an open question, not shown as an improvement of their mouse.",
+      "evidence": [
+        "FLOW_RESULT 2_reference_inspection.status='not_available': No PCB/shell/switch STEP was provided",
+        "recipe.unverified_requirements: 'PCB position and the real mouse shell were not measured; this is a stand-in shell.'",
+        "recipe.parameter_basis: every parameter 'Proposal for this prototype; not measured'",
+        "snapshot.sources: only SRC-1 (request text); reference_uses=[]",
+        "assembly.png / shell/iso.png: smooth generic ellipsoidal body with a flat elliptical top, not a recognisable product shell"
+      ],
+      "proposed_change": "Ask the owner for the mouse shell STEP/scan or at least the location and size of the existing side button and the PCB keep-out. Until then, label the outer-form preservation as 'relative to stand-in shell only' and the button placement as 'inferred'.",
+      "required_test": "Once owner geometry is supplied, rebuild on it and run an outer-surface deviation check against the supplied shell (see REQ-outer-preservation-unmeasured)."
+    },
+    {
+      "id": "REQ-outer-preservation-unmeasured",
+      "severity": "minor",
+      "claim": "The protected constraint 'Outer shell skin is not reshaped' is ensured by construction but has no direct measurement; the only shell dimension checks are bounding-box length and height. Trace volumes are consistent with the intent: hollow 17421.914 = shell_open 17110.614 + skin_piece 273.477 + 37.82 mm3. The 37.82 mm3 is skin removed by the 0.4 mm running-gap ring around the window, a real (small) change to the outer surface. The contract does not state that change, and the face sinks below flush by up to about 1.2 mm at the far edge at the stop angle (2.665 deg x 26 mm). Under 'できるだけ変えないで' this is probably acceptable, but it should be stated, not implied by 'not reshaped'.",
+      "evidence": [
+        "measurements.json trace: hollow 17421.914, shell_open 17110.614, skin_piece 273.477, window_gap 4364.8 vs window 3840.0 mm3",
+        "recipe.dimension_checks: only shell-length (bbox x) and shell-height (bbox z) on the shell",
+        "recipe.protected_constraints: 'Outer shell skin is not reshaped; the button face is the removed skin piece.'",
+        "assembly.png: thin dark gap line visible around the orange button face"
+      ],
+      "proposed_change": "Reword the protected constraint to 'outer skin unchanged except a 0.4 mm running gap around the button; face is flush at rest' and add a measurement for it.",
+      "required_test": "Measure the volume of outer minus (shell_part union button union cavity) at rest; expect only the gap-ring volume (~37.8 mm3) and no material outside outer (i.e. (shell_part union button) minus outer = 0)."
+    }
+  ],
+  "remaining_uncertainties": [
+    "Actual press force, travel feel and click feel are unknown by the user's own instruction and were not tested; no physical test was executed in this review.",
+    "Switch housing/stem are 6x4x6 and 2x1.1x2 mm placeholder boxes; real switch geometry, operating force and travel may change the lever analysis.",
+    "The user's real mouse shell, existing side-button location and PCB keep-out are unknown.",
+    "overtravel-stop-engages reports verdict pass with continuous_swept_motion 'not_proven' and a continuous lower bound of -0.078 mm; this is for the verification/mechanism roles to judge and does not show a measured interference.",
+    "Wall checks report oblique-exit minima of 0.0149 mm (shell, near x=-10.3, z=18.3 window corner) and 0.0050 mm (button, at x=14 window edge), and minimum_proven=false; the manufacturing role should assess these as possible slivers.",
+    "Thumb-force ratios in REQ-pressability-undefined-and-lever-penalty are rigid-statics derivations from recipe parameters, not measurements, and ignore hinge friction and skin flex."
+  ],
+  "evidence_inspections": [
+    {
+      "attachment_sha256": "310545a72cb7d655e14ee55dfc228a1999757b7fd33dae1c8cce6b88c4cfe04f",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/assembly.png",
+      "status": "viewed",
+      "observation": "Isometric of a generic ellipsoidal shell with a flat elliptical top; an orange curved rectangular button face sits flush in the side wall with a thin dark gap line around it. No recognisable real-mouse features; switch is not visible from outside."
+    },
+    {
+      "attachment_sha256": "72c2be9fa1560b14591bd4eb6aa4e50d942f0e2dc76f2e510c008e8e87a04bf0",
+      "kind": "json",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/build-record.json",
+      "status": "viewed",
+      "observation": "kind recipe_build, subject_digest bc37a85d..., lineage is_correction=false with no baseline; protection lists are empty (no persistent or protected assets registered); embeds the recipe with the single protected constraint and six unverified_requirements; measurements overall_verdict 'unknown', geometry_checks_verdict 'pass'."
+    },
+    {
+      "attachment_sha256": "bb5a6506f7224708bc248429c07f3b13ad0aa6ed7db385a836fe5da345d1ef18",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/button/iso.png",
+      "status": "viewed",
+      "observation": "Button part: a curved skin strip with a hinge barrel (bored) at one end connected by a rib and arm, and a small plunger block plus stop tongue at the opposite end. The pivot sits at the end of the face, confirming an end-hinged lever whose thumb leverage varies along the face."
+    },
+    {
+      "attachment_sha256": "d0c9c0eaa9e20461552c4b2c6b086a0b1121912c9e534deb1536822e1f6bf00b",
+      "kind": "json",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/measurements.json",
+      "status": "viewed",
+      "observation": "26 checks all with verdict pass; overall_verdict 'unknown'. Trace volumes: hollow 17421.914, shell_open 17110.614, skin_piece 273.477 mm3 (37.8 mm3 gap ring removed). overtravel-stop-engages continuous bound -0.078 mm, 'not_proven'. Wall oblique-exit minima 0.0149 mm (shell) and 0.0050 mm (button), minimum_proven=false. No check measures pressability or outer-surface deviation."
+    },
+    {
+      "attachment_sha256": "d2a8de1ef4c619b19ab874db3adc48e90518f40cf7799225ab14f754f0cbf833",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/shell/iso.png",
+      "status": "viewed",
+      "observation": "Shell alone shows the rectangular side window opened through the skin, a vertical hinge pin with a mount tab at one window end, and a thin ledge along the lower window edge (stop shelf). The outer surface away from the window is the same smooth stand-in loft."
+    },
+    {
+      "attachment_sha256": "c1d58522c820403fb6bfa08f24bbc769a4b277476e814bb46e3033eec0fc4a58",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/switch_housing/iso.png",
+      "status": "viewed",
+      "observation": "A plain rectangular block (6 x 4 x 6 mm per recipe) with no terminals, mounting features or PCB; consistent with the declared placeholder switch housing envelope."
+    },
+    {
+      "attachment_sha256": "b86a4169fec7e56e7af5756340b2d11bfe3a0a113dbdb26343bd08cacfdf7f2a",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/switch_stem/iso.png",
+      "status": "viewed",
+      "observation": "A plain rectangular block (2 x 1.1 x 2 mm per recipe) representing the assumed stem; no spring or travel feature is modelled, so return force is entirely assumed."
+    }
+  ]
+}
