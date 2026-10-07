@@ -353,6 +353,9 @@ class Motion(Strict):
     moving_part: Name
     obstacles: list[Name] = Field(min_length=1, max_length=32)
     translation_end_mm: Vec
+    # Optional start pose offset: chains multi-leg paths (e.g. slide in, then
+    # lift out). Only the leg from start to start+translation_end is swept.
+    start_translation_mm: Vec = Field(default_factory=lambda:[0.,0.,0.])
     samples: int = Field(default=11, ge=2, le=101)
     max_samples: int = Field(default=101,ge=2,le=201)
     assumed_distance_error_mm: float = Field(default=1e-6,gt=0,le=.1)
@@ -375,10 +378,18 @@ class RotationMotion(Strict):
     # Optional end-pose engagement: at end_deg the closest obstacle must be no
     # farther than this (a hard stop or contact that must actually be reached).
     end_max_distance_mm: float | None = Field(default=None, ge=0, le=10)
+    # 'blocked': the motion must be stopped (rigid interference) within the
+    # sweep at every axis offset, e.g. an outward rest stop or a hard stop.
+    expect: Literal['clear','blocked'] = 'clear'
+    min_blocking_overlap_mm3: float = Field(default=1e-3, gt=0, le=1e3)
+    # Radial hinge play: the sweep is repeated with the axis shifted this far.
+    axis_play_mm: float = Field(default=0., ge=0, le=2)
     @model_validator(mode='after')
     def meaningful_rotation(self):
         if abs(sum(x*x for x in self.axis_direction)-1) > 1e-6:raise ValueError('Rotation axis must be a unit direction.')
         if self.end_deg==0:raise ValueError('A rotation check needs a nonzero end angle.')
+        if self.expect=='blocked' and self.end_max_distance_mm is not None:
+            raise ValueError('A blocked-motion check cannot also require end engagement.')
         if self.end_max_distance_mm is not None and self.end_max_distance_mm<self.min_mm:
             raise ValueError('End engagement distance cannot be smaller than the required clearance.')
         return self
@@ -640,7 +651,7 @@ def evaluate_geometry(recipe,part_shapes):
         while True:
             samples=[]
             for t in np.linspace(0.,1.,count):
-                moving=part_shapes[motion.moving_part].translate(tuple(np.asarray(motion.translation_end_mm)*t))
+                moving=part_shapes[motion.moving_part].translate(tuple(np.asarray(motion.start_translation_mm)+np.asarray(motion.translation_end_mm)*t))
                 for obstacle in motion.obstacles:
                     key=(float(t),obstacle)
                     if key not in cache:cache[key]=pair_clearance(moving,part_shapes[obstacle])
@@ -654,6 +665,7 @@ def evaluate_geometry(recipe,part_shapes):
             if failed or certificate or count>=motion.max_samples:break
             count=min(2*(count-1)+1,motion.max_samples)
         checks.append({'id':motion.id,'kind':'sampled_translation_clearance','samples':samples,
+                       'start_translation_mm':list(motion.start_translation_mm),
                        'verdict':'pass' if all(x['verdict']=='pass' for x in samples) else 'fail',
                        'continuous_swept_motion':'distance_bound_satisfied_under_stated_assumptions' if certificate else 'not_proven',
                        'continuous_distance_lower_bound_mm':lower_bound,
@@ -690,18 +702,32 @@ def max_axis_radius_mm(body,axis_origin_mm,axis_direction):
     return radius
 
 
-def _rotation_check(rotation,part_shapes):
+def _axis_offsets(rotation):
+    """Nominal axis plus eight radial shifts of axis_play_mm perpendicular to it (hinge play envelope)."""
+    import math
+    import numpy as np
+    offsets=[np.zeros(3)]
+    if rotation.axis_play_mm>0:
+        axis=np.asarray(rotation.axis_direction,dtype=float)
+        reference=np.array([1.,0.,0.]) if abs(axis[0])<.9 else np.array([0.,1.,0.])
+        u=reference-np.dot(reference,axis)*axis;u/=np.linalg.norm(u);v=np.cross(axis,u)
+        offsets+=[rotation.axis_play_mm*(math.cos(k*math.pi/4)*u+math.sin(k*math.pi/4)*v) for k in range(8)]
+    return offsets
+
+
+def _rotation_sweep(rotation,part_shapes,offset):
     # A point at distance rho from the axis moves rho*|d theta| (radians), so
     # distance(R(theta)A, B) is rho_max-Lipschitz in theta. Same conditional
     # bound as translation: NOT a formal OCCT error certificate.
     import math
     import numpy as np
-    body=part_shapes[rotation.moving_part]
-    origin=tuple(rotation.axis_origin_mm)
-    tip=tuple(np.asarray(rotation.axis_origin_mm)+np.asarray(rotation.axis_direction))
-    rho=max_axis_radius_mm(body,rotation.axis_origin_mm,rotation.axis_direction)
+    body=part_shapes[rotation.moving_part].translate(tuple(offset)) if np.any(offset) else part_shapes[rotation.moving_part]
+    origin_vec=np.asarray(rotation.axis_origin_mm)+offset
+    origin=tuple(origin_vec);tip=tuple(origin_vec+np.asarray(rotation.axis_direction))
+    rho=max_axis_radius_mm(body,list(origin_vec),rotation.axis_direction)
     sweep_rad=math.radians(abs(rotation.end_deg))
-    count=rotation.samples;cache={};lower_bound=None;certificate=False
+    count=rotation.samples if rotation.expect=='clear' else rotation.max_samples
+    cache={};lower_bound=None;certificate=False
     while True:
         samples=[]
         for t in np.linspace(0.,1.,count):
@@ -711,29 +737,54 @@ def _rotation_check(rotation,part_shapes):
                 key=(float(t),obstacle)
                 if key not in cache:cache[key]=pair_clearance(moving,part_shapes[obstacle])
                 distance,overlap=cache[key]
-                samples.append({'t':float(t),'angle_deg':angle,'obstacle':obstacle,'distance_mm':distance,'overlap_mm3':overlap,
+                samples.append({'t':float(t),'angle_deg':angle,'axis_offset_mm':[float(x) for x in offset],'obstacle':obstacle,
+                                'distance_mm':distance,'overlap_mm3':overlap,
                                 'verdict':'pass' if distance+1e-8>=rotation.min_mm and overlap<=rotation.max_overlap_mm3 else 'fail'})
+        if rotation.expect=='blocked':break
         min_observed=min(s['distance_mm'] for s in samples)
         lower_bound=min_observed-rho*sweep_rad/(2*(count-1))-rotation.assumed_distance_error_mm
         failed=any(s['verdict']=='fail' for s in samples)
         certificate=not failed and lower_bound>=rotation.min_mm and lower_bound>0
         if failed or certificate or count>=rotation.max_samples:break
         count=min(2*(count-1)+1,rotation.max_samples)
-    engagement=None
-    if rotation.end_max_distance_mm is not None:
-        end_distance=min(s['distance_mm'] for s in samples if s['t']==1.)
-        engagement={'end_angle_deg':float(rotation.end_deg),'end_min_distance_mm':end_distance,
-                    'required_max_mm':rotation.end_max_distance_mm,
-                    'verdict':'pass' if end_distance<=rotation.end_max_distance_mm+1e-8 else 'fail',
-                    'scope':'Rigid end pose only; stop stiffness, impact and wear are not modeled.'}
-    return {'id':rotation.id,'kind':'sampled_rotation_clearance','samples':samples,
-            'end_pose_engagement':engagement,
-            'verdict':'pass' if all(x['verdict']=='pass' for x in samples) and (engagement is None or engagement['verdict']=='pass') else 'fail',
-            'continuous_swept_motion':'distance_bound_satisfied_under_stated_assumptions' if certificate else 'not_proven',
-            'continuous_distance_lower_bound_mm':lower_bound,'max_axis_radius_mm':rho,
+    return samples,lower_bound,certificate,count,rho
+
+
+def _rotation_check(rotation,part_shapes):
+    runs=[(offset,*_rotation_sweep(rotation,part_shapes,offset)) for offset in _axis_offsets(rotation)]
+    samples=[s for run in runs for s in run[1]]
+    engagement=None;blocking=None
+    if rotation.expect=='blocked':
+        per_offset=[]
+        for offset,run_samples,*_ in runs:
+            blocked=[s for s in run_samples if s['overlap_mm3']>=rotation.min_blocking_overlap_mm3]
+            first=min(blocked,key=lambda s:s['t']) if blocked else None
+            per_offset.append({'axis_offset_mm':[float(x) for x in offset],'blocked':bool(blocked),
+                               'first_blocked_angle_deg':first['angle_deg'] if first else None,
+                               'first_blocking_obstacle':first['obstacle'] if first else None})
+        blocking={'required':'every axis offset must collide within the sweep','min_blocking_overlap_mm3':rotation.min_blocking_overlap_mm3,
+                  'per_offset':per_offset,'verdict':'pass' if all(x['blocked'] for x in per_offset) else 'fail',
+                  'scope':'Rigid interference means the motion is stopped by contact before this overlap; stop stiffness and impact are not modeled. Uniform samples: blocking between samples is located only to the sample spacing.'}
+        verdict=blocking['verdict']
+    else:
+        if rotation.end_max_distance_mm is not None:
+            end_distance=max(min(s['distance_mm'] for s in run[1] if s['t']==1.) for run in runs)
+            engagement={'end_angle_deg':float(rotation.end_deg),'end_min_distance_mm':end_distance,
+                        'required_max_mm':rotation.end_max_distance_mm,
+                        'verdict':'pass' if end_distance<=rotation.end_max_distance_mm+1e-8 else 'fail',
+                        'scope':'Rigid end pose only (worst axis offset); stop stiffness, impact and wear are not modeled.'}
+        verdict='pass' if all(x['verdict']=='pass' for x in samples) and (engagement is None or engagement['verdict']=='pass') else 'fail'
+    certified=rotation.expect=='clear' and all(run[3] for run in runs)
+    bounds=[run[2] for run in runs if run[2] is not None]
+    return {'id':rotation.id,'kind':'sampled_rotation_clearance','expect':rotation.expect,'samples':samples,
+            'end_pose_engagement':engagement,'blocking':blocking,'verdict':verdict,
+            'axis_play_mm':rotation.axis_play_mm,'axis_offsets_evaluated':len(runs),
+            'continuous_swept_motion':('not_applicable_blocking_expected' if rotation.expect=='blocked' else
+                                       'distance_bound_satisfied_under_stated_assumptions' if certified else 'not_proven'),
+            'continuous_distance_lower_bound_mm':min(bounds) if bounds else None,'max_axis_radius_mm':max(run[5] for run in runs),
             'assumed_distance_error_mm':rotation.assumed_distance_error_mm,
-            'initial_samples':rotation.samples,'final_samples':count,
-            'certificate_scope':'Rigid rotation about one fixed axis against fixed obstacles. Lipschitz constant is the bounding-box corner radius from the axis. The numerical distance-error allowance is an assumption, not a certified OCCT error bound. Deformation, hinge play, wear and tolerance variation are excluded.'}
+            'initial_samples':rotation.samples,'final_samples':max(run[4] for run in runs),
+            'certificate_scope':'Rigid rotation about one fixed axis against fixed obstacles, at the nominal axis and, when axis_play_mm>0, eight radial axis shifts of that size (hinge play envelope, not every intermediate position). Lipschitz constant is the bounding-box corner radius from the axis. The numerical distance-error allowance is an assumption, not a certified OCCT error bound. Deformation, wear and tolerance variation are excluded.'}
 
 
 BOOLEAN_VOLUME_RELATIVE_SLACK=1e-4

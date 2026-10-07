@@ -186,17 +186,26 @@ def test_side_button_flow_brief_and_matrix_are_valid():
 
 
 @kernel
-def test_side_button_recipe_builds_and_passes_every_check(tmp_path):
+def test_side_button_revision2_builds_and_passes_every_check(tmp_path):
     from cadmcp_brain.studio.recipe import execute_recipe
-    from side_button_recipe import side_button_recipe
-    result=execute_recipe(Recipe.model_validate(side_button_recipe()),{},tmp_path/'sb')
+    from side_button_recipe import side_button_recipe_v2
+    result=execute_recipe(Recipe.model_validate(side_button_recipe_v2()),{},tmp_path/'sb2')
     failed=[c['id'] for c in result['checks'] if c['verdict']!='pass']
     assert result['geometry_checks_verdict']=='pass',failed
-    kinds={c['kind'] for c in result['checks']}
-    assert {'sampled_rotation_clearance','sampled_wall_thickness','volume_integration_agreement',
-            'reimported_step_one_to_one_solid_equivalence'}<=kinds
-    stop=next(c for c in result['checks'] if c['id']=='overtravel-stop-engages')
-    assert stop['end_pose_engagement']['verdict']=='pass'
+    checks={c['id']:c for c in result['checks']}
+    assert checks['rest-outward-blocked']['blocking']['verdict']=='pass'
+    assert checks['stem-contact-by-free-play']['axis_offsets_evaluated']==9
+    assert checks['shell-clear-until-stop']['end_pose_engagement']['verdict']=='pass'
+    assert checks['button-insertion-drop']['start_translation_mm']==[0.,-15.,0.]
+
+
+def test_side_button_revision2_is_a_valid_contract():
+    from side_button_recipe import angles_v2,side_button_recipe_v2
+    recipe=Recipe.model_validate(side_button_recipe_v2())
+    a=angles_v2()
+    assert a['stop']<a['press']<a['contact']<0
+    assert {o.part_id for o in recipe.outputs}>={'shell','button','hinge_pin'}
+    assert any('spring' in item for item in recipe.unverified_requirements)
 
 
 @kernel
@@ -215,3 +224,71 @@ def test_side_button_thin_barrel_is_caught_by_wall_check(tmp_path):
             'switch_stem':cq.Solid.makeBox(1.,1.,1.,cq.Vector(120.,100.,100.))}
     check=next(c for c in evaluate_geometry(recipe,shapes)['checks'] if c['id']=='button-printed-wall')
     assert check['verdict']=='fail' and abs(check['sampled_min_mm']-.7)<1e-6
+
+
+def _hinge_shapes(gap=2.):
+    import cadquery as cq
+    return {'stop':cq.Workplane().box(10.,10.,2.).val().translate((25.,0.,-1.-gap)),
+            'button':cq.Workplane().box(30.,10.,2.).val().translate((15.,0.,1.))}
+
+
+@kernel
+def test_blocked_rotation_proves_a_stop_and_fails_when_motion_is_free():
+    from cadmcp_brain.studio.recipe import evaluate_geometry
+    from test_recipe_operations import hinge_recipe
+    blocked=hinge_recipe(8.);blocked['rotation_checks'][0].update(expect='blocked',samples=5,max_samples=33)
+    check=next(c for c in evaluate_geometry(blocked,_hinge_shapes())['checks'] if c['id']=='press')
+    assert check['verdict']=='pass' and check['blocking']['per_offset'][0]['first_blocking_obstacle']=='stop'
+    assert check['continuous_swept_motion']=='not_applicable_blocking_expected'
+    free=hinge_recipe(2.);free['rotation_checks'][0].update(expect='blocked',samples=5,max_samples=9)
+    check=next(c for c in evaluate_geometry(free,_hinge_shapes())['checks'] if c['id']=='press')
+    assert check['verdict']=='fail' and check['blocking']['verdict']=='fail'
+
+
+@kernel
+def test_axis_play_envelope_catches_collision_hidden_at_nominal_axis():
+    from cadmcp_brain.studio.recipe import evaluate_geometry
+    from test_recipe_operations import hinge_recipe
+    # Nominal: the far corner closes the 2 mm gap at 3.82 deg; 3.5 deg leaves about 0.17 mm.
+    nominal=hinge_recipe(3.5)
+    check=next(c for c in evaluate_geometry(nominal,_hinge_shapes())['checks'] if c['id']=='press')
+    assert check['verdict']=='pass' and check['axis_offsets_evaluated']==1
+    played=hinge_recipe(3.5);played['rotation_checks'][0]['axis_play_mm']=.5
+    check=next(c for c in evaluate_geometry(played,_hinge_shapes())['checks'] if c['id']=='press')
+    assert check['verdict']=='fail' and check['axis_offsets_evaluated']==9
+
+
+def test_blocked_check_cannot_also_claim_end_engagement():
+    from pydantic import ValidationError
+    from test_recipe_operations import hinge_recipe
+    data=hinge_recipe(5.);data['rotation_checks'][0].update(expect='blocked',end_max_distance_mm=.1)
+    with pytest.raises(ValidationError):Recipe.model_validate(data)
+
+
+def test_evidence_summary_keeps_nested_sub_verdicts():
+    from cadmcp_brain.studio.evidence_state import _summary
+    summary=_summary({'id':'x','verdict':'pass','end_pose_engagement':{'verdict':'pass','end_min_distance_mm':0.,'scope':'long'},
+                      'blocking':None})
+    assert summary['end_pose_engagement']=={'verdict':'pass','end_min_distance_mm':0.}
+
+
+@kernel
+def test_motion_start_offset_chains_a_second_leg():
+    import cadquery as cq
+    from cadmcp_brain.studio.recipe import evaluate_geometry
+    data=_wall_recipe(.5);data['wall_checks']=[]
+    data['operations'].append({'id':'post','op':'box','function_id':'Tube','reason':'Obstacle beside the second leg.',
+                               'size_mm':[2.,2.,2.],'center_mm':[24.5,0.,-10.]})
+    data['operations'].append({'id':'both','op':'union','function_id':'Tube','reason':'Keep the obstacle in the graph.',
+                               'operands':['tube','post']})
+    data['outputs']=[{'part_id':'tube','node':'tube'},{'part_id':'post','node':'post'}]
+    data['operations'].pop()
+    tube=cq.Solid.makeCylinder(5.,10.).cut(cq.Solid.makeCylinder(4.2,10.))
+    post=cq.Solid.makeBox(2.,2.,2.,cq.Vector(23.5,-1.,-11.))  # meets the tube wall, not its bore
+    def leg(start):
+        d=copy.deepcopy(data)
+        d['motion_checks']=[{'id':'leg','moving_part':'tube','obstacles':['post'],'start_translation_mm':start,
+                             'translation_end_mm':[0.,0.,-20.],'samples':9,'max_samples':17}]
+        return next(c for c in evaluate_geometry(d,{'tube':tube,'post':post})['checks'] if c['id']=='leg')
+    assert leg([0.,0.,0.])['verdict']=='pass'
+    assert leg([20.,0.,0.])['verdict']=='fail'
