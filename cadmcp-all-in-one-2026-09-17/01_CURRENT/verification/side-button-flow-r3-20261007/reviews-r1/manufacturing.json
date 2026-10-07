@@ -1,0 +1,158 @@
+{
+ "schema_version": 1,
+ "subject_digest": "969f9723fc2e9d1b8b2af5db7e7649be6c73c0d598b4fb1ec6998f27551189db",
+ "role": "manufacturing",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (manufacturing role, rev3)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "MFG-BUTTON-FLOATING-FACE",
+   "severity": "major",
+   "claim": "The declared button orientation ('bore vertical and web on the bed') does not print: the face is a floating island. Only the web and barrel bottoms (z 9.8) touch the bed. The skin bottom (z 10.0) is 0.2 mm above the bed, the rib bottom (z 10.5) 0.7 mm, and the plunger bottom (z 12.0) 2.2 mm. From z 9.8 to 13.8 the skin, rib and plunger are not joined to the web or barrel at all. They join only through the link (z 13.8-17.5), 4 mm above the bed. In the first ~4 mm the slicer therefore has to start a separate island in air. One face of that island sits a sub-layer 0.2 mm above the bed, which support cannot fill (typical support z-gap is one layer or more). That face is the skin's lower running-gap edge (33 mm2), which sets the 0.4 mm window gap and the flush look. Flipping the part does not help: the skin top (z 18.0) stands 0.5 mm above the barrel, web, rib and link tops (z 17.5). The barrel top is an axial thrust face with a 0.2 mm gap to tab_high. The rev2 finding MFG-BUTTON-ORIENT (level the features to one plane) is therefore not fixed; only the stated bed side changed.",
+   "evidence": [
+    "Z-slab sections of button/model.step: z 9.80-9.85 has 1 solid (web+barrel, x -17.5..-12.5); z 9.95-10.05, 10.4-10.6 and 13.70-13.75 have 2 solids (face island x -10..14 and web/barrel); z 13.85-13.90 has 1 solid.",
+    "Planar faces of button/model.step: z 9.80 area 76.3+6.9+6.9 mm2 (web, barrel); z 10.00 area 33.2 mm2 (skin bottom, x -10..14, y 29.5..31.8); z 10.50 area 30.2 mm2 (rib bottom); z 12.00 area 18.3 mm2 (plunger bottom); z 18.00 area 36.1 mm2 (skin top) vs z 17.50 web 76.1 mm2, barrel/link tops.",
+    "Recipe v3: bz0 = tab_low_top + axial_gap = 9.8, bz1 = window_z_max - 0.5 = 17.5, window z 10..18, rib_box z 10.5..17.5, link z_min 13.8.",
+    "design_basis.assumptions: 'button printed with the bore vertical and web on the bed'."
+   ],
+   "proposed_change": "Give the button one common bed plane with the face. Option A (bottom down): set the barrel and web bottom to z 10.0, level with the skin bottom. Raise tab_low's top to 9.8 to keep the 0.2 mm axial gap. tab_low's x max of -10.6 is outside the window gap (x >= -10.4), so no sub-layer step comes back. Extend the rib down to z 10.0. Also bring the plunger underside to the bed, or add a <=45 deg chamfer from it to the skin, so the plunger needs no support. Option B (top down): level the barrel, web, rib and link tops to z 18.0 and raise tab_high to keep the gap. Under either option, put a small chamfer on the bottom edges of the web stop faces and the skin gap edge, at least the elephant's-foot size measured on the target printer, because the rest and hard-stop contacts and the running gap sit in the first layers. Re-run the insertion and rotation checks after the change.",
+   "required_test": "Slice the revised button STEP in the declared orientation: one connected bed-contact region that includes the skin, and no support under the barrel thrust faces or the skin gap edge. Print one button and measure the skin's lower edge height and straightness, and the window gap all round in the shell, with feeler gauges."
+  },
+  {
+   "id": "MFG-LINK-THIN-ROOT",
+   "severity": "major",
+   "claim": "The whole face (skin, rib, plunger) hangs on the hinge/stop side through one link of 3.0 x 3.7 mm (11.1 mm2). Nothing else joins them between x -13.15 and -9. The hard stop acts on the web, which is on the hinge side of that link. So any thumb force above the stop load bends the link, rib and skin, and the plunger travels past the rigid stop pose toward the switch housing. The overtravel checks are rigid-body only ('Deformation ... excluded'), with a housing lower bound of 0.178 mm. My first-order beam estimate (not a measurement) assumes the load at the plunger (x 2, about 13 mm from the link), a 3.5 mm free link span and E 2-3 GPa for FDM PLA/PETG. It gives about 0.02-0.03 mm of extra plunger travel per newton from the link alone, and about 2.3 MPa per newton of in-layer bending stress at the link. At a firm 6-10 N press, that would use up the 0.178-0.4 mm housing margin before skin or rib flex is counted. A press near the far end of the face (x 14) roughly doubles the moment. In the declared orientation the layers run across the link's height, so this is in-layer bending, which is the better case. The issue is stiffness and the single thin root, not layer adhesion.",
+   "evidence": [
+    "X-slab sections of button/model.step at x -12.0, -11.5, -11.0: one solid each, y 24.0-27.0, z 13.8-17.5, area 11.1 mm2. At x -10.0 the link and the skin are still separate solids.",
+    "measurements.json housing-clear-past-stop continuous_distance_lower_bound_mm 0.178; certificate_scope 'Deformation, wear and tolerance variation are excluded'.",
+    "Recipe v3: link_box y hy-1..hy+2 = 24..27, z 13.8..17.5 (link_z_min chosen to clear the 13.6 mm block tops on the insertion path); stop contact at the web tip y 8 (radius 17 mm).",
+    "unverified_requirements: 'stop stiffness ... not qualified'."
+   ],
+   "proposed_change": "Stiffen the face-to-hinge root without leaving the insertion envelope. Widen the link in y within safe_core: it can grow toward y 22 on the web side and toward the skin, since only the z band above the blocks is constrained. Fill the corner between the link and the rib with a gusset, and add fillets at the link-barrel and link-rib re-entrant corners. Alternatively, add a second stop on the face side, for example a rib-mounted stop against the shell, so that face flex cannot carry the plunger into the housing. State the expected press force the stop must hold.",
+   "required_test": "Run an FEA of the button at the stop pose (fixed bore, contact at the web tip) with a stated press force, for example 10 N at the plunger centre and at x 14, using a measured or datasheet modulus for the chosen filament. Report the extra plunger displacement against the 0.178 mm housing margin. Physically: on a printed prototype at the stop, apply known weights to the face and measure plunger travel past the stop with a dial indicator or feeler gauge."
+  },
+  {
+   "id": "MFG-SPRING-POCKET-ACCESS",
+   "severity": "minor",
+   "claim": "The spring pocket is a blind horizontal Ø1.6 x 2 mm hole (axis X) in block_in. With the shell printed rim-down, it prints as a small horizontal hole with a bridged or sagged top. The fit to the Ø1.5 spring (0.05 mm radial nominal) depends on how the hole prints, and the recipe gives no finishing step for it, unlike the bore. It also cannot easily be drilled to size. The straight line on the pocket axis from the +x side passes through block_out, the rest-stop block (3.8 mm3 of shell on the axis between x -12.5 and -10.6). The 5.9 mm slot between the blocks has no room for a drill. From the -x side, a drill would break through the 1.5 mm pocket floor. If the pocket prints small, the return spring (F4) cannot be seated without damaging a stop face.",
+   "evidence": [
+    "Shell volume on the pocket axis (Ø1.6, y 9.5, z 11.6): x -18.396..-12.5 = 0.0, x -12.5..-10.6 = 3.82 mm3 (block_out), x -21.9..-20.396 = 3.02 mm3 (pocket floor), x -52..-21.9 = 0.0 (open interior).",
+    "Shell z 11.6 section: block_in x -21.896..-18.396, block_out x -12.500..-10.600, both y 7.5..11.5.",
+    "Recipe v3: spring_pocket r 0.8, spring r 0.75, depth 2.0; shell-printed-wall sampled minimum 1.20 mm at the pocket floor (-20.30, 8.7, 11.6)."
+   ],
+   "proposed_change": "Make the spring seat finishable in the declared orientation. Either make it a vertical U-slot open at the block top (z 13.6), so its width is set by XY accuracy and the spring drops in from above. Or make it a through hole from the open -x interior side, drilled to the bought spring's measured OD, with a backstop such as a set screw or plug, which can also set the preload. Name the spring's OD, free length and solid length once one is chosen.",
+   "required_test": "Print a block_in coupon in the rim-down orientation and check that the chosen spring enters and seats freely. Then assemble: with the spring seated, the button returns onto block_out from the stop pose in every trial, for example 20 presses."
+  },
+  {
+   "id": "MFG-SPRING-NOT-IN-INSERTION-CHECK",
+   "severity": "minor",
+   "claim": "The stated assembly order is 'spring into pocket, button in from below and slid onto the rest block'. The spring envelope reaches past the pocket mouth into the slot (installed length 2.896 mm against a 2.0 mm pocket), and a free spring reaches further. The web and barrel must therefore push the spring end sideways back into its pocket during the 22 mm +y slide. The button-insertion-slide check lists only the shell as an obstacle, so this interaction is unverified. A Ø1.5 spring pushed sideways at its end can kink or jump out of a 2 mm-deep pocket.",
+   "evidence": [
+    "Recipe motion_checks button-insertion-slide: obstacles ['shell'] only.",
+    "measurements.json overlap-button-return_spring distance 0.0 at the installed pose (spring end touches the web face).",
+    "Recipe v3: spring height = pocket depth 2.0 + inward gap 0.896 mm; web x -17.5..-12.5 slides along y through the slot at y 7.5..11.5."
+   ],
+   "proposed_change": "Either change the order so the spring goes in after the button is in place, for example through an access slot or the -x through hole proposed in MFG-SPRING-POCKET-ACCESS. Or add a lead-in chamfer on the web's leading edge and include the compressed spring as an obstacle in the slide check, with the spring held compressed in its pocket.",
+   "required_test": "Run the slide check with the spring envelope compressed to the pocket depth included as an obstacle. Then do a physical assembly trial (for example 5 times) with the chosen spring and record whether it stays seated."
+  },
+  {
+   "id": "MFG-SHELL-SUPPORT-PLAN",
+   "severity": "minor",
+   "claim": "Rim-down printing is the right choice for the shell: the outer skin needs no support. The internal support is still undeclared, though, and part of it lands on functional faces. Faces needing support are: the tab_low underside (260 mm2 at z 6.6, cantilevered from the side wall), the tab_high underside (37.5 mm2 at z 17.7), the flat cavity cap (1791 mm2 at z 32.5), and a large inward-sloping inner roof. Support under tab_high stands on tab_low's top, which is the barrel's lower axial thrust face (0.2 mm gap), and around the pin holes. The window top edge (37.6 mm2 at z 18.4) is a ~24.8 mm curved bridge in the 1.5 mm wall. Its sag goes straight into the 0.4 mm running gap above the button skin and onto the visible edge of the protected outer surface.",
+   "evidence": [
+    "Downward planar faces of shell/model.step: z 6.60 area 260.0 mm2 (tab_low); z 17.70 area 37.5 mm2 (tab_high); z 18.40 area 37.6 mm2 (window top edge); z 32.50 area 1790.6 mm2 (cavity cap); inner loft face ~9410 mm2 with downward normal.",
+    "Recipe v3 window_gap x -10.4..14.4, z 9.6..18.4; axial_gap 0.2 between the barrel and both tabs.",
+    "No layer height, support policy or support blockers are stated anywhere in the recipe or build record."
+   ],
+   "proposed_change": "State the support plan: support from the build plate under tab_low; support blockers (or drill-out after printing) on the pin holes; how support between the tabs is removed through the slot or interior. Add <=45 deg gussets under tab_low and tab_high to the wall, inside the skin and clear of the insertion path, so those faces need no support. For the window top edge, either accept a post-print deburr and gap check, or add a sacrificial one-layer break-away bridge or tie in the window gap, removed after printing.",
+   "required_test": "Slice the shell rim-down with the stated settings and list the support regions. Print it, and after support removal measure the window gap along the top edge (feeler gauge, 0.4 mm nominal) and the tab_low-top / tab_high-bottom thrust faces for flatness and residue."
+  },
+  {
+   "id": "MFG-PIN-RETENTION-PROCESS",
+   "severity": "minor",
+   "claim": "The tab holes are modelled at Ø2.01 for a Ø2 h7 dowel ('adhesive retention'), with no finishing step stated. As-printed vertical FDM holes of this size usually need drilling or reaming to accept the dowel at all. With a near-zero designed gap, adhesive will not wet the joint, or it will be pushed out and wick along the dowel into the 0.2 mm tab-to-barrel gaps, gluing the button. The bore finishing ('reamed to 2.10 mm') is stated; the shell side is not. The straight path is open from below: there is no shell material on the pin axis below tab_low. So one reaming pass through both tabs from the open bottom is possible and would also keep the two tab holes coaxial.",
+   "evidence": [
+    "Recipe v3: tab_hole_radius 1.005, pin_radius 1.0, barrel_inner_radius 1.05; design_basis 'tab holes 2.01 mm with adhesive retention'.",
+    "Shell volume on the pin axis below tab_low (z -5..6.6) = 0.0; above tab_high = 8.73 mm3 (the roof; through hole exits into the cavity).",
+    "pin-insertion-path minimum distance 0.005 mm (nominal radial clearance in the tab holes)."
+   ],
+   "proposed_change": "State the process. Ream both tab holes in one pass from below, before fitting the button. Choose the retention: a light press fit in tab_high only, with tab_low a slip fit, or a single named adhesive applied only at the tab_low underside after assembly. Name the dowel tolerance class actually bought (ISO 8734 m6 and ISO 2338 h8 give different play from the 'h7' assumed), and re-run the play checks with the measured play.",
+   "required_test": "After reaming, measure the bore and both tab holes with pin gauges. Insert the dowel, check that the button rotates freely through the full stop angle, and check that the dowel cannot be pushed out with a stated axial force."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "e9d3cb1c4bdf09e9e8056d14044d963281a2d9fd321ff8adf84ee64d6c47e95a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r3-20261007/workspace/studio/side-button-flow/969f9723fc2e9d1b-24d773b0/assembly.png",
+   "status": "viewed",
+   "observation": "Assembly preview: the button skin piece (orange) sits flush in the side of the stand-in shell with a visible thin running gap on all four sides; no internal parts are visible from this view, so it shows nothing about print orientation or supports."
+  },
+  {
+   "attachment_sha256": "1b0d63ee1c7448803c8cb04d36b428c9cdb34bc75679f68a5c6aacf72137def5",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r3-20261007/workspace/studio/side-button-flow/969f9723fc2e9d1b-24d773b0/build-record.json",
+   "status": "viewed",
+   "observation": "Build record repeats the rev3 recipe: design_basis assumption 'button printed with the bore vertical and web on the bed', 'shell printed rim-down', reamed 2.10 mm bore on a Ø2 h7 dowel, 2.01 mm tab holes with adhesive; outputs all tagged 'FDM prototype; parameters not qualified'; no support plan or layer height is stated."
+  },
+  {
+   "attachment_sha256": "c0b8c6fe7e185f442f8e8e3aa26a416002e20273c19bbf206f5eb9f2ebd38378",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r3-20261007/workspace/studio/side-button-flow/969f9723fc2e9d1b-24d773b0/button/iso.png",
+   "status": "viewed",
+   "observation": "Button iso: curved skin strip, rear rib, thin link at the top joining the rib to the barrel, barrel with the vertical bore, and the large full-height stop web. The link visibly sits in the upper part only; under it the face (skin/rib/plunger) and the web/barrel are separate, which my slices confirm."
+  },
+  {
+   "attachment_sha256": "c780216c913acf1c7a9836582897a3bf918e8239aa68d6637fd107d2e278414f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r3-20261007/workspace/studio/side-button-flow/969f9723fc2e9d1b-24d773b0/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain cylinder, about Ø2 x 14.1 mm (recipe: z 6.6 to 20.7), consistent with a purchased dowel; no chamfer or retention feature is modelled."
+  },
+  {
+   "attachment_sha256": "13eec765ab1a7b68e75c849e35aa5bf995f3f92324f0990758fb7901d97ab25c",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r3-20261007/workspace/studio/side-button-flow/969f9723fc2e9d1b-24d773b0/measurements.json",
+   "status": "viewed",
+   "observation": "All checks pass. Relevant here: button-printed-wall sampled_min 1.30 mm (minimum_proven false), shell-printed-wall sampled_min 1.20 at the spring-pocket floor (-20.30, 8.7, 11.6); oblique exits 0.025 (shell, window end x 14.4) and 0.005 mm (button) — my slice at x 14.4-14.7, z 10.9 shows the shell wall is y 29.26-30.71 (about 1.45 mm), so the shell value is a corner-ray artefact. Every rotation check states 'Deformation ... excluded'; housing-clear-past-stop lower bound is 0.178 mm."
+  },
+  {
+   "attachment_sha256": "1197b6bc6558047bbc2bbad676adc48bb7f54ee273c078082cd236a731647d2f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r3-20261007/workspace/studio/side-button-flow/969f9723fc2e9d1b-24d773b0/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Spring is a plain solid cylinder envelope (Ø1.5 x 2.896 mm); no wire, free length or rate is represented, consistent with the 'placeholder envelope' wording."
+  },
+  {
+   "attachment_sha256": "440927e480cc42f6edbc0c0e2bf716596315f6dc4d9640d61e2a2845fcbaaec5",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r3-20261007/workspace/studio/side-button-flow/969f9723fc2e9d1b-24d773b0/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell iso: side window cut through the 1.5 mm wall with the inner tabs/stop blocks visible through it; the window top edge is a long unsupported span of the curved wall (in rim-down printing it is a ~24.8 mm bridge)."
+  },
+  {
+   "attachment_sha256": "c1d58522c820403fb6bfa08f24bbc769a4b277476e814bb46e3033eec0fc4a58",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r3-20261007/workspace/studio/side-button-flow/969f9723fc2e9d1b-24d773b0/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Plain 6 x 4 x 6 mm box: assumed switch housing placeholder, not a real switch; not a printed part, so no FDM review applies beyond the stated placeholder status."
+  },
+  {
+   "attachment_sha256": "b86a4169fec7e56e7af5756340b2d11bfe3a0a113dbdb26343bd08cacfdf7f2a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r3-20261007/workspace/studio/side-button-flow/969f9723fc2e9d1b-24d773b0/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Plain 2 x 1.1 x 2 mm box: assumed stem placeholder; no travel or force model, only a geometric target for the plunger."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Earlier findings that rev3 fixes in CAD: the pin is now a separate purchased dowel inserted from below (r1/r2 MFG-CAPTIVE-PIN, MFG-PIN-ANISOTROPY, rev2 MFG-PIN-OPTION). The stop web is full height and joined to the barrel over 9.8-17.5 (rev2 MFG-ARM-ROOT blocking). The rest and hard stops are vertical, XY-defined faces (r2 MFG-REST-STOP-PRINTABLE). The tab faces no longer form sub-layer steps at the window (MFG-SUBLAYER-STEP). block_in is now 3.5 mm wide (rev2 MFG-BLOCK-ROOT). Not fixed: rev2 MFG-BUTTON-ORIENT (see MFG-BUTTON-FLOATING-FACE) and MFG-SHELL-SUPPORT (see MFG-SHELL-SUPPORT-PLAN).",
+  "Rest pose and stop travel are still set by printed XY positions of block_out/block_in relative to the printed tab holes, with no adjustment route such as file-to-gauge or a shim. At the 1:1 stop-to-plunger radius, about 0.1 mm of XY error moves the plunger about 0.1-0.13 mm against 0.2 mm of stem free play. This matters only once the real switch position is known.",
+  "Material, layer height, nozzle, slicer and printer are not named. All FDM statements here are qualitative or first-order estimates, not calibrated values. The link stiffness numbers in MFG-LINK-THIN-ROOT are hand beam estimates, not FEA or a test.",
+  "The real switch (stem position, operating force and travel, internal bottoming), the real mouse shell and PCB, the return spring's specification, and what 'easier to press' means to the owner are unknown and can only come from the owner. No physical print, assembly or press test was done in this review.",
+  "Wall checks are sampled. I checked the shell's 0.025 mm oblique-exit point by slicing: the wall there is about 1.45 mm, so it is a corner-ray artefact. The button's 0.005 mm oblique value was shown to be an artefact in the earlier round and is unchanged here. Other thin wedges between samples are not excluded."
+ ]
+}

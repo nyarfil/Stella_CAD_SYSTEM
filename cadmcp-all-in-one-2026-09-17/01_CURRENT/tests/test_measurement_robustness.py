@@ -186,17 +186,28 @@ def test_side_button_flow_brief_and_matrix_are_valid():
 
 
 @kernel
-def test_side_button_revision2_builds_and_passes_every_check(tmp_path):
+def test_side_button_revision3_builds_and_passes_every_check(tmp_path):
     from cadmcp_brain.studio.recipe import execute_recipe
-    from side_button_recipe import side_button_recipe_v2
-    result=execute_recipe(Recipe.model_validate(side_button_recipe_v2()),{},tmp_path/'sb2')
+    from side_button_recipe import side_button_recipe_v3
+    result=execute_recipe(Recipe.model_validate(side_button_recipe_v3()),{},tmp_path/'sb3')
     failed=[c['id'] for c in result['checks'] if c['verdict']!='pass']
     assert result['geometry_checks_verdict']=='pass',failed
     checks={c['id']:c for c in result['checks']}
-    assert checks['rest-outward-blocked']['blocking']['verdict']=='pass'
-    assert checks['stem-contact-by-free-play']['axis_offsets_evaluated']==9
-    assert checks['shell-clear-until-stop']['end_pose_engagement']['verdict']=='pass'
-    assert checks['button-insertion-drop']['start_translation_mm']==[0.,-15.,0.]
+    for check_id in ('rest-outward-blocked-within-play','hard-stop-blocks-within-play','stem-contact-by-free-play'):
+        assert checks[check_id]['blocking']['verdict']=='pass' and checks[check_id]['axis_offsets_evaluated']==9
+    assert checks['housing-clear-past-stop']['axis_offsets_evaluated']==9
+
+
+def test_side_button_revision3_is_a_valid_contract():
+    from side_button_recipe import P3,angles_v3,inward_gap_v3,side_button_recipe_v3
+    recipe=Recipe.model_validate(side_button_recipe_v3())
+    a=angles_v3()
+    assert a['stop']<a['press']<a['contact']<0 and 0<a['stop_play']<.5
+    # Stops act at least as far from the axis as the plunger, so play shifts them no more than it shifts actuation.
+    assert P3['hinge_y_mm']-P3['arm_tip_y_mm']>=(P3['plunger_x_min_mm']+P3['plunger_x_max_mm'])/2-P3['hinge_x_mm']
+    assert inward_gap_v3()>0
+    assert {o.part_id for o in recipe.outputs}>={'shell','button','hinge_pin','return_spring'}
+    assert not any('filament' in str(op.reason) for op in recipe.operations)
 
 
 def test_side_button_revision2_is_a_valid_contract():
