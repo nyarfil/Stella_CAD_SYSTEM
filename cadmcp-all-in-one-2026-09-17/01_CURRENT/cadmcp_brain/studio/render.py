@@ -58,3 +58,39 @@ def render_shapes(shapes,path,direction=(1,1,1),*,width=800,height=600,label='CA
     path=Path(path);path.parent.mkdir(parents=True,exist_ok=True);image.save(path,format='PNG')
     return {'method':'CPU triangle z-buffer orthographic preview','triangles':len(tri),'width':width,'height':height,
             'measurement_evidence':False}
+
+
+def drawing_svg(shape,direction,*,width=700,height=460):
+    """Hidden-line SVG drawing from polygonal HLR on a private mesh copy.
+
+    Exact B-rep HLR (CadQuery getSVG) can run for tens of minutes on B-spline
+    skins, exceeding the bounded worker budget.  Polygonal HLR keeps the
+    drawing time bounded; line positions carry the mesh deflection and the
+    drawing is display evidence only.  The STEP remains the exact geometry.
+    """
+    from OCP.BRepBuilderAPI import BRepBuilderAPI_Copy
+    from OCP.BRepMesh import BRepMesh_IncrementalMesh
+    from OCP.HLRAlgo import HLRAlgo_Projector
+    from OCP.HLRBRep import HLRBRep_PolyAlgo, HLRBRep_PolyHLRToShape
+    from OCP.gp import gp_Ax2, gp_Dir, gp_Pnt
+    from cadquery import Shape
+    from cadquery.occ_impl.exporters.svg import PATHTEMPLATE, SVG_TEMPLATE, getPaths
+    box=shape.BoundingBox()
+    deflection=max(max(box.xlen,box.ylen,box.zlen)*7e-4,1e-6)
+    copy=BRepBuilderAPI_Copy(shape.wrapped).Shape()
+    BRepMesh_IncrementalMesh(copy,deflection,False,.25,True)
+    algo=HLRBRep_PolyAlgo(copy)
+    algo.Projector(HLRAlgo_Projector(gp_Ax2(gp_Pnt(),gp_Dir(*direction))))
+    algo.Update()
+    result=HLRBRep_PolyHLRToShape();result.Update(algo)
+    visible=[Shape.cast(c) for c in (result.VCompound(),result.Rg1LineVCompound(),result.OutLineVCompound()) if not c.IsNull()]
+    hidden=[Shape.cast(c) for c in (result.HCompound(),result.OutLineHCompound()) if not c.IsNull()]
+    hidden_paths,visible_paths=getPaths(visible,hidden)
+    from cadquery import Compound
+    bb=Compound.makeCompound(hidden+visible).BoundingBox()
+    scale=min(width/max(bb.xlen,1e-9)*.75,height/max(bb.ylen,1e-9)*.75)
+    return SVG_TEMPLATE%{'unitScale':str(scale),'strokeWidth':str(1./scale),'strokeColor':'0,0,0','hiddenColor':'160,160,160',
+                         'hiddenContent':''.join(PATHTEMPLATE%p for p in hidden_paths),
+                         'visibleContent':''.join(PATHTEMPLATE%p for p in visible_paths),
+                         'xTranslate':str(-bb.xmin+200/scale),'yTranslate':str(-bb.ymax-20/scale),
+                         'width':str(width),'height':str(height),'textboxY':str(height-30),'uom':'mm','axesIndicator':''}

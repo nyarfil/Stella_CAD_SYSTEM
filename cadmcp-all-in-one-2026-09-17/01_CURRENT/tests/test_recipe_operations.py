@@ -172,7 +172,7 @@ def test_capabilities_advertise_new_operations_and_rotation_check():
     report=capabilities(['shell','revolve','spline_loft','mirror','fillet_edges','chamfer_edges'],
                         ['sampled_rotation_clearance'])
     assert report['requested_capabilities_supported'] is True
-    assert capabilities(['sweep'])['unsupported_operations']==['sweep']
+    assert capabilities(['surface_loft'])['unsupported_operations']==['surface_loft']
 
 
 def test_rotation_checks_are_frozen_in_correction_lineage():
@@ -181,3 +181,59 @@ def test_rotation_checks_are_frozen_in_correction_lineage():
     weakened=copy.deepcopy(hinge_recipe(5.));weakened['rotation_checks'][0]['end_deg']=1.
     assert (Studio._lineage_contract(original)!=
             Studio._lineage_contract(Recipe.model_validate(weakened)))
+
+
+SQUARE=[[-1.,-1.],[1.,-1.],[1.,1.],[-1.,1.]]
+
+
+def _single(op):
+    return base([op],[{'part_id':'p','node':op['id']}])
+
+
+@kernel
+def test_sweep_polyline_volume_and_spline_path_build(tmp_path):
+    from cadmcp_brain.studio.recipe import execute_recipe
+    straight=_single({'id':'tube','op':'sweep','function_id':'Shell','reason':'Square channel along an L-shaped path.',
+                      'profile_mm':SQUARE,'path_mm':[[0.,0.,0.],[0.,0.,20.],[20.,0.,20.]],
+                      'path_kind':'polyline','transition':'right'})
+    result=execute_recipe(Recipe.model_validate(straight),{},tmp_path/'l')
+    assert result['geometry_checks_verdict']=='pass'
+    # Mitred corner: 4 mm2 section times 40 mm centreline.
+    assert abs(result['trace'][0]['volume_mm3']-160.)<1e-6
+    curved=_single({'id':'tube','op':'sweep','function_id':'Shell','reason':'Square channel along a smooth path.',
+                    'profile_mm':SQUARE,'path_mm':[[0.,0.,0.],[5.,0.,10.],[15.,5.,15.],[25.,5.,15.]],'path_kind':'spline'})
+    assert execute_recipe(Recipe.model_validate(curved),{},tmp_path/'s')['geometry_checks_verdict']=='pass'
+
+
+@kernel
+def test_section_loft_on_non_parallel_planes(tmp_path):
+    from cadmcp_brain.studio.recipe import execute_recipe
+    r=2**-.5
+    data=_single({'id':'bend','op':'section_loft','function_id':'Shell','reason':'Bend through perpendicular sections.',
+                  'profile':'polygon','mode':'smooth','sections':[
+                      {'origin_mm':[0.,0.,0.],'normal':[0.,0.,1.],'x_dir':[1.,0.,0.],'points_mm':SQUARE},
+                      {'origin_mm':[5.,0.,8.],'normal':[r,0.,r],'x_dir':[r,0.,-r],'points_mm':SQUARE},
+                      {'origin_mm':[14.,0.,12.],'normal':[1.,0.,0.],'x_dir':[0.,0.,-1.],'points_mm':SQUARE}]})
+    result=execute_recipe(Recipe.model_validate(data),{},tmp_path/'b')
+    assert result['geometry_checks_verdict']=='pass'
+    bounds=next(c for c in result['checks'] if c['id']=='_system-volume-agreement-p')
+    assert bounds['agree'] is True
+
+
+@pytest.mark.parametrize('mutation',['skew_x_dir','shared_origin','flipped_winding','repeated_path_point','short_spline_path'])
+def test_sweep_and_section_loft_contracts(mutation):
+    r=2**-.5
+    if mutation in ('repeated_path_point','short_spline_path'):
+        op={'id':'t','op':'sweep','function_id':'Shell','reason':'Contract trial for sweep paths.','profile_mm':SQUARE,
+            'path_mm':[[0.,0.,0.],[0.,0.,0.],[0.,0.,5.]] if mutation=='repeated_path_point' else [[0.,0.,0.],[0.,0.,5.]],
+            'path_kind':'polyline' if mutation=='repeated_path_point' else 'spline'}
+    else:
+        sections=[{'origin_mm':[0.,0.,0.],'normal':[0.,0.,1.],'x_dir':[1.,0.,0.],'points_mm':SQUARE},
+                  {'origin_mm':[5.,0.,8.],'normal':[r,0.,r],'x_dir':[r,0.,-r],'points_mm':copy.deepcopy(SQUARE)}]
+        if mutation=='skew_x_dir':sections[1]['x_dir']=[1.,0.,0.]
+        elif mutation=='shared_origin':sections[1]['origin_mm']=[0.,0.,0.]
+        else:sections[1]['points_mm'].reverse()
+        op={'id':'t','op':'section_loft','function_id':'Shell','reason':'Contract trial for section lofts.',
+            'profile':'polygon','mode':'ruled','sections':sections}
+    with pytest.raises(ValidationError):
+        Recipe.model_validate(_single(op))

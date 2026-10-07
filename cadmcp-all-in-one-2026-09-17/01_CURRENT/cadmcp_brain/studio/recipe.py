@@ -195,6 +195,72 @@ class SplineLoft(Node):
             raise ValueError('Spline loft sections must retain one winding direction.')
         return self
 
+def _unit3(vector,label):
+    norm=sum(x*x for x in vector)**.5
+    if abs(norm-1)>1e-6:raise ValueError(label+' must be a unit direction.')
+
+
+class PlaneSection(Strict):
+    """Closed 2D profile on an arbitrary plane: origin, unit normal and in-plane unit x axis."""
+    origin_mm: Vec
+    normal: Vec
+    x_dir: Vec
+    points_mm: list[Vec2] = Field(min_length=3, max_length=64)
+    @model_validator(mode='after')
+    def frame(self):
+        if any(abs(v)>1_000_000 for v in self.origin_mm):raise ValueError('Section origin must stay within the bounded CAD workspace.')
+        _unit3(self.normal,'Section normal');_unit3(self.x_dir,'Section x_dir')
+        if abs(sum(a*b for a,b in zip(self.normal,self.x_dir)))>1e-6:raise ValueError('Section x_dir must be perpendicular to its normal.')
+        LoftSection(z_mm=0.,points_mm=self.points_mm)
+        return self
+
+
+class SectionLoft(Node):
+    """Solid loft through closed sections on arbitrary (non-parallel) planes."""
+    op: Literal['section_loft']
+    sections: list[PlaneSection] = Field(min_length=2, max_length=16)
+    profile: Literal['polygon','spline']
+    mode: Literal['smooth','ruled']
+    @model_validator(mode='after')
+    def coherent_sections(self):
+        if self.profile=='polygon' and any(len(x.points_mm)!=len(self.sections[0].points_mm) for x in self.sections[1:]):
+            raise ValueError('Polygon section loft needs the same vertex count in every section.')
+        if self.profile=='spline' and any(len(x.points_mm)<4 for x in self.sections):
+            raise ValueError('Spline sections need at least four points.')
+        if any(sum((a-b)**2 for a,b in zip(x.origin_mm,y.origin_mm))<1e-12 for x,y in zip(self.sections,self.sections[1:])):
+            raise ValueError('Consecutive sections must not share an origin.')
+        # Winding is compared in each section's own frame; a flip would twist the skin.
+        areas=[_signed_area(x.points_mm) for x in self.sections]
+        if any(area*areas[0]<=0 for area in areas[1:]):raise ValueError('Section loft must retain one winding direction.')
+        return self
+
+
+class Sweep(Node):
+    """Closed 2D profile swept along a 3D path (polyline or interpolating spline)."""
+    op: Literal['sweep']
+    profile_mm: list[Vec2] = Field(min_length=3, max_length=64)
+    path_mm: list[Vec] = Field(min_length=2, max_length=64)
+    path_kind: Literal['polyline','spline']
+    transition: Literal['right','round']='round'
+    @model_validator(mode='after')
+    def coherent_path(self):
+        LoftSection(z_mm=0.,points_mm=self.profile_mm)
+        if any(abs(v)>1_000_000 for point in self.path_mm for v in point):raise ValueError('Path must stay within the bounded CAD workspace.')
+        if any(sum((a-b)**2 for a,b in zip(p,q))<1e-12 for p,q in zip(self.path_mm,self.path_mm[1:])):
+            raise ValueError('Path points must be distinct consecutively.')
+        if self.path_kind=='spline' and len(self.path_mm)<3:raise ValueError('A spline path needs at least three points.')
+        return self
+
+
+def profile_frame(tangent):
+    """Deterministic in-plane x axis for a profile normal to tangent: world Z (or X when nearly parallel) projected."""
+    import numpy as np
+    t=np.asarray(tangent,dtype=float);t/=np.linalg.norm(t)
+    reference=np.array([0.,0.,1.]) if abs(t[2])<.9 else np.array([1.,0.,0.])
+    x=reference-np.dot(reference,t)*t
+    return t,x/np.linalg.norm(x)
+
+
 FaceSelector = Literal['>X','<X','>Y','<Y','>Z','<Z']
 EdgeSelector = Literal['|X','|Y','|Z','>X','<X','>Y','<Y','>Z','<Z']
 
@@ -233,7 +299,7 @@ def node_dependencies(node):
     return []
 
 Operation = Annotated[Union[Reference,ProjectStep,Box,Cylinder,PolygonExtrusion,Loft,Revolve,SplineLoft,
-                            Transform,Boolean,Fillet,Shell,Mirror,EdgeFinish],Field(discriminator='op')]
+                            SectionLoft,Sweep,Transform,Boolean,Fillet,Shell,Mirror,EdgeFinish],Field(discriminator='op')]
 
 class ReferenceUse(Strict):
     """Auditable Req2CAD use, independent of whether its shape is imported."""
@@ -306,11 +372,23 @@ class RotationMotion(Strict):
     assumed_distance_error_mm: float = Field(default=1e-6,gt=0,le=.1)
     min_mm: float = Field(default=0., ge=0)
     max_overlap_mm3: float = Field(default=1e-7, ge=0, le=1e-3)
+    # Optional end-pose engagement: at end_deg the closest obstacle must be no
+    # farther than this (a hard stop or contact that must actually be reached).
+    end_max_distance_mm: float | None = Field(default=None, ge=0, le=10)
     @model_validator(mode='after')
     def meaningful_rotation(self):
         if abs(sum(x*x for x in self.axis_direction)-1) > 1e-6:raise ValueError('Rotation axis must be a unit direction.')
         if self.end_deg==0:raise ValueError('A rotation check needs a nonzero end angle.')
+        if self.end_max_distance_mm is not None and self.end_max_distance_mm<self.min_mm:
+            raise ValueError('End engagement distance cannot be smaller than the required clearance.')
         return self
+
+class WallThickness(Strict):
+    """Sampled opposing-wall thickness of one output part (FDM wall, skin, rib)."""
+    id: Name
+    part: Name
+    min_mm: float = Field(gt=0, le=1000)
+    samples_per_face: int = Field(default=8, ge=2, le=24)
 
 class Recipe(Strict):
     schema_version: Literal[1] = 1
@@ -330,6 +408,7 @@ class Recipe(Strict):
     clearance_checks: list[Clearance] = Field(default_factory=list, max_length=64)
     motion_checks: list[Motion] = Field(default_factory=list, max_length=8)
     rotation_checks: list[RotationMotion] = Field(default_factory=list, max_length=8)
+    wall_checks: list[WallThickness] = Field(default_factory=list, max_length=32)
     unverified_requirements: list[str] = Field(min_length=1, max_length=100)
     @model_validator(mode='after')
     def connected(self):
@@ -380,6 +459,9 @@ class Recipe(Strict):
         for d in self.dimension_checks:
             if d.part not in parts:raise ValueError('Dimension check must reference an output part.')
             ids.append(d.id)
+        for w in self.wall_checks:
+            if w.part not in parts:raise ValueError('Wall check must reference an output part.')
+            ids.append(w.id)
         for chk in self.clearance_checks:
             if chk.part_a not in parts or chk.part_b not in parts or chk.part_a==chk.part_b: raise ValueError('Invalid clearance part pair.')
             ids.append(chk.id)
@@ -395,7 +477,13 @@ class Recipe(Strict):
 
 def pair_clearance(a,b):
     """Kernel distance and overlap volume for two solids. Empty intersection is zero overlap."""
-    common=a.intersect(b); overlap=float(sum(s.Volume() for s in common.Solids()))
+    common=a.intersect(b);overlap=0.
+    if common.Solids():
+        # Interference is reported with the largest available estimate, so an
+        # under-integrated curved overlap cannot read as zero.
+        from .measurement import adaptive_volume,triangulated_volume
+        overlap=max(float(sum(s.Volume() for s in common.Solids())),adaptive_volume(common),
+                    triangulated_volume(common,1e-3))
     return float(a.distance(b)),overlap
 
 
@@ -505,8 +593,13 @@ def evaluate_geometry(recipe,part_shapes):
     import numpy as np
     recipe=Recipe.model_validate(recipe) if not isinstance(recipe,Recipe) else recipe
     checks=[]
+    from .measurement import volume_cross_check
     for output in recipe.outputs:
         body=part_shapes[output.part_id]
+        volume=volume_cross_check(body)
+        checks.append({'id':'_system-volume-agreement-'+output.part_id,'kind':'volume_integration_agreement',
+                       'part':output.part_id,**volume,'verdict':'pass' if volume['agree'] else 'fail',
+                       'scope':'Adaptive B-rep volume must agree with an independent triangulated volume. Disagreement means kernel volumes of this part (and volume-based checks on it) are not trustworthy.'})
         checks.append({'id':'solid-count-'+output.part_id,'verdict':'pass' if len(body.Solids())==output.expected_solids else 'fail','actual':len(body.Solids()),'expected':output.expected_solids,'kind':'BRep validity and expected solid count'})
     # Every exported part pair is checked even when the model omits a
     # named clearance check. Intended contacts may touch, but solid overlap
@@ -569,6 +662,14 @@ def evaluate_geometry(recipe,part_shapes):
                        'certificate_scope':'Fixed-orientation linear translation against fixed obstacles. The numerical distance-error allowance is an assumption, not a certified OCCT error bound. Rotations, deformation, wear and tolerance variation are excluded.'})
     for rotation in recipe.rotation_checks:
         checks.append(_rotation_check(rotation,part_shapes))
+    for wall in recipe.wall_checks:
+        from .measurement import sampled_wall_thickness
+        measured=sampled_wall_thickness(part_shapes[wall.part],wall.samples_per_face)
+        observed=measured['sampled_min_mm']
+        checks.append({'id':wall.id,'kind':'sampled_wall_thickness','part':wall.part,'required_min_mm':wall.min_mm,**measured,
+                       'verdict':'pass' if observed is not None and measured['rays_evaluated']>0 and observed+1e-8>=wall.min_mm else 'fail',
+                       'minimum_proven':False,
+                       'scope':'Inward-normal rays from a UV grid on every face; only exits through a roughly opposing face count as wall. Thinner material between samples, wedge edges and elastic behaviour are not covered.'})
     return {'checks':checks,'geometry_checks_verdict':'pass' if all(x['verdict']=='pass' for x in checks) else 'fail'}
 
 
@@ -618,13 +719,42 @@ def _rotation_check(rotation,part_shapes):
         certificate=not failed and lower_bound>=rotation.min_mm and lower_bound>0
         if failed or certificate or count>=rotation.max_samples:break
         count=min(2*(count-1)+1,rotation.max_samples)
+    engagement=None
+    if rotation.end_max_distance_mm is not None:
+        end_distance=min(s['distance_mm'] for s in samples if s['t']==1.)
+        engagement={'end_angle_deg':float(rotation.end_deg),'end_min_distance_mm':end_distance,
+                    'required_max_mm':rotation.end_max_distance_mm,
+                    'verdict':'pass' if end_distance<=rotation.end_max_distance_mm+1e-8 else 'fail',
+                    'scope':'Rigid end pose only; stop stiffness, impact and wear are not modeled.'}
     return {'id':rotation.id,'kind':'sampled_rotation_clearance','samples':samples,
-            'verdict':'pass' if all(x['verdict']=='pass' for x in samples) else 'fail',
+            'end_pose_engagement':engagement,
+            'verdict':'pass' if all(x['verdict']=='pass' for x in samples) and (engagement is None or engagement['verdict']=='pass') else 'fail',
             'continuous_swept_motion':'distance_bound_satisfied_under_stated_assumptions' if certificate else 'not_proven',
             'continuous_distance_lower_bound_mm':lower_bound,'max_axis_radius_mm':rho,
             'assumed_distance_error_mm':rotation.assumed_distance_error_mm,
             'initial_samples':rotation.samples,'final_samples':count,
             'certificate_scope':'Rigid rotation about one fixed axis against fixed obstacles. Lipschitz constant is the bounding-box corner radius from the axis. The numerical distance-error allowance is an assumption, not a certified OCCT error bound. Deformation, hinge play, wear and tolerance variation are excluded.'}
+
+
+BOOLEAN_VOLUME_RELATIVE_SLACK=1e-4
+
+
+def _boolean_volume_sanity(node,body,operands):
+    """Reject Boolean results that violate set-volume monotonicity.
+
+    OCCT can return a valid-looking solid whose material grew under a cut.
+    Checking a necessary volume condition catches that class of kernel failure;
+    passing it does not prove the Boolean is exact.
+    """
+    from .measurement import adaptive_volume
+    result=adaptive_volume(body);volumes=[adaptive_volume(shape) for shape in operands]
+    slack=BOOLEAN_VOLUME_RELATIVE_SLACK*max(volumes)
+    if node.op=='difference':ok=result<=volumes[0]+slack
+    elif node.op=='intersection':ok=result<=min(volumes)+slack
+    else:ok=max(volumes)-slack<=result<=sum(volumes)+slack
+    if not ok:
+        raise BrainError('STUDIO_INVALID_SOLID','Boolean result violates volume monotonicity; the kernel result is not trusted and no fallback geometry was used.',
+                         {'node':node.id,'op':node.op,'result_volume_mm3':result,'operand_volumes_mm3':volumes})
 
 
 def execute_recipe(recipe, sources, out_dir):
@@ -634,6 +764,8 @@ def execute_recipe(recipe, sources, out_dir):
     from pathlib import Path
     from ..req2cad.common import file_hash, atomic_json
     from ..req2cad.geometry import shape_features
+    from .measurement import adaptive_volume
+    from .render import drawing_svg
     recipe = Recipe.model_validate(recipe)
     out_dir=Path(out_dir);out_dir.mkdir(parents=True,exist_ok=True)
     shapes={}; trace=[]; reference_sources=[]
@@ -686,6 +818,34 @@ def execute_recipe(recipe, sources, out_dir):
             except Exception as exc:
                 raise BrainError('STUDIO_INVALID_SOLID','Spline loft kernel construction failed; no fallback geometry was used.',
                                  {'node':node.id,'op':node.op}) from exc
+        elif isinstance(node,SectionLoft):
+            try:
+                wires=[]
+                for section in node.sections:
+                    plane=cq.Plane(cq.Vector(*section.origin_mm),cq.Vector(*section.x_dir),cq.Vector(*section.normal))
+                    points=[plane.toWorldCoords((x,y)) for x,y in section.points_mm]
+                    wires.append(cq.Wire.assembleEdges([cq.Edge.makeSpline(points,periodic=True)]) if node.profile=='spline'
+                                 else cq.Wire.makePolygon(points,close=True))
+                body=cq.Solid.makeLoft(wires,ruled=node.mode=='ruled')
+                if not body.isValid() or len(body.Solids())!=1 or adaptive_volume(body)<=0:
+                    raise ValueError('Section loft must produce exactly one valid positive-volume solid.')
+            except Exception as exc:
+                raise BrainError('STUDIO_INVALID_SOLID','Section loft kernel construction failed; no fallback geometry was used.',
+                                 {'node':node.id,'op':node.op}) from exc
+        elif isinstance(node,Sweep):
+            try:
+                path_points=[cq.Vector(*p) for p in node.path_mm]
+                path=(cq.Wire.assembleEdges([cq.Edge.makeSpline(path_points)]) if node.path_kind=='spline'
+                      else cq.Wire.makePolygon(path_points))
+                tangent,x_dir=profile_frame(path.tangentAt(0).toTuple())
+                plane=cq.Plane(path_points[0],cq.Vector(*x_dir),cq.Vector(*tangent))
+                profile=cq.Wire.makePolygon([plane.toWorldCoords((x,y)) for x,y in node.profile_mm],close=True)
+                body=cq.Solid.sweep(profile,[],path,makeSolid=True,isFrenet=False,mode=None,transitionMode=node.transition)
+                if not body.isValid() or len(body.Solids())!=1 or adaptive_volume(body)<=0:
+                    raise ValueError('Sweep must produce exactly one valid positive-volume solid.')
+            except Exception as exc:
+                raise BrainError('STUDIO_INVALID_SOLID','Sweep kernel construction failed; no fallback geometry was used.',
+                                 {'node':node.id,'op':node.op}) from exc
         elif isinstance(node,Shell):
             src=shapes[node.source]
             if len(src.Solids())!=1:raise BrainError('STUDIO_SHELL','Shell requires one solid.',{'node':node.id})
@@ -706,11 +866,17 @@ def execute_recipe(recipe, sources, out_dir):
                 # Intersection joins keep inward offsets as plain offset faces;
                 # 'arc' joins on spline skins failed STEP round-trip validity.
                 body=solid.hollow(faces,-node.wall_mm,kind='intersection')
+                # Offset surfaces left by hollowing defeat OCCT volume
+                # integration; approximate them by B-splines so the
+                # material invariant below is measured, not mis-integrated.
+                from OCP.ShapeCustom import ShapeCustom
+                body=cq.Shape.cast(ShapeCustom.ConvertToBSpline_s(body.wrapped,False,False,True,False))
             except Exception as exc:
                 raise BrainError('STUDIO_SHELL','Shell kernel construction failed; wall thickness was not reduced and no fallback geometry was used.',
                                  {'node':node.id,'wall_mm':node.wall_mm}) from exc
+            from .measurement import adaptive_volume
             if (not body.isValid() or len(body.Solids())!=1 or
-                    not 0<body.Solids()[0].Volume()<solid.Volume() or
+                    not 0<adaptive_volume(body)<adaptive_volume(solid) or
                     any(abs(a-b)>DELIVERY_BOUNDS_TOLERANCE_MM for a,b in zip(nominal_bounds(body),source_bounds))):
                 raise BrainError('STUDIO_SHELL','Shell must yield one valid solid with less material and the unchanged outer bounds of its source.',
                                  {'node':node.id,'wall_mm':node.wall_mm})
@@ -739,11 +905,12 @@ def execute_recipe(recipe, sources, out_dir):
             body=shapes[node.operands[0]]
             for operand in node.operands[1:]:
                 body={'union':body.fuse,'difference':body.cut,'intersection':body.intersect}[node.op](shapes[operand])
+            _boolean_volume_sanity(node,body,[shapes[operand] for operand in node.operands])
         if not body.isValid() or not body.Solids() or any(s.Volume()<=0 for s in body.Solids()):
             raise BrainError('STUDIO_INVALID_SOLID','Operation produced an empty/invalid solid.',{'node':node.id,'op':node.op})
         shapes[node.id]=body
         trace.append({'node':node.id,'op':node.op,'function_id':node.function_id,'reason':node.reason,
-                      'volume_mm3':float(sum(s.Volume() for s in body.Solids())), 'solids':len(body.Solids())})
+                      'volume_mm3':adaptive_volume(body),'solids':len(body.Solids())})
     outputs={}
     for output in recipe.outputs:
         body=shapes[output.node];folder=out_dir/output.part_id;folder.mkdir()
@@ -751,7 +918,7 @@ def execute_recipe(recipe, sources, out_dir):
         cq.exporters.export(body,str(folder/'model.step'))
         cq.exporters.export(body,str(folder/'model.stl'),tolerance=.01)
         for label,d in [('iso',(1,1,1)),('top',(0,0,1)),('front',(0,-1,0)),('right',(1,0,0))]:
-            (folder/(label+'.svg')).write_text(cq.exporters.getSVG(body,opts={'width':700,'height':460,'projectionDir':d,'showAxes':False}),encoding='utf-8')
+            (folder/(label+'.svg')).write_text(drawing_svg(body,d,width=700,height=460),encoding='utf-8')
             from .render import render_shapes
             render_shapes([body],folder/(label+'.png'),d,label=output.part_id+' / '+label.upper())
         files={p.name:{'relative_path':p.relative_to(out_dir).as_posix(),'sha256':file_hash(p)} for p in folder.iterdir() if p.is_file()}
@@ -763,7 +930,7 @@ def execute_recipe(recipe, sources, out_dir):
     render_shapes(list(part_shapes.values()),out_dir/'assembly.png',(1,1,1),width=900,height=650,label='Prototype assembly / not a certified product')
     assembly=cq.Compound.makeCompound(list(part_shapes.values()))
     cq.exporters.export(assembly,str(out_dir/'assembly.step'))
-    (out_dir/'assembly.svg').write_text(cq.exporters.getSVG(assembly,opts={'width':900,'height':650,'projectionDir':(1,1,1),'showAxes':False}),encoding='utf-8')
+    (out_dir/'assembly.svg').write_text(drawing_svg(assembly,(1,1,1),width=900,height=650),encoding='utf-8')
     delivery_check=verify_delivery_steps(
         {part_id:out_dir/part_id/'model.step' for part_id in outputs},out_dir/'assembly.step')
     checks.append(delivery_check)
@@ -776,7 +943,7 @@ def execute_recipe(recipe, sources, out_dir):
             'overall_verdict':'unknown','unverified_requirements':recipe.unverified_requirements,
             'assembly':{'relative_path':'assembly.step','sha256':file_hash(out_dir/'assembly.step')},
             'unit_notice':'Target recipe assigns mm explicitly; imported reference scale is a design choice, not proof of original physical units.',
-            'notes':['No global wall thickness or FEA certification; shell wall_mm is the construction offset, not a measured minimum wall.', 'Translation and rotation motion checks use adaptive samples and a conditional Lipschitz distance bound; not formal kernel-error certification.', 'No printer commands or canonical CAD writes were sent.']}
+            'notes':['No FEA certification; shell wall_mm is the construction offset. Only wall_checks measure (sampled) wall thickness, and only for the parts they name.', 'Translation and rotation motion checks use adaptive samples and a conditional Lipschitz distance bound; not formal kernel-error certification.', 'No printer commands or canonical CAD writes were sent.']}
     atomic_json(out_dir/'recipe.json',recipe.model_dump())
     atomic_json(out_dir/'measurements.json',result)
     return result

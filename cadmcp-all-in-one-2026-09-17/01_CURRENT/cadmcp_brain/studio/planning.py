@@ -11,7 +11,8 @@ def capabilities(required_operations=(), required_checks=()):
                            for value in item.get('properties', {}).get('op', {}).get('enum', [])})
     checks = ['solid_validity', 'solid_count', 'bbox', 'inner_cylinder_diameter',
               'outer_cylinder_diameter', 'rigid_pair_interference', 'static_clearance',
-              'sampled_translation_clearance', 'sampled_rotation_clearance', 'delivery_step_equivalence']
+              'sampled_translation_clearance', 'sampled_rotation_clearance', 'sampled_wall_thickness',
+              'volume_integration_agreement', 'delivery_step_equivalence']
     missing_ops = sorted(set(required_operations) - set(operations))
     missing_checks = sorted(set(required_checks) - set(checks))
     return {'operations': operations, 'checks': checks,
@@ -19,10 +20,10 @@ def capabilities(required_operations=(), required_checks=()):
             'requested_capabilities_supported': not (missing_ops or missing_checks),
             'verification_limits': {'delivery_step_equivalence_max_solids': DELIVERY_MAX_SOLIDS},
             'reference_policy': 'principle_reference, fit_reference, direct_reuse or explicit original design; shape reuse is not mandatory',
-            'limitations': ['Rotation checks cover rigid rotation about one fixed axis only; no elastic, flexure or hinge-play verification.',
+            'limitations': ['Rotation checks cover rigid rotation about one fixed axis only; no elastic, flexure or hinge-play verification (UNKNOWN).',
                             'Rigid pair overlap is not a press-fit deformation model.',
-                            'Loft and spline_loft accept only bounded parallel XY sections; sweep paths and arbitrary section planes are unsupported.',
-                            'Shell offsets one solid inward by a uniform wall; the minimum resulting wall is not measured.',
+                            'Loft and spline_loft take parallel XY sections; section_loft takes closed sections on arbitrary planes; sweep takes one closed profile along a polyline or spline path with a deterministic profile frame. Free-form surface lofting and guide-curve sweeps remain unsupported.',
+                            'Shell offsets one solid inward by a uniform wall; use wall_checks for a sampled (not proven) minimum wall.',
                             'No physical strength, fatigue or manufacturing certification.'],
             'next': ('Plan with supported operations and verify the result.' if not (missing_ops or missing_checks)
                      else 'Identify an equivalent design preserving the requirements, or implement and test the missing capability. Do not silently substitute geometry or waive checks.'),

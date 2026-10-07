@@ -7,6 +7,17 @@
 
 The older `Unreleased` headings below are retained as development-history sections for the same 0.3.3 release.
 
+# Unreleased — §22 side-button flow and measurement robustness (2026-10-07)
+
+- Add `scripts/check_side_button_flow.py` and `scripts/side_button_recipe.py`: the design-doc §22 flow through the real Studio tools (intent, function decomposition, Req2CAD search recorded as unavailable when no encoder is configured, first-principles morphology and synthesis, typed recipe, worker build, role packets, separate review submission and delivery). The switch is an explicit placeholder; physical feel stays unverified.
+- Add `volume_integration_agreement` (`_system-volume-agreement-<part>`): OCCT's default volume integration is several percent off on B-spline lofts and grossly wrong on offset surfaces left by hollowing, although the B-rep is valid. Verdict volumes now use adaptive integration and must agree with an independent triangulated volume. Trace volumes use the adaptive value.
+- Reject Boolean results that violate set-volume monotonicity (a cut that grows material was observed on spline shells) instead of trusting them.
+- `shell` converts offset faces to B-splines after hollowing so its material invariant is measured correctly. Interference overlap volume takes the largest of the default, adaptive and triangulated estimates.
+- Add `wall_checks` (`sampled_wall_thickness`): inward-normal rays from a UV grid on every face; only exits through a roughly opposing face count as wall, oblique wedge exits are reported separately. A sampled observation, not a proof of minimum wall. Frozen in correction lineage and autopilot guards. It caught a 0.7 mm hinge barrel in the first side-button draft.
+- Add optional `end_max_distance_mm` to rotation checks: the end pose must actually reach a hard stop or contact, not merely stay clear.
+- Add `sweep` (closed polygon profile along a polyline or interpolating-spline path; the profile frame is the start tangent with world Z, or X when nearly parallel, projected as its x axis) and `section_loft` (closed polygon or periodic-spline sections on arbitrary, non-parallel planes with explicit origin, normal and x axis). Both require one valid positive-volume solid; failures raise without fallback geometry. Free-form `surface_loft` remains routed to external editors. Capability tests that used `sweep` as an unsupported example now use `surface_loft`; assertions are unchanged.
+- Studio SVG drawings use polygonal hidden-line removal on a private mesh copy. Exact HLR ran for over 25 minutes on a spline shell, beyond the 300 s worker budget. SVGs are display evidence; STEP remains the exact geometry.
+
 # Unreleased — Shell, spline surfaces and rotation clearance (2026-10-07)
 
 - Add typed Recipe operations `shell` (inward uniform wall with optional open faces), `revolve`, `spline_loft` (parallel closed periodic-spline sections), `mirror`, and selector-bounded `fillet_edges` / `chamfer_edges`. Kernel failures raise without reducing wall/size or substituting geometry.
