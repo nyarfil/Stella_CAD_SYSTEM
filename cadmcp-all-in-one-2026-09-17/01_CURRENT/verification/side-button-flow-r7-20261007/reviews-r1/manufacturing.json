@@ -1,0 +1,183 @@
+{
+ "schema_version": 1,
+ "subject_digest": "d5ed4de93f07e55b8b1b583c0927090b270cdec1dc118f65011a1ad629afaef7",
+ "role": "manufacturing",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (manufacturing role, rev7)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "5da76a7de624d5078d2c65f074299bb5ddd28d63200efcb3118411bc4ff95333",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/assembly.png",
+   "status": "viewed",
+   "observation": "Exterior ISO of shell plus button: the orange button face sits flush in the side skin with a thin running gap; the far (front) window edge is visibly slanted, matching the new radial far edge. No interior parts such as the blocks, screws or spring are visible, so this image cannot show any manufacturing detail inside the shell."
+  },
+  {
+   "attachment_sha256": "4f1e1a4457d36db3520472cd69a4e6b2fa6ba08263b9e3dee1abb7e4a67697bb",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/build-record.json",
+   "status": "viewed",
+   "observation": "Build record repeats the v7 recipe context. Outputs list three purchased M2 grub screws (x1.5 spring closer, x4 stop, x3 rest) \"self-tapped into a 1.6 mm printed hole\". The finishing assumption still reads \"dowel holes and the plug pocket are reamed after printing\", although v7 has no plug. The thread press_fits are rigid-overlap bands only."
+  },
+  {
+   "attachment_sha256": "c6c7daf38f77bc63a78477fc327505450e70f448c82952d0f1f4102b7aed74a7",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/button/iso.png",
+   "status": "viewed",
+   "observation": "Button ISO: skin piece, rear rib, link, chamfered barrel with vertical bore, full-height stop web and the spine ledge. The button keeps one flat bed plane (z 10) with the bore vertical, which suits the stated print orientation. The spine is still a shelf above the bed plane, unchanged from r6."
+  },
+  {
+   "attachment_sha256": "562ca66e8007272cd5fd7b8c247bc4132fa14d91f772d2fc3484a302bc9e3a79",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain cylinder dowel with no chamfer or retention feature, matching the purchased Ø2 h7 dowel. This part is unchanged from r6."
+  },
+  {
+   "attachment_sha256": "7fd1c75613bf83cd72b138c7b8ef3b00400bbf1861a248c7b5a9ebaf6a9571d0",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/measurements.json",
+   "status": "viewed",
+   "observation": "All checks pass. Thread engagements are reported as declared_press_fit_interference overlaps: spring screw 1.70, stop screw 3.96 and rest screw 1.58 mm3. Wall checks are sampled, with minimum_proven false and sampled minima of 1.200 (shell) and 1.202 (button). The screw paths are sampled translation checks. No check covers thread strength, block root strength or tool access."
+  },
+  {
+   "attachment_sha256": "c07300dff15c81864071425d7b93ed10a42337543f5ba9e95f2803acc4f0a672",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/rest_screw/iso.png",
+   "status": "viewed",
+   "observation": "The rest screw is shown as a plain Ø2 x 3 cylinder. No socket, thread or point type is modeled, so the tip form against the printed web (flat or cup) is not defined."
+  },
+  {
+   "attachment_sha256": "678716bd6741d3edbebc970c03126f181aa2f158f00e72dc571c7461a946949b",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "The return spring is a solid Ø1.5 cylinder envelope about 3.2 mm long, with no wire or coil detail. Its outer diameter is 0.1 mm smaller than the Ø1.6 printed tap hole it runs in."
+  },
+  {
+   "attachment_sha256": "6432529df07f7f7626e153f5814c8963c8c0ee0488709dcc432e0da8340f5b3f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell ISO with the window open. The slanted far edge and the lintel are visible, and the interior tabs are just visible through the window. The blocks and tap holes cannot be seen at this view, so I probed them from the STEP."
+  },
+  {
+   "attachment_sha256": "cae67ebfbebb02e1c098f2aff67635f7ec2f88e241bd7e04c24f41ef9f4c56d1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/spring_screw/iso.png",
+   "status": "viewed",
+   "observation": "The spring-closing screw is a short Ø2 x 1.5 plain cylinder with no socket modeled. That length is shorter than common M2 set-screw catalogue minimums."
+  },
+  {
+   "attachment_sha256": "c46aac7b312bc962f3d4754c7b888b1daadc4fc5af86123d944d76edde16d2d9",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/stop_screw/iso.png",
+   "status": "viewed",
+   "observation": "The stop screw is a plain Ø2 x 3.8 cylinder; the outputs list M2 x 4. No socket or point type is modeled, and its flat end is the hard-stop contact on the web."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Placeholder rectangular switch housing box with no mounting or PCB datum, so no PCB plane is available to check tool access during adjustment."
+  },
+  {
+   "attachment_sha256": "269790e02304a1521b5881b73ce5730093d356b24797aa0c9d79ba1e489987e1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Placeholder rectangular stem box, a stand-in only. It is irrelevant to printability, but the click it represents is needed for the stop-screw adjustment."
+  }
+ ],
+ "findings": [
+  {
+   "id": "MFG-STOP-COLUMN-ROOT",
+   "severity": "major",
+   "claim": "The v7 hard stop moved from a 4.2 mm block face to an M2 screw tip at z 15.2 on a taller, freestanding block_in. Every press that reaches the stop now bends a slender column across its layer lines. block_in is a 3.5 (x) x 4.4 (y) x 7.6 (z) mm column (x -22.18..-18.68, z 9.8..17.4). Its only root is the 15.4 mm2 layer interface at z 9.8 on tab_low. The stop reaction acts in -x at 5.4 mm above that root. In r6 the lever was about 2 mm. The stop force is the thumb force times about 29/15.5 = 1.9 for a press at x 14. Per 10 N of thumb force this gives about 19 N at the tip, about 100 N.mm at the root and about 11 MPa nominal bending stress (Z = 4.4 x 3.5^2/6 = 9.0 mm3). The tension acts in Z on the +x side, which is the FDM interlayer direction. At the spring-hole plane z 11.9 the section is only 9.8 mm2 (Z about 5.7 mm3), at about 11 MPa nominal before the notch effect of the hole. The thread-forming hoop stress in the same two holes also opens these layers. Every click loads this column, so it is a fatigue case, not a one-off overload. No check, fillet or tie covers it. I measured the column only; its strength is an uncalibrated estimate.",
+   "evidence": [
+    "STEP probe (shell/model.step): horizontal section areas in the block_in footprint are 15.4 mm2 at z 9.85-10.5, 9.8 mm2 at z 11.9 and 15.2 (hole planes), 15.4 mm2 at z 13-17.3, and 0 at z 17.5.",
+    "STEP probe: the shell intersected with x -24..-16, y 4.5..14.5, z 9.8..17.6 gives a single solid with bbox x -22.18..-18.68, y 7.3..11.7, z 9.8..17.4, so block_in touches nothing but tab_low.",
+    "recipe v7: stop_screw_z_mm 15.2, block_in_z_max_mm 17.4, inward_block_width_mm 3.5, tab_low_top 9.8; stop_screw_tip_x7 = -18.38; screw radius from the axis = hinge_y - screw_y = 15.5 mm.",
+    "r6 MFG-STOP-BLOCK-ROOTS (minor) asked for root fillets or gussets. v7 made the block taller and raised the load point instead."
+   ],
+   "proposed_change": "Do not move the stop or rest contact points. Tie block_in to more than one layer interface. For example, extend it down through tab_low as one column to the tab underside, add a gusset or fillet of at least about 1 mm on its +x and -x roots, or join it in +y/-y to a wall or rib that runs to the skin, so the stop load goes in-plane. Alternatively, lower stop_screw_z toward the root, if the web still meets the tip there. State the design thumb force the stop must hold.",
+   "required_test": "Print block_in on a coupon of tab_low in the shell material and orientation, with the two tap holes and screws installed. Load the stop-screw tip in -x with a push gauge to at least 2x the stated design stop force. Then cycle it, for example 10,000 presses at the design force, and check for cracking at z 9.8 and z 11.9 and for drift of the screw tip position over 0.02 mm."
+  },
+  {
+   "id": "MFG-PRINTED-THREADS",
+   "severity": "major",
+   "claim": "All three adjustment and closing functions now depend on M2 grub screws self-tapped into Ø1.6 horizontal printed holes. As specified, that process is not defined well enough to hold a setting. (1) Hoop stress across layers: in rim-down printing the hole axes are X. The walls at ±y are 1.4 mm (y 7.3-8.7 and 10.3-11.7) and the top wall of block_out is 1.3 mm (z 12.7-14.0). Thread-forming hoop tension at the ±y walls acts in Z, across the layer lines. (2) Short engagement: block_out is only 1.4 mm thick in X, which gives 3.5 thread pitches of formed plastic to hold the flushness setting. (3) No hole size from a coupon and no sizing step: small horizontal printed holes usually come out undersize and oval, which changes the forming torque and the risk of splitting. The STEP hole is the nominal tap-drill size, so nothing defines the real hole. (4) No locking: the stop screw takes the full stop load on every press, and the rest screw takes the spring preload. Plastic creep and vibration will let them back out. A drift of 0.1 mm at the rest screw changes the face flushness directly. (5) The thread press_fits only show that a 2.0 cylinder overlaps a 1.6 hole by 1.6-4.0 mm3, which proves nothing about torque, strip or holding. The unverified list already admits \"holding torque and wear ... not qualified\", but nothing in the process controls them.",
+   "evidence": [
+    "recipe v7 outputs: \"Purchased M2 x 1.5 / x 4 / x 3 grub screw, self-tapped into a 1.6 mm printed hole\".",
+    "recipe v7: block_out_box x -12.0..-10.6 (1.4 mm), z 9.8..14.0; rest_hole Ø1.6 at z 11.9; tap_radius_mm 0.8, block y 7.3..11.7.",
+    "measurements.json: spring-screw-thread 1.70, stop-screw-thread 3.96 and rest-screw-thread 1.58 mm3 are declared_press_fit_interference (rigid overlap only).",
+    "STEP probe: block_out section area is 6.16 mm2 at z 10.5 and 3.92 mm2 at the z 11.9 hole plane.",
+    "design_basis Adjustment: both screws are set once after assembly. No locking method is stated."
+   ],
+   "proposed_change": "Define the thread process. Drill the printed holes through to a stated tap-drill size after printing, then cut-tap M2 instead of forming, or fit M2 heat-set or press-in threaded inserts where the wall allows. Specify flat-point set screws (ISO 4026 type) with a nylon-patch or other plastic-compatible lock; avoid anaerobic threadlockers on ABS or PC. Lengthen block_out in +x at y 9.5, where the line to +x is free, so the rest thread has more engagement, for example 3 mm. Thicken the ±y walls, or add bosses, around the tap holes. Take the printed hole size from a coupon in the chosen material.",
+   "required_test": "Coupon of each block, printed rim-down in the shell material: install each screw, measure the drive torque and the strip torque with the 0.9 mm key, and check for splitting along layers under 10x magnification. Then load each screw axially with its service load (stop force, and spring preload for the rest screw), cycle it, and measure the change in tip position. The requirement is under 0.02 mm drift, or a stated flushness limit."
+  },
+  {
+   "id": "MFG-ADJUST-ACCESS",
+   "severity": "major",
+   "claim": "The new adjustment step cannot be done as written, and its tool access is neither stated nor checked. It says the stop screw is set \"until the switch clicks with about 0.2 mm overtravel ... before the PCB closes the bottom\". The click needs the switch in its final position, and the switch is located by the PCB. So with the PCB fitted the bottom is closed, and without it there is no click. r6 asked for \"the access path ... with the switch/PCB fitted\"; v7 does not give one. The stop and spring screws are driven from -x. The straight free line from their sockets to the inner skin is only about 29-31 mm, which is too short for a straight 0.9 mm hex driver with a handle. Only an L-key, short leg in the socket and long leg hanging down to the open rim (16 mm below at x -26), can turn them, in partial turns, and only while the bottom is open. The rest screw is reached from +x along a 60 mm free line, but only with nothing fitted below it.",
+   "evidence": [
+    "design_basis Adjustment: \"after assembly the rest screw is set until the face is flush, then the stop screw until the switch clicks with about 0.2 mm overtravel; both are set from outside the blocks with a 0.9 mm hex key, before the PCB closes the bottom.\"",
+    "STEP ray probe (shell, button, switch_housing; 0.45 mm radius): from the stop-screw socket (x -22.18, y 9.5, z 15.2) toward -x, free for 29.3 mm, then the shell; from the spring-screw socket (z 11.9), 30.8 mm; from the rest-screw tail (x -9.5, z 11.9) toward +x, free for 60 mm.",
+    "STEP probe: vertical line at x -26, y 9.5 from z 15.2 down to the rim is free for 16.3 mm.",
+    "No motion or access check covers the key; the screw-path checks move only the screw, 6 mm.",
+    "r6 MFG-REST-CALIBRATION-ORDER: the two-way adjustment requested there is now provided, but its access condition is not."
+   ],
+   "proposed_change": "Write the adjustment as an executable sequence. For example: fit the switch on the PCB, or in a fixture that reproduces the PCB datum, while the bottom is still open. Or state an access hole in the PCB or bottom cover on the key path. Name the tool, an L-key 0.9 mm with its short-leg length that fits the 29 mm line, and state how the click and the 0.2 mm overtravel are observed, for example with a feeler between the web and the stop-screw tip at the click. If the click cannot be made with the bottom open, move the stop-screw socket so it faces an opening that stays reachable.",
+   "required_test": "Add a CAD access check: sweep a 0.9 mm L-key model (short and long leg) through 60 degrees at each screw socket, with the switch housing and a stated PCB plane present, against shell, button and switch. Then do a physical dry run on the printed prototype: set rest and stop with the switch fitted, record the overtravel and the flushness, refit the bottom, and re-measure."
+  },
+  {
+   "id": "MFG-SPRING-BORE-AND-STALE-FINISH",
+   "severity": "minor",
+   "claim": "r6 found the spring section of the pocket undefined, and v7 did not resolve it. The Ø1.5 spring envelope runs about 2.0 mm inside the same Ø1.6 printed horizontal tap hole (x -20.68..-18.68), with 0.05 mm radial clearance and no sizing step. A small horizontal printed hole that comes out undersize or oval, or a coil OD that grows under compression, will drag or bind the return. The hole must also stay at tap-drill size for the closing screw, so the two needs conflict. The stated spring selection limits only give solid length, not OD. The finishing assumption still says \"the plug pocket [is] reamed after printing\", but v7 has no plug and the change note says \"no reaming\". The process text therefore contradicts itself.",
+   "evidence": [
+    "recipe v7: spring origin x -20.68, length 3.18, radius 0.75; spring_pocket radius 0.8 over x -22.68..-18.18.",
+    "packet design_basis Finishing assumption still mentions the plug pocket; source comment for v7: \"M2 grub screw in a 1.6 mm tap hole (no reaming)\".",
+    "unverified_requirements: \"Return spring selection: solid length below about 2.0 mm\" (no OD limit)."
+   ],
+   "proposed_change": "Step the hole: keep a tap-drill section only where the closing screw sits, and drill the spring section to a stated clearance. Alternatively, add a spring OD limit, for example a maximum compressed OD at least 0.2 mm under the drilled hole, to the selection limits. Replace the stale plug-reaming sentence with the actual hole-finishing steps.",
+   "required_test": "Measure printed tap-hole diameters on a coupon (pin gauges). Fit the chosen spring, and check that it compresses from free length to its stop length and returns without sticking over 100 cycles."
+  },
+  {
+   "id": "MFG-SCREW-SPEC",
+   "severity": "minor",
+   "claim": "The screw specification is incomplete for a buy-and-build prototype. No point type is stated. A cup point, which is common stock, bites into the printed web at the rest and stop contacts, so both settings creep. M2 x 1.5 is shorter than many catalogues stock for M2 set screws (often 2 mm minimum), and its 0.9 mm socket depth then takes most of the screw length. The stop screw is modeled 3.8 mm long but bought as 4 mm.",
+   "evidence": [
+    "recipe v7 outputs: M2 x 1.5, M2 x 4, M2 x 3 grub screws; stop_screw modeled length 3.8 mm (tip x -18.38, start x -22.18).",
+    "Screw images show plain cylinders, with no point or socket modeled."
+   ],
+   "proposed_change": "Specify ISO 4026 flat-point set screws, or dog point, with stock lengths. If M2 x 1.5 is unavailable, change the spring closer to M2 x 2 and re-derive the spring envelope. Model the stop screw at its bought length.",
+   "required_test": "Check the supplier catalogue for each part number. After 1,000 presses at the design force, measure the indentation depth of the web under each screw tip."
+  },
+  {
+   "id": "MFG-CARRYOVER-R6-MINORS",
+   "severity": "minor",
+   "claim": "Several r6 minor findings are unchanged in v7, because the dowel, spine and skin edges are inherited from v6. (a) The dowel holes have no printed pre-ream size and no fallback retention; the 1.98 blind hole has a bridged ceiling. (b) The spine is still a flat shelf with its underside at z 12.6, 2.6 mm above the button bed plane, with no chamfer or support stated. (c) The visible gap edges have no flare relief on the skin bottom edge and no deburr step or post-finish gap check. The new slanted far edge adds one more such edge.",
+   "evidence": [
+    "side_button_recipe_v7 reuses the v6 spine_box, pin_hole_high, pin and skin_piece operations unchanged.",
+    "r6 manufacturing findings MFG-DOWEL-STOCK-AND-RETENTION, MFG-SPINE-LEDGE and MFG-VISIBLE-GAP-EDGES."
+   ],
+   "proposed_change": "Apply the r6 proposals: state pre-ream sizes from a coupon and a retention fallback for the dowel; chamfer the spine underside at 45 degrees toward the skin, or state its support; add first-layer flare relief, a deburr step, and a feeler check of the 0.4 mm gap on all four sides.",
+   "required_test": "Coupon print of the button and of the shell window region. Measure the pre-ream hole sizes, the spine underside droop and the four running-gap widths after finishing."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Printer, nozzle, material, slicer hole compensation and support settings are not named. Every stress, hole-size and creep figure in this review is an uncalibrated estimate, not a measurement.",
+  "Design thumb force is not stated. The block_in stress figures are given per 10 N of thumb force for a press at x 14.",
+  "Fixed since r6 and confirmed here. The reamed press-fit plug and its unreachable pocket are gone, replaced by a screw closer. The one-way rest-face sanding, which needed the dowel pulled out, is replaced by a two-way rest screw reachable from +x along a 60 mm free line. The far window edge is now radial.",
+  "The real switch, its PCB and its mounting datum, and the real shell are unknown. Whether the PCB leaves the screw sockets reachable is an owner question.",
+  "Spring wire, OD, rate, free length and solid length are not selected, so the preload and the bore clearance cannot be checked in CAD.",
+  "Owner questions: whether the 0.4 mm running gap and the possible proud face are acceptable, and what \"easier to press\" means in force and travel.",
+  "Wall checks are sampled (minimum_proven false), and the motion and rotation checks are sampled verdicts.",
+  "No physical print, tapping, torque, press-fit or load test was done in this review. The findings rest on the recipe source, the packet, STEP section and ray probes, and the viewed images."
+ ],
+ "conclusion": "revise"
+}

@@ -186,16 +186,27 @@ def test_side_button_flow_brief_and_matrix_are_valid():
 
 
 @kernel
-def test_side_button_revision6_builds_and_passes_every_check(tmp_path):
+def test_side_button_revision7_builds_and_passes_every_check(tmp_path):
     from cadmcp_brain.studio.recipe import execute_recipe
-    from side_button_recipe import side_button_recipe_v6
-    result=execute_recipe(Recipe.model_validate(side_button_recipe_v6()),{},tmp_path/'sb6')
+    from side_button_recipe import side_button_recipe_v7
+    result=execute_recipe(Recipe.model_validate(side_button_recipe_v7()),{},tmp_path/'sb7')
     failed=[c['id'] for c in result['checks'] if c['verdict']!='pass']
     assert result['geometry_checks_verdict']=='pass',failed
-    rise=next(c for c in result['checks'] if c['id']=='rise-with-play-clear-of-skin')
-    assert rise['axis_offsets_evaluated']==9 and rise['start_deg']==-.5
-    fits={c['press_fit_id']:c for c in result['checks'] if c['kind']=='declared_press_fit_interference'}
-    assert set(fits)=={'dowel-in-upper-tab','plug-in-pocket'}
+    checks={c['id']:c for c in result['checks']}
+    assert checks['stop-screw-reached']['end_pose_engagement']['end_min_distance_mm']<=.02
+    assert checks['hard-stop-blocks-within-play']['blocking']['per_offset'][0]['first_blocking_obstacle']=='stop_screw'
+    assert checks['window-gap-kept-until-stop']['axis_offsets_evaluated']==9
+
+
+def test_side_button_revision7_is_a_valid_contract():
+    from side_button_recipe import side_button_recipe_v7,stop_screw_tip_x7,P7
+    recipe=Recipe.model_validate(side_button_recipe_v7())
+    parts={o.part_id for o in recipe.outputs}
+    assert {'stop_screw','rest_screw','spring_screw'}<=parts and 'spring_plug' not in parts
+    window=next(op for op in recipe.operations if op.id=='window')
+    far=[pt for pt in window.points_mm if pt[0]>0]
+    assert far[0][0]>far[1][0]  # far edge leans: normal to the hinge radius
+    assert stop_screw_tip_x7()<P7['hinge_x_mm']-P7['arm_half_width_mm']
 
 
 def test_side_button_revision6_is_a_valid_contract():

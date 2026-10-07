@@ -1,0 +1,166 @@
+{
+ "schema_version": 1,
+ "subject_digest": "d5ed4de93f07e55b8b1b583c0927090b270cdec1dc118f65011a1ad629afaef7",
+ "role": "assembly",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (assembly role, rev7)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "ASM7-1-stop-adjustment-needs-switch-before-pcb",
+   "severity": "major",
+   "claim": "The screw stops fix the one-way, out-of-order sanding from ASM6-1/ASM6-2 in principle. Both stops can now be set in both directions without taking the button out. But the procedure that now sets both datums cannot be carried out as written. The text says: \"the stop screw [is set] until the switch clicks with about 0.2 mm overtravel; both are set from outside the blocks with a 0.9 mm hex key, before the PCB closes the bottom.\" That needs the switch fitted and working while the bottom is still open. The contract also says the switch is located by the owner PCB, and the assembly order fits \"switch/PCB\" last, as the step that closes the bottom. My probe shows both hex-key corridors are clear only because the model has no PCB. The stop and spring screws are reached from -x (an L-key long leg drops at about x -28..-34, y 9.5). The rest screw is reached from +x (long leg at about x -3.5..2.5, y 9.5). That second corridor is directly in front of the switch footprint (x -1..5), where a PCB would normally lie. No PCB placeholder, keep-out or switch fixture is modelled, so the CAD cannot show that the stop can be set against the real switch and still be reached. Once the bottom is closed, the self-tapped grub screws have no locking element. Any drift from repeated hard-stop loads (the stop screw is loaded axially toward its socket) cannot be corrected without opening the mouse.",
+   "evidence": [
+    "Subject design_basis.assumptions: \"Adjustment: after assembly the rest screw is set until the face is flush, then the stop screw until the switch clicks ... before the PCB closes the bottom.\"",
+    "Subject design_basis.assumptions: \"Assembly order: button in from below ..., then switch/PCB.\" Subject unverified_requirements: \"The switch is located by the owner PCB ... (no PCB datum modeled).\"",
+    "Own probe (/tmp/claude-0/probes-v7-assembly/probe2.py): an L-key of radius 0.52 (short leg 6-12 mm along the screw axis, long leg down past z=0) is 0.28 mm from the shell (the tap-hole wall at the socket), 4.68 mm from the button and 22.8 mm from the switch housing for the stop and spring screws. For the rest screw it is 1.135 mm from the shell, 3.0 mm from the button and 8.5 mm from the housing. So access exists only with the bottom open.",
+    "Recipe outputs: there is no PCB or keep-out part. Pair checks therefore cannot detect a PCB blocking either key corridor or the switch mounting.",
+    "unverified_requirements: \"Self-tapped M2 threads in printed plastic: holding torque and wear under repeated hard-stop loads are not qualified.\" No thread locker or nylon-patch screw is stated."
+   ],
+   "proposed_change": "Make the setting order executable and state it in the contract. Choose one: (a) Set the stop screw against a gauge that needs no switch, for example a stated plunger travel or face depth at a marked point, measured with a depth gauge or a feeler between the web and the screw tip at a known rest. Then fit the switch/PCB. (b) Set it with the switch on its PCB fitted, and model the PCB placeholder with access holes or cut-outs on both key corridors (stop/spring screws from -x, rest screw from +x at y 9.5), named as keep-outs. (c) Use a switch fixture located from the dowel. Also specify thread-locking set screws (nylon patch or a low-strength threadlocker) or a jam screw, and say whether readjustment after closing is supported.",
+   "required_test": "Add a PCB or keep-out placeholder part and pair checks: the PCB must not overlap the two L-key corridor solids (or straight-key solids) for the stop, spring and rest screws, and it must still carry the switch. Or show in the contract an order in which the stop is set without the switch present. Physically: set both screws on a printed prototype in the stated order, close the bottom, cycle the button 1000 times to the hard stop, and re-measure face flushness and stop travel."
+  },
+  {
+   "id": "ASM7-2-stale-assembly-order-and-screw-sequence",
+   "severity": "minor",
+   "claim": "The assembly-order and finishing text was not updated for revision 7. It still says \"spring and plug into the through pocket\" and \"dowel holes and the plug pocket are reamed after printing\". There is no plug in v7, and the pocket is now a 1.6 mm tap hole for an M2 grub screw, which the v7 header says needs \"no reaming\". The order also never says when the three screws are fitted. That matters. With the rest screw at its modelled position, its outer end (x -10.6..-9.5) is inside the button insertion path. At the end of the -22 mm slide, which is also the start of the drop leg, the skin piece overlaps it by 0.344 mm3. The web +x face slides along the screw tip at exactly 0.000 mm over the whole slide. The insertion checks list only \"shell\" as obstacle, so they cannot see this. Fitting the rest screw before the button blocks insertion. Fitting it after the button works, but nothing says so. The button also has to come out the same way for service, so the rest screw must be backed fully out first.",
+   "evidence": [
+    "Subject design_basis.assumptions still contain \"spring and plug into the through pocket\" and \"the plug pocket are reamed after printing\". Recipe outputs list spring_screw, stop_screw and rest_screw and no spring_plug.",
+    "Own probe (/tmp/claude-0/probes-v7-assembly/probe1.py, CadQuery 2.8 on the exported part STEPs): button translated -22 mm in y overlaps rest_screw by 0.34392 mm3. At t = 0, -1, -3, -6, -10 and -14 mm the button-rest_screw distance is 0.0 (sliding contact).",
+    "Recipe motion_checks button-insertion-slide and button-insertion-drop: obstacles [\"shell\"] only. rest_screw, stop_screw, spring and spring_screw are not included."
+   ],
+   "proposed_change": "Rewrite the assembly order for the v7 parts. 1) Fit the stop screw backed off (tip inside block_in). 2) Insert the button from below and slide it on. 3) Press the dowel. 4) Thread in the rest screw from +x until it touches the web. 5) Fit the spring, then the spring screw, from -x. 6) Adjust. Give the matching removal order. Remove the plug wording and the reaming of the tap hole from the finishing note.",
+   "required_test": "Add the screws (at their backed-off assembly positions) and the spring as obstacles to the button insertion slide and drop checks, or add separate checks that show the stated order is collision-free. Add a check that the rest screw can be threaded in from +x with the button at rest."
+  },
+  {
+   "id": "ASM7-3-web-underside-thrust-under-x-tilt",
+   "severity": "minor",
+   "claim": "ASM6-3 is still open in v7. The web and tab_low geometry did not change, and the tilt checks still rotate only about the Y axis. With the pin cocked about the X axis by the same bore-clearance angle (0.377 deg) and the axial drop applied, the web underside lands on tab_low before the barrel end does, at every stroke angle. So the claim that the barrel ends are the axial thrust faces still fails under this moment. The printed web then slides on printed tab_low out to about 17 mm radius, which adds friction to press feel.",
+   "evidence": [
+    "Own probe (/tmp/claude-0/probes-v7-assembly/probe1.py, CadQuery 2.8 on the exported part STEPs): button rotated 0.377 deg about the X axis through (-15,25,13.8), then dropped 0.17 mm: overlap with shell is 2.037, 2.037, 2.035 and 2.032 mm3 at 0, -1, -2 and -3 deg of stroke. With a 0.2 mm drop it is 3.88 mm3 at all four angles.",
+    "Recipe rotation_checks tilt-down-with-axial-drop and tilt-up-with-axial-rise use axis_direction [0,1,0] only."
+   ],
+   "proposed_change": "Relieve the tab_low top under the web sweep (about y 7.3..22) by 0.2-0.4 mm, keeping full height under the barrel. Or declare the web underside as an intended thrust and sliding face.",
+   "required_test": "Add tilt checks about the X axis with axial drop (both signs) at rest and at the stop angle, against the shell."
+  },
+  {
+   "id": "ASM7-4-pin-path-and-lead-in",
+   "severity": "minor",
+   "claim": "ASM6-4 is unchanged. The dowel path is checked only against the shell, not through the button bore. Neither the dowel ends, the bore nor the tab_low hole has a lead-in. The button floats in y while the dowel is pressed, because the spring and rest screw are not yet fitted. Extraction for service still relies on the 1.0 mm stub below tab_low and a 0.01 mm interference in a blind printed hole. Because v7 no longer needs disassembly to calibrate, this is now a first-assembly and service issue only.",
+   "evidence": [
+    "Recipe motion_checks pin-insertion-path: obstacles [\"shell\"]. Measured sampled min 0.010 mm.",
+    "hinge_pin/iso.png and the pin bbox z 5.8..19.6: plain cylinder, no chamfer. Recipe pin_protrusion_mm 1.0."
+   ],
+   "proposed_change": "State an ISO 8734-type dowel with chamfered or rounded ends. Add a 0.2-0.3 mm lead-in at the bore and tab_low hole entries, or a countersink after reaming. Add the button to the pin-path obstacles. Give an extraction method or a longer stub.",
+   "required_test": "Run pin-insertion-path with obstacles [shell, button] at nominal and at the 0.035 mm play offsets."
+  },
+  {
+   "id": "ASM7-5-window-gap-check-masked-by-tab-gap",
+   "severity": "minor",
+   "claim": "The far-edge fix does work. My probe gives a far-edge running gap of at least 0.331 mm up to the stop across all nine play offsets (it was 0.128-0.137 in r6). But the check that is supposed to prove it does not measure the window gap. window-gap-kept-until-stop uses the whole shell as obstacle, and its sampled minimum is exactly 0.200 mm, which is the button-to-tab_low axial gap. So any window gap of 0.2 mm or more would pass. Its min_mm of 0.15 is also below the verification_plan text, which promises \"at least 0.2 mm\".",
+   "evidence": [
+    "measurements.json window-gap-kept-until-stop: sampled min 0.19999 mm over 27 samples, continuous_swept_motion not_proven. Recipe min_mm 0.15. verification_plan: \"the window running gap stays at least 0.2 mm up to the stop\".",
+    "Own probe (/tmp/claude-0/probes-v7-assembly/probe1.py, CadQuery 2.8 on the exported part STEPs): far-region button vs shell rim (box x 10..18, y 24..38), min over 9 play offsets: 0.365 (0 deg), 0.345 (-1), 0.333 (-2), 0.331 (-3.033). Near edge: 0.365/0.400/0.400."
+   ],
+   "proposed_change": "Measure the gap against a shell rim region only (the shell intersected with a band around the window_gap outline), or add a separate rim part. Set min_mm to the stated value.",
+   "required_test": "Rerun window-gap-kept-until-stop against the rim-only obstacle with play offsets. The reported minimum should be about 0.33 mm, and the check should fail if the far edge is moved back to the r6 square cut."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "5da76a7de624d5078d2c65f074299bb5ddd28d63200efcb3118411bc4ff95333",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/assembly.png",
+   "status": "viewed",
+   "observation": "Assembly preview: the stand-in ellipsoidal shell with the orange button face flush in the side window and a thin running gap visible all round. The far (right) window edge is now slanted, not square, which matches the radial far edge. No tabs, blocks, screws, spring or switch are visible, so this image shows nothing about the mating interfaces or the screw access."
+  },
+  {
+   "attachment_sha256": "4f1e1a4457d36db3520472cd69a4e6b2fa6ba08263b9e3dee1abb7e4a67697bb",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/build-record.json",
+   "status": "viewed",
+   "observation": "Build record for subject d5ed4de9..., kind recipe_build. It embeds the v7 recipe (three M2 grub screws replace the plug and the printed rest/stop faces) and the measurements. Its file hashes match the evidence files I checked with sha256sum. The design_basis still says \"spring and plug into the through pocket\" and \"the plug pocket [is] reamed after printing\", but the recipe no longer has a plug."
+  },
+  {
+   "attachment_sha256": "c6c7daf38f77bc63a78477fc327505450e70f448c82952d0f1f4102b7aed74a7",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/button/iso.png",
+   "status": "viewed",
+   "observation": "Button ISO view: a curved skin piece with the rib, the upper link, the barrel with its vertical bore and chamfered top rim, and the full-height stop web. The web runs out to y=8 (bbox x -17.5..-12.5). The web flat sides are the rest-screw and stop-screw contact faces. The web underside and the skin bottom share the z=10 bed plane."
+  },
+  {
+   "attachment_sha256": "562ca66e8007272cd5fd7b8c247bc4132fa14d91f772d2fc3484a302bc9e3a79",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 cylinder, z 5.8..19.6 (bbox). It has no end chamfer or rounded ends, so there is no lead-in for the press into the blind upper hole or for entering the bore."
+  },
+  {
+   "attachment_sha256": "7fd1c75613bf83cd72b138c7b8ef3b00400bbf1861a248c7b5a9ebaf6a9571d0",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/measurements.json",
+   "status": "viewed",
+   "observation": "geometry_checks_verdict pass, overall_verdict unknown. Button touches rest_screw (distance 0) and return_spring (distance 0), and is 0.88 mm from stop_screw at rest. stop-screw-reached end distance is 0.002 mm. hard-stop-blocks-within-play first blocks at -3.205 deg at all 9 offsets. button-insertion-slide, button-insertion-drop and pin-insertion-path list only \"shell\" as obstacle. window-gap-kept-until-stop reports a sampled min of exactly 0.200 mm against the whole shell, which equals the tab axial gap. rise/tilt/stop checks are not_proven as continuous sweeps."
+  },
+  {
+   "attachment_sha256": "c07300dff15c81864071425d7b93ed10a42337543f5ba9e95f2803acc4f0a672",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/rest_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 x 3 cylinder (bbox x -12.5..-9.5 at y 9.5, z 11.9) with no socket or thread modelled. In the assembly its tip sits on the web +x face and its outer end stands 1.1 mm proud of block_out (x -10.6) on the +x side."
+  },
+  {
+   "attachment_sha256": "678716bd6741d3edbebc970c03126f181aa2f158f00e72dc571c7461a946949b",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø1.5 x 3.18 cylinder envelope (x -20.68..-17.5), coaxial with the rest screw (y 9.5, z 11.9). Its +x end bears directly on the web -x face, and about 1.18 mm of it is unguided between block_in and the web."
+  },
+  {
+   "attachment_sha256": "6432529df07f7f7626e153f5814c8963c8c0ee0488709dcc432e0da8340f5b3f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell ISO view with the button removed: the side window opening with a slanted far edge, and internal tabs/blocks partly visible through it. The bottom is open (rim at z=0). No PCB, bottom cover or keep-out volume is part of the model."
+  },
+  {
+   "attachment_sha256": "cae67ebfbebb02e1c098f2aff67635f7ec2f88e241bd7e04c24f41ef9f4c56d1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/spring_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 x 1.5 cylinder (x -22.18..-20.68), flush with the block_in -x face. Its socket end faces -x into the open cavity."
+  },
+  {
+   "attachment_sha256": "c46aac7b312bc962f3d4754c7b888b1daadc4fc5af86123d944d76edde16d2d9",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/stop_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 x 3.8 cylinder (x -22.18..-18.38 at z 15.2). Its tip stands 0.3 mm out of the block_in face. It has no thread, socket or locking feature. The stop load pushes it axially back toward its socket end."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Plain 6 x 4 x 8 box placeholder (x -1..5, y 18.5..22.5, z 9..17). It has no PCB, mounting feature or datum, so nothing locates it relative to the dowel."
+  },
+  {
+   "attachment_sha256": "269790e02304a1521b5881b73ce5730093d356b24797aa0c9d79ba1e489987e1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Plain 2 x 1.3 x 4 box placeholder for the stem (y 22.5..23.8), 0.2 mm from the plunger at rest per the pair check. The stop setting procedure says the stop screw is turned \"until the switch clicks\", so it needs this part (on its PCB) to be fitted."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Fixed versus r6, checked: ASM6-1 and ASM6-2 are resolved in principle. The rest and hard stop are now screw tips that adjust in both directions without disassembly, and the switch window no longer depends on a printed stop face. The plug dimension mismatch in ASM6-5 is gone because the plug was removed. The PCB keep-out part of ASM6-5 is still open (see ASM7-1).",
+  "Real switch and PCB: the stem position, travel, force and the PCB plane are placeholders. The -0.15/+0.05 mm stem window and the key-corridor clearance can only be confirmed against the owner PCB.",
+  "Self-tapped M2 grub screws in printed plastic: thread form, holding torque, back-out under repeated stop loads, and the 1.4 mm engagement length of the rest screw in block_out need a physical test.",
+  "Coaxial spring and rest screw (y 9.5, z 11.9): the spring force reacts directly at the rest screw, so the barrel floats in its 0.025 mm bore play at rest. Whether this rattles is for the mechanism review and a physical test.",
+  "How \"flush\" is judged when setting the rest screw (straight edge, feeler, or by touch) is not stated, and it is an owner preference.",
+  "All motion checks are rigid and sampled. Several report continuous_swept_motion not_proven. Print tolerances, deformation and wear are excluded.",
+  "Whether the owner accepts the 0.4 mm running gap and the possible 0.14 mm proud face within hinge play is an owner decision."
+ ]
+}
