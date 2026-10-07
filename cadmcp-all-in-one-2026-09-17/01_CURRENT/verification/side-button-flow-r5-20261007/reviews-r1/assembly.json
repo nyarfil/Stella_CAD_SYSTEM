@@ -1,0 +1,161 @@
+{
+ "schema_version": 1,
+ "subject_digest": "68f182bc0420784d4f5a41d6e8e2c947fdd7ddd98db37a9bb81c17b27b0220e4",
+ "role": "assembly",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (assembly role, rev5)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "d7c9bc8cc99681775bfc4bc1cab68ad1ba637b8395b54a6a8c61e6e09ec4f78d",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/assembly.png",
+   "status": "viewed",
+   "observation": "Exterior iso of the closed assembly: orange button face sits in the side window, flush with the skin, with a thin even running gap. No internal mating interface (hinge, tabs, stop blocks, spring, plug, switch) is visible, so it shows outer-form continuity only, not fit."
+  },
+  {
+   "attachment_sha256": "99e9dea25e8a49512f7abe8c8f016160fc95c2016e28fdaee4e728e3e01ef2c9",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/build-record.json",
+   "status": "viewed",
+   "observation": "Carries the v5 recipe (P5): bore r 1.025, lower tab hole r 1.01, upper tab hole r 0.99 (declared press fit), plug r 0.81 in a r 0.8 through pocket (declared press fit), axial gaps 0.2, web bed edges chamfered 0.4, new spine stiffener. Assumptions name reaming for the bore and both tab holes but not for the spring pocket; every output, including the purchased steel dowel and the spring, is labelled \"FDM prototype\"."
+  },
+  {
+   "attachment_sha256": "2c68734737e73434235e45628867eef99cf8b7be08727ef7c47f07a72234470a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/button/iso.png",
+   "status": "viewed",
+   "observation": "One-piece button: curved skin face with spine stiffener and rear rib, upper link to the bored barrel, and the long full-height stop web. Barrel end and web underside share the z 10 bed plane, so the whole web underside is coplanar with the declared barrel thrust face."
+  },
+  {
+   "attachment_sha256": "040abb9cf3a096dd91a69bd54181d06b0375e5d4a66cb17335e43cb520112d9e",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 x 15 mm cylinder with square ends: no chamfer, shoulder, groove or head, so its axial position and retention come only from the 0.01 mm radial press in the 3 mm upper tab."
+  },
+  {
+   "attachment_sha256": "80d661b8d820c6d25ef31f9c65b361ecfa64896dd0ef23945d4dfaf5272a9794",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/measurements.json",
+   "status": "viewed",
+   "observation": "All 50-odd checks pass. Press fits are measured as rigid overlap only (dowel 0.188 mm3, plug 0.076 mm3). Insertion slide/drop are sampled at 9/5 points (continuous sweep not proven); housing-clear-past-stop lower bound 0.202 vs 0.2 required; rest-band-stem-free lower bound 0.107 vs 0.05; tilt checks only about the y axis."
+  },
+  {
+   "attachment_sha256": "1197b6bc6558047bbc2bbad676adc48bb7f54ee273c078082cd236a731647d2f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Return spring is a solid Ø1.5 x 2.9 mm cylinder envelope, no coil, free length or end form, so spring preload and solid height cannot be read from the CAD."
+  },
+  {
+   "attachment_sha256": "1cfb3a5503546f2981b55d1c06f1ce630ceaeb3d3938c5aad7747d1e76c477de",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell alone with the side window open; the upper tab and part of the hinge structure are just visible through the window. The bottom is open, which is the only access path for button, dowel, spring and plug."
+  },
+  {
+   "attachment_sha256": "fa573248f940ae549ee1ecad1edc459670bd0cf5967ca1acc2c6f6bfa5357f9a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/spring_plug/iso.png",
+   "status": "viewed",
+   "observation": "Plug is a plain Ø1.62 x 1.5 mm cylinder: no flange, barb, chamfer or material callout, so nothing but the nominal 0.01 mm interference holds it against spring preload, and nothing but flushness sets its depth."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Plain 6 x 4 x 8 mm block, explicitly a placeholder switch body; no pins, PCB face or locating features, so it carries no datum."
+  },
+  {
+   "attachment_sha256": "ac71ede0dba808202e9fc3eb8ca24246e3e2d388bed08d433233ea343c5e2349",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Plain 2 x 1.1 x 4 mm block standing on the housing, placeholder stem; no travel or force data, it only fixes the stem top at y 23.8 for the clearance checks."
+  }
+ ],
+ "findings": [
+  {
+   "id": "ASM5-1-printed-rest-and-stop-faces-not-in-tolerance-budget",
+   "severity": "major",
+   "claim": "The rest pose and the hard stop are set by printed shell faces: block_out at x -12.5 and block_in at x -18.396. They are about 15-16.5 mm from the dowel axis and sit beside the reamed tab holes. Their position error goes straight into the windows the contract gives as measured margins. Rest contact is on the web +x face over y 8..11.5, about 15.25 mm from the axis. If block_out is 0.1 mm out of place, the rest angle moves by about 0.38 deg. That moves the plunger tip (17-18.5 mm out) by about 0.12 mm and the face tip at x 14 (29 mm out) by about 0.19 mm. The stated switch window is +0.10/-0.20 mm in Y, and the face may already stand proud by 0.06-0.12 mm from hinge play. So one typical FDM face error of +/-0.1 mm uses up the whole +0.10 window. In one direction the stem is preloaded at rest. In the other the face stands proud by about 0.3 mm and the plunger loses about 0.12 mm of the roughly 0.69 mm of travel past stem contact. The stem window is written as stem position relative to the dowel. It silently assumes nominal printed rest and stop faces, and the contract gives no fit, trim or shim step for them.",
+   "evidence": [
+    "recipe: block_out box x -12.5..-10.6, y 7.5..11.5; stop_arm web x -17.5..-12.5, y 8..25; hinge (-15, 25)",
+    "unverified_requirements: \"the stem top must sit within -0.20/+0.10 mm in Y of the modeled position relative to the dowel\"",
+    "measurements: rest-band-stem-free continuous lower bound 0.107 mm (required 0.05); housing-clear-past-stop lower bound 0.202 mm (required 0.2)",
+    "my probe p3.py: hard-stop contact at the web tip on the block_in face (x -18.396, y 8.16..9.04) begins at about -3.05 deg; contact patch identical with 0.2 mm axial drop",
+    "lever arithmetic: d(theta)=delta/15.25 mm; plunger shift = 17-18.5*d(theta); face tip shift = 29*d(theta)",
+    "assumptions name reaming for the bore and tab holes only; no finishing or tolerance is stated for the stop or rest faces"
+   ],
+   "proposed_change": "Make the rest datum adjustable or state its tolerance. Options: (a) print block_out 0.2-0.3 mm proud of nominal as a fit allowance and sand it down until the face is flush (with a feeler gauge on the skin) before the switch is fitted, and say so in the assembly order. (b) Add a replaceable shim or a set-screw rest stop. (c) Keep it printed, but state the required block_out face position relative to the dowel axis (for example +/-0.03 mm), and restate the switch window as the remaining budget after that tolerance. Apply the same treatment to the block_in face, since it sets the overtravel and the housing margin.",
+   "required_test": "After printing and reaming, measure the block_out and block_in face positions relative to the dowel axis (pin gauge plus height gauge or optical). Then assemble without the switch and measure face flushness at x -10, 2 and 14 with feeler gauges. With the placeholder switch fitted, measure the stem gap at rest and the plunger travel past stem contact at the hard stop. Accept only if the stem gap at rest is greater than 0 at every hinge-play extreme and the travel past contact is at least the assumed 0.5 mm."
+  },
+  {
+   "id": "ASM5-2-spring-plug-retention-not-realizable",
+   "severity": "major",
+   "claim": "The r4 plug finding (ASM4-2) is only half fixed. Revision 5 now models a 0.01 mm radial interference (plug r 0.81 in pocket r 0.80) and takes the pocket mouth as the depth datum. Flush with the block face can be held with a flat-ended push tool, so depth is acceptable. Retention is still not something you can build. The pocket is a Ø1.6 hole with a horizontal axis, printed in a rim-down shell, and the contract does not call for reaming it. Such a hole is typically 0.1-0.2 mm out of size and out of round, which is 10-20 times the declared interference. The plug has no material or source: all outputs, including the purchased steel dowel, are labelled \"FDM prototype\", and a printed Ø1.62 x 1.5 mm cylinder is not practical. The plug carries the full spring preload axially, straight out toward the open interior, over 1.5 mm of engagement with no flange, barb or adhesive. If it walks out, the plug and spring fall loose into the mouse, and the button loses its rest preload and rattles. An undersized printed pocket would also bind the Ø1.5 spring, which has only 0.05 mm radial clearance.",
+   "evidence": [
+    "recipe ops: spring_pocket cylinder r 0.8, axis +x, through block_in; plug r 0.81 x 1.5 at x -21.896..-20.396 (flush with the block_in -x face)",
+    "press_fits: plug-in-pocket min 0.04 / max 0.12 mm3; measured overlap 0.0759 mm3 (rigid overlap only, retention not verified per scope)",
+    "design_basis.assumptions lists reaming for the button bore and both tab holes, none for the spring pocket",
+    "outputs: spring_plug manufacturing_process \"FDM prototype; parameters not qualified\"; same label on hinge_pin, which the pin op calls a purchased steel dowel",
+    "my probe p1.py: a straight line along -x from the pocket mouth (y 9.5, z 11.8) is clear for about 31 mm to the inner wall near x -53, so a push rod can reach the plug from the open bottom; access is not the problem, retention is"
+   ],
+   "proposed_change": "State the plug as a purchased part, for example a Ø1.6 steel or brass pin cut to 1.5 mm, with the pocket reamed to a stated size (for example Ø1.58 for about 0.01 mm radial interference in PLA/PETG). Or make retention positive and independent of print accuracy: a flanged plug whose flange seats on the block_in -x face and is held by a drop of stated adhesive at the flange only, or a printed snap or cap captured by tab_low. Also state the reamed size for the spring-guide length of the pocket. Correct the outputs so that dowel, spring and plug are not labelled as FDM parts.",
+   "required_test": "Pull-out or push-out test of the seated plug on a printed (and reamed, if specified) coupon. Retention force must be at least 3 times the spring force at the hard stop, once the spring is selected. Then cycle the assembled button (for example 1000 presses to the hard stop) and check that the plug has not moved, by its flushness to the block face within 0.05 mm."
+  },
+  {
+   "id": "ASM5-3-web-underside-is-gravity-thrust-face",
+   "severity": "minor",
+   "claim": "ASM4-4 is not addressed. In normal use (z up, rim down), gravity drops the button the full 0.2 mm axial gap onto tab_low (top z 9.8). It is then carried by the whole 5 x 17 mm web underside as well as the barrel end, not by the barrel end alone as the contract says. This contact is a printed-on-printed sliding face over the full stroke. It also changes the visible running gap from the nominal 0.4/0.4 to about 0.2 below and 0.6 above the face. My probe found no interference over the full stroke with the 0.2 drop. Tilting the pin about the x axis by the bore-clearance angle (+0.38 deg, with a 0.17 drop) gives 2.07 mm3 of overlap of the web tip with tab_low. So under that moment the web tip, not the barrel end, is the thrust face. Tilt about x is not checked; the packet checks tilt about y only.",
+   "evidence": [
+    "recipe: barrel_outer z 10..17.6; stop_arm_box z 10..17.6; tab_low top z 9.8; axial_gap 0.2",
+    "rotation_checks tilt-down/tilt-up rotate about axis (0,1,0) only, with start translation -0.17/+0.17",
+    "my probe p2.py: dz -0.2, rz 0 to -3.0 deg: overlap 0, distance 0 (web and barrel on tab_low); dz -0.17, rx +0.38 deg about x through (-15,25,13.8): overlap 2.07 mm3 with shell",
+    "button bbox after 0.2 drop: z 9.8..17.8 versus window_gap z 9.6..18.4"
+   ],
+   "proposed_change": "Either state the web underside as an intended secondary thrust and sliding face, and state that the running gap under gravity is 0.2/0.6 (for owner acceptance of the outer form), or relieve the tab_low top under the web sweep by 0.2-0.3 mm (one layer pair), keeping full height under the barrel. Add tilt checks about the x axis with axial drop and rise.",
+   "required_test": "Add rotation checks about the x axis through the barrel mid-height at +/- the bore tilt angle, with the axial play taken up both ways. On the print, press with the mouse in normal orientation and in inverted orientation and compare feel and return; inspect the web underside and the tab_low top for wear after cycling."
+  },
+  {
+   "id": "ASM5-4-dowel-depth-datum-and-capture",
+   "severity": "minor",
+   "claim": "The ASM4-3 sizes are now stated: the upper tab is reamed to 1.98 for a press fit, the lower tab is 2.02 clearance, and the bore is 2.05. But the dowel still has no depth datum and no secondary capture. My probe shows that the upper hole goes through tab_high into a closed pocket of about 2.1 mm under the dome: at the pin axis the shell is open from z 20.8 to about 22.9. So the dowel top is hidden, it is not stopped at flush, and it can be over-pressed by up to about 2 mm until it meets the dome skin. Its depth is set only by judging the 1 mm stub below tab_low. That 1 mm stub is also the only means of extraction, against the press fit, and it hangs into the unmodelled PCB/base space. If the reamed fit comes out loose, gravity pulls the dowel downward, and nothing modelled stops it from walking out and releasing the button. Minor text error: the barrel_bore op still says \"0.05 mm radial play\", but the assumptions and the geometry say 0.025 mm radial.",
+   "evidence": [
+    "recipe: pin z 5.8..20.8; pin_hole_high r 0.99, z 17.7..20.8; tab_high z 17.8..20.8; tab_low z 6.8..9.8; pin_protrusion 1.0",
+    "my probe p1.py: point (-15,25,z) is outside shell material for z 20.81..22.0 and inside at z 23 (dome skin)",
+    "barrel_bore op reason: \"Reamed bore on the h7 dowel, 0.05 mm radial play\" vs barrel_inner_radius 1.025 and assumption \"0.025 mm radial play\""
+   ],
+   "proposed_change": "State a press-depth stop: press the dowel against a 1.0 mm spacer under tab_low, or use a shouldered or headed pin seated against the tab_low underside. State a minimum stub length for extraction (2 mm or more), or that the base plate captures the stub with a stated gap. Fix the 0.05/0.025 wording.",
+   "required_test": "After pressing, measure the stub length (1.0 +/- 0.1 mm). Push-out test of the dowel in a reamed coupon tab: retention must be greater than a stated value, for example 20 N. Drop test of the assembled shell, bottom down, without the base, and check that the dowel has not moved."
+  },
+  {
+   "id": "ASM5-5-pcb-keepout-still-unstated",
+   "severity": "minor",
+   "claim": "ASM4-5 is not addressed. Below the switch base (placeholder housing bottom z 9.0) the hinge structure takes up tab_low (z 6.8..9.8, x -22.4..-10.6, y 7..~30) and the dowel stub down to z 5.8. The plug and spring must also be reached along -x at z 11.8 from the open bottom after the button is in. The contract says \"then switch/PCB\" but gives no keep-out solid or tool-access zone. So the owner cannot check a real PCB, its components or the base plate against the hinge, or check that the plug can still be serviced.",
+   "evidence": [
+    "recipe: tab_low_box center (-16.498,23.5,8.3) size (11.796,33,3); pin origin z 5.8; switch_housing z 9..17",
+    "design_basis assumption: \"... spring and plug into the through pocket, then switch/PCB\"",
+    "my probe p1.py: the line below the dowel (-15,25,z<6.8) and the -x line from the pocket are open in the stand-in shell; nothing reserves them"
+   ],
+   "proposed_change": "Add a named keep-out solid (hinge, tab_low, dowel stub plus extraction space, and the plug push-rod corridor), or a placeholder PCB slab at the switch base height with pair checks against it, and state that the owner PCB must clear it.",
+   "required_test": "Pair interference check of the keep-out solid against the owner PCB/base STEP when it is supplied; on the print, assemble with the real PCB and confirm that the plug and dowel can be reached without removing the PCB."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Real switch: stem position, operating travel, pre/overtravel and force are placeholders; the -0.20/+0.10 mm Y window can only be checked against the owner PCB, and no PCB datum exists in this CAD.",
+  "Real shell: this is a stand-in shell; tab, block and window placement against the real mouse wall and its internal ribs/bosses is unknown.",
+  "Owner acceptance of the outer-form change: the 0.4 mm running gap (about 0.2/0.6 under gravity), and a face that may stand proud by 0.06-0.12 mm from play plus any rest-face print error.",
+  "What \"easier to press\" means to the owner (force, travel, position on the face) is not defined; the rigid force ratio 17/(x+15) is a designer estimate only.",
+  "Return spring rate, free length, solid height and preload are not selected; plug retention needs to be checked against that force.",
+  "Achieved FDM hole and face accuracy after reaming (tab holes, bore, pocket, block faces) is unknown; all press fits are verified only as rigid overlap volume.",
+  "The insertion paths are sampled translations (9 and 5 samples in the packet); my own denser sweep (45 slide and 39 drop samples, plus 23 slide samples with a 0.2 drop) found no overlap, but a continuous sweep is still not proven, and tolerance and deformation during assembly are excluded.",
+  "Physical tests not done: press-feel comparison against the original button, cycle life of the hinge, stops and plug, dowel and plug retention, drop test.",
+  "Independent review: this review ran in a separate Claude subagent context of the same model family as the designer; it is not an independent human or vendor review."
+ ],
+ "conclusion": "revise"
+}

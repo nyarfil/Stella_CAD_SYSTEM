@@ -398,6 +398,24 @@ class RotationMotion(Strict):
             raise ValueError('End engagement distance cannot be smaller than the required clearance.')
         return self
 
+class PressFit(Strict):
+    """Declared intended interference between two output parts (press fit, interference pin).
+
+    Only a declared pair may overlap, and only by a volume inside the stated
+    band; every undeclared pair keeps the zero-overlap rule.
+    """
+    id: Name
+    part_a: Name
+    part_b: Name
+    min_overlap_mm3: float = Field(gt=0, le=1e4)
+    max_overlap_mm3: float = Field(gt=0, le=1e4)
+    basis: Statement
+    @model_validator(mode='after')
+    def band(self):
+        if self.max_overlap_mm3<self.min_overlap_mm3:raise ValueError('Press-fit overlap band is inverted.')
+        if self.part_a==self.part_b:raise ValueError('A press fit needs two different parts.')
+        return self
+
 class WallThickness(Strict):
     """Sampled opposing-wall thickness of one output part (FDM wall, skin, rib)."""
     id: Name
@@ -424,6 +442,7 @@ class Recipe(Strict):
     motion_checks: list[Motion] = Field(default_factory=list, max_length=8)
     rotation_checks: list[RotationMotion] = Field(default_factory=list, max_length=8)
     wall_checks: list[WallThickness] = Field(default_factory=list, max_length=32)
+    press_fits: list[PressFit] = Field(default_factory=list, max_length=16)
     unverified_requirements: list[str] = Field(min_length=1, max_length=100)
     @model_validator(mode='after')
     def connected(self):
@@ -477,6 +496,12 @@ class Recipe(Strict):
         for w in self.wall_checks:
             if w.part not in parts:raise ValueError('Wall check must reference an output part.')
             ids.append(w.id)
+        fit_pairs=set()
+        for fit in self.press_fits:
+            pair=frozenset((fit.part_a,fit.part_b))
+            if fit.part_a not in parts or fit.part_b not in parts:raise ValueError('Press fit must reference output parts.')
+            if pair in fit_pairs:raise ValueError('Duplicate press-fit pair.')
+            fit_pairs.add(pair);ids.append(fit.id)
         for chk in self.clearance_checks:
             if chk.part_a not in parts or chk.part_b not in parts or chk.part_a==chk.part_b: raise ValueError('Invalid clearance part pair.')
             ids.append(chk.id)
@@ -620,12 +645,22 @@ def evaluate_geometry(recipe,part_shapes):
     # named clearance check. Intended contacts may touch, but solid overlap
     # is not silently accepted as a valid assembly.
     part_names=list(part_shapes)
+    fits={frozenset((f.part_a,f.part_b)):f for f in recipe.press_fits}
     for i,a in enumerate(part_names):
         for b in part_names[i+1:]:
             distance,overlap=pair_clearance(part_shapes[a],part_shapes[b])
-            checks.append({'id':'overlap-'+a+'-'+b,'kind':'automatic_output_pair_interference',
-                           'distance_mm':distance,'overlap_mm3':overlap,'max_overlap_mm3':1e-7,
-                           'verdict':'pass' if overlap<=1e-7 else 'fail'})
+            fit=fits.get(frozenset((a,b)))
+            if fit is None:
+                checks.append({'id':'overlap-'+a+'-'+b,'kind':'automatic_output_pair_interference',
+                               'distance_mm':distance,'overlap_mm3':overlap,'max_overlap_mm3':1e-7,
+                               'verdict':'pass' if overlap<=1e-7 else 'fail'})
+            else:
+                checks.append({'id':'overlap-'+a+'-'+b,'kind':'declared_press_fit_interference','press_fit_id':fit.id,
+                               'distance_mm':distance,'overlap_mm3':overlap,
+                               'min_overlap_mm3':fit.min_overlap_mm3,'max_overlap_mm3':fit.max_overlap_mm3,
+                               'basis':fit.basis,
+                               'verdict':'pass' if fit.min_overlap_mm3<=overlap<=fit.max_overlap_mm3 else 'fail',
+                               'scope':'Rigid overlap volume of a declared press fit only; retention force, hoop stress and printed hole accuracy are not verified.'})
     for d in recipe.dimension_checks:
         body=part_shapes[d.part];axis_index={'x':0,'y':1,'z':2}[d.axis]
         if d.kind=='bbox':

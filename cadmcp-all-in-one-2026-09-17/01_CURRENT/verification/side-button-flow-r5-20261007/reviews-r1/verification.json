@@ -1,0 +1,160 @@
+{
+ "schema_version": 1,
+ "subject_digest": "68f182bc0420784d4f5a41d6e8e2c947fdd7ddd98db37a9bb81c17b27b0220e4",
+ "role": "verification",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (verification role, rev5)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "V5-1-barrel-rim-meets-inner-skin-within-declared-play",
+   "severity": "major",
+   "claim": "Within the declared hinge play, the hinge barrel top rim reaches the sloping printed inner skin before the declared axial thrust face (the bottom of tab_high, z 17.8) engages. Revision 5 raised the barrel top from 17.5 to 17.6 mm, which shrank the barrel-to-skin gap to 0.067 mm (r4 mechanism M5 measured about 0.10 mm). With 0.025 mm of bore play toward the skin (+y), the gap is 0.044 mm at rest. It is 0.009 mm after a 0.1 mm axial rise, and the parts interfere after a 0.15-0.17 mm rise, which is inside the 0.2 mm axial gap. The build check meant to cover this (tilt-up-with-axial-rise) passes only at zero margin: 6.4e-15 mm and 1.9e-9 mm3 at its end pose, with continuous bound -0.048 (not_proven). It shifts the axis only toward -x, never toward the wall (+y). This contradicts the barrel_outer and tab_high reasons (\"its ends are axial thrust faces\", \"bottom is the barrel axial thrust face\") and the link_box comment. In a print, a 0.03-0.07 mm gap to a rough overhanging FDM inner surface means the hinge will rub, which works directly against the \"easier to press\" goal.",
+   "evidence": [
+    "Probe (CadQuery 2.8 on shell/model.step): a cylinder r 2.35 at (-15, 25), z 10..17.6, has minimum distance 0.0671 mm to the shell at barrel (-15.374, 27.32, 17.6) / shell (-15.384, 27.382, 17.623).",
+    "Same probe, barrel translated (dy, dz): (0.025, 0) 0.0439 mm; (0.025, 0.10) 0.0092 mm; (0.025, 0.17) overlap 1.05e-4 mm3 at z 17.73-17.77; (0.035, 0.10) 0.000 mm; (0.035, 0.15) overlap 1.49e-4 mm3. The tab_high thrust face is reached only at dz 0.2.",
+    "Probe on the full button STEP, translated (-0.0247, +0.0247, +0.17): overlap 1.7e-4 mm3 with the shell at (-15.092, 27.374, 17.77).",
+    "measurements.json tilt-up-with-axial-rise: start_translation [-0.035, 0, 0.17], sample distances 0.00266, 0.00123, 6.4e-15 mm; final overlap 1.9e-9 mm3; continuous_distance_lower_bound -0.048; continuous_swept_motion not_proven.",
+    "Same check, rotation samples at angle 0 with no rise: shell-clear-until-stop holds a constant 0.067 mm over -0.38 to -1.5 deg, which is the coaxial barrel-to-skin gap.",
+    "side_button_recipe_v5: bz1 = zh - barrel_top_below_window_mm = 17.6 (P5 sets 0.4; P4 used 0.5)."
+   ],
+   "proposed_change": "Restore real clearance between the barrel top and the inner skin. Options: lower the barrel top and web top back to 17.4 or 17.5 (still on the 0.2 mm grid) and lower tab_high to match; or add a lead chamfer of about 0.4-0.5 mm to the barrel top outer edge; or relieve the inner skin locally above the barrel. Then state which faces actually take axial thrust.",
+   "required_test": "Add a clearance check of button against shell with axial rise to the full axial gap (0.2 mm) combined with radial play in all eight directions, not only -x. Require a minimum clearance meaningful for FDM (for example 0.2 mm) between the barrel or web and the inner skin, so that only the intended thrust faces can touch. Also extend the tilt checks to +/-y axis shifts."
+  },
+  {
+   "id": "V5-2-switch-window-not-measured-and-inconsistent",
+   "severity": "minor",
+   "claim": "The new owner-facing line \"the stem top must sit within -0.20/+0.10 mm in Y of the modeled position\" is not backed by any recorded check, and its +0.10 limit breaks the recipe's own rest-band criterion. rest-band-stem-free requires min_mm 0.05. The worst sampled rest-band distance is 0.118 mm, at axis offset -y 0.035, and the continuous bound is 0.107 mm. Moving the stem +0.10 mm toward the plunger leaves about 0.018 mm sampled and 0.007 mm bounded, below 0.05. The -0.20 limit gives about zero margin for reaching the assumed 0.5 mm operating travel before the hard stop. At the nominal stop (0.9 mm at the 17 mm lever, about 0.95 mm at the stem x=3 edge), a -0.20 shift leaves roughly 0.05 mm, and less at the -x play offset where the stop engages early. No check measures operating travel at all (see V5-4).",
+   "evidence": [
+    "measurements.json rest-band-stem-free: min sampled 0.1183 mm at angle -0.1485 deg, offset [0, -0.035, 0]; continuous_distance_lower_bound 0.1074; min_mm 0.05 in recipe.json.",
+    "measurements.json housing-clear-past-stop: min sampled 0.2495 mm, bound 0.202 mm.",
+    "recipe.json unverified_requirements: \"Switch window (from the measured margins): ... -0.20/+0.10 mm in Y\".",
+    "angles_v5: stop -3.0333 deg = 0.9 mm at lever 17 mm; press -2.359 deg = 0.7 mm."
+   ],
+   "proposed_change": "Derive the window from the recipe's own acceptance thresholds, not from zero contact: for example about -0.15/+0.05 mm, or whatever the reruns show. Label it as relative to the placeholder switch.",
+   "required_test": "Rebuild with the switch_stem and switch_housing shifted to each window end and rerun rest-band-stem-free, stem-contact and housing-clear-past-stop, plus an operating-travel check (V5-4). Record those runs as the evidence for the stated window."
+  },
+  {
+   "id": "V5-3-stale-and-unsupported-contract-text",
+   "severity": "minor",
+   "claim": "Several contract texts still do not match the built geometry. Two of them were reported in r4 V4-5 and are unchanged. (a) barrel_bore reason: \"0.05 mm radial play\", but the bore is r 1.025 on an r 1.0 pin, i.e. 0.025 mm, as design_basis says. (b) spring reason: \"pocket floor to the arm face\", but the pocket is a through hole and the spring seats on the plug. (c) pin reason and the unverified line: \"press fit in line-reamed tab holes\", but the holes now differ (lower Ø2.02 clearance, upper Ø1.98 press), so they are not line-reamed together. (d) barrel_outer reason \"its ends are axial thrust faces\" and the link_box comment \"only the barrel end bears on the upper tab\": at a 0.2 mm rise the web top also lands on tab_high, at (-17.5, 25, 17.8) and (-16.025, 25, 17.8), and the web bottom is still coplanar with the barrel bottom (r4 V4-2); V5-1 shows the barrel rim meets the skin first. (e) The spine reason says a firm press reaches the stop \"without bending the skin\", but no stiffness check exists and unverified_requirements says this is not analysed. (f) The outputs label the steel dowel, the purchased spring and the placeholder switch as \"FDM prototype\".",
+   "evidence": [
+    "side_button_recipe.py side_button_recipe_v5 ops barrel_bore, spring, pin, barrel_outer, link_box comment, spine_box reasons.",
+    "Probe: button translated +0.2 in z touches the shell at (-17.5, 25.0, 17.8), the web top corner, as well as at the barrel.",
+    "recipe.json outputs: manufacturing_process \"FDM prototype; parameters not qualified\" for hinge_pin, return_spring, switch_housing and switch_stem (the schema default, recipe.py line 334)."
+   ],
+   "proposed_change": "Correct the six texts (a)-(f). Set manufacturing_process explicitly to \"purchased steel dowel\", \"purchased spring (placeholder)\" and \"placeholder, not manufactured\". Reword the spine reason as a design intent that has not been verified.",
+   "required_test": "A text audit against the built parameters: every reason quoting a dimension or a contact role must match the recipe parameters and a probe of the STEP. Also add an axial-rise contact check that lists which faces touch."
+  },
+  {
+   "id": "V5-4-stop-and-actuation-evidence-gaps",
+   "severity": "minor",
+   "claim": "F3 and F5 still rest partly on construction, not on recorded evidence (carried from r4 V4-3). (1) hard-stop-blocks-within-play names only the obstacle \"shell\". My probe confirms the blocking contact is the intended block_in face (x = -18.396, web -x tip corner, y about 8.16, z 10.4-13.8), but the build record does not. (2) housing-clear-past-stop ends at -3.151 deg, while blocking is proven only by -3.201 deg. At the +x play offset the stop engages between -3.08 and -3.20 deg, so the housing is unchecked for up to 0.05 deg. The margin there is still about 0.18 mm, so this is an evidence gap, not a collision. (3) No check shows that the assumed operating travel (0.5 mm beyond 0.2 mm free play) is reached before the hard stop at every play offset. stem-contact-by-free-play proves only contact at 0.3 mm travel.",
+   "evidence": [
+    "Probe at -3.2012 deg: overlap 0.0720 mm3 at nominal, 0.0063 at +x 0.035 offset, 0.1884 at -x offset; overlap bboxes at x -18.48..-18.396, y 8.16..9.67, which is block_in.",
+    "Probe at -3.0333 deg, +x offset: distance 0.035 mm (not yet at the stop); at -3.08 deg, 0.0213 mm.",
+    "recipe.json rotation_checks: housing-clear-past-stop end_deg -3.1513; hard-stop-blocks-within-play end_deg -3.2013, start_deg -1.0, 2 samples."
+   ],
+   "proposed_change": "Run housing-clear-past-stop to the same end angle as the hard-stop check. Record the blocking contact location or the feature name. Add an operating-travel check, for example a phantom stem body shifted 0.5 mm along -y that must be reached (blocked) before the hard-stop angle at every play offset.",
+   "required_test": "Rerun with the matched end angles. Add a negative control: a build with block_in removed must fail hard-stop-blocks-within-play. Add the operating-point blocking check at all nine axis offsets."
+  },
+  {
+   "id": "V5-5-by-construction-and-sampled-passes",
+   "severity": "minor",
+   "claim": "Several passes should not reach the owner as proofs. (1) shell-printed-wall = 1.1999999999999993 mm against 1.2, at the spring pocket wall: it is exactly the construction value (pocket edge y 8.7 against block_y_min 7.5) and passes only through the float tolerance, unchanged since r3. (2) Eight clear-type motion checks are sampled-only with negative continuous bounds: insertion slide (at 0.0 mm sliding contact), drop, pin, plug and spring paths, shell-clear-until-stop and both tilt checks. (3) The new press-fit checks (0.1876 and 0.0759 mm3) confirm only that the CAD carries the declared nominal 0.01 mm interference. That is by construction. For the plug, no reaming or finishing of the horizontal printed Ø1.6 pocket is stated, so a 0.01 mm interference is far below the accuracy of the printed pocket and plug. The pin and plug insertion paths begin after the press-fit leg and leave out the button, through whose bore the dowel passes.",
+   "evidence": [
+    "measurements.json shell-printed-wall sampled_min_mm 1.1999999999999993 at [-21.72, 8.7, 11.8]; minimum_proven false.",
+    "measurements.json continuous_distance_lower_bound_mm: slide -1.375, drop -1.775, pin -0.578, plug -0.400, spring -0.600, shell-clear-until-stop -0.111, tilt-down -0.034, tilt-up -0.048.",
+    "recipe.json press_fits basis values 0.19 and 0.076 mm3 against measured 0.1876 and 0.0759; design_basis names reaming only for the dowel holes and bore.",
+    "recipe.json motion_checks pin-insertion-path obstacles [\"shell\"], start [0, 0, -3.1]."
+   ],
+   "proposed_change": "In the owner summary, mark these as sampled or by-construction. Thicken the spring-pocket wall slightly above 1.2 mm, or lower the requirement only with a written basis (do not lower the threshold silently). State how the plug pocket is sized (ream or drill to a stated size, or switch to a flanged or barbed plug). Add the button to the dowel insertion obstacles.",
+   "required_test": "Rerun the wall check with margin. Add a pin-insertion check that includes the button as an obstacle. Physical test: measure the as-printed pocket and plug and their pull-out force."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "d7c9bc8cc99681775bfc4bc1cab68ad1ba637b8395b54a6a8c61e6e09ec4f78d",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/assembly.png",
+   "status": "viewed",
+   "observation": "Iso view of the stand-in shell. The orange button face sits flush in the side window, with a thin running-gap line around it. No interior part (barrel, web, stop blocks, dowel, spring, switch) is visible, so this image cannot show the hinge, the stop or the barrel-to-skin gap. It is labelled \"Prototype assembly / not a certified product\". sha256 matches."
+  },
+  {
+   "attachment_sha256": "99e9dea25e8a49512f7abe8c8f016160fc95c2016e28fdaee4e728e3e01ef2c9",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/build-record.json",
+   "status": "viewed",
+   "observation": "sha256 matches the packet build_record_sha256. Holds the recipe context (title revision 5, upper_hole_radius 0.99, lower 1.01, plug 0.81, axial_gap 0.2, barrel top 17.6), file_hashes, the same 55 checks as measurements.json and subject digest 68f182bc... The outputs carry the default manufacturing_process \"FDM prototype; parameters not qualified\" for every part, including the steel dowel, the spring and the placeholder switch."
+  },
+  {
+   "attachment_sha256": "2c68734737e73434235e45628867eef99cf8b7be08727ef7c47f07a72234470a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/button/iso.png",
+   "status": "viewed",
+   "observation": "One printed button. It shows the curved skin face, the rear rib, the link up to a vertical barrel with its bore open at the top, the full-height stop web, and the new back stiffener as a stepped ledge along the face. The 0.4 mm bed-edge chamfer and the barrel top-to-skin gap cannot be judged at this scale. STEP bbox x -17.5..14, y 8..31.8, z 10..18."
+  },
+  {
+   "attachment_sha256": "040abb9cf3a096dd91a69bd54181d06b0375e5d4a66cb17335e43cb520112d9e",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 cylinder, with no head, shoulder or lead chamfer. STEP bbox z 5.8..20.8 (15 mm), so its top is flush with the upper tab top at z 20.8. Nothing modelled sets its axial seating depth in the press fit."
+  },
+  {
+   "attachment_sha256": "80d661b8d820c6d25ef31f9c65b361ecfa64896dd0ef23945d4dfaf5272a9794",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/measurements.json",
+   "status": "viewed",
+   "observation": "sha256 matches. 55 checks, all pass; geometry_checks_verdict pass, overall_verdict unknown. Points to note: (1) tilt-up-with-axial-rise ends at distance 6.4e-15 mm with 1.9e-9 mm3 overlap, so it passes at zero margin. (2) Eight clear-type checks report continuous_swept_motion not_proven with negative bounds (slide -1.375, drop -1.775, pin -0.578, plug -0.400, spring -0.600, shell-clear-until-stop -0.111, tilt-down -0.034, tilt-up -0.048). (3) shell-printed-wall reports 1.1999999999999993 against 1.2, at the spring pocket wall (-21.72, 8.7, 11.8). (4) The press-fit overlaps are 0.1876 and 0.0759 mm3."
+  },
+  {
+   "attachment_sha256": "1197b6bc6558047bbc2bbad676adc48bb7f54ee273c078082cd236a731647d2f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Solid cylinder envelope with no coils, Ø1.5 x 2.896 mm (STEP x -20.396..-17.5). It is a placeholder volume only, with no rate, free length or solid height, which matches the unverified_requirements line."
+  },
+  {
+   "attachment_sha256": "1cfb3a5503546f2981b55d1c06f1ce630ceaeb3d3938c5aad7747d1e76c477de",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/shell/iso.png",
+   "status": "viewed",
+   "observation": "Stand-in shell with the side window open. Through the window, part of the hinge-side tab structure and a small hole are visible at the right end. The stop blocks, the spring pocket and the inner-skin region next to the barrel top are hidden, so the 0.067 mm barrel-to-skin gap cannot be seen in this image."
+  },
+  {
+   "attachment_sha256": "fa573248f940ae549ee1ecad1edc459670bd0cf5967ca1acc2c6f6bfa5357f9a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/spring_plug/iso.png",
+   "status": "viewed",
+   "observation": "Plain cylinder, Ø1.62 x 1.5 mm (STEP x -21.896..-20.396), with no flange, lead chamfer or barb. Retention rests entirely on the declared 0.01 mm radial interference in a printed horizontal pocket."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Plain rectangular block, 6 x 4 x 8 mm (STEP x -1..5, y 18.7..22.7, z 9..17). A labelled placeholder envelope, not a switch model."
+  },
+  {
+   "attachment_sha256": "ac71ede0dba808202e9fc3eb8ca24246e3e2d388bed08d433233ea343c5e2349",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Plain rectangular stem, 2 x 1.1 x 4 mm (STEP x 1..3, y 22.7..23.8, z 11..15). The stem top at y 23.8 gives 0.2 mm free play to the plunger tip at y 24. Placeholder only."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Status of the r4 findings: V4-1 (press fits modelled as clearance) is fixed in the geometry. The upper hole is r 0.99 and the plug r 0.81, giving 0.01 mm radial interference, with declared overlap checks that pass. Retention force is still unverified, as declared. V4-2 is partly open (V5-3d), V4-3 is open (V5-4), V4-4 is open (V5-5), and V4-5 is partly fixed: part_count is gone, but the barrel_bore and spring texts remain.",
+  "All geometry is rigid nominal CAD. Print accuracy, first-layer flare, layer quantisation, link and skin bending beyond the stop, stiffener effectiveness, wear and creep are not covered by any check.",
+  "The real switch (dimensions, operating force, travel, click feel), the real PCB position and the real mouse shell are unknown; only the owner can supply them. All margins to the stem and housing are relative to placeholders.",
+  "Whether \"easier to press\" (もっと押しやすく) means lower force, shorter travel, a larger usable area or a different feel is undefined. The force factor 17/(x+15) and the face-travel figures are rigid designer estimates, and the return spring adds an unselected force.",
+  "The owner has not accepted the 0.4 mm running gap (about 38 mm3 of skin removed) or the up to about 0.1 mm proud-face bound (human_approval false).",
+  "Press-fit retention (dowel in the reamed Ø1.98 upper tab, plug in the printed pocket), pull-out force and hoop cracking of FDM tabs need physical tests.",
+  "Hinge friction, rattle and whether the barrel rubs the inner skin (V5-1) need a printed test piece. Rigid clearances of 0.03-0.07 mm are below FDM accuracy.",
+  "The shell volume integrations disagree (default B-rep 17976 mm3 against adaptive 18063 mm3). Overlap measurements use the maximum estimate, but very small curved-surface overlaps (1e-4 mm3 scale) in my probes are close to integration noise. The distance values are the primary evidence for V5-1.",
+  "My probes cover offsets in x/y and pure axial shifts, not the whole continuous play envelope. Independent agents in the other roles may find interactions I did not test. This review is not a physical test."
+ ]
+}

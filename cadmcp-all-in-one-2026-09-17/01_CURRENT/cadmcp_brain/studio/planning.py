@@ -12,7 +12,7 @@ def capabilities(required_operations=(), required_checks=()):
     checks = ['solid_validity', 'solid_count', 'bbox', 'inner_cylinder_diameter',
               'outer_cylinder_diameter', 'rigid_pair_interference', 'static_clearance',
               'sampled_translation_clearance', 'sampled_rotation_clearance', 'sampled_wall_thickness',
-              'volume_integration_agreement', 'delivery_step_equivalence']
+              'volume_integration_agreement', 'declared_press_fit', 'delivery_step_equivalence']
     missing_ops = sorted(set(required_operations) - set(operations))
     missing_checks = sorted(set(required_checks) - set(checks))
     return {'operations': operations, 'checks': checks,
@@ -21,7 +21,7 @@ def capabilities(required_operations=(), required_checks=()):
             'verification_limits': {'delivery_step_equivalence_max_solids': DELIVERY_MAX_SOLIDS},
             'reference_policy': 'principle_reference, fit_reference, direct_reuse or explicit original design; shape reuse is not mandatory',
             'limitations': ['Rotation checks cover rigid rotation about one fixed axis only; no elastic, flexure or hinge-play verification (UNKNOWN).',
-                            'Rigid pair overlap is not a press-fit deformation model.',
+                            'Rigid pair overlap is not a press-fit deformation model; declared press_fits verify only a rigid overlap-volume band.',
                             'Loft and spline_loft take parallel XY sections; section_loft takes closed sections on arbitrary planes; sweep takes one closed profile along a polyline or spline path with a deterministic profile frame. Free-form surface lofting and guide-curve sweeps remain unsupported.',
                             'Shell offsets one solid inward by a uniform wall; use wall_checks for a sampled (not proven) minimum wall.',
                             'No physical strength, fatigue or manufacturing certification.'],

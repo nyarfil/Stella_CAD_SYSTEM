@@ -186,16 +186,23 @@ def test_side_button_flow_brief_and_matrix_are_valid():
 
 
 @kernel
-def test_side_button_revision4_builds_and_passes_every_check(tmp_path):
+def test_side_button_revision5_builds_and_passes_every_check(tmp_path):
     from cadmcp_brain.studio.recipe import execute_recipe
-    from side_button_recipe import side_button_recipe_v4
-    result=execute_recipe(Recipe.model_validate(side_button_recipe_v4()),{},tmp_path/'sb4')
+    from side_button_recipe import side_button_recipe_v5
+    result=execute_recipe(Recipe.model_validate(side_button_recipe_v5()),{},tmp_path/'sb5')
     failed=[c['id'] for c in result['checks'] if c['verdict']!='pass']
     assert result['geometry_checks_verdict']=='pass',failed
-    checks={c['id']:c for c in result['checks']}
-    assert checks['hard-stop-blocks-within-play']['start_deg']==-1.
-    assert all(x['first_blocked_angle_deg']<-1. for x in checks['hard-stop-blocks-within-play']['blocking']['per_offset'])
-    assert checks['tilt-down-with-axial-drop']['start_translation_mm'][2]<0<checks['tilt-up-with-axial-rise']['start_translation_mm'][2]
+    fits=[c for c in result['checks'] if c['kind']=='declared_press_fit_interference']
+    assert {c['press_fit_id'] for c in fits}=={'dowel-in-upper-tab','plug-in-pocket'}
+    assert all(c['min_overlap_mm3']<=c['overlap_mm3']<=c['max_overlap_mm3'] for c in fits)
+
+
+def test_side_button_revision5_is_a_valid_contract():
+    from side_button_recipe import P5,side_button_recipe_v5
+    recipe=Recipe.model_validate(side_button_recipe_v5())
+    assert abs(P5['axial_gap_mm']/.2-round(P5['axial_gap_mm']/.2))<1e-9
+    assert {f.id for f in recipe.press_fits}=={'dowel-in-upper-tab','plug-in-pocket'}
+    assert any('Switch window' in item for item in recipe.unverified_requirements)
 
 
 def test_side_button_revision4_is_a_valid_contract():
@@ -336,3 +343,35 @@ def test_rotation_needs_a_nonzero_sweep():
     from test_recipe_operations import hinge_recipe
     data=hinge_recipe(5.);data['rotation_checks'][0]['start_deg']=5.
     with pytest.raises(ValidationError):Recipe.model_validate(data)
+
+
+def _fit_recipe(band):
+    data=_wall_recipe(.5);data['wall_checks']=[]
+    data['operations'].append({'id':'peg','op':'cylinder','function_id':'Tube','reason':'Peg pressed into the tube bore.',
+                               'radius_mm':4.25,'height_mm':5.,'origin_mm':[0.,0.,0.],'axis':[0.,0.,1.]})
+    data['outputs']=[{'part_id':'tube','node':'tube'},{'part_id':'peg','node':'peg'}]
+    if band:data['press_fits']=[{'id':'peg-fit','part_a':'peg','part_b':'tube','min_overlap_mm3':band[0],'max_overlap_mm3':band[1],
+                                 'basis':'0.05 mm radial interference over 5 mm: about 6.6 mm3.'}]
+    return data
+
+
+@kernel
+@pytest.mark.parametrize('band,verdict',[(None,'fail'),((5.,8.),'pass'),((7.,9.),'fail')])
+def test_declared_press_fit_band_replaces_zero_overlap_rule_only_for_its_pair(band,verdict):
+    import cadquery as cq
+    from cadmcp_brain.studio.recipe import evaluate_geometry
+    tube=cq.Solid.makeCylinder(5.,10.).cut(cq.Solid.makeCylinder(4.2,10.))
+    peg=cq.Solid.makeCylinder(4.25,5.)
+    check=next(c for c in evaluate_geometry(_fit_recipe(band),{'tube':tube,'peg':peg})['checks'] if c['id']=='overlap-tube-peg')
+    assert check['verdict']==verdict
+    assert check['kind']==('automatic_output_pair_interference' if band is None else 'declared_press_fit_interference')
+
+
+def test_press_fit_contract_and_lineage():
+    from pydantic import ValidationError
+    from cadmcp_brain.studio.runtime import Studio
+    with pytest.raises(ValidationError):Recipe.model_validate(_fit_recipe((8.,5.)))
+    dup=_fit_recipe((5.,8.));dup['press_fits'].append(dict(dup['press_fits'][0],id='again'))
+    with pytest.raises(ValidationError):Recipe.model_validate(dup)
+    wide=_fit_recipe((1.,80.))
+    assert Studio._lineage_contract(Recipe.model_validate(_fit_recipe((5.,8.))))!=Studio._lineage_contract(Recipe.model_validate(wide))

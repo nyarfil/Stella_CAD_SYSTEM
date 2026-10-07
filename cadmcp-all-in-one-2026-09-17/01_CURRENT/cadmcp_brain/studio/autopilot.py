@@ -11,17 +11,17 @@ from pathlib import Path
 from pydantic import ValidationError
 from .runtime import ROLES,Review
 from .synthesis import FunctionBrief,Matrix
-from .recipe import Recipe,Reference,Dimension,Clearance,Motion,RotationMotion,WallThickness
+from .recipe import Recipe,Reference,Dimension,Clearance,Motion,RotationMotion,WallThickness,PressFit
 from ..errors import BrainError
 from ..req2cad.common import atomic_json,digest
 from .planning import capabilities,recovery_for
 
 _CHECK_MODELS={'dimension_checks':Dimension,'clearance_checks':Clearance,'motion_checks':Motion,
-               'rotation_checks':RotationMotion,'wall_checks':WallThickness}
+               'rotation_checks':RotationMotion,'wall_checks':WallThickness,'press_fits':PressFit}
 _CHECK_PART_FIELDS={'dimension_checks':('part',),'clearance_checks':('part_a','part_b'),
                     'motion_checks':('moving_part','obstacles'),
                     'rotation_checks':('moving_part','obstacles'),
-                    'wall_checks':('part',)}
+                    'wall_checks':('part',),'press_fits':('part_a','part_b')}
 
 
 def _output_part_map(recipe):
