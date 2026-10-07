@@ -1,0 +1,162 @@
+{
+ "schema_version": 1,
+ "subject_digest": "2f33ec505f74e846c7798a93dc6981a1efd15336c3c5b8114b1c75b9bae940e6",
+ "role": "verification",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (verification role, rev9)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "V9-1-stop-recovery-exceeds-housing-margin",
+   "severity": "major",
+   "claim": "The v9 adjustment text says that if there is no click, the stop screw is backed out up to 0.15 mm in 1/8-turn steps, 'keeping the housing margin'. No check covers that range, and my probe of the delivered STEP contradicts the claim at the modelled switch position. With hinge play, the housing margin falls from 0.117 mm (gauge setting) to 0.062 mm at 0.05 mm back-out, 0.008 mm at 0.10 mm (below the plan's 0.05 mm requirement) and a 0.104 mm3 plunger/housing overlap at 0.15 mm. That overlap means the stem is pushed past its assumed 0.95 mm bottoming depth, which defeats F5 (the hard stop, not the switch, ends the stroke). The switch-selection line also understates the push. It says the plunger pushes the stem 'about 0.68-0.70 mm' at the gauge setting. That figure matches only the stem centre (x=2). The placeholder stem is 2 mm wide, so the deepest contact is at x=3: 0.758 mm nominal and 0.809 mm with hinge play. The real margin to bottoming is about 0.14 mm, not about 0.25 mm. The claim holds only if a missing click means the whole switch (stem and body) sits deeper. The contract does not state that condition, and the stated stem envelope (-0.15/+0.05 mm) already clicks at the gauge setting.",
+   "evidence": [
+    "recipe design_basis.assumptions 'Adjustment (no switch needed)': 'back the stop screw out 1/8 turn (about 0.05 mm) at a time, at most 0.15 mm, keeping the housing margin'",
+    "measurements.json housing-clear-past-stop: end_deg -3.2034 (nominal stop - stop_play - 0.05); min 0.0828 mm at the worst play offset. No check is made at any backed-out stop position.",
+    "probe2.py (/tmp/claude-0/probes-v9-verification): stop screw translated -x by 0, 0.05, 0.10, 0.15 mm; stop angle bisected against it at the 9 play offsets; button vs switch_housing at that angle. Worst distance 0.1167, 0.0621, 0.0076, 0.0 mm (overlap 0.104 mm3).",
+    "probe2.py: nominal stop -3.041 deg (front-edge 29*sin = 1.539 mm). Plunger depth into the stem footprint (x 1..3, z 11..15) is 0.758 mm nominal and 0.809 mm worst play, against 'about 0.68-0.70 mm' in unverified_requirements.",
+    "The rest gap plunger-stem is 0.200 mm (STEP), so the stated 0.20 mm free play is consistent. The discrepancy is only the stem-centre vs stem-edge reference."
+   ],
+   "proposed_change": "Make the recovery step consistent with the measured margin. Either limit the back-out to the margin the checks cover (about 0.05 mm, one 1/8 turn) and say that a missing click beyond that means the switch or PCB position must be corrected, not the stop. Or state explicitly that more back-out is allowed only when the switch body is confirmed to sit deeper by the same amount. Restate the push figure as the deepest-contact value (about 0.76 mm nominal, about 0.81 mm with hinge play, about 0.14 mm short of the assumed 0.95 mm bottoming) and re-derive the switch-selection line from it.",
+   "required_test": "Add a rotation check at the deepest permitted stop: stop_screw translated by the maximum allowed back-out, button rotated to that stop minus stop_play at all 8 play offsets, obstacle switch_housing, min_mm 0.05. Show that it passes, or that the stated back-out limit is the one that passes. Report the plunger depth into the stem at the stem edge and at the centre for the gauge band ends (1.48 and 1.58 mm)."
+  },
+  {
+   "id": "V9-2-nut-turn-check-omits-spring-screw-coplanar-contact",
+   "severity": "minor",
+   "claim": "The r8 major is genuinely fixed. The lower tab now ends at the inward-block face (x -22.69). My 31-step sweep (0-90 deg, 3 deg steps) of the stop nut about its screw axis gives no volume overlap with the shell, spring_screw, return_spring, button or hinge_pin. The rest nut is likewise clear. A negative control on the r8 STEP gives 0.077/0.109/0.077 mm3 overlap at 22.5/45/67.5 deg, so the new 45-deg sample would have caught the r8 defect. Two coverage gaps remain. (a) The recorded check uses only 'shell' as an obstacle and only 3 samples (continuous bound -1.11 mm, not_proven), so its pass alone does not prove a quarter turn. (b) The spring screw's outer end is exactly coplanar with the nut seat (x -22.69). From about 15 deg the nut corner (R 2.83 mm, reaching y 12.13) sweeps over the spring screw end (edge at y 11.4) with zero clearance. The contract says the spring-screw depth sets the preload. Any back-out of that screw to lower the preload leaves it proud of the block face, and the stop nut then cannot turn. That is the same failure class as r8.",
+   "evidence": [
+    "measurements.json stop_nut-turns-on-seat: obstacles ['shell'], samples at 0/45/90 deg all distance 0.0, continuous_distance_lower_bound_mm -1.1107, not_proven",
+    "STEP bounds: spring_screw x -22.69..-21.19, y 11.4..13.4; stop_nut x -24.29..-22.69, y 7.3..11.3; static distance 0.1 mm",
+    "probe1.py: stop_nut swept 0-90 deg in 3 deg steps: max overlap 0 with all obstacles; spring_screw distance 0.0 from 15 deg on (coplanar faces)",
+    "probe1.py negative control on r8 STEP (59f15ee7...): stop_nut vs shell overlap 0.0766 mm3 at 22.5 deg, 0.1091 mm3 at 45 deg",
+    "recipe outputs/unverified_requirements: 'Its preload adds to thumb force and is set by the spring screw depth.'"
+   ],
+   "proposed_change": "Add spring_screw (and return_spring) to the stop_nut-turns-on-seat obstacles. Either recess the spring pocket mouth or seat the spring screw at least 0.3 mm below the block face as a stated limit. Or say in the adjustment text that the spring screw must not stand proud of the block face, and that preload is reduced only by a shorter spring, never by backing the screw out.",
+   "required_test": "Re-run the nut-turn check with obstacles [shell, spring_screw, return_spring], samples at least 7 over 0-90 deg. Also run it with spring_screw translated 0.2 mm in -x (backed out). The design must then either show clearance or carry the stated limit that makes that pose not allowed."
+  },
+  {
+   "id": "V9-3-stale-spring-diameter-in-design-basis",
+   "severity": "minor",
+   "claim": "The design basis still states 'Return spring: Ø1.5 compression spring' (carried from r6). v9 changed the spring envelope to Ø1.2 and its own unverified_requirements set 'outside diameter at most 1.2 mm'. The contract therefore names a spring 0.3 mm larger than its own limit, and a Ø1.5 spring would bring back the 0.05 mm radial clearance in the printed Ø1.6 bore that v9 was meant to remove.",
+   "evidence": [
+    "recipe.design_basis.assumptions[1]: 'Return spring: Ø1.5 compression spring, rate and preload not selected (placeholder envelope).'",
+    "unverified_requirements: 'Return spring selection: outside diameter at most 1.2 mm (0.2 mm radial clearance in the printed 1.6 mm bore)'",
+    "return_spring STEP: y 11.8..13.0, z 11.3..12.5 (Ø1.2); P9 spring_radius_mm 0.6"
+   ],
+   "proposed_change": "Replace the stale assumption with 'Return spring: compression spring, OD at most 1.2 mm, rate and preload not selected (placeholder envelope)', so the owner-facing text has one spring size.",
+   "required_test": "Text consistency check: search the recipe and derived documents for every spring diameter and confirm that each equals the P9 envelope (Ø1.2) or the stated maximum."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "dbae29691a1bc803922bd760111af74f169c8a53a5fff3f230d96e6bb6036995",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/assembly.png",
+   "status": "viewed",
+   "observation": "Closed assembly render: the ellipsoidal stand-in shell with the orange button face set flush in a curved side window and a thin running gap all round. No internal parts are visible, so the image cannot show the nuts, screws, spring or switch. sha256 matches."
+  },
+  {
+   "attachment_sha256": "8a1187a0a03fa033c291bbf07889753aa35c4b071388ffd4c12a02274ebc9a3e",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/build-record.json",
+   "status": "viewed",
+   "observation": "Build record for attempt 836c4201..., subject 2f33ec50..., kind recipe_build. It holds the v9 recipe context and 105 measurement checks. All 118 file_hashes entries match the files on disk; I recomputed them. The recipe text still says 'Return spring: Ø1.5 compression spring' in design_basis.assumptions."
+  },
+  {
+   "attachment_sha256": "c6c7daf38f77bc63a78477fc327505450e70f448c82952d0f1f4102b7aed74a7",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/button/iso.png",
+   "status": "viewed",
+   "observation": "Button iso view: the curved skin face with the rib, a link to the bored barrel, the full-height stop web and the spine. The visible geometry matches the STEP bbox x -17.5..14.316, y 8.0..31.797, z 10..18."
+  },
+  {
+   "attachment_sha256": "7a27aec709ac4d6cb724dc8962e62653c8dedb013c5ec0f561af1d98b96edf29",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain cylinder dowel. The STEP gives Ø2 x 14.8 mm (z 4.8..19.6) on the hinge axis at x -15, y 25."
+  },
+  {
+   "attachment_sha256": "08a5e30f4e79555ef2fa74ec190a9fc8b4b84fd714a536f48d84b524b23d07d2",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/measurements.json",
+   "status": "viewed",
+   "observation": "geometry_checks_verdict pass, overall_verdict unknown. The stop_nut/rest_nut-turns-on-seat checks use 3 samples (0/45/90 deg), shell as the only obstacle, distance 0.0 at every sample and continuous bound -1.11 (not_proven). housing-clear-past-stop has a minimum of 0.0828 mm at -3.203 deg (worst play offset). nearest-shell-gap-until-stop uses 2 samples (bound -0.73, not_proven)."
+  },
+  {
+   "attachment_sha256": "5ea8ab38ef850bfa8b90f97851242fb569f79326219d3838925a9bfd2ab89f93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/rest_nut/iso.png",
+   "status": "viewed",
+   "observation": "Square nut, 4 x 4 x 1.6 mm, with a 1.6 mm minor bore. The STEP places it at x -10.6..-9.0, seated on the outward block face. The tab end is coplanar at x -10.6."
+  },
+  {
+   "attachment_sha256": "dad9e60ede08194c8bdf93e104ed3ef906d27da262e822ebcd7179c8fe5bbaac",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/rest_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 cylinder with no thread or hex socket, an envelope only. The STEP gives x -12.5..-8.5 (4.0 mm, matches M2 x 4). It stands 0.5 mm out of the rest nut."
+  },
+  {
+   "attachment_sha256": "aa216734152eaf9716179d5bf387c18ef20a3fe7445ac7a4dbe04370e1623484",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Solid cylinder envelope, not a coil. The STEP gives Ø1.2 (y 11.8..13.0) x 3.69 mm (x -21.19..-17.5), which leaves 0.2 mm radial clearance in the Ø1.6 bore. This matches the v9 spring change."
+  },
+  {
+   "attachment_sha256": "53c4315aa20068facd0ed3a3a584209938c8fc4378a1817c990a4f1cd8b22649",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell without the button. The window opening and the internal tab and block can be seen through the window. The render cannot resolve the trimmed lower-tab end or the nut seats, so I checked those on the STEP instead."
+  },
+  {
+   "attachment_sha256": "cae67ebfbebb02e1c098f2aff67635f7ec2f88e241bd7e04c24f41ef9f4c56d1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/spring_screw/iso.png",
+   "status": "viewed",
+   "observation": "Short Ø2 cylinder, 1.5 mm long. The STEP gives x -22.69..-21.19, so its outer end is exactly coplanar with the inward-block face and the stop-nut seat (x -22.69)."
+  },
+  {
+   "attachment_sha256": "96d45587337c023e156725d2ddbed206300fa16012b17a241184437ea0fb10b8",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/stop_nut/iso.png",
+   "status": "viewed",
+   "observation": "Square nut, 4 x 4 x 1.6 mm. The STEP gives x -24.29..-22.69, y 7.3..11.3, z 9.9..13.9, seated on the inward block face. Its corner circle (R 2.83) reaches y 12.13, past the spring-screw edge at y 11.4."
+  },
+  {
+   "attachment_sha256": "4d0eebbce260478b1d8e92acd60d3f7e5627cc2543440a24b416ba4085455968",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/stop_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 cylinder. The STEP gives x -24.39..-18.39 = 6.0 mm, now the bought M2 x 6 length (r8 modelled it at 6.4). It stands 0.1 mm out of the stop nut. The thread overlap with the nut is 1.8096 mm3, i.e. full 1.6 mm engagement."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Rectangular placeholder box, 6 x 4 x 8 mm (x -1..5, y 18.85..22.85, z 9..17). Its top at y 22.85 is the assumed stem-bottoming plane, 0.95 mm below the stem top."
+  },
+  {
+   "attachment_sha256": "1d4f98e6ffd629c862bfd1c63862d273d24e6f603569dd8dc6bc246eef48ff93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Rectangular placeholder stem, 2 x 0.95 x 4 mm (x 1..3, y 22.85..23.8). It is 2 mm wide in X, so the plunger's deepest contact is at the stem edge x=3, not at the centre x=2."
+  }
+ ],
+ "remaining_uncertainties": [
+  "All checks are rigid-geometry checks on placeholder switch, stand-in shell and envelope fasteners (no threads, coils or hex sockets). Pressing ease, force, click feel, spring rate and preload are untested, and only the owner and physical tests can settle them.",
+  "The real switch dimensions, operating point and bottoming depth, the PCB datum, and what the owner means by 'easier to press' are unknown. The stem envelope (-0.15/+0.05 mm) and the 0.95 mm bottoming are assumptions.",
+  "nearest-shell-gap-until-stop still has only 2 samples (bound -0.73, not_proven). My 9-angle x 9-offset sweep to -3.153 deg (probe3.py) found a minimum of 0.200 mm everywhere, which is the axial tab gap. The window running gap itself is not isolated by any check.",
+  "Insertion-slide (7 samples), pin path, tilt and rise checks remain sampled with not_proven continuous bounds. I re-ran only the nut-turn, stop-recovery and gap sweeps, not the insertion paths.",
+  "Self-tapped M2 threads in 1.6 mm horizontal printed holes, jam-nut clamp on printed block faces, dowel press-fit retention and hard-stop durability are not qualified, and CAD cannot settle them.",
+  "Wrench/hex-key access to the stop nut and screws inside the shell (from the open bottom) was not checked with a tool envelope.",
+  "The gauge procedure (1.53 mm, accept 1.48-1.58 mm, measured from the skin beside the window) depends on the skin normal and on the flush setting by touch. The 1.58 mm band end plus hinge play lies about 0.04 deg beyond the housing-check end angle. By the measured slope (~0.33 mm/deg) the margin is still about 0.07 mm there, but no check covers it directly.",
+  "No independent agent, human review or physical test was carried out. Agreement between same-family model roles is not physical proof."
+ ]
+}

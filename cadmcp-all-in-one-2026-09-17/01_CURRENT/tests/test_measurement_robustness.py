@@ -186,15 +186,39 @@ def test_side_button_flow_brief_and_matrix_are_valid():
 
 
 @kernel
-def test_side_button_revision8_builds_and_passes_every_check(tmp_path):
+def test_side_button_revision10_builds_and_passes_every_check(tmp_path):
     from cadmcp_brain.studio.recipe import execute_recipe
-    from side_button_recipe import side_button_recipe_v8
-    result=execute_recipe(Recipe.model_validate(side_button_recipe_v8()),{},tmp_path/'sb8')
+    from side_button_recipe import side_button_recipe_v10
+    result=execute_recipe(Recipe.model_validate(side_button_recipe_v10()),{},tmp_path/'sb10')
     failed=[c['id'] for c in result['checks'] if c['verdict']!='pass']
     assert result['geometry_checks_verdict']=='pass',failed
     checks={c['id']:c for c in result['checks']}
-    assert checks['housing-clear-past-stop']['axis_offsets_evaluated']==9
-    assert {c['press_fit_id'] for c in result['checks'] if c['kind']=='declared_press_fit_interference'}>={'stop-nut-thread','rest-nut-thread'}
+    assert checks['stop_nut-turns-on-seat']['verdict']=='pass' and checks['housing-clear-past-stop']['verdict']=='pass'
+
+
+def test_side_button_revision10_is_a_valid_contract():
+    from side_button_recipe import P10,deepest_accepted_angle_deg,gauge_reading_mm,side_button_recipe_v10
+    recipe=Recipe.model_validate(side_button_recipe_v10())
+    housing=next(c for c in recipe.rotation_checks if c.id=='housing-clear-past-stop')
+    # The housing check reaches the deepest pose the gauge band and hinge play accept.
+    assert housing.end_deg<=deepest_accepted_angle_deg()+1e-12
+    assert gauge_reading_mm(P10,deepest_accepted_angle_deg())>gauge_reading_mm()+P10['gauge_band_mm']
+    text=' '.join(recipe.design_basis.assumptions)
+    assert 'back the stop screw out' not in text and 'Ø1.5' not in text
+    assert f'{gauge_reading_mm():.2f} mm' in text
+    nut=next(c for c in recipe.rotation_checks if c.id=='stop_nut-turns-on-seat')
+    assert 'spring_screw' in nut.obstacles
+
+
+def test_side_button_revision9_is_a_valid_contract():
+    from side_button_recipe import P9,side_button_recipe_v9
+    recipe=Recipe.model_validate(side_button_recipe_v9())
+    ops={op.id:op for op in recipe.operations}
+    tab_x0=ops['tab_low_box'].center_mm[0]-ops['tab_low_box'].size_mm[0]/2
+    block_x0=ops['block_in_box'].center_mm[0]-ops['block_in_box'].size_mm[0]/2
+    assert abs(tab_x0-block_x0)<1e-9  # nothing of the tab under the stop nut
+    assert ops['stop_screw'].height_mm==P9['stop_screw_bought_length_mm']
+    assert P9['tap_radius_mm']-P9['spring_radius_mm']>=.2-1e-9
 
 
 def test_side_button_revision8_is_a_valid_contract():

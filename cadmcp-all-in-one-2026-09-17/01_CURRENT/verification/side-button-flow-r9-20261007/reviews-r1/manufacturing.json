@@ -1,0 +1,173 @@
+{
+ "schema_version": 1,
+ "subject_digest": "2f33ec505f74e846c7798a93dc6981a1efd15336c3c5b8114b1c75b9bae940e6",
+ "role": "manufacturing",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (manufacturing role, rev9)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "no_blocker_found",
+ "findings": [
+  {
+   "id": "MFG9-TAP-HOLE-PROCESS-AND-THIN-THREAD-WALLS",
+   "severity": "minor",
+   "claim": "Carry-over of r8 MFG-PRINTED-THREAD-WALLS, which v9 does not change. All three M2 screws self-tap into as-printed Ø1.6 holes. The holes are horizontal (axis X) in the rim-down shell, so they print undersize, oval and with a drooped crown, and no coupon, drilling or sizing step is given. The walls that take the thread-forming hoop stress run across the layer lines. They are 1.2 mm in block_in beside both holes (sampled shell minimum 1.200 mm, minimum_proven false), 1.3 mm to the block top and 1.5 mm between the holes. The rest screw engages only the 1.4 mm thick block_out plate (about 3.5 threads in printed plastic), and its jam nut is tightened against that same plate, so the plate threads can strip when the nut is locked.",
+   "evidence": [
+    "measurements.json shell-printed-wall: sampled_min_mm 1.1999999999999993 at [-22.49, 13.2, 11.9], minimum_proven false",
+    "recipe: block_in_box y 7.3..14.4, z 9.8..14.0; stop_hole y 9.3 and spring_pocket y 12.4, both radius 0.8 (tap_radius)",
+    "recipe: block_out_box size_mm [1.4, 7.1, 4.2], rest_hole radius 0.8; rest_nut seated on its +x face at x -10.6",
+    "design_basis Finishing: \"screw holes stay as printed 1.6 mm tap holes\"",
+    "side_button_recipe_v9 changes only tab_low, stop-screw length, the checks and the text; block sizes are unchanged from P8"
+   ],
+   "proposed_change": "State the hole process. Either drill the printed holes through with a Ø1.6 drill after printing (the standard M2 tap drill) and cut-tap M2, or take the hole size from a printed coupon of block_in and block_out in the chosen material and orientation. Where y room allows, grow block_in (for example y 7.0..14.7) so each tapped hole has at least about 1.5 mm of wall. Do not move the screw axes or the stop contact. For block_out, state a low locking torque, or give the rest screw more printed thread length.",
+   "required_test": "Print a coupon of block_in and block_out in the production orientation and material. Drive the M2 screws, lock the jam nuts to the stated torque, and run 1000 hard-stop presses at the stated thumb force. Inspect the walls for layer splitting and check that the screw tip position does not drift by more than 0.02 mm."
+  },
+  {
+   "id": "MFG9-SPRING-BORE-AS-PRINTED",
+   "severity": "minor",
+   "claim": "r8 MFG-SPRING-BORE-CARRYOVER is improved but not closed. v9 states a spring OD of at most 1.2 mm, which gives 0.2 mm nominal radial clearance in the Ø1.6 bore. The spring section (about x -21.19..-18.69, 2.5 mm) is still an as-printed horizontal hole and is never threaded or drilled. A horizontal Ø1.6 FDM hole often prints 0.1-0.3 mm undersize at the drooped crown. That can bring the clearance down to about 0.05-0.1 mm on one side, and the coil OD also grows under compression. Spring drag would leave the button short of the rest screw, which is a flushness defect. No hole check is specified.",
+   "evidence": [
+    "recipe: spring cylinder radius 0.6, origin x -21.19, length 3.69; spring_pocket radius 0.8 in block_in x -22.69..-18.69",
+    "unverified_requirements: \"outside diameter at most 1.2 mm (0.2 mm radial clearance in the printed 1.6 mm bore)\"",
+    "probe overhang scan (shell, rim-down): the tap-hole crowns are downward-facing cylinder faces at z 12.48-12.7, so they print unsupported"
+   ],
+   "proposed_change": "After printing, drill the full spring pocket through with Ø1.6 (the same drill as in MFG9-TAP-HOLE-PROCESS). Add an acceptance step: a Ø1.45 gauge pin passes the full spring section. Optionally state the maximum spring OD at the stop length, not only the free OD.",
+   "required_test": "On the printed shell, check the drilled spring bore with a Ø1.45 pin gauge. Fit the chosen spring, then press the button to the stop and release it 50 times. It must return onto the rest screw each time, with the face flush within the stated band."
+  },
+  {
+   "id": "MFG9-SCREW-SPEC-RESIDUAL",
+   "severity": "minor",
+   "claim": "r8 MFG-SCREW-SPEC-RESIDUAL is only partly fixed. (1) The stop screw is now modelled at its bought 6.0 mm length, which fixes the model/purchase mismatch. In the model, however, its tail ends only 0.10 mm beyond the jam-nut outer face (screw x -24.39, nut -24.29..-22.69). Any adjustment that moves the tip toward the web (a shorter stroke, needed when print error makes the stroke long) draws the tail into the nut at 0.4 mm per turn. No adjustment range with full nut engagement is stated. (2) The spring closer is still M2 x 1.5, below the usual 2 mm catalogue minimum for M2 set screws, and no point type is given. (3) The stop-nut sweep circle (radius 2.83 mm about y 9.3) covers the spring-screw end at y 11.4..13.4, because the axes are only 3.1 mm apart. The spring screw therefore cannot stand proud of the block face without blocking the stop nut, and the nut partly covers the spring-screw socket at some angles. The nut-turn checks use only the shell as obstacle, so they cannot show this. (4) Still no adjustment tool is named.",
+   "evidence": [
+    "probe on exported STEP: stop_screw bbox x -24.39..-18.39, stop_nut x -24.29..-22.69, so the tail stands 0.10 mm proud; rest screw tail stands 0.5 mm proud",
+    "probe: spring_screw bbox y 11.4..13.4, z 10.9..12.9, face at x -22.69, coplanar with the nut seat; stop nut corner reaches y 12.13 at z 11.9 when turned 45 deg",
+    "recipe rotation_checks stop_nut-turns-on-seat: obstacles [\"shell\"] only",
+    "outputs: spring_screw \"Purchased M2 x 1.5 grub screw\""
+   ],
+   "proposed_change": "Buy and model M2 x 8 for the stop screw, or state the usable adjustment range (for example tip +0.3/-1.0 mm with at least 1.2 mm nut engagement). Change the spring closer to a stock M2 x 2 (or confirm a source for M2 x 1.5) and re-derive the spring length and preload. State that the spring screw must sit at or below the block face, and add spring_screw to the stop-nut turn-check obstacles. Name the tool, for example a 0.9 mm hex L-key plus a 4 mm spanner for the square nut.",
+   "required_test": "Re-run stop_nut-turns-on-seat with obstacles [shell, spring_screw] and with the spring screw at its shallowest allowed depth. On the bench, set the stop at both ends of the stated range and confirm that the nut can still be locked with full engagement."
+  },
+  {
+   "id": "MFG9-BUTTON-SUPPORT-FINISH-PRESSFIT-CARRYOVER",
+   "severity": "minor",
+   "claim": "r8 carry-overs that v9 does not change. (a) The button has unsupported flat down-facing faces above its z=10 bed. The spine underside is 33.0 + 25.6 mm2 at z 12.6, cantilevered about 4 mm from the skin and running 9 mm free beyond the plunger. The link underside is 27.4 mm2 at z 14.2 and spans about 3.5 mm. The support plan covers the shell only. (b) The skin-piece bed edge has no first-layer chamfer. Only the stop web has one. Bed flare acts sideways on the visible face bottom edge and its 0.4 mm side gaps. (c) The dowel holes have no pre-ream print size. The upper blind press fit is 0.01 mm radial interference over 1.8 mm of engagement in reamed plastic, and there is no retention fallback. The lower tab hole is clearance and the shell bottom is open, so a loose dowel can drop out.",
+   "evidence": [
+    "probe overhang scan (button, bed z 10, normal z < -0.70): planes at z 12.6 with 33.0 and 25.6 mm2 (spine), z 14.2 with 27.4 mm2 (link), 107 mm2 in total including the 45 deg web chamfers",
+    "design_basis: \"Shell support plan: printed rim-down with tree supports under the curved window lintel ..., the tab undersides and the cavity roof\"; there is no button support statement",
+    "recipe: stop_arm chamfer_edges <Z 0.4 mm; skin_piece has no chamfer",
+    "press_fits dowel-in-upper-tab: 0.01 mm radial interference, 1.8 mm blind hole; pin z 4.8..19.6, lower hole radius 1.01"
+   ],
+   "proposed_change": "Chamfer the spine and link undersides at 45 deg toward the skin or web, or state tree supports for the button. Add a 0.2-0.3 mm first-layer chamfer on the skin-piece bed edges, and add a deburr step plus a feeler check of the 0.4 mm gap on all four sides. State the printed pre-ream hole sizes (from a coupon) and a retention fallback for the dowel, for example a drop of retaining compound, or a dowel captured by the base or PCB.",
+   "required_test": "Print the button in the stated orientation and inspect the spine and link undersides for sag beyond 0.2 mm. Feeler-check the window gap on all sides after deburring. Push out the pressed dowel with a force gauge on three printed tabs and record the retention force."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "dbae29691a1bc803922bd760111af74f169c8a53a5fff3f230d96e6bb6036995",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/assembly.png",
+   "status": "viewed",
+   "observation": "Assembly render: rim-down stand-in shell with the gold button face flush in the side window. A thin running gap is visible around the face. The internal tabs, blocks, screws and nuts are hidden, so the image says nothing about printability. Labelled as a prototype and not a certified product."
+  },
+  {
+   "attachment_sha256": "8a1187a0a03fa033c291bbf07889753aa35c4b071388ffd4c12a02274ebc9a3e",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/build-record.json",
+   "status": "viewed",
+   "observation": "Build record, attempt 836c4201..., subject_digest 2f33ec50... matches the packet. Recipe title is \"revision 9 (turnable jam nuts, free-running spring)\". It lists 118 file hashes. The outputs give shell FDM rim-down and button FDM on bed plane z=10, with \"parameters not qualified\"."
+  },
+  {
+   "attachment_sha256": "c6c7daf38f77bc63a78477fc327505450e70f448c82952d0f1f4102b7aed74a7",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/button/iso.png",
+   "status": "viewed",
+   "observation": "Button iso: curved skin piece, full-height stop web, vertical barrel with bore, and the link and spine stepping up from the skin. The flat spine and link undersides face down above the z=10 bed and are visible as ledges. There is no first-layer chamfer on the skin-piece bottom edge."
+  },
+  {
+   "attachment_sha256": "7a27aec709ac4d6cb724dc8962e62653c8dedb013c5ec0f561af1d98b96edf29",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Hinge pin is a plain Ø2 cylinder 14.8 mm long with square ends. The bought dowel is modelled with no lead-in chamfer and no retention feature."
+  },
+  {
+   "attachment_sha256": "08a5e30f4e79555ef2fa74ec190a9fc8b4b84fd714a536f48d84b524b23d07d2",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/measurements.json",
+   "status": "viewed",
+   "observation": "105 checks, all \"pass\". geometry_checks_verdict is pass and overall_verdict is \"unknown\". shell-printed-wall sampled_min is 1.200 mm at (-22.49, 13.2, 11.9), in block_in beside the spring tap hole, with minimum_proven false. button-printed-wall is 1.202 mm. stop_nut- and rest_nut-turns-on-seat take only 3 samples (0/45/90 deg) at distance 0.0 and are continuous not_proven."
+  },
+  {
+   "attachment_sha256": "5ea8ab38ef850bfa8b90f97851242fb569f79326219d3838925a9bfd2ab89f93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/rest_nut/iso.png",
+   "status": "viewed",
+   "observation": "Rest nut: square 4 x 4 x 1.6 block with a Ø1.6 minor bore and no thread or chamfer. It is a correct envelope for a purchased M2 square nut."
+  },
+  {
+   "attachment_sha256": "dad9e60ede08194c8bdf93e104ed3ef906d27da262e822ebcd7179c8fe5bbaac",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/rest_screw/iso.png",
+   "status": "viewed",
+   "observation": "Rest screw is a plain Ø2 x 4 cylinder. The flat point and the hex socket are not modelled."
+  },
+  {
+   "attachment_sha256": "aa216734152eaf9716179d5bf387c18ef20a3fe7445ac7a4dbe04370e1623484",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Return spring is drawn as a solid Ø1.2 x 3.69 cylinder envelope. No coils, wire or solid length are modelled."
+  },
+  {
+   "attachment_sha256": "53c4315aa20068facd0ed3a3a584209938c8fc4378a1817c990a4f1cd8b22649",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell iso: smooth lofted skin with the side window opened. An internal tab is visible through the window. The rim is open at the bottom, which suits printing rim-down. The flat cavity roof and dome inside need support, as the support plan states."
+  },
+  {
+   "attachment_sha256": "cae67ebfbebb02e1c098f2aff67635f7ec2f88e241bd7e04c24f41ef9f4c56d1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/spring_screw/iso.png",
+   "status": "viewed",
+   "observation": "Spring closing screw is a short Ø2 x 1.5 cylinder. That length is below the usual 2 mm catalogue minimum for M2 set screws."
+  },
+  {
+   "attachment_sha256": "96d45587337c023e156725d2ddbed206300fa16012b17a241184437ea0fb10b8",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/stop_nut/iso.png",
+   "status": "viewed",
+   "observation": "Stop nut is the same square 4 x 4 x 1.6 envelope as the rest nut. Its half-diagonal of 2.83 mm sets the sweep radius about the screw axis."
+  },
+  {
+   "attachment_sha256": "4d0eebbce260478b1d8e92acd60d3f7e5627cc2543440a24b416ba4085455968",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/stop_screw/iso.png",
+   "status": "viewed",
+   "observation": "Stop screw is a plain Ø2 cylinder, now 6.0 mm long (the bought M2 x 6). The flat point is not modelled."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Switch housing is a plain 6 x 4 x 8 box, the placeholder envelope. It is not a part to make."
+  },
+  {
+   "attachment_sha256": "1d4f98e6ffd629c862bfd1c63862d273d24e6f603569dd8dc6bc246eef48ff93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Switch stem is a plain 2 x 0.95 x 4 box, a placeholder. It is not a part to make."
+  }
+ ],
+ "remaining_uncertainties": [
+  "r8 major MFG-STOP-NUT-CANNOT-SEAT appears fixed in the exported geometry. tab_low now ends at x -22.69, the block_in outer face. My probe rotated the exported stop_nut and rest_nut STEP about their screw axes from 0 to 90 deg in 5 deg steps against the exported shell and found 0 overlap at every step. A Ø5.66 sweep cylinder over the stop-nut span touches the shell only in a 0.0005 mm coplanar sliver at the seat face (zero once it is shortened by 0.01 mm). The recorded turn checks themselves sample only 0/45/90 deg and are continuous not_proven.",
+  "Printer, material, nozzle, slicer settings and support interface parameters are not stated. Hole shrink, bed flare, support scar depth and Z accuracy on the 8.0 mm tab slot can only be found on a test print.",
+  "The 8.0 mm tab slot is printed with supports between the tab_high underside and the tab_low top, which are both barrel thrust faces, and is then sanded to a gauge. If the slot prints over 8.0 mm, sanding cannot recover it and the axial play grows. This needs a test print.",
+  "Strength and stiffness of the 22 mm cantilevered lower tab carrying the hard-stop reaction, and of the printed self-tapped threads under repeated stop loads, are not analysed (no FEA). Physical cycling is required.",
+  "Real switch, real shell, PCB position and the thumb force the owner means by \"easier\" are not known. The manufacturing review covers only the stand-in shell and placeholder switch.",
+  "Hex-key and spanner access to the stop screw and nuts through the open bottom was not probed by me (assembly role).",
+  "Return-spring rate and availability at Ø1.2 OD with the stated installed length were not checked against a catalogue."
+ ]
+}

@@ -1680,3 +1680,167 @@ def side_button_recipe_v9(request=REQUEST,p=None):
         f'Return spring selection: outside diameter at most 1.2 mm (0.2 mm radial clearance in the printed 1.6 mm bore); installed length about {ops["spring"]["height_mm"]:.2f} mm; solid length below the stop length. Its preload adds to thumb force and is set by the spring screw depth.',
         'Outer-form changes awaiting owner acceptance: the 0.4 mm running gap removes about 38 mm3 of skin; after flush adjustment hinge play lets the face stand proud by about 0.1 mm at the free edge.']
     return r
+
+
+# ---------------------------------------------------------------------------
+# Revision 10: repairs the revision-9 round-1 major findings.
+# - Gauge value was the front edge's Y travel, not a depth read normal to the
+#   skin -> the gauge reading is computed along the skin normal measured on
+#   the revision-9 shell next to the window front edge, with a stated band.
+# - The no-click recovery step (back the stop out up to 0.15 mm) went past the
+#   checked housing range -> removed; a missing click now means the switch or
+#   PCB is outside its selection band. The housing check ends at the deepest
+#   pose the procedure accepts (band and hinge play), with margin.
+# - Design-basis spring text matches the Ø1.2 spring; spring length at the
+#   stop is restated; the stop nut must also turn past the spring screw.
+# - Stop screw is an M2 x 8 so the adjustment has thread left behind the nut.
+# ---------------------------------------------------------------------------
+P10=dict(P9)
+P10.update({'stop_screw_bought_length_mm':8.,'gauge_band_mm':.03,
+            # Outward skin normal measured on the revision-9 shell STEP
+            # at (14.6, 30.45, 12.26), beside the window front edge.
+            'gauge_skin_normal_x':.1410,'gauge_skin_normal_y':.9739,'gauge_skin_normal_z':.1779,
+            'gauge_check_margin_deg':.03})
+
+
+def angles_v10(p=P10):
+    return angles_v9(p)
+
+
+def gauge_reading_mm(p=P10,angle_deg=None):
+    """Depth of the face front edge below the adjacent skin, read normal to the skin, at a hinge angle."""
+    a=math.radians(angles_v10(p)['stop'] if angle_deg is None else angle_deg)
+    hx,hy=p['hinge_x_mm'],p['hinge_y_mm'];rx,ry=p['window_x_max_mm']-hx,p['far_edge_ref_y_mm']-hy
+    dx=rx*math.cos(a)-ry*math.sin(a)-rx;dy=rx*math.sin(a)+ry*math.cos(a)-ry
+    nx,ny,nz=p['gauge_skin_normal_x'],p['gauge_skin_normal_y'],p['gauge_skin_normal_z'];n=math.sqrt(nx*nx+ny*ny+nz*nz)
+    return -(dx*nx+dy*ny)/n
+
+
+def gauge_band_angle_deg(p=P10):
+    """Hinge angle swept by the gauge acceptance band (reading per degree near the stop)."""
+    s=angles_v10(p)['stop'];per_deg=gauge_reading_mm(p,s-.5)-gauge_reading_mm(p,s+.5)
+    return p['gauge_band_mm']/per_deg
+
+
+def deepest_accepted_angle_deg(p=P10):
+    """Deepest hinge angle the adjustment procedure accepts: band, hinge play at the stop, plus a check margin."""
+    a=angles_v10(p)
+    return a['stop']-a['stop_play']-gauge_band_angle_deg(p)-p['gauge_check_margin_deg']
+
+
+def stem_push_mm(p=P10,angle_deg=None):
+    """Stem push at a hinge angle at the stem's far edge (deepest contact) minus the free play."""
+    a=angles_v10(p)['stop'] if angle_deg is None else angle_deg
+    lever=p['plunger_x_max_mm']-.5-p['hinge_x_mm']  # stem is 0.5 mm narrower than the plunger each side
+    return lever*math.sin(math.radians(-a))-p['stem_free_play_mm']
+
+
+def side_button_recipe_v10(request=REQUEST,p=None):
+    p=dict(P10 if p is None else p)
+    r=side_button_recipe_v9(request,p)
+    ops={o['id']:o for o in r['operations']}
+    stop=ops['stop_screw'];tip=stop['origin_mm'][0]+stop['height_mm'];length=p['stop_screw_bought_length_mm']
+    stop.update(height_mm=length,origin_mm=[tip-length,stop['origin_mm'][1],stop['origin_mm'][2]],
+                reason='M2 x 8 grub screw whose tip is the adjustable hard stop, locked by a jam nut; thread is left behind the nut for adjustment.')
+    for o in r['outputs']:
+        if o['part_id']=='stop_screw':o['manufacturing_process']='Purchased M2 x 8 grub screw, flat point, in a drilled 1.6 mm tap hole'
+    r['title']='Side button improvement trial, revision 10 (skin-normal gauge setting, checked deepest pose)'
+    r['design_parameters']={k:float(v) for k,v in p.items()}
+    r['parameter_basis']={k:'Proposal for this prototype revision; not measured from a real mouse, switch or PCB.' for k in p}
+    for k in ('gauge_skin_normal_x','gauge_skin_normal_y','gauge_skin_normal_z'):
+        r['parameter_basis'][k]='Measured on the revision-9 shell STEP: outward skin normal at (14.6, 30.45, 12.26) beside the window front edge.'
+    a=angles_v10(p);deep=deepest_accepted_angle_deg(p)
+    rot={c['id']:c for c in r['rotation_checks']}
+    rot['housing-clear-past-stop'].update(end_deg=deep)
+    rot['stop_nut-turns-on-seat'].update(obstacles=['shell','spring_screw'],samples=7,max_samples=7)
+    rot['rest_nut-turns-on-seat'].update(samples=7,max_samples=7)
+    r['rotation_checks']=list(rot.values())
+    r['motion_checks']=[dict(m,start_translation_mm=[-(length+.1),0.,0.]) if m['id']=='stop-screw-path' else m for m in r['motion_checks']]
+    g=gauge_reading_mm(p);band=p['gauge_band_mm']
+    spring=ops['spring']['height_mm'];spring_stop=spring-(p['hinge_y_mm']-p['spring_y_mm'])*math.sin(math.radians(-a['stop']))
+    basis=r['design_basis']
+    basis['assumptions']=[x for x in basis['assumptions'] if not x.startswith(('Return spring:','Adjustment','Finishing:','Assembly order:'))]+[
+        f'Return spring: compression spring, outside diameter at most 1.2 mm, installed length about {spring:.2f} mm and about {spring_stop:.2f} mm at the stop; rate and preload not selected (placeholder envelope).',
+        'Finishing: the upper-tab underside and lower-tab top are sanded to an 8.0 mm gauge block (barrel 7.6 mm + 0.2 mm each side); dowel holes are reamed (lower 2.02 mm clearance, upper 1.98 mm blind press fit); the three screw holes and the spring bore are drilled 1.6 mm after printing; the spring bore must pass a 1.45 mm pin gauge.',
+        'Assembly order: button in from below and slid into the slot; dowel pressed up into the upper tab; spring then spring screw (set flush or below the inward block face) into the inward block; stop screw and its jam nut; rest screw and its jam nut; adjust; then switch/PCB. Changing spring preload later means loosening the stop nut and re-gauging the stop.',
+        f'Adjustment (no switch needed): turn the rest screw until the face is flush with the skin beside the window front edge, lock its nut; press the face and turn the stop screw until a depth gauge held normal to that skin, at the face front edge at mid height, reads {g:.2f} mm (accept {g-band:.2f}-{g+band:.2f} mm); lock its nut and re-read. Fit the PCB and confirm the click; do not back the stop out to get a click.']
+    r['verification_plan']=r['verification_plan']+[
+        f'Placeholder housing clear (at least 0.05 mm) down to {deep:.3f} deg: the deepest gauge-accepted stop plus hinge play and a {p["gauge_check_margin_deg"]:.2f} deg margin, at every play offset.',
+        'The stop jam nut turns a quarter turn on its seat past a flush spring screw.']
+    r['unverified_requirements']=[x for x in r['unverified_requirements'] if not x.startswith(('Switch selection','Return spring selection'))]+[
+        f'Switch selection: operating point no deeper than 0.50 mm and total travel to bottoming of at least 0.95 mm; the plunger pushes the far edge of the stem about {stem_push_mm(p):.2f} mm at the nominal stop and up to about {stem_push_mm(p,deep):.2f} mm at the deepest accepted pose; stem within -0.15/+0.05 mm in Y of the modeled position. A missing click after adjustment means the switch or PCB is outside this band.',
+        f'Return spring selection: outside diameter at most 1.2 mm (0.2 mm radial clearance in the drilled 1.6 mm bore); installed length about {spring:.2f} mm, about {spring_stop:.2f} mm at the stop; solid length below the stop length. Its preload adds to thumb force and is set by the spring screw depth.',
+        'Gauge reading uses the skin normal measured on the model; the printed skin and the real hinge play move it, so the first article is checked against the housing margin, not only the gauge.']
+    return r
+
+
+# ---------------------------------------------------------------------------
+# Revision 11: repairs the revision-10 round-1 findings.
+# - Spring bore cannot be drilled after printing (no tool access) -> it stays
+#   as printed and is checked with a short 1.45 mm gauge pin from -X; only
+#   the coaxial stop and rest tap holes are drilled, from +X, before fitting.
+# - Gauge value was computed at a construction point -> the reading is the
+#   value measured on the revision-10 button/shell STEP at a stated point
+#   (1.0 mm in from the face front edge, z 14), linear in the hinge angle.
+# - Switch window no closer than modeled (+0.00 mm), so the housing margin
+#   is not spent by the switch position; setting force stated; spring screw
+#   set flush; shell-gap sweep reaches the deepest accepted pose.
+# ---------------------------------------------------------------------------
+P11=dict(P10)
+P11.update({'gauge_stop_reading_mm':1.4429,'gauge_mm_per_deg':.4694,'gauge_read_z_mm':14.,'gauge_read_inset_mm':1.,
+            'gauge_setting_force_n':5.})
+
+
+def angles_v11(p=P11):
+    return angles_v10(p)
+
+
+def gauge_reading_v11_mm(p=P11,angle_deg=None):
+    """Depth gauge reading (normal to the skin, at the stated point) at a hinge angle; measured calibration."""
+    a=angles_v11(p)['stop'] if angle_deg is None else angle_deg
+    return p['gauge_stop_reading_mm']+p['gauge_mm_per_deg']*(angles_v11(p)['stop']-a)
+
+
+def deepest_accepted_angle_v11_deg(p=P11):
+    a=angles_v11(p)
+    return a['stop']-a['stop_play']-p['gauge_band_mm']/p['gauge_mm_per_deg']-p['gauge_check_margin_deg']
+
+
+def side_button_recipe_v11(request=REQUEST,p=None):
+    p=dict(P11 if p is None else p)
+    p['depth_gauge_mm']=p['gauge_stop_reading_mm']
+    r=side_button_recipe_v10(request,p)
+    r['title']='Side button improvement trial, revision 11 (measured gauge setting, printed spring bore)'
+    r['design_parameters']={k:float(v) for k,v in p.items()}
+    r['parameter_basis']={k:'Proposal for this prototype revision; not measured from a real mouse, switch or PCB.' for k in p}
+    for k in ('gauge_skin_normal_x','gauge_skin_normal_y','gauge_skin_normal_z'):
+        r['parameter_basis'][k]='Measured on the revision-9 shell STEP (used only by the revision-10 estimate).'
+    for k in ('gauge_stop_reading_mm','gauge_mm_per_deg','depth_gauge_mm'):
+        r['parameter_basis'][k]=('Measured on the revision-10 button and shell STEP (same button geometry): ray along the inward skin normal '
+                                 '(0.1483, 0.966, 0.2116) from the skin tangent plane at (13.895, 30.267, 13.726), 1.0 mm in from the face '
+                                 'front edge at z 14; 0.047 mm at rest, 1.443 mm at the nominal stop, 0.469 mm per degree.')
+    a=angles_v11(p);deep=deepest_accepted_angle_v11_deg(p)
+    rot={c['id']:c for c in r['rotation_checks']}
+    rot['housing-clear-past-stop'].update(end_deg=deep)
+    rot['nearest-shell-gap-until-stop'].update(end_deg=deep,samples=3,max_samples=3)
+    r['rotation_checks']=list(rot.values())
+    for o in r['outputs']:
+        if o['part_id']=='stop_screw':o['manufacturing_process']='Purchased M2 x 8 grub screw, flat point, in a 1.6 mm tap hole drilled from +X'
+        if o['part_id']=='rest_screw':o['manufacturing_process']='Purchased M2 x 4 grub screw, flat point, in a 1.6 mm tap hole drilled from +X'
+        if o['part_id']=='spring_screw':o['manufacturing_process']='Purchased M2 grub screw cut to 1.5 mm, self-tapped into the printed 1.6 mm spring bore'
+    g=gauge_reading_v11_mm(p);band=p['gauge_band_mm'];ops={o['id']:o for o in r['operations']}
+    spring=ops['spring']['height_mm'];lever=p['hinge_y_mm']-p['spring_y_mm']
+    spring_stop=spring-lever*math.sin(math.radians(-a['stop']));spring_deep=spring-lever*math.sin(math.radians(-deep))
+    basis=r['design_basis']
+    basis['assumptions']=[x for x in basis['assumptions'] if not x.startswith(('Return spring:','Adjustment','Finishing:','Assembly order:'))]+[
+        f'Return spring: compression spring, outside diameter at most 1.2 mm, installed length about {spring:.2f} mm, about {spring_stop:.2f} mm at the nominal stop and {spring_deep:.2f} mm at the deepest accepted stop; rate and preload not selected (placeholder envelope).',
+        'Finishing: the upper-tab underside and lower-tab top are sanded to an 8.0 mm gauge block (barrel 7.6 mm + 0.2 mm each side); dowel holes are reamed (lower 2.02 mm clearance, upper 1.98 mm blind press fit). Before the button is fitted, the coaxial rest and stop tap holes are drilled 1.6 mm from +X through the rest hole (straight free line about 64 mm). The spring bore stays as printed and must accept a short 1.45 mm gauge pin from -X; if not, reprint with hole compensation (it cannot be drilled: no tool access).',
+        'Assembly order: button in from below and slid into the slot; dowel pressed up into the upper tab; spring then spring screw, set flush with the inward block face; stop screw and its jam nut; rest screw and its jam nut; adjust; then switch/PCB. Changing spring preload later means loosening the stop nut and re-gauging the stop.',
+        f'Adjustment (no switch needed): turn the rest screw until the face is flush with the skin beside the window front edge, lock its nut; press the face with about {p["gauge_setting_force_n"]:.0f} N and turn the stop screw until a depth gauge whose foot rests on the skin beside the front edge, rod normal to the skin, 1.0 mm in from the face front edge at mid height (z 14), reads {g:.2f} mm (accept {g-band:.2f}-{g+band:.2f} mm; it reads about 0.05 mm at rest); lock its nut and re-read. Fit the PCB and confirm the click; do not back the stop out to get a click.']
+    r['verification_plan']=[x for x in r['verification_plan'] if not x.startswith('Placeholder housing clear (at least 0.05 mm) down to')]+[
+        f'Placeholder housing clear (at least 0.05 mm) and nearest shell gap (at least 0.15 mm) down to {deep:.3f} deg: the deepest gauge-accepted stop plus hinge play and a {p["gauge_check_margin_deg"]:.2f} deg margin, at every play offset (sampled).']
+    r['unverified_requirements']=[x for x in r['unverified_requirements'] if not x.startswith(('Switch selection','Return spring selection','Gauge reading'))]+[
+        f'Switch selection: operating point no deeper than 0.50 mm and total travel to bottoming of at least 0.95 mm; the plunger pushes the far edge of the stem about {stem_push_mm(p):.2f} mm at the nominal stop and up to about {stem_push_mm(p,deep):.2f} mm at the deepest accepted pose; stem within -0.15/+0.00 mm in Y of the modeled position (never closer, which would spend the housing margin). A missing click after adjustment means the switch or PCB is outside this band.',
+        f'Return spring selection: outside diameter at most 1.2 mm (0.2 mm radial clearance in the printed 1.6 mm bore); solid length below {spring_deep:.2f} mm (deepest accepted stop, spring screw flush). Its preload adds to thumb force.',
+        'Gauge reading: calibrated on the CAD model; printed layer cusps (about 0.04 mm) and stop-path flex under the setting force (estimated about 0.01 mm per N) are not modeled, so the first article is checked for stiffness and for a free switch at a firm press.']
+    return r
