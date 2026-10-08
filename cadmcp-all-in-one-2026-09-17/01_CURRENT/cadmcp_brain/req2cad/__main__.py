@@ -22,6 +22,9 @@ def main(argv=None):
     k=sub.add_parser('case');k.add_argument('uid')
     g=sub.add_parser('materialize');g.add_argument('uid');g.add_argument('--timeout',type=int,default=60)
     batch=sub.add_parser('materialize-all');batch.add_argument('--limit',type=int,default=None);batch.add_argument('--timeout',type=int,default=60)
+    for name,hlp in (('train-geometry','Train the in-house geometry encoder (tokenises DeepCAD JSON on first run; GPU; 60 min cap)'),('eval-geometry','Held-out evaluation of the geometry encoder vs baselines'),('encode-geometry','Embed all cases with the trained geometry encoder')):
+        gp=sub.add_parser(name,help=hlp);gp.add_argument('--version',default='v1')
+        if name=='train-geometry':gp.add_argument('--time-cap-minutes',type=float,default=60.);gp.add_argument('--max-epochs',type=int,default=None)
     c=sub.add_parser('compare');c.add_argument('a');c.add_argument('b')
     args=p.parse_args(argv);catalog=Catalog(args.root)
     try:
@@ -56,6 +59,14 @@ def main(argv=None):
                 encoder=SentenceEncoder(conf['model_path'],conf['device'],conf['batch_size'],query_mode=conf.get('query_mode','req2cad_native'))
                 if args.command=='build-embeddings':out=SemanticIndex(catalog).build(encoder,args.batch_size)
                 else:out=SemanticIndex(catalog).search(args.functions,encoder,args.threshold,args.limit,args.require_cad)
+        elif args.command in ('train-geometry','eval-geometry','encode-geometry'):
+            from . import geoenc_run as G
+            if args.command=='train-geometry':
+                ov={'time_cap_seconds':args.time_cap_minutes*60}
+                if args.max_epochs:ov['max_epochs']=args.max_epochs
+                out=G.run_training(catalog.root,args.version,ov,log=lambda m:print(m,file=sys.stderr,flush=True))
+            elif args.command=='eval-geometry':out=G.run_evaluation(catalog.root,args.version)
+            else:out=G.encode_all(catalog.root,args.version,log=lambda m:print(m,file=sys.stderr,flush=True))
         elif args.command=='case':out=catalog.case(args.uid)
         elif args.command=='materialize':out=Service(catalog).materialize(args.uid,args.timeout)
         elif args.command=='compare':out=Service(catalog).compare(args.a,args.b)

@@ -1,6 +1,6 @@
 # Core development state (handoff)
 
-Branch `claude/project-thread-jqv4yf` (draft PR #2, base `cursor/vendor-sidecar-cad-engines`).
+Branch `claude/project-thread-jqv4yf` (draft PR #2, base `cursor/vendor-sidecar-cad-engines`); follow-up work on `claude/project-thread-b07n52` (stacked on it).
 Never merge or mark ready without the owner. Package root: `cadmcp-all-in-one-2026-09-17/01_CURRENT`.
 Python env used: `/tmp/claude-0/venv` (CadQuery 2.8). Full suite: `python -m pytest -q -p no:cacheprovider` (614 passed at b3687c6, about 14 min).
 
@@ -53,3 +53,12 @@ Python env used: `/tmp/claude-0/venv` (CadQuery 2.8). Full suite: `python -m pyt
 4. Freeform / class-A surface quality checks (curvature continuity, zebra-style metrics).
 5. In-house encoder last (held-out evaluation against the text search; old path selectable, no fallback). Next 4 (Req2CAD checkpoint port) stays blocked: upstream weights not published.
 6. Report "what the system can now do" to the coordinator when work resumes.
+
+## Session 2026-10-08 (owner machine, branch claude/project-thread-b07n52)
+- Python env on the owner machine: `01_CURRENT/.venv` (CadQuery 2.8, OCP 7.9, torch CUDA, RTX 4080 SUPER).
+- Full suite on Windows first failed 49 tests: Git autocrlf rewrote the hash-pinned public fixtures. Fixed with `examples/public-cases/.gitattributes` (`* -text`).
+- Queue 2 (r18 lessons, system only, subject untouched): design `docs/design/R18_SYSTEM_LESSONS.md`. Tolerance coverage audit (checks on toleranced parts missing a declared tolerance become unverified unless waived) and `stop_travel_checks` (rotation load cases, bisection to first stop contact, placement corners). On r18: min plunger travel at stop 0.366 mm vs 0.32 required, margin -0.054 mm with the declared 0.10 mm stop print tolerance -> FAIL; 25 existing r18 checks now unverified. Did not reproduce the reviewers' 0.23-0.31 mm (stop faces kept nominal in geometry). `verification/r18-system-lessons-20261008/RESULT.json`.
+- Queue 3 (scan -> hollow shell): A1 faceted SDF route (`docs/design/SCAN_TO_SHELL_A1.md`, `studio/scan_mesh.py`, `scan_shell.py`, tools `brain_mouse_prepare_scan`, `brain_mouse_build_shell_brep`). Mouse-like 120x64x38, t=2, voxel 1.0: 72k faces, 98 s, outer deviation 0.049 mm, wall min 1.996, PASS; default voxel 0.5 exceeds the face budget (reported, not coarsened). A2 smooth route (`route="smooth_fit"`, `studio/scan_fit.py`): MakeThickSolid dropped (breaks at rim corners); inner skin fitted separately from the SDF phi=-t. Small case PASS at grid 121 / fit tol 0.03; mouse scale FAILS outer deviation near the rim (0.165 vs 0.15 at grid 201). Open: rim-region fit (e.g. rim-aware parametrisation or a separate rim band patch).
+- Queue 4 (surface quality): `docs/design/SURFACE_QUALITY_CHECKS.md`, `studio/surface_quality.py`, `scripts/surface_quality.py`. OP1_Shell_NEW.step: FAIL (worst G1 21.3 deg, G2 rel 1.98, 135 internal-knot findings); zebra/curvature images via vtk offscreen. Profile thresholds ASSUMED. Not yet wired as an MCP tool.
+- Queue 5 (geometry encoder): data was already present at `E:/aiwork/Stella_CAD_SYSTEM/cadmcp-workspace/knowledge/req2cad` (176k cases, DeepCAD tar, Qwen vectors). `docs/design/GEOMETRY_ENCODER.md`, `req2cad/geoenc_core.py`, `geoenc_run.py`, `brain_fs_search(mode="geometry_encoder")`. Held-out: encoder nDCG@10 0.245 vs handcrafted kNN 0.257 vs random 0.092 -> NOT accepted; shipped `experimental`. `benchmarks/results/geometry_encoder_v1.*`.
+- Next: A2 rim fit; wire surface quality as a tool and run it on A2 output; encoder v2 ideas (B-rep/point features, larger model) only with a new evaluation.

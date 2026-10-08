@@ -1,3 +1,21 @@
+# Unreleased — scan-to-shell stage A2, smooth B-spline route (2026-10-08)
+
+- Add route `smooth_fit` to `brain_mouse_build_shell_brep` (new argument `route`, default `faceted_sdf`; extra arguments `grid`, `degree_min`, `degree_max`, `fit_tolerance_mm`, `smoothing`, rejected under `faceted_sdf`). Design: `docs/design/SCAN_TO_SHELL_A2.md`; module `studio/scan_fit.py`. A scan that is star-shaped from the opening-section centroid is sampled by exact ray hits on an elliptical-grid hemisphere parametrisation, fitted with `GeomAPI_PointsToBSplineSurface` twice (outer skin on the scan, inner skin at distance t on the same rays, same parametrisation), closed by a planar ring face on the opening plane and sewn into a hollow solid (no offset operation; default grid 121, max 201). Routes never fall back to each other; `SMOOTH_FIT_NOT_STAR_SHAPED`, `SMOOTH_FIT_LOCALLY_SOLID`, `SMOOTH_FIT_BREP_INVALID` stop with a report; an out-of-tolerance fit is reported as a FAIL (`SMOOTH_FIT_OUT_OF_TOLERANCE`), never loosened or densified.
+- Checks add `surface_quality` (consumer_product profile on the outer face), `fit_knots`, `inner_skin_extent`, spline-based wall thickness and a closest-point fit residual. Known limitation (measured, see the design note): the four parametric rim corners are singular and the thick-solid offset gives a thin wall near them, so mouse-like bodies currently report `design_status` FAIL (`wall_thickness`). Writes `build_report_smooth.json`, never `build_report.json`.
+- `scan_shell.load_prepared` / `load_prepared_mesh` are now shared by both routes.
+
+# Unreleased — in-house geometry encoder, experimental (2026-10-08)
+
+- Add `brain_fs_search(mode="geometry_encoder")`: ranks Req2CAD cases by a small transformer that maps DeepCAD sketch-and-extrude construction (64 commands, 256-level parameters) into the 2560-d Qwen keyword space; case annotations are not used. Explicit mode only: a missing or stale encoder raises `FS_GEOMETRY_ENCODER_NOT_READY` / `FS_GEOMETRY_ENCODER_STALE`, never a silent switch. Existing modes and defaults are unchanged; no tool signature change.
+- Owner CLI: `python -m cadmcp_brain.req2cad train-geometry | eval-geometry | encode-geometry` (design: `docs/design/GEOMETRY_ENCODER.md`; outputs only under `<root>/models/geometry_encoder/<version>/` and `benchmarks/results/geometry_encoder_<version>.json`).
+- v1 held-out result: NOT accepted (does not beat the hand-crafted kNN baseline on nDCG@10 and Recall@50), so the mode reports `experimental: true`. See `benchmarks/results/geometry_encoder_v1.md`.
+
+# Unreleased — scan-to-shell stage A1, faceted route (2026-10-08)
+
+- Add `brain_mouse_prepare_scan` and `brain_mouse_build_shell_brep` (design: `docs/design/SCAN_TO_SHELL_A1.md`): closed scan mesh -> inspected, allow-list-repaired mesh -> open-bottom hollow faceted B-rep solid (signed-distance shell, surface nets, one planar face per triangle, STEP/STL/mesh export). Modules `studio/scan_mesh.py` (numpy/scipy) and `studio/scan_shell.py` (OCP).
+- Every check reports PASS / FAIL / UNVERIFIED with numbers; outer deviation and wall thickness are measured against the scan with exact point-to-triangle distance. Self-intersection stays UNVERIFIED. The route never coarsens, rescales or patches silently: it stops with a code (`SCAN_GRID_TOO_LARGE`, `BREP_FACE_BUDGET_EXCEEDED`, `SHELL_MESH_NOT_MANIFOLD`, `BREP_FIT_FAILED`, ...).
+- A faceted B-rep is not a smooth surface model (the A2 route is separate). Physical fit, printability and click feel remain unverified. Tool count 58 -> 60.
+
 # 0.3.3 — Official MCP release (2026-09-20)
 
 - Publish the Codex project MCP configuration, Design Skill, Factory OS handoff, and the shared Cursor/Codex cadMCP implementation as the current official software release.
