@@ -15,7 +15,7 @@
 | brain_fs_interfaces | Inspect materialized planar/cylindrical surfaces. Distinguish inner cavity from solid shaft exterior; NOT proof of through-bore, fit, force transmission or fatigue. |
 | brain_fs_materialize | Reconstruct/import the registered real CAD; export STEP/STL/views and measure face-type graph, WL features and sampled geometry. Never invent geometry for missing UIDs. |
 | brain_fs_portfolio | Choose structurally diverse representatives from retrieved, measured CAD UIDs. Missing geometry is reported, not fabricated. |
-| brain_fs_search | Retrieve real CAD UIDs by functional keywords. Semantic is default and requires a prepared real model/index. Lexical mode must be explicitly requested. |
+| brain_fs_search | Retrieve real CAD UIDs by functional keywords. Semantic is default and requires a prepared real model/index. Lexical mode must be explicitly requested. mode=geometry_encoder ranks by the in-house CAD-construction encoder (annotations unused); explicit only, no fallback, may be experimental. |
 | brain_fs_search_tasks | Search multiple paraphrases per functional requirement without double-counting them. Inspect real surface preconditions; unknown geometry is not a pass. Explicit lexical mode is only a diagnostic/limited retrieval route. |
 | brain_fs_status | Read actual function/asset/geometry coverage. An empty catalog is not an installed 128k library. |
 | brain_fusion_handoff | Issue the only Fusion adapter script allowed for this built subject. Host must pass it to fusion_mcp_execute unchanged. Does not save f3d. CadQuery remains the geometry referee. |
@@ -23,11 +23,13 @@
 | brain_get | Read current state and revision. Reload after REVISION_CONFLICT; never overwrite a newer design. |
 | brain_history | Read the transactional project event history. |
 | brain_import_step | Copy/hash a workspace-relative STEP. output needs current contract digest; reference performs actual kernel measurements and invalidates concepts/plans. Trusted local STEP only. |
+| brain_mouse_build_shell_brep | Hollow a READY scan into an open-bottom solid. route faceted_sdf (default): signed-distance shell, surface nets, one planar face per triangle (voxel_mm, max_faces, max_voxels). route smooth_fit: two fitted B-spline surfaces (outer skin = scan, inner skin = phi=-thickness) on the same rays + a planar ring on the opening plane; needs a scan that is star-shaped from the opening-section centroid and locally thicker than 2 x thickness (grid default 121, max 201; degree_min, degree_max, fit_tolerance_mm, smoothing). Routes never fall back to each other; checks report PASS/FAIL/UNVERIFIED and stop codes replace coarsening or loosening. |
 | brain_mouse_get_board_pack | Read one stored board pack. Presence is not printability, optical alignment, or click-feel. |
 | brain_mouse_get_shell_pack | Read one stored shell pack. Registration is not printability, wall-thickness proof everywhere, or optical alignment. |
 | brain_mouse_inspect_inputs | Hash workspace files and report board/shell pack status. A STEP on disk is not a ready shell. Does not invent fasteners or a passing design. |
 | brain_mouse_list_board_packs | List draft and ready board packs in this workspace. Demo CAD cases are not listed here. |
 | brain_mouse_list_shell_packs | List draft and ready prepared-shell packs. A mesh scan is not listed here. |
+| brain_mouse_prepare_scan | Inspect a closed scan mesh (STL/OBJ) for scan-to-shell stage A1: unit (required, never guessed), topology, orientation, components, holes. Only allow-listed repairs run (all default off) and each is reported. Writes mouse/scans/<scan_id>/; READY or NOT_READY with reasons. Self-intersection stays UNVERIFIED. |
 | brain_mouse_register_board_pack | Store a typed PCB mechanical pack. Ready status is refused when required fields are unverified, hashes mismatch, or the STEP is not a valid B-rep. |
 | brain_mouse_register_shell_pack | Store a typed prepared-shell pack. Ready status needs a protected outer envelope, a positive wall thickness, matching STEP hash, and a valid B-rep. Scan-to-shell conversion is not performed. |
 | brain_mouse_structure_gate | Report whether a ready board pack and a ready shell pack exist. Does not generate structure CAD, bosses, or click parts. |

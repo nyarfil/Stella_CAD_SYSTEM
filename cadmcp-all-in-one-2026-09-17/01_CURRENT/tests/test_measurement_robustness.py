@@ -215,10 +215,15 @@ def test_side_button_parallel_revision18_builds_and_passes_every_check(tmp_path)
     from cadmcp_brain.studio.recipe import execute_recipe
     from side_button_leaf_recipe import side_button_parallel_recipe_v18
     result=execute_recipe(Recipe.model_validate(side_button_parallel_recipe_v18()),{},tmp_path/'r18')
-    failed=[c['id'] for c in result['checks'] if c['verdict']!='pass']
-    assert result['geometry_checks_verdict']=='pass',failed
+    # The r18 subject is frozen. The tolerance coverage audit (system lesson from the r18 review) marks every check on a
+    # carrier part that omits the declared 'carrier-placement' tolerance unverified: geometry passes, coverage does not.
+    failed=[c['id'] for c in result['checks'] if c['verdict'] not in ('pass','unverified')]
+    assert not failed,failed
+    unverified=[c for c in result['checks'] if c['verdict']=='unverified']
+    assert unverified and all(c['computed_verdict']=='pass' and c['tolerance_coverage_gap']==['carrier-placement'] and 'not applied' in c['reason'] for c in unverified)
+    assert result['geometry_checks_verdict']=='fail' and sorted(result['unverified_checks'])==sorted(c['id'] for c in unverified)
     checks={c['id']:c for c in result['checks']}
-    assert checks['press-blocked-by-hard-stop']['verdict']=='pass' and checks['rest-outward-blocked-by-lip']['verdict']=='pass'
+    assert checks['press-blocked-by-hard-stop']['computed_verdict']=='pass' and checks['rest-outward-blocked-by-lip']['computed_verdict']=='pass'
     assert len(checks['press-to-stop-clear-of-shell']['placement_corners'])==8  # X, Z and rotation corners
     assert checks['rest-button-shell']['required_mm']==.35  # the nominal criterion is kept beside the corner check
     flex=checks['parallel-leaves-beam']['checks']['stress']

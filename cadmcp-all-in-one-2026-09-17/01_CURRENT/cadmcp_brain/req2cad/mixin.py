@@ -18,10 +18,21 @@ class Req2CADToolsMixin:
         return catalog_for(self.brain).status()
 
     def brain_fs_search(self,functions: list[str],limit: int=20,threshold: float=0.7,require_cad: bool=False,mode: str='semantic') -> dict:
-        """Retrieve real CAD UIDs by functional keywords. Semantic is default and requires a prepared real model/index. Lexical mode must be explicitly requested."""
+        """Retrieve real CAD UIDs by functional keywords. Semantic is default and requires a prepared real model/index. Lexical mode must be explicitly requested. mode=geometry_encoder ranks by the in-house CAD-construction encoder (annotations unused); explicit only, no fallback, may be experimental."""
         c=catalog_for(self.brain)
         if mode=='lexical':return c.lexical(functions,limit,require_cad)
-        if mode!='semantic':raise BrainError('FS_ARGUMENT','Use semantic or explicit lexical.')
+        if mode=='geometry_encoder':
+            import numpy as np
+            from .semantic import normalized
+            from .geoenc_run import geometry_search
+            c._queries(functions)
+            if not isinstance(limit,int) or isinstance(limit,bool) or not 1<=limit<=50:raise BrainError('FS_ARGUMENT','limit must be an integer in [1, 50].')
+            # Fail on a missing/stale geometry encoder before loading the text embedding model.
+            from .geoenc_run import check_ready
+            check_ready(c)
+            q=normalized(self._fs_get_encoder(c).encode(functions,query=True),len(functions))
+            return geometry_search(c,q,functions,None,limit,require_cad)
+        if mode!='semantic':raise BrainError('FS_ARGUMENT','Use semantic, geometry_encoder or explicit lexical.')
         from .semantic import SemanticIndex
         return SemanticIndex(c).search(functions,self._fs_get_encoder(c),threshold,limit,require_cad)
 

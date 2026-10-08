@@ -339,7 +339,7 @@
   },
   {
     "name": "brain_fs_search",
-    "description": "Retrieve real CAD UIDs by functional keywords. Semantic is default and requires a prepared real model/index. Lexical mode must be explicitly requested.",
+    "description": "Retrieve real CAD UIDs by functional keywords. Semantic is default and requires a prepared real model/index. Lexical mode must be explicitly requested. mode=geometry_encoder ranks by the in-house CAD-construction encoder (annotations unused); explicit only, no fallback, may be experimental.",
     "inputSchema": {
       "additionalProperties": false,
       "properties": {
@@ -651,6 +651,130 @@
     }
   },
   {
+    "name": "brain_mouse_build_shell_brep",
+    "description": "Hollow a READY scan into an open-bottom solid. route faceted_sdf (default): signed-distance shell, surface nets, one planar face per triangle (voxel_mm, max_faces, max_voxels). route smooth_fit: two fitted B-spline surfaces (outer skin = scan, inner skin = phi=-thickness) on the same rays + a planar ring on the opening plane; needs a scan that is star-shaped from the opening-section centroid and locally thicker than 2 x thickness (grid default 121, max 201; degree_min, degree_max, fit_tolerance_mm, smoothing). Routes never fall back to each other; checks report PASS/FAIL/UNVERIFIED and stop codes replace coarsening or loosening.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "scan_id": {
+          "title": "Scan Id",
+          "type": "string"
+        },
+        "thickness_mm": {
+          "title": "Thickness Mm",
+          "type": "number"
+        },
+        "opening": {
+          "additionalProperties": true,
+          "title": "Opening",
+          "type": "object"
+        },
+        "route": {
+          "default": "faceted_sdf",
+          "title": "Route",
+          "type": "string"
+        },
+        "voxel_mm": {
+          "default": 0.5,
+          "title": "Voxel Mm",
+          "type": "number"
+        },
+        "outer_tolerance_mm": {
+          "default": 0.15,
+          "title": "Outer Tolerance Mm",
+          "type": "number"
+        },
+        "thickness_tolerance_mm": {
+          "default": 0.1,
+          "title": "Thickness Tolerance Mm",
+          "type": "number"
+        },
+        "max_faces": {
+          "default": 60000,
+          "title": "Max Faces",
+          "type": "integer"
+        },
+        "max_voxels": {
+          "default": 40000000,
+          "title": "Max Voxels",
+          "type": "integer"
+        },
+        "grid": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Grid"
+        },
+        "degree_min": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Degree Min"
+        },
+        "degree_max": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Degree Max"
+        },
+        "fit_tolerance_mm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fit Tolerance Mm"
+        },
+        "smoothing": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Smoothing"
+        }
+      },
+      "required": [
+        "scan_id",
+        "thickness_mm",
+        "opening"
+      ],
+      "title": "brain_mouse_build_shell_brep_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "brain_mouse_get_board_pack",
     "description": "Read one stored board pack. Presence is not printability, optical alignment, or click-feel.",
     "inputSchema": {
@@ -919,6 +1043,62 @@
     },
     "annotations": {
       "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "brain_mouse_prepare_scan",
+    "description": "Inspect a closed scan mesh (STL/OBJ) for scan-to-shell stage A1: unit (required, never guessed), topology, orientation, components, holes. Only allow-listed repairs run (all default off) and each is reported. Writes mouse/scans/<scan_id>/; READY or NOT_READY with reasons. Self-intersection stays UNVERIFIED.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "relative_path": {
+          "title": "Relative Path",
+          "type": "string"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "transform": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Transform"
+        },
+        "repairs": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Repairs"
+        }
+      },
+      "required": [
+        "relative_path",
+        "unit"
+      ],
+      "title": "brain_mouse_prepare_scan_arguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
       "destructiveHint": false,
       "openWorldHint": false
     }

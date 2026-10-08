@@ -1,0 +1,2 @@
+# Hash-pinned public sources: keep bytes exact on every platform (no CRLF conversion).
+* -text

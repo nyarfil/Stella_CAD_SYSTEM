@@ -10,6 +10,7 @@ import math
 from typing import Any, Literal
 from pydantic import Field, ValidationError, model_validator
 from .recipe import Name, Strict
+from . import scan_fit, scan_shell
 from .. import geometry
 from ..errors import BrainError
 from ..req2cad.common import atomic_json, json_load, write_lock
@@ -452,3 +453,20 @@ class MouseToolsMixin:
     def brain_mouse_structure_gate(self) -> dict[str, Any]:
         """Report whether a ready board pack and a ready shell pack exist. Does not generate structure CAD, bosses, or click parts."""
         return structure_gate(self.brain.store.root)
+
+    def brain_mouse_prepare_scan(self, relative_path: str, unit: str, transform: list[float] | None = None, repairs: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Inspect a closed scan mesh (STL/OBJ) for scan-to-shell stage A1: unit (required, never guessed), topology, orientation, components, holes. Only allow-listed repairs run (all default off) and each is reported. Writes mouse/scans/<scan_id>/; READY or NOT_READY with reasons. Self-intersection stays UNVERIFIED."""
+        return scan_shell.prepare_scan(self.brain.store.root, relative_path, unit, transform, repairs)
+
+    def brain_mouse_build_shell_brep(self, scan_id: str, thickness_mm: float, opening: dict[str, Any], route: str = 'faceted_sdf', voxel_mm: float = 0.5, outer_tolerance_mm: float = 0.15, thickness_tolerance_mm: float = 0.1, max_faces: int = 60000, max_voxels: int = 40000000, grid: int | None = None, degree_min: int | None = None, degree_max: int | None = None, fit_tolerance_mm: float | None = None, smoothing: float | None = None) -> dict[str, Any]:
+        """Hollow a READY scan into an open-bottom solid. route faceted_sdf (default): signed-distance shell, surface nets, one planar face per triangle (voxel_mm, max_faces, max_voxels). route smooth_fit: two fitted B-spline surfaces (outer skin = scan, inner skin = phi=-thickness) on the same rays + a planar ring on the opening plane; needs a scan that is star-shaped from the opening-section centroid and locally thicker than 2 x thickness (grid default 121, max 201; degree_min, degree_max, fit_tolerance_mm, smoothing). Routes never fall back to each other; checks report PASS/FAIL/UNVERIFIED and stop codes replace coarsening or loosening."""
+        smooth_args = {'grid': grid, 'degree_min': degree_min, 'degree_max': degree_max, 'fit_tolerance_mm': fit_tolerance_mm, 'smoothing': smoothing}
+        if route == 'faceted_sdf':
+            given = [k for k, x in smooth_args.items() if x is not None]
+            if given:
+                raise BrainError('SHELL_SETTINGS', 'These arguments belong to route smooth_fit and are not accepted by faceted_sdf.', {'arguments': given})
+            return scan_shell.build_shell_brep(self.brain.store.root, scan_id, thickness_mm, opening, voxel_mm, outer_tolerance_mm, thickness_tolerance_mm, max_faces, max_voxels)
+        if route == 'smooth_fit':
+            return scan_fit.build_shell_smooth(self.brain.store.root, scan_id, thickness_mm, opening, 121 if grid is None else grid, 3 if degree_min is None else degree_min,
+                                               5 if degree_max is None else degree_max, outer_tolerance_mm, thickness_tolerance_mm, fit_tolerance_mm, 0.0 if smoothing is None else smoothing)
+        raise BrainError('SHELL_SETTINGS', "route must be 'faceted_sdf' or 'smooth_fit'.", {'route': route})

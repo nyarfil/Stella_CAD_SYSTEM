@@ -333,13 +333,19 @@ class Output(Strict):
     expected_solids: int = Field(default=1, ge=1, le=64)
     manufacturing_process: str = Field(default='FDM prototype; parameters not qualified', max_length=300)
 
+class ToleranceWaiver(Strict):
+    """Explicit, reported decision not to apply a declared placement tolerance to one check."""
+    id: Name
+    reason: str = Field(min_length=10, max_length=500)
+
 class Clearance(Strict):
     id: Name
     part_a: Name
     part_b: Name
     min_mm: float = Field(ge=0, le=1_000_000)
     max_overlap_mm3: float = Field(default=1e-7, ge=0, le=1e-3)
-    tolerance_ids: list[Name] = Field(default_factory=list, max_length=4)
+    tolerance_ids: list[Name] = Field(default_factory=list, max_length=8)
+    tolerance_waivers: list[ToleranceWaiver] = Field(default_factory=list, max_length=8)
 
 class PlacementTolerance(Strict):
     """Declared rigid placement tolerance of a part (and parts that move with it): +/- each translation component and +/- one rotation."""
@@ -384,7 +390,8 @@ class Motion(Strict):
     # 'blocked': the translation must be stopped by rigid contact within the sweep (e.g. an outward rest stop).
     expect: Literal['clear','blocked'] = 'clear'
     min_blocking_overlap_mm3: float = Field(default=1e-3, gt=0, le=1e3)
-    tolerance_ids: list[Name] = Field(default_factory=list, max_length=4)
+    tolerance_ids: list[Name] = Field(default_factory=list, max_length=8)
+    tolerance_waivers: list[ToleranceWaiver] = Field(default_factory=list, max_length=8)
 
 class RotationMotion(Strict):
     """Rigid rotation of one part about a fixed axis (button hinge, wheel, lever)."""
@@ -416,7 +423,8 @@ class RotationMotion(Strict):
     # threaded into a button); they move rigidly with it and are checked
     # against the obstacles too.
     carried_parts: list[Name] = Field(default_factory=list, max_length=8)
-    tolerance_ids: list[Name] = Field(default_factory=list, max_length=4)
+    tolerance_ids: list[Name] = Field(default_factory=list, max_length=8)
+    tolerance_waivers: list[ToleranceWaiver] = Field(default_factory=list, max_length=8)
     @model_validator(mode='after')
     def meaningful_rotation(self):
         if abs(sum(x*x for x in self.axis_direction)-1) > 1e-6:raise ValueError('Rotation axis must be a unit direction.')
@@ -425,6 +433,50 @@ class RotationMotion(Strict):
             raise ValueError('A blocked-motion check cannot also require end engagement.')
         if self.end_max_distance_mm is not None and self.end_max_distance_mm<self.min_mm:
             raise ValueError('End engagement distance cannot be smaller than the required clearance.')
+        return self
+
+class StopRotation(Strict):
+    """Rigid press-induced rotation of a load case, about an axis given in the part's drawn frame (moves with the start pose)."""
+    axis_point: Vec
+    axis_direction: Vec
+    angle_deg: float = Field(ge=-360, le=360)
+    @model_validator(mode='after')
+    def unit_axis(self):
+        if abs(sum(x*x for x in self.axis_direction)-1)>1e-6:raise ValueError('Rotation axis must be a unit direction.')
+        return self
+
+class StopLoadCase(Strict):
+    id: Name
+    rotation: StopRotation | None = None
+    direction: Vec
+    max_travel_mm: float = Field(gt=0, le=100)
+    @model_validator(mode='after')
+    def unit_direction(self):
+        if abs(sum(x*x for x in self.direction)-1)>1e-6:raise ValueError('Travel direction must be a unit vector.')
+        return self
+
+class StopTravelCheck(Strict):
+    """Reference-point travel until the first hard-stop contact, per load case (press yaw) and placement corner."""
+    id: Name
+    moving_part: Name
+    carried_parts: list[Name] = Field(default_factory=list, max_length=8)
+    stop_obstacles: list[Name] = Field(min_length=1, max_length=8)
+    other_obstacles: list[Name] = Field(default_factory=list, max_length=32)
+    load_cases: list[StopLoadCase] = Field(min_length=1, max_length=6)
+    start_translation_mm: Vec = Field(default_factory=lambda:[0.,0.,0.])
+    reference_point: Vec
+    reference_direction: Vec
+    required_min_travel_mm: float = Field(gt=0, le=100)
+    requirement_source: str = Field(min_length=8, max_length=500)
+    margin_mm: float = Field(default=0., ge=0, le=100)
+    resolution_mm: float = Field(default=.005, gt=0, le=.1)
+    contact_tol_mm: float = Field(default=.002, ge=0, le=.1)
+    tolerance_ids: list[Name] = Field(default_factory=list, max_length=8)
+    tolerance_waivers: list[ToleranceWaiver] = Field(default_factory=list, max_length=8)
+    @model_validator(mode='after')
+    def meaningful_stop(self):
+        if abs(sum(x*x for x in self.reference_direction)-1)>1e-6:raise ValueError('Reference direction must be a unit vector.')
+        if len({c.id for c in self.load_cases})!=len(self.load_cases):raise ValueError('Duplicate load-case id.')
         return self
 
 class PressFit(Strict):
@@ -549,6 +601,7 @@ class Recipe(Strict):
     press_fits: list[PressFit] = Field(default_factory=list, max_length=16)
     base_shape_checks: list[BaseShapeCheck] = Field(default_factory=list, max_length=8)
     flexure_checks: list[FlexureCheck] = Field(default_factory=list, max_length=8)
+    stop_travel_checks: list[StopTravelCheck] = Field(default_factory=list, max_length=8)
     placement_tolerances: list[PlacementTolerance] = Field(default_factory=list, max_length=8)
     unverified_requirements: list[str] = Field(min_length=1, max_length=100)
     @model_validator(mode='after')
@@ -617,8 +670,20 @@ class Recipe(Strict):
             if tol.part not in parts or any(x not in parts or x==tol.part for x in tol.carried_parts):raise ValueError('Placement tolerance must name output parts.')
             if any(p.part_id in [tol.part,*tol.carried_parts] and p.node in protected for p in self.outputs):raise ValueError('Protected hardware pose must stay fixed.')
             tol_ids.add(tol.id);ids.append(tol.id)
-        for chk in [*self.clearance_checks,*self.motion_checks,*self.rotation_checks]:
+        for chk in [*self.clearance_checks,*self.motion_checks,*self.rotation_checks,*self.stop_travel_checks]:
             if any(i not in tol_ids for i in chk.tolerance_ids):raise ValueError('Check names an undeclared placement tolerance.')
+            waived=[w.id for w in chk.tolerance_waivers]
+            if any(i not in tol_ids for i in waived):raise ValueError('Waiver names an undeclared placement tolerance.')
+            if len(waived)!=len(set(waived)) or set(waived)&set(chk.tolerance_ids):raise ValueError('A tolerance is either applied or waived once.')
+            if len(chk.tolerance_ids)!=len(set(chk.tolerance_ids)):raise ValueError('Duplicate tolerance id.')
+        for chk in self.stop_travel_checks:
+            if chk.moving_part not in parts or any(x not in parts for x in [*chk.carried_parts,*chk.stop_obstacles,*chk.other_obstacles]):
+                raise ValueError('Stop-travel check must name output parts.')
+            groups=[[chk.moving_part],chk.carried_parts,chk.stop_obstacles,chk.other_obstacles]
+            flat=[x for g in groups for x in g]
+            if len(flat)!=len(set(flat)):raise ValueError('Stop-travel moving, carried, stop and other-obstacle parts must be distinct.')
+            if any(p.part_id in [chk.moving_part,*chk.carried_parts] and p.node in protected for p in self.outputs):raise ValueError('Protected hardware pose must stay fixed.')
+            ids.append(chk.id)
         for b in self.base_shape_checks:
             if b.base_node not in defined:raise ValueError('Base-shape check must name a defined node as its base.')
             if any(x not in parts for x in b.parts) or len(b.parts)!=len(set(b.parts)):raise ValueError('Base-shape check must reference distinct output parts.')
@@ -991,6 +1056,129 @@ def _with_tolerances(fn,check,part_shapes,tolerances):
             'tolerance_scope':'Rigid placement corners only (every nonzero component at its + and - limit); intermediate placements and form errors are not covered.'}
 
 
+def _audit_tolerances(result,check,parts,tolerances):
+    """Every declared placement tolerance touching the check's parts must be applied or explicitly waived; otherwise never a pass."""
+    parts=set(parts)
+    covered=set(check.tolerance_ids)|{w.id for w in check.tolerance_waivers}
+    missing=[t.id for t in tolerances.values() if parts&{t.part,*t.carried_parts} and t.id not in covered]
+    result['waived_tolerances']=[{'id':w.id,'reason':w.reason} for w in check.tolerance_waivers]
+    if missing:
+        result['tolerance_coverage_gap']=missing
+        result['reason']='declared placement tolerance not applied: '+', '.join(missing)
+        result['computed_verdict']=result['verdict']
+        if result['verdict']=='pass':result['verdict']='unverified'
+    return result
+
+
+def _stop_contact(shape,obstacles):
+    """(name, distance, overlap) of the closest obstacle to a pose."""
+    best=None
+    for name,body in obstacles:
+        distance,overlap=pair_clearance(shape,body)
+        if overlap>0:distance=0.
+        if best is None or distance<best[1]:best=(name,distance,overlap)
+    return best
+
+
+def _stop_case(check,case,shapes,placed_reference):
+    """First stop contact of one load case in one placement: sampling with distance-limited steps, then bisection."""
+    import numpy as np
+    import cadquery as cq
+    body=shapes[check.moving_part]
+    if check.carried_parts:body=cq.Compound.makeCompound([body,*(shapes[p] for p in check.carried_parts)])
+    shift=np.asarray(check.start_translation_mm,dtype=float)
+    if np.any(shift):body=body.translate(tuple(shift))
+    ref0=np.asarray(check.reference_point,dtype=float)+shift  # nominal rest position: the stop and the click point are fixed on the shell
+    ref_dir=np.asarray(check.reference_direction,dtype=float);direction=np.asarray(case.direction,dtype=float)
+    ref=np.asarray(placed_reference,dtype=float)+shift
+    if case.rotation is not None:
+        origin=np.asarray(case.rotation.axis_point,dtype=float)+shift;tip=origin+np.asarray(case.rotation.axis_direction)
+        body=body.rotate(tuple(origin),tuple(tip),case.rotation.angle_deg)
+        vertex=cq.Vertex.makeVertex(*ref).rotate(cq.Vector(*origin),cq.Vector(*tip),case.rotation.angle_deg)
+        ref=np.array([vertex.X,vertex.Y,vertex.Z])
+    stops=[(n,shapes[n]) for n in check.stop_obstacles];others=[(n,shapes[n]) for n in check.other_obstacles]
+    def travel(s):return float(np.dot(ref+s*direction-ref0,ref_dir))
+    def probe(s):
+        # The boolean kernel can return a null shape for an exactly degenerate pose; retry 10 nm further along the path (never silently skipped).
+        for nudge in (0.,1e-5,2e-5):
+            moved=body.translate(tuple((s+nudge)*direction)) if (s or nudge) else body
+            try:
+                return _stop_contact(moved,stops),(_stop_contact(moved,others) if others else None)
+            except ValueError:
+                continue
+        raise ValueError('Kernel failed to evaluate the stop pose at s=%.6f mm.'%s)
+    def touching(hit):return hit is not None and (hit[1]<=check.contact_tol_mm or hit[2]>0)
+    out={'load_case':case.id,'max_travel_mm':case.max_travel_mm}
+    def other_fail(hit,at):
+        return {**out,'verdict':'fail','reason':f'other obstacle {hit[0]} touched before the stop','other_obstacle':hit[0],'s_mm':at,'reference_travel_mm':travel(at)}
+    s=0.;s_clear=None;contact=None;steps=0
+    while steps<2000:
+        steps+=1
+        stop,other=probe(s)
+        if touching(other):return other_fail(other,s)
+        if touching(stop):contact=(s,stop[0]);break
+        s_clear=s
+        if s>=case.max_travel_mm:break
+        gap=min(stop[1],other[1] if other else stop[1])
+        s=min(s+max(gap-check.contact_tol_mm,check.resolution_mm),case.max_travel_mm)
+    if contact is None:
+        return {**out,'verdict':'fail','reason':'stop not reached within max_travel_mm','reference_travel_mm':None,'s_clear_mm':s_clear}
+    s_hi,name=contact
+    if s_clear is None:
+        return {**out,'verdict':'fail','reason':'stop already in contact at the start pose','stop_obstacle':name,'reference_travel_mm':travel(0.),'s_clear_mm':None,'s_contact_mm':0.}
+    lo,hi=s_clear,s_hi
+    while hi-lo>check.resolution_mm:
+        mid=(lo+hi)/2;stop,other=probe(mid)
+        if touching(other):return other_fail(other,mid)
+        if touching(stop):hi=mid;name=stop[0]
+        else:lo=mid
+    return {**out,'verdict':'pass','stop_obstacle':name,'s_clear_mm':lo,'s_contact_mm':hi,
+            'reference_travel_mm':travel(lo),'reference_travel_at_contact_mm':travel(hi)}
+
+
+def _placed_point(point,label,tolerance_list,part):
+    """A point of `part` after the same rigid placement corner that _tolerance_variants applies to the shapes."""
+    import numpy as np
+    import cadquery as cq
+    vertex=cq.Vertex.makeVertex(*point)
+    for tol in tolerance_list:
+        if part not in (tol.part,*tol.carried_parts):continue
+        entry=label[tol.id];origin=np.asarray(tol.rotation_origin_mm);tip=origin+np.asarray(tol.rotation_axis)
+        if entry['rotation_deg']:vertex=vertex.rotate(cq.Vector(*origin),cq.Vector(*tip),entry['rotation_deg'])
+        if any(entry['translation_mm']):vertex=vertex.translate(cq.Vector(*entry['translation_mm']))
+    return [vertex.X,vertex.Y,vertex.Z]
+
+
+def _stop_travel_check(check,part_shapes,tolerances):
+    required=check.required_min_travel_mm+check.margin_mm
+    variants=[({},part_shapes)]
+    tolerance_list=[tolerances[i] for i in check.tolerance_ids]
+    if tolerance_list:variants+=_tolerance_variants(part_shapes,tolerance_list)
+    cases=[]
+    for label,shapes in variants:
+        placed=_placed_point(check.reference_point,label,tolerance_list,check.moving_part) if label else list(check.reference_point)
+        for case in check.load_cases:
+            result=_stop_case(check,case,shapes,placed);result['placement']=label
+            travel=result.get('reference_travel_mm')
+            if result['verdict']=='pass' and travel+1e-9<required:
+                result['verdict']='fail';result['reason']='reference travel at the stop is below the requirement'
+            result['margin_left_mm']=None if travel is None else travel-required
+            cases.append(result)
+    measured=[c for c in cases if c.get('reference_travel_mm') is not None]
+    # A case that never reached the stop has no travel and governs first.
+    unreached=[c for c in cases if c.get('reference_travel_mm') is None]
+    governing=unreached[0] if unreached else min(measured,key=lambda c:c['reference_travel_mm'])
+    return {'id':check.id,'kind':'stop_travel_reference','moving_part':check.moving_part,'carried_parts':list(check.carried_parts),
+            'stop_obstacles':list(check.stop_obstacles),'other_obstacles':list(check.other_obstacles),
+            'required_min_travel_mm':check.required_min_travel_mm,'margin_mm':check.margin_mm,'requirement_source':check.requirement_source,
+            'tolerance_ids':list(check.tolerance_ids),'cases_evaluated':len(cases),
+            'min_reference_travel_mm':min((c['reference_travel_mm'] for c in measured),default=None),
+            'governing_load_case':governing['load_case'],'governing_placement':governing['placement'],
+            'governing_stop_obstacle':governing.get('stop_obstacle'),'margin_left_mm':governing.get('margin_left_mm'),'cases':cases,
+            'verdict':'pass' if all(c['verdict']=='pass' for c in cases) else 'fail',
+            'scope':'Rigid-body approximation: each load case applies a rigid press-induced rotation then translates along its direction; elastic deformation of the leaves, shell and stop is excluded. Contact is located to resolution_mm by sampling and bisection; the reported travel is the last contact-free pose (conservative). Placement corners are rigid corners only.'}
+
+
 def evaluate_geometry(recipe,part_shapes,node_shapes=None):
     """Overlap, dimension, clearance and sampled-motion checks. Does not export files."""
     import numpy as np
@@ -1039,11 +1227,13 @@ def evaluate_geometry(recipe,part_shapes,node_shapes=None):
                        'nominal_mm':d.nominal_mm,'tolerance_mm':d.tolerance_mm,'verdict':'pass' if passes else 'fail',
                        'scope':'Analytic surface presence/dimension only; a cylindrical surface does not prove a through-bore.'})
     for c in recipe.clearance_checks:
-        checks.append(_with_tolerances(_clearance_check,c,part_shapes,tolerances))
+        checks.append(_audit_tolerances(_with_tolerances(_clearance_check,c,part_shapes,tolerances),c,[c.part_a,c.part_b],tolerances))
     for motion in recipe.motion_checks:
-        checks.append(_with_tolerances(_motion_check,motion,part_shapes,tolerances))
+        checks.append(_audit_tolerances(_with_tolerances(_motion_check,motion,part_shapes,tolerances),motion,[motion.moving_part,*motion.carried_parts],tolerances))
     for rotation in recipe.rotation_checks:
-        checks.append(_with_tolerances(_rotation_check,rotation,part_shapes,tolerances))
+        checks.append(_audit_tolerances(_with_tolerances(_rotation_check,rotation,part_shapes,tolerances),rotation,[rotation.moving_part,*rotation.carried_parts],tolerances))
+    for stop_check in recipe.stop_travel_checks:
+        checks.append(_audit_tolerances(_stop_travel_check(stop_check,part_shapes,tolerances),stop_check,[stop_check.moving_part,*stop_check.carried_parts],tolerances))
     for flexure in recipe.flexure_checks:
         checks.append(_flexure_check(recipe,flexure,part_shapes,node_shapes))
     for base_check in recipe.base_shape_checks:
@@ -1056,7 +1246,8 @@ def evaluate_geometry(recipe,part_shapes,node_shapes=None):
                        'verdict':'pass' if observed is not None and measured['rays_evaluated']>0 and observed+1e-8>=wall.min_mm else 'fail',
                        'minimum_proven':False,
                        'scope':'Inward-normal rays from a UV grid on every face; only exits through a roughly opposing face count as wall. Thinner material between samples, wedge edges and elastic behaviour are not covered.'})
-    return {'checks':checks,'geometry_checks_verdict':'pass' if all(x['verdict']=='pass' for x in checks) else 'fail'}
+    return {'checks':checks,'geometry_checks_verdict':'pass' if all(x['verdict']=='pass' for x in checks) else 'fail',
+            'unverified_checks':[x['id'] for x in checks if x['verdict']=='unverified']}
 
 
 def max_axis_radius_mm(body,axis_origin_mm,axis_direction):
@@ -1373,6 +1564,7 @@ def execute_recipe(recipe, sources, out_dir):
             'design_basis':recipe.design_basis.model_dump() if recipe.design_basis else None,
             'verification_plan':recipe.verification_plan,'checks':checks,
             'geometry_checks_verdict':geometry_verdict,
+            'unverified_checks':[c['id'] for c in checks if c['verdict']=='unverified'],
             'overall_verdict':'unknown','unverified_requirements':recipe.unverified_requirements,
             'assembly':{'relative_path':'assembly.step','sha256':file_hash(out_dir/'assembly.step')},
             'unit_notice':'Target recipe assigns mm explicitly; imported reference scale is a design choice, not proof of original physical units.',
