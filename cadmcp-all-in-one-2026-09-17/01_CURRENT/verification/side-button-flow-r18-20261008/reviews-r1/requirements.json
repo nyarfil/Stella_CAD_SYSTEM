@@ -1,0 +1,218 @@
+{
+ "schema_version": 1,
+ "subject_digest": "5438bbd8ddb792ddea9436bfdff5e0f90cfc188fe68362a6a96e95e786c3013b",
+ "role": "requirements",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (requirements role, rev18)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "bae73813aecc48b7da334c13c71a3c8d0c32739bc272538b8accebb5494558ae",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/actuator_insert/iso.png",
+   "status": "viewed",
+   "observation": "Stepped insert: flat head, short press band, slip shank, small tip. No grip feature on the head; removal relies on the pull notch in the face (in the button part). bbox y 22.80-30.34."
+  },
+  {
+   "attachment_sha256": "5354ecb8ebb7e5acad55a3dc8dbfa36bcfcf41ee74d9823d892c6aa7ab3feb57",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/assembly.png",
+   "status": "viewed",
+   "observation": "Closed shell with the side-button face in the window and the insert head visible in its counterbore. Drawn at the free (unloaded) pose, where the face is flush with the skin; the 0.3 mm rest recess is not shown. The running gap is visible as a thin line."
+  },
+  {
+   "attachment_sha256": "225c0db15f794ae5a7fae109956ce80b83377f26b1473182e544e681f832ac5e",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/build-record.json",
+   "status": "viewed",
+   "observation": "kind recipe_build, subject_digest 5438bbd8...013b matches the packet; it holds the context and measurements, no extra verdict text."
+  },
+  {
+   "attachment_sha256": "c6856ac1186199e2081522f44a6427678c1490b74d528e55ee518e6f1b6da6c2",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/button/iso.png",
+   "status": "viewed",
+   "observation": "Curved face with the counterbore and pull notch, spine, the plunger behind the face, the pad at the leaf end and the stop tab at the far end. Single solid. bbox x -10.0..16.9, y 11.0..31.8."
+  },
+  {
+   "attachment_sha256": "463bdc5e852d1f0c2690bc7b2b455d24070ec9f35bea2e116295a8f7acf71bb2",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/carrier_block/iso.png",
+   "status": "viewed",
+   "observation": "T-shaped block plus tongue with two vertical pin holes about 15.7 mm apart (x -35.5 and -19.8). bbox x -38..-17.5, y 11..19.6."
+  },
+  {
+   "attachment_sha256": "8c6079019cb61ee3c16340aec9d8ae4cc925c79a439750971d5973494b946413",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/leaf_a/iso.png",
+   "status": "viewed",
+   "observation": "Thin vertical leaf wall, x -33..-9, with root and tip fillets; y 11..12.6 including fillets, so it lies below the ASSUMED PCB plane (y 13.7-15.3)."
+  },
+  {
+   "attachment_sha256": "87c6ba3984763f99867965fd3f31b00a915520f4c68a4dca8d33bf16cbfad300",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/leaf_b/iso.png",
+   "status": "viewed",
+   "observation": "Second leaf, y 18..20.6 with fillets on both sides of the tip, above the PCB plane. Same length as leaf A."
+  },
+  {
+   "attachment_sha256": "7376c0a08eb3cb92a783a0e23bf96f0071bb495952d0d45688091b1dfbdd5002",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/measurements.json",
+   "status": "viewed",
+   "observation": "157 checks; geometry_checks_verdict pass, overall_verdict unknown. Read the motion, rotation, flexure, base-shape, wall and press-fit records and compared them with the contract text. Findings below cite check ids."
+  },
+  {
+   "attachment_sha256": "f0294d43b0b1f2d0a8e3755ec1ec2b075d5ba1a5ba1b6d593ad8b5548b3fac18",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/pcb_slab/iso.png",
+   "status": "viewed",
+   "observation": "Plain 20 x 12 x 1.6 mm slab (x -6..14, y 13.7..15.3, z 8..20), the ASSUMED board outline that the keep-out text states."
+  },
+  {
+   "attachment_sha256": "e8c872cd83539a567ba311e6205305ccdd5ebe830551e6dac12c840fc5e65872",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/pin_1/iso.png",
+   "status": "viewed",
+   "observation": "Headed pin with a tapered top lead-in, z 5.4..20.7. ABS printed, not a screw: consistent with owner policy."
+  },
+  {
+   "attachment_sha256": "5ee6e2f8917b04f7db12e38d4fb2ca119c208bfe67ae1693bd2ce5517774e772",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/pin_2/iso.png",
+   "status": "viewed",
+   "observation": "Identical to pin_1, at x -19.8 in the tongue."
+  },
+  {
+   "attachment_sha256": "f8cd0f8b2ffe4c1595bd6a77271bc372e5efafedd27b4de350d4e2e12a41296f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/rest_lip/iso.png",
+   "status": "viewed",
+   "observation": "Curved rectangular ring that follows the inner skin around the window (x -11.6..15.6, z 9.5..19.6). The bottom side is thinner. It is drawn 0.3 mm into the skin at the free pose."
+  },
+  {
+   "attachment_sha256": "69ee56b39a3dc3e8f00c364bbdcedca938c944a55307b20137ec1c87670efe5b",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell skin with the open window on the side. Probes show the skin intact in the strip x 14.4..17 that the base-shape check exempts."
+  },
+  {
+   "attachment_sha256": "d56d8e6e9e1527c085bfe6be8dc0e4dd9927c7eff19f5d97bb2781c5bc1c3d97",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/stop_jaw/iso.png",
+   "status": "viewed",
+   "observation": "Plain block jaw x 14.7..19.7, y 22.68..24.21, z 11.5..15. Probe: it touches the button stop tab exactly 0.50 mm after rest (0.80 mm from the free pose)."
+  },
+  {
+   "attachment_sha256": "af6e47ea086ad8777483c4a10533a23e807f20d6f7d502842223954ed1b2090b",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/stop_post/iso.png",
+   "status": "viewed",
+   "observation": "Post block at x 17.2..20.2, grown from the inner skin. The keyway is on the hidden -X/bottom side and cannot be seen from this view."
+  },
+  {
+   "attachment_sha256": "7b7ff223cd76a231584532d3550c5add6ea3acfa2b6bc33c58be318ab63c7a92",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/switch_body/iso.png",
+   "status": "viewed",
+   "observation": "Placeholder box for zippy_df_pin, x -4.35..8.35, top at y 21.95."
+  },
+  {
+   "attachment_sha256": "9327d52221940a905340241ffd621594730496c30dcead8e7a221ffc06821589",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/switch_pin/iso.png",
+   "status": "viewed",
+   "observation": "Pin box at y 21.95..22.80, drawn to the insert tip at the free pose (0.85 mm above the body). This length comes from the insert tip, not from the datasheet FP."
+  }
+ ],
+ "findings": [
+  {
+   "id": "R18-1-stop-claim-vs-pin-bottoming",
+   "severity": "major",
+   "claim": "F5 states that the stop jaw ends travel 0.5 +/- 0.1 mm after rest and that thumb and insert press-in forces go into the shell. design_basis also says travel no longer depends on pin bottoming. The geometry does not support this. With the drawn nominal Zippy and the drawn insert (rest 0.2 mm above OP), the insert tip reaches the switch-body plane (pin flush) 0.55 mm after rest. That is before the stop at its declared +0.1 tolerance (0.60). The stack itself reports pin_flush_from_rest_min = 0.00 mm (zippy) and -0.10 mm (omron), against a stop range of 0.40-0.60. Inserts are seated with the face held on the stop, which drives the tip 0.08-0.50 mm past OP, so the press-in force can also go into the switch. No measurement checks the insert against the switch body beyond the nominal stop. The owner-facing profile line reads \"pass ... pin may bottom first: yes\", which contradicts F5 without explanation.",
+   "evidence": [
+    "My probe on the STEP exports, button+insert translated (-0.6*dy^2/24, -dy, 0): at 0.50 after rest, insert-to-switch_body 0.050 mm and button-to-stop_jaw 0.000; at 0.55, insert-to-body 0.000; at 0.60 (stop +tol), insert/body overlap 0.039 mm3 and button/jaw overlap 0.654 mm3.",
+    "recipe.motion_checks press-insert-clear-of-switch-body ends at translation_end -0.5 (nominal stop only); its swept bound -0.0125 mm is not_proven. No check runs to stop +0.1, although the press-to-stop shell/PCB checks run to 0.60.",
+    "stack_v18(zippy_df_pin): pin_flush_from_rest_min_mm = -8.9e-16; stack_v18(omron_d2f_pin): -0.10; stop_travel_mm (0.40, 0.60); travel_past_op_at_stop_mm (0.08, 0.50).",
+    "unverified_requirements calls this \"a tolerance corner\". The drawn nominal switch with a nominal insert already bottoms at a stop 0.55-0.60 after rest, so it is not only a corner.",
+    "FLOW_RESULT S_hardstop force_path: \"Overtravel force goes into the shell stop unless the switch pin bottoms first in a tolerance corner\". recipe F5 has no such qualifier.",
+    "The stop sits only at the far end (jaw x 14.7..19.7); the leaf tips are at x -9. My estimate with the recipe's own stiffnesses (pair 0.52 N/mm; yaw 0.325 deg per 69 N*mm, thin leaves): extra force at x -10 after the far end meets the jaw rotates the button about the jaw. The switch (x 2) moves about 0.029 mm per N, so about 1.8 N beyond the force that reaches the stop uses up the 0.05 mm nominal margin. No rotation check covers rotation about the stop contact; all yaw/corner axes pass through x -9."
+   ],
+   "proposed_change": "Make F5 and design_basis match the stack. Either (a) move the jaw (or shorten the insert rule) so that pin flush is at least the stop +tolerance plus a stated margin for every registered profile and for a near-end press at a stated thumb force, or (b) restate F5 as \"the shell stop ends travel unless the switch pin bottoms first\" and list the conditions (stop above 0.55 mm for the drawn config, near-end press). Remove \"travel no longer depends on it\" from design_basis. Print the verdict_scope next to each profile \"pass\".",
+   "required_test": "Extend press-insert-clear-of-switch-body to stop +tolerance (0.60 after rest) with expect blocked by stop_jaw before switch_body, or report the bottoming margin per profile. Add a rotation check about the jaw contact line (axis at x ~15.8) for a near-end press at the ASSUMED thumb force, with the insert-to-switch-body distance recorded. First article: measure stop travel and switch actuation with a feeler gauge and confirm that the insert does not bottom the pin at the stop."
+  },
+  {
+   "id": "R18-2-face-recess-unstated",
+   "severity": "major",
+   "claim": "The owner asked to keep the outer form as unchanged as possible. In normal use the one outer-form change of this design is that the face sits recessed below the surrounding skin. The contract never states the amount, and no measurement checks it. The face is the removed skin piece, flush at the drawn free pose. At rest the preload lip holds it 0.30 mm below the skin, and at the stop it is 0.80-0.90 mm below. A 0.4 mm running gap surrounds it. The base-shape check exempts the whole button region, and the check runs at the drawn free pose, so it says nothing about flushness. The first-article note \"feeler-gauge the face-to-skin step at both ends\" has no target value or acceptance band.",
+   "evidence": [
+    "Probe at the free pose: skin vs face just across the gap: (-10.6,14) 30.538 vs (-9.9,14) 30.610; (14.6,14) 30.094 vs (13.9,14) 30.194; (2,9.4) 31.852 vs (2,10.1) 31.772. The face is flush within the local curvature.",
+    "rest_lip is drawn +0.3 mm into the skin (rest-lip-preload-on-skin, overlap 16.94 mm3). Rest = free pose -0.3 in Y (all motion checks start at y -0.3), so the face is 0.30 mm below the skin at rest.",
+    "base_shape_checks outer-form-matches-base: parts shell, button at the drawn pose; region side-button-region kind allowed_change covers x -11..17, y 20..40, z 9..19, which includes the whole face.",
+    "The region reason says only \"face below the skin at rest\", with no number. The unverified_requirements entry asks for a feeler-gauge step test without a value.",
+    "FLOW_RESULT F6 behavior still says \"the outer skin stays unchanged\"."
+   ],
+   "proposed_change": "State in design_basis or unverified_requirements that the face rests 0.30 mm (ASSUMED lip print error +/- x) below the skin and 0.80-0.90 mm below it at the stop, with the 0.4 mm running gap. Give the owner this as the cost of the preload and ask them to confirm it as part of 「外形はできるだけ変えないで」. Add the target to the first-article feeler-gauge test.",
+   "required_test": "Add a measured check of the face-to-skin step at the rest pose (button at translation -0.3) at both face ends and both edges, reported in mm with a declared acceptance band. First article: feeler-gauge step 0.30 mm within the declared band at both ends."
+  },
+  {
+   "id": "R18-3-no-baseline-for-motto",
+   "severity": "minor",
+   "claim": "「もっと押しやすく」 is comparative, but the contract has no baseline. The current button's force, travel to click and pivot behaviour are not recorded, and they are not labelled UNKNOWN. The interpretation is correctly flagged as awaiting the owner. Even after confirmation, though, no acceptance criterion would show that the new button is easier than the old one. The design adds 0.08-0.53 N of leaf force at the click, on top of the switch, and nothing compares that with the original.",
+   "evidence": [
+    "context.lineage: baseline_subject_digest null, is_correction false.",
+    "design_basis: \"Reading of 「もっと押しやすく」 ... an interpretation for the owner to confirm\".",
+    "unverified_requirements: leaves add 0.08-0.53 N at the click and up to 0.72 N at the stop. I reproduced this with k_pair 0.399 N/mm (t 0.55) * 0.21 mm and 0.659 N/mm (t 0.65) * 0.81 / 1.09 mm.",
+    "No entry states that the original button force or travel is UNKNOWN."
+   ],
+   "proposed_change": "Add an UNKNOWN entry for the original side-button press force, travel to click and stop feel. State that 「もっと」 can be judged only by an A/B comparison against the original mouse.",
+   "required_test": "First article A/B test: gram-gauge force at click and travel to click, at the face centre and both ends, on the original button and on the prototype, with the owner's judgement recorded."
+  },
+  {
+   "id": "R18-4-counterbore-depth-mismatch",
+   "severity": "minor",
+   "claim": "The counterbore and pull notch are placed with _outer_y, an ellipse approximation labelled \"ASSUMED close to the spline\". At the insert it lies about 0.6-0.9 mm below the real skin. The built counterbore is therefore about 1.8 mm deep, not the declared counterbore_depth_mm 1.0. The insert head ends about 1.0 mm below the face, and the pull-notch floor about 2.2 mm below it. This affects the stated removal (\"levered out with a pick in the pull notch\") and the face appearance.",
+   "evidence": [
+    "_outer_y(2,13) = 30.536, so cb_bottom = 29.536. Probed face at the counterbore rim: (0.4,13) 31.326, (2,11.4) 31.592 (ellipse 30.714), (2,14.6) 30.968 (ellipse 30.358).",
+    "actuator_insert bbox ymax 30.336 (head top) vs face rim about 31.3. Pull notch floor probed at (3.6,13) = 29.136.",
+    "design_parameters counterbore_depth_mm 1.0, pull_notch_depth_mm 0.4."
+   ],
+   "proposed_change": "Place the counterbore from the measured skin (the outer spline) or from the face solid, or state the built depth. Correct the \"close to the spline\" assumption with the measured error.",
+   "required_test": "Measure the head-to-face depth and the notch depth on the export and report them in measurements. First article: a pick reaches under the head in the notch."
+  },
+  {
+   "id": "R18-5-check-evidence-resolution",
+   "severity": "minor",
+   "claim": "Two checks behind the stated rest and stop claims prove less than the plan text says. (1) rest-outward-blocked-by-lip passes at t = 0 because of a boolean artifact. At the start pose (-0.00225, -0.3, 0) the lip-to-shell intersection returns the whole lip volume, although the faces only touch. (2) press-blocked-by-hard-stop samples 0.225 mm steps and first blocks at t = 0.75, i.e. somewhere between 0.45 and 0.675 mm after rest. That does not resolve the stated 0.5 +/- 0.1 mm. My probe confirms that the nominal contact is exactly 0.50 mm, so the conclusions hold, but the recorded evidence does not show them.",
+   "evidence": [
+    "Probe: lip at (-0.00225,-0.3,0): intersect volume 81.770 mm3 (= rest_lip volume 81.770), distance 4e-15. At (0,-0.3,0): 0.0 mm3. At (-0.0024,-0.31,0): 0.0 mm3, distance 0.0088.",
+    "measurements rest-outward-blocked-by-lip first_blocked_t 0.0. press-blocked-by-hard-stop: samples 5 over 0.9 mm, first_blocked_t 0.75. press-to-stop-clear-of-jaw-before-stop is clear to 0.39 (bound 0.0125)."
+   ],
+   "proposed_change": "Start the outward-blocking sweep 0.01 mm inside rest, as press-lip-leaves-skin already does. Add a clear-to sweep to 0.49 and a blocked sweep to 0.61 for the jaw, so that the stop is located within the declared band.",
+   "required_test": "Rerun with the shifted start. Pass only if blocking occurs at t > 0 with an overlap smaller than the lip volume, and if the jaw contact is bracketed between 0.49 and 0.61 mm after rest."
+  },
+  {
+   "id": "R18-6-allowed-region-too-wide",
+   "severity": "minor",
+   "claim": "The protected outer-form check exempts x -11..17 and z 9..19. The window plus running gap is x -10.4..14.4 and z 9.6..18.4. The extra 2.6 mm strip on +X has no stated reason, and the skin there is intact, so the exemption is not needed. It would hide a future change to protected skin next to the button.",
+   "evidence": [
+    "recipe base_shape_checks region lo [-11,20,9] hi [17,40,19], built from wl-1 and wh+3.",
+    "Probe: shell material 0.1 mm under the skin at x 14.6, 15.0, 15.5, 16.0, 16.5, 16.9 and z 9.2, 10, 14, 18, 18.8: all True (intact)."
+   ],
+   "proposed_change": "Shrink the allowed region to the window plus gap plus a stated small margin, such as 0.2 mm, or state why the +X strip must be free.",
+   "required_test": "Rerun outer-form-matches-base with the tightened region; it should still pass with 0 off-form points."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Revision-17 requirements findings: R1 (PCB keep-out) FIXED. The keep-out now reads x >= -6.0 for z 8-20 and no board at x < -16. pcb_slab is modelled, and pad-to-pcb 0.50, press-to-stop-clear-of-pcb (bound 0.352) and the twist/yaw checks against the slab pass. pad-to-pcb is not run with placement corners; my estimate is still about 0.43 mm.",
+  "R2 (poses vs preload) FIXED. All stroke poses start at the preloaded rest (-0.3), the stop + tolerance is 0.9 from free, and flexure is at 1.09 mm (highest preload plus longest stop). The switch_body note now says OP 0.2 mm below the tip at rest, which matches.",
+  "R3 (pin-flush assumption unlabelled) PARTLY FIXED. It is now labelled ASSUMED, but design_basis adds \"travel no longer depends on it\", which R18-1 shows is false at the stop tolerance limit.",
+  "R4 (stale flow text) MOSTLY FIXED. Hinge is removed from the F6 behaviour, and G_leaf force path now reads \"shell tabs or posts\". The F6 behaviour still says \"the outer skin stays unchanged\" (see R18-2).",
+  "The near-end-press estimate in R18-1 uses the recipe's own beam stiffnesses and a rigid button. It is not a kernel check, and real thumb forces are UNKNOWN.",
+  "The PCB plane, switch placement, lip print error and carrier placement tolerance remain ASSUMED. I did not re-derive the twist/yaw angles or the stress numbers beyond reproducing the force range.",
+  "This review is by a model of the same family as the designer. No physical test was performed."
+ ],
+ "conclusion": "no_blocker_found"
+}

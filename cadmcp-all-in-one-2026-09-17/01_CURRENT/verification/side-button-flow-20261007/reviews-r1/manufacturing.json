@@ -1,0 +1,135 @@
+{
+ "schema_version": 1,
+ "subject_digest": "bc37a85d6af1cace9690e466bc6aa947fa55862b559444eec5dfaf387056472b",
+ "role": "manufacturing",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (manufacturing role)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "MFG-CAPTIVE-PIN",
+   "severity": "blocking",
+   "claim": "The two printed parts cannot be assembled. The hinge pin (r 1.0, z 6.7-21.3) is fused at both ends into the shell (tab_low z 6.7-9.7 and tab_high z 18.3-21.3), and the button barrel is a closed annulus (bore r 1.3) sitting between the tabs with 0.8 mm axial gaps. The selected concept's stated assembly method ('button barrel slides over the pin from below before the PCB is fitted' / 'pin is part of the shell; barrel slides on') is impossible because the lower tab occupies the pin's lower end. Outputs declare shell and button as separate FDM parts, so the contract is not print-in-place either, and the gaps are not designed for print-in-place (tongue bottom z 7.8 sits 0.3 mm over the stop shelf top z 7.5; the skin floats in a 0.4 mm window gap), which would need unremovable support in sub-millimetre gaps.",
+   "evidence": [
+    "Recipe ops: pin cylinder origin z 6.7 height 14.6 unioned into shell_part with tab_low_box (center z 8.2, size 3) and tab_high_box (center z 19.8, size 3).",
+    "My CadQuery section of shell/model.step near the pin: area 30.0 mm2 at z 6.8/8.0/9.65 and 18.35/21.2 (tab solid), 3.142 mm2 (pin only) at z 9.75-18.2 -> pin continuous and fused to both tabs.",
+    "button/iso.png shows the barrel as a full ring without a slot; recipe barrel_bore is a full cylinder r 1.3.",
+    "FLOW_RESULT.json selected option assembly_method: 'Button barrel slides over the pin from below before the PCB is fitted.'",
+    "No assembly-path or insertion check exists in the recipe (motion_checks is empty)."
+   ],
+   "proposed_change": "Make the pin a separate part inserted after the button is positioned: e.g. a purchased steel dowel or M2 screw (diameter chosen against a measured printed-hole coupon) passing through a hole in tab_low (accessible from the open bottom) into a blind or through hole in tab_high. Alternatively make the lower tab a separate clip. Record the assembly sequence in the recipe and keep both printed parts separate.",
+   "required_test": "Add a CAD assembly-path check: with the pin absent, translate/rotate the button along the declared insertion path from the open bottom into its rest pose without colliding with shell, tabs, stop shelf and stop post; then insert the pin along -z through tab_low with no collision. Physically: print shell+button, assemble per the written sequence, and record that the button rotates on the pin."
+  },
+  {
+   "id": "MFG-TONGUE-ROOT",
+   "severity": "major",
+   "claim": "The overtravel stop tongue is attached to the rest of the button only by a thin root. The tongue (x 10.5-13.5, y 25-27.5, z 7.8-13) does not reach the skin; it overlaps the plunger (x 8-11, z 12-16) only in x 10.5-11 and z 12-13. The minimal separating cut between the tongue and the plunger is roughly 3.75 mm2 (2.5 mm2 on plane x=11 for z 12-13 plus 1.25 mm2 on plane z=12 for x 10.5-11), about half the 7.5 mm2 tongue section, and it carries the full hard-stop reaction applied at z ~7.8-9.4, i.e. a 3-4 mm lever. With the barrel axis printed vertical, part of this joint is an interlayer bond loaded in bending. Its compliance also directly erodes the measured 0.232 mm housing clearance at the stop pose.",
+   "evidence": [
+    "My CadQuery x=12.0 slice of button/model.step: two separate islands, tongue y 25.0-27.5 z 7.8-13.0 (13.0 mm2) and skin y 27.78-31.14 z 10-18 -> no tongue-skin connection.",
+    "Section area at x=10.9 is 42.4 mm2 but drops to 24.4 mm2 at x=11.05 (plunger ends at x=11), confirming the tongue joins only through the x 10.5-11 strip.",
+    "Horizontal section at z=11.9 in the tongue region: 7.5 mm2 (tongue only).",
+    "measurements.json housing-clear-until-stop minimum 0.2317 mm at -2.665 deg; overtravel-stop-engages is a rigid end-pose check only (declared)."
+   ],
+   "proposed_change": "Give the tongue a substantial root: extend it in +y to merge with the skin inner surface and/or up to the plunger top (z 16), or add an internal gusset/fillet between tongue, plunger and skin, all inside the existing outer surface.",
+   "required_test": "Add a minimum-cross-section (min-cut) measurement between the tongue stop face and the barrel with a stated threshold, and a physical overload test on a printed button: press to the stop with a stated force (e.g. a declared multiple of the eventual thumb force) for a stated cycle count, measuring permanent set and stop-pose housing clearance."
+  },
+  {
+   "id": "MFG-PIN-ANISOTROPY",
+   "severity": "major",
+   "claim": "The integral printed pin is a 2.0 mm diameter column with an 8.6 mm free span (z 9.7-18.3). Because its axis is the shell's build axis in any practical shell orientation (open bottom or flat top on the bed), all hinge reactions load it in bending across layer lines, the weakest FDM direction, and a slender free-standing column of this height prints with poor roundness. A pin failure scraps the whole shell print (shell volume about 17.4 cm3). The design basis already lists 'Pin can break if undersized' as a risk but no strength or orientation check exists.",
+   "evidence": [
+    "Recipe: pin_radius_mm 1.0, tab_low top z 9.7, tab_high bottom z 18.3; shell bbox z 0-34 with open bottom (cavity from z -1) and a flat top cap at z 34.",
+    "measurements.json: shell adaptive B-rep volume 17389 mm3.",
+    "FLOW_RESULT.json option 'Pin is part of the shell; barrel slides on.' assumption 'Printed pin is strong enough for thumb loads.' with risk 'Pin can break if undersized.'",
+    "shell/iso.png shows the pin as a very slender vertical member."
+   ],
+   "proposed_change": "Use a separate metal pin (same change as MFG-CAPTIVE-PIN), or, if a printed pin is kept, print it as a separate part lying flat so layers run along its axis.",
+   "required_test": "Load test on the chosen pin configuration: apply a stated radial load at mid-span through the barrel on a printed shell+button sample and record failure load; compare against the hinge reaction estimated from the declared thumb-force assumption once one is set."
+  },
+  {
+   "id": "MFG-ORIENT-SUPPORT",
+   "severity": "major",
+   "claim": "No print orientation or support plan is declared for either part, and both need support on functional surfaces. Button: no common flat datum (skin top z 18 while barrel/rib/arm tops are z 17.5, plunger top z 16, tongue top z 13; bottom side tongue z 7.8, skin z 10, barrel z 10.5), so either barrel-axis-vertical orientation puts support against a barrel end face (0.5 mm or 2.7 mm stand-off) and under plunger/tongue; laying it on the curved skin gives a teardropped 2.6 mm bore. Shell: the flat cavity roof (inner cap at z 32.5, about 69 x 33 mm), the stop shelf underside (z 6.0, ~8.5 mm cantilever from the wall) and the upper tab underside (z 18.3) are horizontal overhangs needing internal support; the upper-tab support lands beside the 2 mm pin, so removing it risks breaking the pin.",
+   "evidence": [
+    "Recipe parameters: window_z_max 18, barrel_z_max 17.5, plunger_z_max 16, tongue_z_max 13, tongue_z_min 7.8, window_z_min 10, barrel_z_min 10.5.",
+    "Recipe cavity loft top section at z 32.5 (x +/-34.5, y +/-16.5); stop_shelf_box center z 6.75 size z 1.5, y 21-40; tab_high_box z 18.3-21.3.",
+    "button/iso.png: barrel and rib tops visibly below the skin top edge.",
+    "Outputs list manufacturing_process 'FDM prototype; parameters not qualified' with no orientation."
+   ],
+   "proposed_change": "Declare a build orientation per part. For the button, bring barrel, arm and rib top faces flush with the skin top plane z 18 (re-checking the resulting barrel-to-upper-tab gap) so the part prints top-face-down with the bore vertical. For the shell, add 45-degree internal chamfers/gussets under the stop shelf and upper tab (inside the skin, outer surface unchanged), or document support placement and removal.",
+   "required_test": "Overhang-face report per declared orientation (area of downward faces steeper than the chosen limit) for both parts, plus a slicer support preview confirming no support inside the bore, between barrel and tabs, or in gaps under 1 mm."
+  },
+  {
+   "id": "MFG-SUBLAYER-STEP",
+   "severity": "minor",
+   "claim": "The pin tabs overlap the window running gap by 0.1 mm (tab_low top z 9.7 vs gap bottom z 9.6; tab_high bottom z 18.3 vs gap top z 18.4, over x -10.4 to -9), creating 0.1 mm steps below a typical layer height at the window edge; the slicer will round these unpredictably and the local running gap is set by the tab, not the window.",
+   "evidence": [
+    "Recipe: window_gap box center z 14 size z 8.8 (z 9.6-18.4), x -10.4 to 14.4; tab boxes x -15 to -9.",
+    "measurements.json shell-printed-wall oblique_exit_min_mm 0.0149 at (-10.34, 29.32, 18.31), at the tab_high/window edge."
+   ],
+   "proposed_change": "Align tab faces with the window gap planes (or recess them away from the window) so no feature thinner than one layer is created.",
+   "required_test": "Slice the shell at the intended layer height and check the window edge near x -10.4 for sub-layer artefacts; re-measure button-shell rest clearance there."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "310545a72cb7d655e14ee55dfc228a1999757b7fd33dae1c8cce6b88c4cfe04f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/assembly.png",
+   "status": "viewed",
+   "observation": "Assembly preview: blue stand-in shell with a flat elliptical top cap and a gold curved skin strip flush in the side wall window. Only the exterior is visible; the pin, tabs, stop shelf, tongue and print orientation cannot be judged from this image."
+  },
+  {
+   "attachment_sha256": "72c2be9fa1560b14591bd4eb6aa4e50d942f0e2dc76f2e510c008e8e87a04bf0",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/build-record.json",
+   "status": "viewed",
+   "observation": "Build record (title 'Side button improvement trial (hinged flush skin button)'): recipe operations show pin cylinder z 6.7-21.3 unioned into shell_part together with tab_low (z 6.7-9.7) and tab_high (z 18.3-21.3); button is a closed barrel (r 2.6, bore r 1.3, z 10.5-17.5). Outputs are separate FDM parts with 'parameters not qualified'; no print orientation or assembly sequence is recorded. measurements.overall_verdict is 'unknown', 26 checks."
+  },
+  {
+   "attachment_sha256": "bb5a6506f7224708bc248429c07f3b13ad0aa6ed7db385a836fe5da345d1ef18",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/button/iso.png",
+   "status": "viewed",
+   "observation": "Button ISO view: curved skin strip with rear rib block, arm and a closed ring barrel (full annulus, no slot) at one end; plunger and a small tongue block at the other end. Tops of barrel/rib sit visibly below the skin top edge; no common flat face across the part."
+  },
+  {
+   "attachment_sha256": "d0c9c0eaa9e20461552c4b2c6b086a0b1121912c9e534deb1536822e1f6bf00b",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/measurements.json",
+   "status": "viewed",
+   "observation": "overall_verdict 'unknown', geometry_checks_verdict 'pass'. Sampled wall: shell min 1.236 mm, button min 1.300 mm (minimum_proven false); oblique-exit minima 0.0149 mm at (-10.34, 29.32, 18.31) on the shell and 0.0050 mm at (14.0, 29.03, 12.8) on the button. Stop engages at -2.665 deg with housing min distance 0.232 mm. No printability, overhang, root-section or assembly-path check exists."
+  },
+  {
+   "attachment_sha256": "d2a8de1ef4c619b19ab874db3adc48e90518f40cf7799225ab14f754f0cbf833",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell ISO view: closed dome with flat elliptical top, side window opening; through the window a thin vertical pin is visible standing between a lower tab and a ledge at the window edge. The pin is visually very slender relative to the shell."
+  },
+  {
+   "attachment_sha256": "c1d58522c820403fb6bfa08f24bbc769a4b277476e814bb46e3033eec0fc4a58",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Plain rectangular block (placeholder switch housing envelope, 6 x 4 x 6 mm per recipe); no features. Not a printed part of the prototype."
+  },
+  {
+   "attachment_sha256": "b86a4169fec7e56e7af5756340b2d11bfe3a0a113dbdb26343bd08cacfdf7f2a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Plain small rectangular block (placeholder stem, 2 x 1.1 x 2 mm per recipe); no features. Not a printed part of the prototype."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Radial pin/bore clearance (0.3 mm) and axial tab gaps (0.8 mm) are uncalibrated for the target printer; I did not judge them against universal values. A printed fit coupon is needed.",
+  "Thumb force, switch force and stop impact are unknown, so the root-section and pin-strength concerns are qualitative; no physical load test was performed.",
+  "PLA vs PETG is not decided; interlayer strength and creep of the stop differ between them.",
+  "The button oblique-exit minimum of 0.005 mm at (14.0, 29.03, 12.8) appears to be a corner-ray artefact of the wall sampler rather than a real thin feature; not confirmed by a dedicated measurement.",
+  "Insertion path for the button into the shell (tongue must clear the stop shelf/post, barrel must reach the pin axis) is unchecked even after the pin is made removable.",
+  "My own section measurements were run with CadQuery 2.8 on the exported STEP files only; no slicer was run, so support volumes and actual overhang behaviour are not measured."
+ ]
+}

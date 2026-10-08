@@ -1,0 +1,189 @@
+{
+ "schema_version": 1,
+ "subject_digest": "bc37a85d6af1cace9690e466bc6aa947fa55862b559444eec5dfaf387056472b",
+ "role": "mechanism",
+ "discussion_round": 2,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (mechanism role)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "R2-M1-no-outward-rest-stop",
+   "severity": "blocking",
+   "claim": "Maintained as blocking. ASM2 independently confirms it (first contact at about +3.70 deg by bisection), and so does V1 (+4 deg overlap 0.008 mm3, the same value I measured). The two disagree on severity, and I challenge ASM2 rating it only major. With 0.2 mm free play there is no return to the drawn pose. The face can sit up to about 1.7 mm proud and wedge into a cosmetic edge. F2 (\"without rattling\") and F4 (\"returns to rest\") are then unmet by design, not just unverified, and every rest-based check starts from a pose that nothing enforces.",
+   "evidence": [
+    "round-1 mechanism probe: +3 deg 0.075 mm, +4 deg overlap 0.008 mm3 at x=-10.43..-10.40, z 10..12.9",
+    "assembly.json ASM2: first outward contact +3.70 deg at (-10.4,31.25,10.0); verification.json V1: +4 deg overlap 0.0080 mm3, +5 deg 0.328 mm3",
+    "measurements.json rest-plunger-free-play 0.200 mm; rotation_checks cover negative angles only"
+   ],
+   "proposed_change": "Accepted change: add an outward rest stop at the free end of the face. This is a lip about 1.0 mm deep and 2 mm tall (z) on the inner side of the skin piece, past the window edge at x about 14.4-15.5. At 0 deg it bears on the inner face of the shell wall, so the outer surface is unchanged. The lip moves away from the wall during a press, and it can only be fitted from inside, which is compatible with inserting a pin from the open bottom. Preload: a separate return element (a printed leaf spring from the shell onto the rib, or a small purchased torsion or compression spring), giving a stated preload torque that holds the lip on the shell. The stem must not be the rest-defining element.",
+   "required_test": "A positive-angle rotation check that ends on lip contact at 0 deg +/- 0.05 deg (end_max_distance small). It must assert that the contact pair is lip to shell inner wall, not the window edge. A static check at rest must show the window edge clear by at least the hinge play plus 0.1 mm. Then a physical rattle and return test on the print."
+  },
+  {
+   "id": "R2-M2-hinge-play-blocks-actuation",
+   "severity": "blocking",
+   "claim": "Upgraded from major to blocking after I reproduced the V2 counterexample. With the barrel offset +0.29 mm in X, inside the designed 0.3 mm radial play, the face edge hits the window edge at x=14.4 already at -1.5 deg. At that angle the stem overlap is only 1.42 mm3 (about 0.36 mm of stem travel, below the 0.5 mm assumed operating travel), against 2.0 mm3 at the nominal press angle. The design's own nominal play can therefore jam the button before it clicks. The offset in -X (-0.29 mm) shows no such contact, so this is one-sided and orientation-dependent, and the centred-axis certificates do not detect it.",
+   "evidence": [
+    "Reviewer read-only CadQuery probe on the exported model.step files (scratchpad script, nothing written to the build folder): translate +0.29 X, rotate about (-11.71,25): -1.0 deg no shell overlap (stem 0.681 mm3); -1.5 deg shell overlap 0.0564 mm3 at x 14.40-14.44, y 28.86-30.21, z 10-16.4 (stem 1.423 mm3); -1.865 deg 0.162 mm3",
+    "Reviewer read-only CadQuery probe on the exported model.step files (scratchpad script, nothing written to the build folder): translate -0.29 X: no shell overlap at -1.0/-1.5/-1.865 deg",
+    "verification.json V2 reports the same 0.0564 mm3 at (14.4,30.21,10.0); assembly.json ASM3 the same 0.3 mm play-closes-clearances result",
+    "design_parameters pin_radius 1.0, barrel_inner_radius 1.3"
+   ],
+   "proposed_change": "Accepted change: a separate Ø2.0 mm ground steel dowel through a tab_low hole into tab_high, inserted from the open bottom. Run it in a button bore printed undersize and drilled or reamed to about Ø2.05-2.1 (radial play of 0.1 mm or less, set by a printed coupon). Then size every running gap (window edge at the press and stop angles, barrel to inner wall, stem free play) as radial play + FDM error + 0.1 mm, using a written stack-up.",
+   "required_test": "Re-run press-swept, stop-engage and housing-clear with the axis offset to the radial-play limits in +/-X and +/-Y (four runs, or an envelope). All must keep the window edge clear until the stop, and must reach the operating stem travel before any shell contact other than the stop."
+  },
+  {
+   "id": "R2-X1-confirm-captive-pin",
+   "severity": "blocking",
+   "claim": "I confirm MFG-CAPTIVE-PIN, ASM1 and V4 from the mechanism side. As modelled, the F2 guide cannot be built: the pin is fused to both tabs and the barrel is a closed ring. The fix must be chosen together with R2-M2, because the pin choice sets the hinge play. One manufacturing proposal is challenged: an \"M2 screw\" as the pivot. A threaded shank running in a printed bore gives a rough bearing with about 0.2-0.3 mm effective radial play at the thread roots, and it wears the bore. That recreates R2-M2. A smooth dowel or shoulder screw is acceptable; a plain threaded screw is not.",
+   "evidence": [
+    "manufacturing.json MFG-CAPTIVE-PIN: section areas 30.0 mm2 at tab levels, 3.142 mm2 pin-only between, so the pin is fused at both ends",
+    "assembly.json ASM1: no straight escape direction (1 mm moves overlap 8.8-26.9 mm3)",
+    "manufacturing.json proposed_change: \"purchased steel dowel or M2 screw\""
+   ],
+   "proposed_change": "Use a separate smooth dowel (or shoulder screw) pressed into tab_high and sliding through tab_low, inserted from the open bottom after the button is placed. Do not use a plain threaded screw as the bearing surface.",
+   "required_test": "An insertion-path check (button placed from inside, then the pin translated along +Z with no overlap except the intended press fit), plus a coupon measurement of the bore and pin fit."
+  },
+  {
+   "id": "R2-M3-axial-location",
+   "severity": "major",
+   "claim": "Maintained, with one correction to my round 1. The upper axial limit is +0.3 mm, not +0.4: the skin top meets the tab_high step that overlaps the window gap by 0.1 mm, consistent with V2 and MFG-SUBLAYER-STEP. The lower limit is -0.3 mm (tongue on the stop shelf). The barrel, with 0.8 mm to each tab, is still not the locator. MFG-ORIENT-SUPPORT proposes raising the barrel top to z=18. Taken alone, that makes the barrel-to-tab gap 0.3 mm, equal to the tongue-to-shelf and skin-to-tab-step gaps, so three surfaces would compete as the axial stop. The two changes have to be designed together.",
+   "evidence": [
+    "Reviewer read-only CadQuery probe on the exported model.step files (scratchpad script, nothing written to the build folder): translate Z +0.3 gives distance 0.0; Z +0.35 gives overlap 0.069 mm3; Z -0.3 gives 0.0 with tongue on shelf (round 1)",
+    "manufacturing.json MFG-SUBLAYER-STEP: tab_low top 9.7 vs gap bottom 9.6, tab_high bottom 18.3 vs gap top 18.4",
+    "manufacturing.json MFG-ORIENT-SUPPORT proposed_change: bring barrel/arm/rib tops flush with z 18"
+   ],
+   "proposed_change": "Trim the tabs to the window-gap planes (z 9.6 / 18.4). Make the barrel z 9.8-18.2 so the barrel ends carry thrust with 0.2 mm per side. Keep the skin gap at 0.4 mm and raise tongue_z_min to 8.0 or more, so the tongue-to-shelf gap of 0.5 mm or more is larger than the barrel gap.",
+   "required_test": "Static clearance at the button shifted +/-0.2 mm in Z: the barrel touches the tabs first, and the tongue, skin and arm all stay clear by at least 0.1 mm."
+  },
+  {
+   "id": "R2-X2-confirm-tongue-root-and-orientation-conflict",
+   "severity": "major",
+   "claim": "I confirm MFG-TONGUE-ROOT. At x=12 the button slice has two separate islands: the tongue (y 25-27.5, z 7.8-13) and the skin (y 27.78-31.14, z 10-18), with a 0.28 mm gap between them. The tongue hangs only from the plunger, and the overtravel stop load passes through that joint with a lever of about 3-4 mm. The manufacturing reviews also conflict with each other here. MFG-ORIENT proposes printing the button top-face-down with the bore vertical. In that orientation the tongue-to-plunger joint at z 12-13 is a horizontal layer interface loaded in bending by the -Y stop force, the weakest case for FDM. The orientation fix and the tongue-root fix therefore have to be made together.",
+   "evidence": [
+    "Reviewer read-only CadQuery probe on the exported model.step files (scratchpad script, nothing written to the build folder): button slab at x 11.95-12.05 gives islands y 27.78-31.14 z 10-18 and y 25.0-27.5 z 7.8-13.0",
+    "manufacturing.json MFG-TONGUE-ROOT: about 3.75 mm2 joint, against a 7.5 mm2 tongue section",
+    "manufacturing.json MFG-ORIENT-SUPPORT: button printed top-face-down with the bore vertical"
+   ],
+   "proposed_change": "Close the 0.28 mm gap so the tongue merges with the inner surface of the skin over its full height, and extend it up to the plunger top (z 16). The stop load then goes from the tongue into the skin and plunger in compression and shear across the layers, not as a peel at one layer line.",
+   "required_test": "A section check showing the tongue connected to the skin over at least 70% of its height, and a hand calculation of root stress at a stated overload (for example 20 N on the face)."
+  },
+  {
+   "id": "R2-M6-stop-shelf-compliance-quantified",
+   "severity": "major",
+   "claim": "Upgraded from minor. The shelf carrying the stop post is a cantilever 3 mm wide (x) and 1.5 mm thick (z), running from the wall at y about 30.25 to y=21, so about 9.25 mm long. The tongue loads it in -Y about 1.85 mm above its mid-plane, which bends it. My hand estimate (PLA printed E about 2500 MPa assumed, I=0.84 mm4) is a pull-back of about 0.16 mm at the contact for an 11 N tongue load. That load corresponds to about a 20 N thumb force at the face centre. The extra rotation (about 0.36 deg) eats about 0.15 mm of the 0.232 mm housing clearance and adds stem overtravel (R2-M4). Housing contact at roughly 30 N thumb force is plausible. This is an estimate, not a measurement. Manufacturing flagged this shelf only as a support overhang (about 8.5 mm), not as a stiffness problem.",
+   "evidence": [
+    "Reviewer read-only CadQuery probe on the exported model.step files (scratchpad script, nothing written to the build folder): shell occupied y at x=12, z=6.75 from 21.0 to 31.25; wall alone at z=5 y 30.25-31.25",
+    "recipe stop_shelf z 6.0-7.5, x 10.5-13.5; stop_post z 6.0-9.4; tongue contact z 7.8-9.4 (V6: edge contact at (13.47,23.81,7.8))",
+    "measurements.json housing-clear-until-stop min 0.2317 mm at -2.665 deg (rigid)",
+    "hand calc: M = 11 N x 1.85 mm = 20 N mm; phi = M L/(E I) = 20 x 9.25/(2500 x 0.84) = 0.088 rad; dy = phi x 1.85 = 0.16 mm"
+   ],
+   "proposed_change": "Make the stop bear in compression: either a stop post that rises from a rib running along the wall, or a gusset from the post back to the wall under the shelf. The 45 deg gusset proposed by MFG-ORIENT serves both purposes. Alternatively put the stop face on the inner wall itself.",
+   "required_test": "Hand calculation or FEA of stop deflection at a stated overload (at least 20 N thumb force at the face centre and at the far edge), added to the housing-clearance and stem-overtravel budget. Then a physical overload press test."
+  },
+  {
+   "id": "R2-M4-stop-vs-switch-travel",
+   "severity": "major",
+   "claim": "Maintained and corroborated. V3 measures about 0.8 mm of stem compression at the stop, and my 0.1 mm-step probe gave 0.9 mm. The stop is still placed relative to the housing, not to the switch total travel, and R2-M6 compliance adds to it.",
+   "evidence": [
+    "verification.json V3: stem overlap 3.207 mm3 at the stop, about 0.8 mm compression",
+    "round-1 probe: stem cleared only after 0.9 mm retraction at -2.665 deg"
+   ],
+   "proposed_change": "Add an assumed switch total-travel parameter. Place the stop so that worst-case stem travel (outer plunger corner + hinge play + stop compliance) is no more than total travel minus margin.",
+   "required_test": "A stem-depth check at the stop angle under the play envelope, compared with the stated total travel."
+  },
+  {
+   "id": "R2-M5-hinge-position-vs-pressability",
+   "severity": "major",
+   "claim": "Maintained. REQ, V5 and I independently derive the same factor of 21.5/r (1.5x at the face centre, about 3.6x at x=-6, over 10x at the hinge edge). Mechanism change I would accept: move the plunger and switch to the face centroid (x about 2) and keep the hinge. That gives a factor of 1.0 at the centroid, 0.54 at the far edge and 2.3 at x=-6, with about 0.47 mm of actuating travel at the centroid. The region x < -4 must then be declared a non-press zone. Alternatively, choose the direct translating candidate 59ae5a17 (factor about 1 everywhere), with a rail check against tilt. Moving the pivot further toward -X is not available: at y=25 the inner wall is at about x=-26 to -29, and moving the pivot inboard in Y makes the face slide in the window.",
+   "evidence": [
+    "requirements.json REQ-pressability: 1.5x centre, 3.6x x=-6, 10.8x edge",
+    "verification.json V5: same factors",
+    "recipe cavity section z 18: (-26.75, 24.68)"
+   ],
+   "proposed_change": "Plunger and switch at x about 2 (or the translating concept), a declared press zone, and a stated proxy: factor no more than 1.2 at the centroid, no more than 2 across the press zone, and stem operating travel reached at a centroid face travel of 0.6 mm or less.",
+   "required_test": "A computed force-factor and travel map over the face from the CAD, plus a physical comparison press test with the real switch at three positions."
+  },
+  {
+   "id": "R2-X3-confirm-pin-anisotropy-moot-with-dowel",
+   "severity": "minor",
+   "claim": "I confirm MFG-PIN-ANISOTROPY for the current printed pin, with a load estimate. Pressing near the hinge sends almost the full thumb force into the pin. With 20 N over the fixed-fixed 8.6 mm span, M is about FL/12 = 14 N mm, so sigma is about 18 MPa across the layer lines of a Ø2 mm PLA column. That is marginal. The finding becomes moot under the accepted dowel change (R2-X1), so I rate it minor rather than duplicate the blocker.",
+   "evidence": [
+    "manufacturing.json MFG-PIN-ANISOTROPY: free span z 9.7-18.3",
+    "hand calc: Z = pi d^3/32 = 0.785 mm3"
+   ],
+   "proposed_change": "Use a steel dowel, per R2-X1.",
+   "required_test": "None beyond R2-X1 once the dowel is adopted. If a printed pin is kept, a break test at 2x the stated overload."
+  },
+  {
+   "id": "R2-M7-stop-sweep-evidence-gap",
+   "severity": "minor",
+   "claim": "Downgraded to an evidence gap only. V6 resampled the nominal approach finely (0.118 mm at -2.4 deg, monotone, down to 0 at -2.665 deg), so in the nominal pose no premature contact exists. The delivered certificate still reports not_proven, and contact-pair assertion is missing (ASM4).",
+   "evidence": [
+    "verification.json V6 resampling",
+    "measurements.json overtravel-stop-engages continuous_distance_lower_bound_mm -0.078"
+   ],
+   "proposed_change": "Split the check into a clearance sweep up to 0.99 x the stop angle and a separate end-pose contact check that asserts the tongue-to-post contact pair.",
+   "required_test": "The split check with a positive certified lower bound."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "310545a72cb7d655e14ee55dfc228a1999757b7fd33dae1c8cce6b88c4cfe04f",
+   "kind": "image",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/assembly.png",
+   "observation": "Re-checked in round 2: sha256 unchanged. Assembly preview: ovoid blue stand-in shell with a curved orange rectangular skin-piece button flush in a window on the side wall; thin visible running gap along the lower edge; internal hinge/switch not visible from outside. Rest pose only, no pressed or outward pose shown."
+  },
+  {
+   "attachment_sha256": "72c2be9fa1560b14591bd4eb6aa4e50d942f0e2dc76f2e510c008e8e87a04bf0",
+   "kind": "json",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/build-record.json",
+   "observation": "Re-checked in round 2: sha256 unchanged. Build record for attempt 7d46af64...; carries the same recipe context (hinge at x=-12,y=25 about +Z, pin r1.0 in bore r1.3, stem_free_play 0.2, operating travel 0.5, stop_extra_travel 0.3, functions F1-F6). rotation_checks only sweep negative (press) angles; no positive/outward rotation check and no motion_checks."
+  },
+  {
+   "attachment_sha256": "bb5a6506f7224708bc248429c07f3b13ad0aa6ed7db385a836fe5da345d1ef18",
+   "kind": "image",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/button/iso.png",
+   "observation": "Re-checked in round 2: sha256 unchanged. Button ISO: curved skin piece with rear rib and arm to a bored hinge barrel at one end; plunger block and lower stop tongue at the other end. One rigid printed body; no spring feature, no outward-retention hook or lip visible."
+  },
+  {
+   "attachment_sha256": "d0c9c0eaa9e20461552c4b2c6b086a0b1121912c9e534deb1536822e1f6bf00b",
+   "kind": "json",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/measurements.json",
+   "observation": "Re-checked in round 2: sha256 unchanged. overall_verdict unknown, geometry checks pass. press-swept-clearance to -1.865 deg min shell 0.222 mm, housing 0.552 mm; overtravel-stop-engages end distance 0.0 at -2.665 deg but continuous_swept_motion not_proven (lower bound -0.078 mm); housing-clear-until-stop min 0.232 mm; rest plunger-stem 0.200 mm; barrel bore 2.6 mm. All rotation certificates exclude hinge play."
+  },
+  {
+   "attachment_sha256": "d2a8de1ef4c619b19ab874db3adc48e90518f40cf7799225ab14f754f0cbf833",
+   "kind": "image",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/shell/iso.png",
+   "observation": "Re-checked in round 2: sha256 unchanged. Shell ISO: side window cut through the wall with a vertical hinge pin and small mount tab visible at one window end and a lower ledge (stop shelf) along the window bottom; open bottom. No feature on the outer side of the button that could hold it in against outward motion is visible."
+  },
+  {
+   "attachment_sha256": "c1d58522c820403fb6bfa08f24bbc769a4b277476e814bb46e3033eec0fc4a58",
+   "kind": "image",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/switch_housing/iso.png",
+   "observation": "Re-checked in round 2: sha256 unchanged. Plain rectangular block (6x4x6 mm placeholder housing), no terminals or mounting features; confirms the switch is an unmeasured envelope."
+  },
+  {
+   "attachment_sha256": "b86a4169fec7e56e7af5756340b2d11bfe3a0a113dbdb26343bd08cacfdf7f2a",
+   "kind": "image",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/switch_stem/iso.png",
+   "observation": "Re-checked in round 2: sha256 unchanged. Plain rectangular block (2x1.1x2 mm placeholder stem) with no travel/overtravel limit or spring represented; it is a fixed rigid solid in all checks."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Real switch pretravel, total travel, force and click feel are unknown; the stop placement and force factors depend on placeholders.",
+  "The shelf and pin stress and deflection numbers are hand estimates with an assumed printed E of about 2500 MPa and assumed loads (11-20 N); no FEA or physical test was run.",
+  "The accepted change package (outer lip stop, separate return spring, dowel pin, plunger at the centroid, braced stop) has not been modelled; any of it may create new interferences or affect the insertion path.",
+  "The real mouse shell, PCB and existing button location are unknown (REQ); the hinge and plunger placement may not fit the real interior.",
+  "All my probes are rigid OCCT distance and Boolean queries at discrete poses from the same kernel as the original checks, not independent certificates."
+ ]
+}

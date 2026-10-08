@@ -1,0 +1,164 @@
+{
+ "schema_version": 1,
+ "subject_digest": "4a646ca790f037dc9f76bf4598caa593b96e924a73892d6a4a619965a2ef21f5",
+ "role": "mechanism",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (mechanism role, rev14 leaf)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "83682a39f2abe4cd310a61d66b4da8a4e73f72da52c799cd9d013a4c22d3b527",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/actuator_screw/iso.png",
+   "status": "viewed",
+   "observation": "Stepped cylinder: Ø2.0 x 4 mm thread body with a Ø1.0 x ~1 mm dog point, flat ends, no thread or hex socket modeled. Matches recipe nodes actuator_thread/actuator_point; it is the only part that transmits plunger force to the switch pin."
+  },
+  {
+   "attachment_sha256": "4def080e98067214e74d80f148bd875752ccd519e6db0cf08409fbd8705c4abc",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/assembly.png",
+   "status": "viewed",
+   "observation": "Assembly shows the stand-in shell with the green skin-piece button flush in its side window and the actuator access hole visible; leaf, root block and switch are hidden inside. Only the unloaded rest pose is rendered; no pressed or preloaded pose is shown."
+  },
+  {
+   "attachment_sha256": "ac68017959cb524da9cbc8b3d38614810b4ce0a71a7d2c85ba96c6df1bfdb631",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/build-record.json",
+   "status": "viewed",
+   "observation": "Build record repeats the recipe: leaf box 10 x 1 x 5 mm at x -19..-9, PRBM pivot (-17.5, 26.5), rotation checks only about +z through that pivot (press to -4.202 deg, rise to +0.3 deg), obstacles shell only, adjustment procedure that places the dog point between the switch release point and free position; no rest-stop, torsion or preload-equilibrium check is declared."
+  },
+  {
+   "attachment_sha256": "16830d3314cbb13941de01acf115b986686fe6c3c3757bf64565cbe18623cce3",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/button/iso.png",
+   "status": "viewed",
+   "observation": "Button is one body: curved skin piece, inner pad and spine blocks and a plunger block, with the Ø1.6 tap hole through the face. The face is about 24 x 8 mm and is carried only at one end by the 5 mm wide leaf (not visible in this view), so off-centre loads twist the leaf."
+  },
+  {
+   "attachment_sha256": "7d420ba7ee05cff21bfd17446c1fafa50932b6904fba141595dc6fe02ea5e9c1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/leaf_spring/iso.png",
+   "status": "viewed",
+   "observation": "Leaf is a plain rectangular block (10 x 5 x 1 mm, volume 50 mm3 per measurements) with sharp edges; no root or tip fillet exists in the part or, per the recipe, where it joins the root block (x=-19) and the pad (x=-9)."
+  },
+  {
+   "attachment_sha256": "f831b29f8abf6cdaab76cb383c7c2789cf3a5bf62645f58f3372e4a7c574c6ce",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/measurements.json",
+   "status": "viewed",
+   "observation": "All geometry checks pass; overall_verdict unknown. press-to-deepest lower bound 0.1716 mm vs 0.15 min (with 0.05 mm axis play), rise-clear-of-shell only to +0.3 deg. leaf-spring-beam: stiffness 2.125 N/mm (E 1.7 GPa flexural), deflection 0.623 mm, total 2.048 N, peak 15.9 MPa vs 23.5 allowed, nominal section only. actuator_screw-switch_pin distance 3.6e-15 (contact at rest)."
+  },
+  {
+   "attachment_sha256": "dee2acdb811d1dd7f8a40f6d5a74bcc101d4e9457e2b797a5c3dfbe5157207e5",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell shows the open side window with a uniform running gap rim; the leaf root block is inside and not visible. Nothing in the shell acts as an outward rest stop or an inward overtravel stop for the button."
+  },
+  {
+   "attachment_sha256": "7b7ff223cd76a231584532d3550c5add6ea3acfa2b6bc33c58be318ab63c7a92",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/switch_body/iso.png",
+   "status": "viewed",
+   "observation": "Switch body is a plain 12.7 x 6.65 x 5.8 mm box with no mounting holes, PCB or support; it floats in the assembly, so the reaction path for bottoming force (the only travel limit) ends in an unmodelled mount."
+  },
+  {
+   "attachment_sha256": "e4c7a64560fa88a5e94b3f031a7f4acdc7923efaddc91025cda54eeb35210709",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/switch_pin/iso.png",
+   "status": "viewed",
+   "observation": "Pin is a 1.2 x 0.4975 x 2.9 mm box. Its height (0.4975 mm above the body top) is cut off at the dog-point tip, while the zippy profile gives FP 7.35 max vs body 6.65 (0.70 mm), so the model shows the pin already depressed about 0.2 mm at rest without showing the preload it implies."
+  }
+ ],
+ "findings": [
+  {
+   "id": "B1-rest-preload-unreacted",
+   "severity": "blocking",
+   "claim": "The stated rest pose cannot exist once the switch is set by the stated procedure. The procedure (turn in until the switch operates, out until it releases, then 3 x 1/16 turn out) leaves the dog point 0.075-0.195 mm above the release point, which is still inside the switch pretravel. So the pin pushes outward on the button with at least the release force. In revision 14 the only thing reacting that force is the leaf. There is no rest screw or rest stop. The leaf is soft at the plunger: 0.40 N/mm by the recipe's own PRBM numbers and about 0.27 N/mm by linear beam theory with the load at the plunger. So the button rises out of the skin by about RF/k. Zippy S (RF >= 35 gf = 0.34 N): 0.85-1.28 mm at the plunger, 2.5-3.8 deg, about 1.4-2.1 mm proud at the far edge. Zippy L (21 gf): 0.51-0.77 mm, 1.5-2.3 deg. OMRON low force (5 gf): 0.36-0.54 deg. Every one of these is larger than the 0.3 deg that rise-clear-of-shell covers. The operate step itself needs about OF/k = 1.47/0.40 = 3.6 mm (about 10.8 deg) of outward travel. My probe shows the button touches the shell window edge at about 5 deg outward. So during adjustment the shell, not the leaf, reacts the switch, and the setting is made against an unintended contact. As a result the outer-form check, the rest clearance, no_operation_at_rest and the click angles were all evaluated at a pose (leaf unstressed, pin force zero) that the documented process does not produce. The click stroke from the real rest also includes this extra ~0.5-1.3 mm of soft travel.",
+   "evidence": [
+    "side_button_leaf_recipe.py: rest_window_mm = (3*0.025, MD + 4*0.025) above OP; switch_body placed so OP is 0.148 mm below the tip; switch_pin modeled only up to the tip (0.4975 mm) while zippy FP max - body = 7.35 - 6.65 = 0.70 mm.",
+    "switch_profiles.py: zippy release_force 35 gf min (L 21 gf), operating_force 150 gf max; omron release_force 20 gf min (low-force 5 gf).",
+    "measurements.json leaf-spring-beam: stiffness 2.125 N/mm at leaf tip; beam_force_ratio 0.4359 (8.5/19.5) -> plunger stiffness 2.125*0.4359^2 = 0.404 N/mm.",
+    "Own calculation (linear Euler-Bernoulli, E = 1.7 GPa as in _flexure_check, load 11 mm beyond the leaf tip at x=2): plunger compliance (L^3/3 + aL^2 + a^2 L)/EI = 3.73 mm/N -> 0.268 N/mm.",
+    "recipe rotation_checks: rise-clear-of-shell end_deg +0.3 (0.10 mm at the 19.5 mm plunger lever).",
+    "Own CadQuery probe on exported STEP (button + actuator_screw rotated about (-17.5, 26.5) +z vs shell): +1 deg 0.318 mm, +2 deg 0.239 mm, +3 deg 0.161 mm, +5 deg 0.013 mm, +8 deg overlap 0.19 mm3; contact near (-10.4, 31.25, 10.0), the near window edge.",
+    "design_basis assumption: \"Adjustment (switch fitted, output read): with the button at rest turn the actuator screw in until the switch operates, out until it releases, then 3 steps of 1/16 turn further out.\"",
+    "switch_fit_leaf no_operation_at_rest is a rigid-stack margin (0.025 mm) that assumes the button stays at the rest pose under pin force."
+   ],
+   "proposed_change": "Make the rest reference consistent with a leaf-only button. One option is a zero-preload rest: put the dog point above the switch free position. The setting procedure then holds the button flush with a gauge or fixture, turns in until the switch operates, and backs out by PT max plus a stated gap (zippy 0.62 + gap). Re-derive click_nominal and click_latest and the force basis from that stroke. The other option is an explicit outward rest stop on the shell (ledge against the pad or spine) with the leaf preloaded inward by more than the largest pin force at rest. Model that stop and keep the procedure. Either way, model the rest pin force explicitly and state the resulting protrusion. Do not leave the pin drawn as truncated at the tip.",
+   "required_test": "Add a rest-equilibrium check for every switch profile: u_rest = F_pin(rest) / k_plunger, with F_pin from RF min to OF max and k from both the PRBM and the beam-with-moment models. Require u_rest <= a stated tolerance, or a rest stop that a blocked rotation check proves engaged. Run outer-form, rest clearance and rise checks at the worst u_rest pose, not at +0.3 deg. Also simulate the operate step (u = OF/k) and show it does not drive the button into the shell. Physical test after printing: measure button protrusion and click travel after the documented procedure with each fitted switch."
+  },
+  {
+   "id": "M1-leaf-torsion-unchecked",
+   "severity": "major",
+   "claim": "The 5 x 1 mm leaf is the only guide for a face about 24 x 8 mm. Off-centre thumb loads twist it about its length axis (x), and that degree of freedom is not checked anywhere. The rotation checks model only rotation about +z with a 0.05 mm axis-play envelope. By my estimate a press of about 2 N (the recipe's own total press force) at the face edge z ~ 17-18 gives about 7-9 N mm of torque on the leaf and about 4.5-5.8 deg of twist. The inputs are: J = 0.291*5*1^3 = 1.455 mm4; G = E/(2(1+nu)) with E 1.7 GPa and an ASSUMED nu 0.38, so G is about 616 MPa; k_t = GJ/L is about 90 N mm/rad. My probe shows the running gap is used up at that twist: +/-2 deg leaves 0.28/0.22 mm, +4.6 deg leaves 0.134 mm (below the 0.15 mm motion minimum), and -4.6 deg overlaps the shell (0.007 mm3). An off-centre press can therefore rub or jam the face in the window. This is a guide-length or guide-width failure mode, not a pivot-play effect.",
+   "evidence": [
+    "recipe leaf node: box center (-14, 26.5, 13.5), size 10 x 1 x 5; window z 10..18, x -10..14.9.",
+    "recipe rotation_checks: axis_direction [0,0,1] only; _axis_offsets shifts the axis radially by 0.05 mm, no rotation about x or y.",
+    "Own CadQuery probe: button+screw rotated about the leaf axis (y=26.5, z=13.5, direction +x) vs shell: +2 deg 0.281 mm, -2 deg 0.217 mm, +4.6 deg 0.134 mm, -4.6 deg distance 0 / overlap 0.0072 mm3 near (4.5, 31.42, 9.59), +/-8 deg overlap.",
+    "Torsion estimate is my own hand calculation (rectangular-section J coefficient 0.291 for b/t=5; Poisson ratio ASSUMED); not FEA, not measured."
+   ],
+   "proposed_change": "Either widen or double the guide so the face is carried against twist. Options: a wider leaf, two leaves spaced in z, or a leaf plus a z-guide tab on the shell sliding with a stated gap. Or state and check the twist DOF explicitly, with the load points and force band that define it, and limit the face so that edge loads stay inside the gap.",
+   "required_test": "Add rotation checks about the leaf length axis (x through y=26.5, z=13.5) out to the twist computed for the band maximum force at the worst face corner. Combine them with the press sweep. Require >= 0.15 mm clearance, or a declared guide contact that is checked as blocking. Back the twist estimate with a beam or FEA calculation that cites its Poisson ratio and shear modulus source. Physical test: press each face corner and check for rubbing."
+  },
+  {
+   "id": "M2-leaf-root-stress-concentration",
+   "severity": "major",
+   "claim": "The static stress check passes on the nominal section only (15.9 MPa vs 23.5 MPa allowed). The leaf joins the root block at x=-19 and the pad at x=-9 with sharp 90 deg re-entrant corners on the y=27 face, and the root carries the peak bending moment. A stress concentration factor of about 2 is plausible for an FDM corner radius of about 0.2 mm on a 1 mm leaf (ASSUMED, chart-level estimate). That would put the root at about 32 MPa, above the stated allowance. The check scope does not mention stress concentration, so the \"pass\" reads stronger than the evidence. This is a fixable geometry defect on the single return element, whose fatigue strength is already UNKNOWN.",
+   "evidence": [
+    "side_button_leaf_recipe.py: root_box x -22..-19, y 26..40; leaf box x -19..-9, y 26..27; pad_box x -9..-6.5, y 26..40 -> sharp corners at (x=-19, y=27) and (x=-9, y=27); no fillet operation exists.",
+    "leaf_spring/iso.png: plain sharp-edged block.",
+    "measurements.json leaf-spring-beam: peak_mpa 15.88, allowed_mpa 23.5, scope \"Euler-Bernoulli cantilever ... rigid root ... No FEA\" (no Kt).",
+    "For context: with the load applied at the plunger (end moment included), my linear beam estimate of root stress at the same plunger travel is about 9.6 MPa nominal, so the reported 15.9 MPa nominal is conservative. The concentration factor is the open issue, not the nominal value."
+   ],
+   "proposed_change": "Add root and tip fillets (for example r >= 1 mm, i.e. r/t >= 1) at the leaf-root and leaf-pad joints. State a stress concentration factor in the flexure check, or say explicitly that the check covers only the nominal section.",
+   "required_test": "Re-run the flexure check with Kt from a cited chart for the modeled fillet radius (or a local FEA of the root), at the worst of: deepest press, and the outward rest/adjustment deflection from B1. Physical: cycle test of the printed leaf with fatigue reported as UNKNOWN until tested."
+  },
+  {
+   "id": "m1-prbm-envelope-wording",
+   "severity": "minor",
+   "claim": "The contract says the leaf-tip translation is \"covered only by the stated pivot-play envelope\" (0.05 mm). But the PRBM gamma 0.85 holds for a pure end force, and the button applies a large end moment: the plunger is 11 mm beyond the leaf tip and the face extends up to 23 mm beyond it. For the same plunger travel, linear beam theory gives a rotation of 4.63-5.01 deg and a tip translation of 0.47-0.54 mm, against PRBM 4.20 deg and 0.62 mm. The effective pivot sits about 4.5 mm from the root, not 1.5 mm. The two models differ by more than 0.05 mm at the far edge. My probe shows these beam-model end poses still clear the shell by 0.40 mm, so I found no clearance consequence. The envelope wording is still unsupported, and the plunger stiffness used for the force band differs by about 1.5x between the models (0.40 vs 0.27 N/mm).",
+   "evidence": [
+    "cadmcp_brain/studio/recipe.py: PRBM_GAMMA = .85 \"cantilever with end force\"; _flexure_check uses 3EI/a^3 with load_at = beam length (tip).",
+    "Own CadQuery probe: beam-model rigid poses (rotation about leaf tip (-9, 26.5) plus tip translation) for load 0, 11 and 19 mm beyond the tip, scaled to the deepest plunger travel: all 0.400 mm from the shell.",
+    "measurements.json press-to-deepest-clear-of-shell: lower bound 0.1716 mm vs 0.15 min."
+   ],
+   "proposed_change": "Reword the approximation statement: the pivot location depends on the load point. Add the beam-model end poses (load at the leaf tip, at the plunger and at the far face) as explicit rotation-plus-translation checks, or widen the play envelope to the computed model discrepancy. Report the force band under both stiffness models.",
+   "required_test": "Pose checks at the beam-model kinematics for each load point, with clearance >= 0.15 mm, and a force-band check reported for the PRBM and beam-with-moment stiffnesses."
+  },
+  {
+   "id": "m2-overtravel-path-and-F5",
+   "severity": "minor",
+   "claim": "The only travel limit is the switch body: the pin bottoms with the dog point at the body top. The switch placeholder has no mount, so the bottoming reaction path (thumb, face, leaf/button, screw, pin, switch body, PCB, shell) ends in a floating box, and the deepest-pose location relative to the shell is not tied to anything. The function decomposition still defines F5 as \"Motion stops before the switch housing is loaded\". The chosen option S_switch does the opposite and rests on the assumption \"The switch tolerates bottoming at thumb force\", whose rating is UNKNOWN. This is declared in unverified_requirements, so it is honest. But the F5 behaviour text was not updated, and nothing backs up the stop if the switch or its mount is absent or compliant: the button would then travel until the plunger or face meets the shell or root.",
+   "evidence": [
+    "FLOW_RESULT.json 3_function_decomposition F5_limit_overtravel behavior: \"Motion stops before the switch housing is loaded.\"",
+    "FLOW_RESULT.json chosen candidate a43a0269...: F5_limit_overtravel -> S_switch, assumption \"The switch tolerates bottoming at thumb force.\"",
+    "recipe: switch_body is a free box; no PCB/mount node; rotation_checks obstacles [\"shell\"] only.",
+    "unverified_requirements: \"Switch bottoming force is carried by the switch (no hard stop); its maximum rated force is not in the registered datasheets (UNKNOWN).\""
+   ],
+   "proposed_change": "Update the F5 behaviour to match S_switch, or add a secondary overtravel stop (for example a plunger or pad ledge on the shell or root block that engages just past the deepest registered switch pose). Add a placeholder switch mount (PCB plane or bosses) tied to the shell, with its position and stiffness labelled UNKNOWN.",
+   "required_test": "If a backup stop is added: a blocked rotation check showing it engages after the deepest switch pose and before any other contact. Either way: a check that the switch mount placeholder is fixed to the shell and that the dog point lands on the pin within the pin width under the worst twist from M1."
+  },
+  {
+   "id": "m3-press-point-assumed",
+   "severity": "minor",
+   "claim": "The force band is evaluated at the plunger, and ratio_basis says \"the plunger (switch and press point) at 19.50 mm\". So the thumb press point is quietly assumed to be at the plunger (x=2). The face spans 7.5-31.5 mm from the pivot. A press near the near edge needs about 19.5/7.5 = 2.6x the plunger force (about 5.3 N for the computed 2.05 N), which is outside the 0.3-3 N band. A press at the far edge needs about 0.62x. The press point is a test-subject assumption that should be labelled.",
+   "evidence": [
+    "measurements.json leaf-spring-beam force.ratio_basis and total_n 2.048 N.",
+    "recipe window x -10..14.9; pivot x -17.5."
+   ],
+   "proposed_change": "Label the press point as ASSUMED, and report the force at the face as a range over the face (near edge, centre, far edge), or define the band at a named thumb point.",
+   "required_test": "Force-band check repeated for at least three face press points, with each result reported against the band."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Real switch part number, its force-travel curve inside pretravel (not given by the registered datasheets), bottoming force rating, and mount/PCB position and stiffness are UNKNOWN; huano_mouse_generic and kailh_gm20 remain unverified.",
+  "What \"easier to press\" means to the owner (force, travel, press location, click feel) is an owner question; the 0.3-3 N band is a test-subject assumption.",
+  "Leaf creep under any rest preload, fatigue of printed PETG, and print-in-place gap/leaf thickness depend on material and printer and need physical tests.",
+  "My torsion and beam-with-moment numbers are hand calculations with an ASSUMED Poisson ratio and linear small-deflection theory; my clearance probes are sampled rigid end poses on the exported STEP, not swept certificates and not FEA.",
+  "Real shell geometry is a stand-in loft; the window-edge contact found at about 5 deg outward depends on that stand-in.",
+  "Thumb force direction is not only normal to the face; sliding or squeezing loads along x (leaf axial) and their effect were not assessed beyond noting the leaf is axially stiff."
+ ]
+}

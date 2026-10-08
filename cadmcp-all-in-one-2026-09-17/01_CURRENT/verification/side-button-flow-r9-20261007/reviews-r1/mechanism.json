@@ -1,0 +1,187 @@
+{
+ "schema_version": 1,
+ "subject_digest": "2f33ec505f74e846c7798a93dc6981a1efd15336c3c5b8114b1c75b9bae940e6",
+ "role": "mechanism",
+ "reviewer_label": "Claude subagent (mechanism role, rev9)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "MECH9-1-no-click-recovery-leaves-checked-stroke",
+   "severity": "major",
+   "claim": "The new no-click recovery step in the Adjustment text lets the hard stop be backed out past the stroke that was checked, as far as the placeholder housing, which stands for stem bottoming. The text says to back the stop screw out 1/8 turn (0.05 mm) at a time, up to 0.15 mm in total, 'keeping the housing margin'. The stop contact is about 16.7 mm from the hinge, so each 0.05 mm of screw travel adds about 0.17 deg of stroke. The full 0.15 mm adds 0.51 deg. The recorded housing check (with hinge play, min 0.05 mm) runs only to -3.2034 deg. From the nominal 1.53 mm gauge setting, 0.15 mm of back-out puts the stop at about -3.53 deg, where the plunger is 0.012 mm from the housing at the nominal axis and touches it at the hinge-play offsets. From the accepted 1.58 mm setting it reaches about -3.63 deg, and the plunger overlaps the housing by 0.019 mm3. At that point the switch, not the screw, ends the stroke. That breaks F5, and the stop load of roughly 1.7-1.9 times thumb force goes into the switch. Within the checked range, only one 1/8-turn step from the nominal setting keeps at least 0.05 mm (0.086 mm with play). From 1.58 mm, even one step gives only 0.054 mm.",
+   "evidence": [
+    "side_button_recipe_v9 Adjustment assumption: 'back the stop screw out 1/8 turn (about 0.05 mm) at a time, at most 0.15 mm, keeping the housing margin'.",
+    "measurements.json housing-clear-past-stop: end -3.2034 deg, continuous lower bound 0.0532 mm. No check covers deeper angles.",
+    "Probe p3.py (exported STEP, stop_screw translated -x, bisected first contact at the nominal axis): back-out 0/0.05/0.10/0.15 mm puts contact at -3.040/-3.210/-3.379/-3.549 deg. That is +0.170 deg per 0.05 mm.",
+    "Probe p3.py: from gauge 1.53 (-3.024 deg) plus 0.15 mm, -3.533 deg: housing distance 0.012 nominal, 0.000 minimum over the 9 hinge-play offsets.",
+    "Probe p3.py: from gauge 1.58 (-3.123 deg) plus 0.15 mm, -3.632 deg: overlap with switch_housing 0.0187 mm3.",
+    "Probe p3.py: the placeholder housing is first touched at -3.570 deg at the nominal axis (front-edge travel about 1.81 mm).",
+    "Probe p3.py: housing minimum with play is 0.172/0.140/0.109 mm at gauge 1.48/1.53/1.58. After one 0.05 mm step it is 0.086 (from 1.53) and 0.054 (from 1.58)."
+   ],
+   "proposed_change": "Limit the recovery to what is checked. For example, allow at most one 1/8-turn step (0.05 mm), and only from a gauge reading of 1.53 mm or less. Beyond that, the action should be 'stop and re-check the switch position or switch choice', not more back-out. Alternatively, keep a larger allowance, but then extend housing-clear-past-stop to the deepest allowed recovery angle (gauge 1.58 plus allowance plus play, with min_mm 0.05). Keep the stop contact, the housing placeholder and every threshold unchanged.",
+   "required_test": "A rotation check with hinge play against switch_housing, ending at the deepest stop angle the Adjustment text allows (upper gauge limit plus the full permitted back-out). It should be clear with min_mm 0.05. Physically: after the recovery step, confirm with a feeler or a dial on the face that the stop screw, not the switch, ends the stroke."
+  },
+  {
+   "id": "MECH9-2-spring-diameter-contradiction",
+   "severity": "major",
+   "claim": "The F4 fix in revision 9 (a Ø1.2 maximum spring OD, giving 0.2 mm radial clearance in the as-printed Ø1.6 bore) contradicts the contract's own design basis, which still says 'Return spring: Ø1.5 compression spring'. side_button_recipe_v9 changes spring_radius_mm and the selection line, but it never replaces that inherited v6 assumption. A builder or owner who buys from the design basis gets the revision-8 condition again: 0.05 mm radial clearance in a horizontally printed, as-printed tap hole. That is the drag or jam failure that MECH8-2 rated major, where the button may not return to the rest screw.",
+   "evidence": [
+    "build-record.json and packet recipe.design_basis.assumptions[1]: 'Return spring: Ø1.5 compression spring, rate and preload not selected (placeholder envelope).'",
+    "packet recipe.unverified_requirements: 'Return spring selection: outside diameter at most 1.2 mm (0.2 mm radial clearance in the printed 1.6 mm bore)'.",
+    "return_spring STEP bounding box y 11.8..13.0, z 11.3..12.5, which is Ø1.2. P9 spring_radius_mm 0.6.",
+    "side_button_recipe_v9 filters design_basis assumptions only for strings that start with 'Adjustment', so the v6 'Return spring: Ø1.5' line is carried through unchanged."
+   ],
+   "proposed_change": "Replace the design-basis spring assumption with the revision-9 value. For example: 'Return spring: compression spring, OD at most 1.2 mm (Ø1.2 envelope), rate and preload not selected.' Keep one spring diameter throughout the contract. Do not change the bore or the spring axis.",
+   "required_test": "A text consistency check: every spring diameter in design_basis, unverified_requirements and the outputs manufacturing_process agrees with spring_radius_mm x 2. Physically: a Ø1.2 spring cycled in a printed coupon bore at the stop length returns the web without sticking."
+  },
+  {
+   "id": "MECH9-3-stop-compliance-eats-housing-margin",
+   "severity": "minor",
+   "claim": "The housing margin past the stop is proven only for rigid parts, and it is small compared with the elastic travel the stop path will see. With hinge play, I measure 0.14 mm at the nominal gauge setting and 0.11 mm at the 1.58 mm accept limit. The stop reaction is about 1.7 times the thumb force at the front edge (lever 29/16.7). The stop web is a printed 5 mm (x) by 7.6 mm (z) cantilever about 13-14 mm long from the barrel/link junction, loaded at y of about 8.3-8.8. At 10 N of thumb force (17 N at the stop), PLA with E of about 2.5 GPa deflects about 0.07 mm at the contact. That carries the plunger about 0.07 mm further, before any compliance of the skin, rib, link, printed thread or jam-nut seat. A firm squeeze can therefore use up half or more of the margin to switch bottoming. The contract states that this is unanalysed ('no FEA'), but no number or test bounds it.",
+   "evidence": [
+    "Probe p3.py: housing minimum over 9 play offsets 0.140 mm at -3.024 deg (gauge 1.53) and 0.109 mm at -3.123 deg (gauge 1.58).",
+    "Web geometry from the recipe: stop_arm_box x -17.5..-12.5, y 8..25, z 10..17.6. The link joins only at y 20 or more, and the stop contact is at y 8.3 (model rim).",
+    "Hand estimate: delta = F L^3/(3EI) = 17 x 13.5^3/(3 x 2500 x 79.2) = about 0.07 mm. Plunger lever 17 / stop lever 16.7 is about 1.",
+    "unverified_requirements: 'Skin and stiffener bending under a firm press beyond the hard stop is not analysed (no FEA).'"
+   ],
+   "proposed_change": "Bound it, or give margin. Either state a design press force (for example 10 N at the front edge) and add an elastic allowance to the housing margin, or stiffen the stop path, for example by extending the link or rib down the web, or by moving the stop contact closer to the web root. Leave the protected parts and the stop contact angle unchanged.",
+   "required_test": "On the printed prototype, measure plunger or face travel with a dial gauge at 0, 5, 10 and 20 N applied at the front edge with the stop engaged. Report the elastic overtravel beyond the stop and compare it with the 0.11-0.14 mm rigid housing margin."
+  },
+  {
+   "id": "MECH9-4-stop-contact-and-tip-model-carryover",
+   "severity": "minor",
+   "claim": "MECH8-3 is unchanged in revision 9. The stop is still a modeled sharp Ø2 rim meeting the 3 deg-rotated square web about 0.17 mm from the web end (contact at y 8.3, rotated web end at about y 8.13). The bought ISO 4026 flat point (flat about Ø1 with a chamfer) makes an edge contact further in, at about y 8.8. The gauge setting absorbs the change in angle, but nothing addresses indentation or creep of an edge contact on printed plastic under repeated stop loads, which deepens the stroke over use. MECH9-1 and MECH9-3 show the margin to bottoming is small. The stop screw is now modeled at its bought 6.0 mm length (fixed). Its tail stands 0.10 mm out of the nut, so the chamfered tail end gives only partial thread engagement in the jam nut.",
+   "evidence": [
+    "stop_screw STEP x -24.39..-18.39 with flat Ø2 ends; stop_nut x -24.29..-22.69.",
+    "Probe p3.py: first contact at -3.040 deg at the nominal axis. The model rim is at y 8.3 and the web end at y 8.0 before rotation.",
+    "button STEP: the stop web end is square with no pad (button/iso.png)."
+   ],
+   "proposed_change": "Give the contact a real flat area away from the web end, for example by tilting the stop hole about Z by the stop angle, extending the web end, or pressing a small steel pad into the web. Model the tip as the purchased flat point, or consider an M2 x 8 screw for full nut engagement.",
+   "required_test": "Cycle test: 10,000 presses at a stated force on a printed prototype, measuring the stop depth (front-edge travel) before and after. The drift should stay below about 0.05 mm."
+  },
+  {
+   "id": "MECH9-5-spring-screw-must-stay-flush-for-nut",
+   "severity": "minor",
+   "claim": "The stop-nut fix works against the shell: the nut now turns freely on its seat. But the nut's corner sweep (radius 2.83 mm about y 9.3) reaches y 12.13, which overlaps the face of the spring-closing screw (y 11.4..13.4). The modeled spring screw is exactly flush, so the two do not interfere. If the spring screw is backed out to reduce preload, which the contract says it sets, then once it stands proud of the block face the stop nut cannot be turned through about 45 deg, and the screw cannot be adjusted past a nut corner. The nut-turn check lists only the shell as an obstacle, so it cannot see this.",
+   "evidence": [
+    "Probe p2.py: stop_nut spun 0-90 deg in 5 deg steps at back-off 0, 0.2 and 0.4 mm against the shell: overlap 0 at every step (MECH8-1 fixed).",
+    "Probe p2.py: spring_screw translated 0.3 mm proud (-x) with stop_nut at 45 deg: overlap 0.132 mm3.",
+    "measurements.json overlap-spring_screw-stop_nut distance 0.100 mm. stop_nut-turns-on-seat obstacles: ['shell'] only."
+   ],
+   "proposed_change": "State that the spring screw stays at or below the block face (preload is set only by screwing in, with a limited preload range), or move the spring axis up or out of the nut sweep. Add spring_screw to the stop_nut-turns-on-seat obstacles.",
+   "required_test": "Rerun the nut-turn check with spring_screw included, at the shallowest spring-screw setting the contract allows."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "dbae29691a1bc803922bd760111af74f169c8a53a5fff3f230d96e6bb6036995",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/assembly.png",
+   "status": "viewed",
+   "observation": "Assembled stand-in shell with the orange button face set flush in the side window and a thin running gap on all four sides. The view shows no internal stop, spring or nut, so this image says nothing about the mechanism."
+  },
+  {
+   "attachment_sha256": "8a1187a0a03fa033c291bbf07889753aa35c4b071388ffd4c12a02274ebc9a3e",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/build-record.json",
+   "status": "viewed",
+   "observation": "Subject digest 2f33ec50... matches. The recipe context still lists the design_basis assumption 'Return spring: Ø1.5 compression spring', but unverified_requirements says 'outside diameter at most 1.2 mm' and the model spring is Ø1.2 (y 11.8..13.0)."
+  },
+  {
+   "attachment_sha256": "c6c7daf38f77bc63a78477fc327505450e70f448c82952d0f1f4102b7aed74a7",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/button/iso.png",
+   "status": "viewed",
+   "observation": "One-piece button: curved skin piece, rear rib, link plate, bored barrel at the hinge end and the full-height stop web, all visible. The web's square end shows no relief or pad at the stop-screw contact."
+  },
+  {
+   "attachment_sha256": "7a27aec709ac4d6cb724dc8962e62653c8dedb013c5ec0f561af1d98b96edf29",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 cylinder (STEP z 4.8..19.6) with square ends. The dowel is modeled with no chamfer or lead-in."
+  },
+  {
+   "attachment_sha256": "08a5e30f4e79555ef2fa74ec190a9fc8b4b84fd714a536f48d84b524b23d07d2",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/measurements.json",
+   "status": "viewed",
+   "observation": "105 checks, all pass. The new stop_nut and rest_nut turn-on-seat checks use 3 samples (0/45/90 deg) and are not_proven continuously. housing-clear-past-stop has a lower bound of 0.0532 mm at -3.2034 deg. The stop-screw-reached end distance is 0.0020 mm at -3.0333 deg. spring_screw to stop_nut distance is 0.100 mm."
+  },
+  {
+   "attachment_sha256": "5ea8ab38ef850bfa8b90f97851242fb569f79326219d3838925a9bfd2ab89f93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/rest_nut/iso.png",
+   "status": "viewed",
+   "observation": "Square nut 4 x 4 x 1.6 mm with a plain Ø1.6 minor bore (thread not modeled). In the STEP it lies at x -10.6..-9.0, seated on the outward-block face."
+  },
+  {
+   "attachment_sha256": "dad9e60ede08194c8bdf93e104ed3ef906d27da262e822ebcd7179c8fe5bbaac",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/rest_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 x 4.0 cylinder with flat ends. The socket and the ISO 4026 flat point with its chamfer are not modeled. The STEP tip is at x -12.5, touching the web +x face at rest."
+  },
+  {
+   "attachment_sha256": "aa216734152eaf9716179d5bf387c18ef20a3fe7445ac7a4dbe04370e1623484",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Solid cylinder envelope Ø1.2 x 3.69 mm (STEP x -21.19..-17.50). The spring is not a coil, and its free end bears on the flat web face with no seat."
+  },
+  {
+   "attachment_sha256": "53c4315aa20068facd0ed3a3a584209938c8fc4378a1817c990a4f1cd8b22649",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell with the side window cut out. Through the opening, part of the internal tab/block structure is visible. The trimmed lower-tab end under the stop nut cannot be judged from this view, so I checked it with a STEP probe."
+  },
+  {
+   "attachment_sha256": "cae67ebfbebb02e1c098f2aff67635f7ec2f88e241bd7e04c24f41ef9f4c56d1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/spring_screw/iso.png",
+   "status": "viewed",
+   "observation": "Short Ø2 x 1.5 cylinder. In the STEP (x -22.69..-21.19, y 11.4..13.4) it is exactly flush with the inward-block outer face, 0.1 mm beside the stop nut flat."
+  },
+  {
+   "attachment_sha256": "96d45587337c023e156725d2ddbed206300fa16012b17a241184437ea0fb10b8",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/stop_nut/iso.png",
+   "status": "viewed",
+   "observation": "Square nut 4 x 4 x 1.6 mm with a plain bore. In the STEP it lies at x -24.29..-22.69 with its flats level; its corner sweep radius is 2.83 mm about y 9.3, z 11.9."
+  },
+  {
+   "attachment_sha256": "4d0eebbce260478b1d8e92acd60d3f7e5627cc2543440a24b416ba4085455968",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/stop_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 x 6.0 cylinder, now at the bought M2 x 6 length (STEP x -24.39..-18.39), with its tail 0.10 mm outside the nut. The tip is still a sharp Ø2 rim, not the purchased flat point."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Placeholder box 6 x 4 x 8 mm (STEP x -1..5, y 18.85..22.85). Its top face is at the assumed stem bottoming depth, 1.15 mm below the plunger tip at rest."
+  },
+  {
+   "attachment_sha256": "1d4f98e6ffd629c862bfd1c63862d273d24e6f603569dd8dc6bc246eef48ff93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Placeholder stem box 2 x 0.95 x 4 mm (STEP y 22.85..23.8), 0.2 mm below the plunger at rest. It is a placeholder, not a real switch."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Revision-8 major MECH8-1 (stop jam nut could not turn) is fixed in geometry. tab_low now starts at the block_in face, x -22.69, and my 5 deg spin probe at 0, 0.2 and 0.4 mm back-off shows zero overlap with the shell. Jam-nut clamp retention on a printed face (creep, loosening) is not qualified.",
+  "Revision-8 major MECH8-2 (spring in a 0.05 mm clearance) is fixed in the model: a Ø1.2 envelope in a Ø1.6 bore. Its effect depends on correcting the contract text (MECH9-2). The spring rate, preload, solid length below about 3.02 mm and buckling over the 1.19 mm unguided span to the web are not selected or verified.",
+  "Real switch: operating point, total travel, stem position relative to the hinge and actuation force are placeholders. At the lower gauge limit (1.48 mm) with the stem at -0.15 mm, the push past the 0.50 mm operating point is only about 0.02 mm (rigid, at plunger centre). The owner must confirm the switch.",
+  "The real shell and PCB were not measured. Only the owner can confirm what 'easier to press' means (force, travel, click feel) and whether the 0.4 mm running gap and about 0.1 mm proud face are acceptable.",
+  "Gauge reading versus modeled travel: the gauge reads normal to the skin at the front edge, while the model uses 29 x sin(angle). The small difference is not checked.",
+  "Self-tapped M2 threads in printed blocks: torque, wear and the rest-screw engagement of only 1.4 mm (block_out x -12.0..-10.6) are not qualified physically.",
+  "All checks are rigid and sampled. Hinge pin cocking about X, friction, and wear of the dowel in the printed bore are not covered."
+ ]
+}

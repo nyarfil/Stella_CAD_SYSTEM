@@ -1,0 +1,208 @@
+{
+ "schema_version": 1,
+ "subject_digest": "2977ef89492e90ae71cfc7c406d751e41de4e622452f5937e98a504461370f1c",
+ "role": "assembly",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (assembly role, rev16 parallel)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "A1-redundant-y-datum-no-preload",
+   "severity": "major",
+   "claim": "The carrier's Y position is set twice, both at nominal zero: (1) the two pins pass through 0.03 mm-interference holes in the block into the shell posts, which fixes the block in Y and Z; (2) the stop tab touches the lug face at y 26.5 with zero designed gap and no preload. The face position at rest therefore depends on the FDM position error between the block holes and the post holes, not on the lug. If the block ends up shifted -Y, the tab leaves the lug and the face sits below flush, held only by the leaves. In that case F2 ('hold it flush at rest against the lug') and the 'rest-outward-blocked-by-lug' check say nothing about the built part. If the block ends up shifted +Y, the leaves are preloaded by an uncontrolled amount. The stated assembly order makes this worse: 'carrier until the tab meets the lug, then pins' means the pins must force the block onto the post-hole axis after the lug has already set its position. This is the revision-15 finding A2(b) (two zero-gap Y stops on one carrier), and it is not resolved in revision 16.",
+   "evidence": [
+    "recipe stop_tab: 'its top meets the lug bottom at rest'; rest-outward-blocked-by-lug samples: distance 0.0 at t=0 and overlap 0.66 mm3 at t=0.33 (no preload)",
+    "press_fits pin-1/2-in-block: 'ASSUMED 0.03 mm radial interference through the block (locates the carrier, no play)'",
+    "design_basis assumption: 'carrier in ... until the tab meets the lug ...; then both pins pressed in along -X through the block into the posts'",
+    "No tolerance budget or offset case in the recipe; all checks are at nominal",
+    "r15 reviews-r1/assembly.json A2-redundant-zero-datums-no-tolerance-budget (b)"
+   ],
+   "proposed_change": "Choose one rest datum. Recommended: keep the lug as the face datum and design a nominal preload, for example the lug 0.1-0.3 mm into the tab path with the block holes at nominal. Size the preload above the expected hole-position error, declare it as a checked overlap or preload, and include it in the leaf stress and force figures. Otherwise give the tab a designed gap and say that the pins set flushness. Either way, state which datum sets flushness and add a tolerance stack for the block-hole to post-hole position.",
+   "required_test": "Rebuild with the block holes offset by -0.15 and +0.15 mm in Y relative to the post holes. Show that the tab still bears on the lug with positive preload in both cases, and that leaf stress and press force stay inside the stated band. Physical check: print the carrier and shell and measure the face flushness and the tab-lug contact on several builds."
+  },
+  {
+   "id": "A2-pin-head-clashes-root-fillet",
+   "severity": "major",
+   "claim": "Both pin heads (r 1.6 at x -31 to -30.2) overlap the R1 root fillets of the block, the concave fillets at the leaf roots. The overlap is 0.0040 mm3 per pin, so the heads cannot seat flat on the block face. They either stand proud or bear on the fillet at the leaf root, the most highly stressed point of each leaf. The checks did not catch this because the pin-in-block declared press-fit band (0.52-0.97 mm3) absorbs the extra volume. A head/fillet clash and a shank interference cannot be told apart from one summed overlap.",
+   "evidence": [
+    "Reviewer probe on carrier_block/model.step: head cylinder (r1.6, x -31..-30.2) intersect carrier_block = 0.00401 mm3 for pin 1 (y15, z10.5) and pin 2 (y17.7, z16.5)",
+    "Pin-in-block measured overlap 0.74669 mm3 vs pure shank ring pi*(1.0^2-0.97^2)*4.0 = 0.74267 mm3; difference 0.0040 mm3",
+    "Geometry: head reaches y 13.4 (pin 1). Fillet A material at x -31..-30.95 reaches y 13.39-13.7. Pin 2 head reaches y 19.3 into fillet B (y 19.0-20.0)."
+   ],
+   "proposed_change": "Clear the heads from the fillets: reduce the head radius to about 1.2 mm, move the pins away from the leaf roots, or relieve the fillet locally (relieving the fillet would weaken the leaf root). Declare the shank-in-block fit and the head-on-block seat separately, so that any head overlap fails a zero-overlap check.",
+   "required_test": "Add separate checks for pin head vs carrier_block (overlap 0, contact allowed) and for shank vs block hole (ring band). Rerun them and confirm the head-to-fillet overlap is 0 mm3."
+  },
+  {
+   "id": "A3-insert-selection-procedure-not-executable",
+   "severity": "major",
+   "claim": "The rest-gap adjustment says to fit the longest insert from a 0.05 mm series that does not operate the switch at rest. That needs the switch installed to judge each trial. However, the blind insert hole opens toward -Y, directly at the switch: with the switch in place the insert cannot be inserted or withdrawn. The stated order also puts the carrier in before the switch/PCB. The insert is a 0.05 mm radial-interference press fit in a blind hole and has no extraction feature. Each trial would mean removing the switch/PCB and pulling a press-fitted insert, and repeated insertion degrades the ABS fit. The contract describes no executable sequence (when the insert is pressed, how the trial is judged, how it is removed). The 0.05 mm rest gap is shown only at nominal in CAD.",
+   "evidence": [
+    "Reviewer probe: insert translated -0.5 mm in Y overlaps switch_pin by 1.01 mm3; at -1.0 mm it overlaps switch_body by 0.79 mm3. The insert (y 22.8-28.0) cannot leave its hole with the switch in place.",
+    "insert_hole: origin y 23.99, axis +Y, depth 4.01 (blind, opening toward -Y)",
+    "Assumption: 'Rest gap: inserts ... the longest that does not operate the switch at rest is fitted'; 'carrier ... before the switch/PCB'",
+    "press_fits insert-in-plunger: ASSUMED 0.05 mm radial interference; overlap 1.225 mm3"
+   ],
+   "proposed_change": "Write an assembly procedure that can actually be carried out. For example: (a) measure the installed plunger-to-switch distance with the PCB fitted, using a depth gauge through an access path, then select and press a single insert before the final PCB install; or (b) make the insert slide-fit with a positive retention feature and give it an extraction feature, so trials are reversible; or (c) put the adjustment on the face side. State the order (carrier, pins, insert selection/press, switch/PCB, verification) and how 'does not operate at rest' is judged.",
+   "required_test": "Add a motion check for the insert's insertion and removal path with the switch_body and switch_pin present in the declared order. Physical test: run the selection procedure on a build and record the resulting rest gap and the actuation state at rest."
+  },
+  {
+   "id": "A4-pin-press-access-and-reaction-undefined",
+   "severity": "minor",
+   "claim": "The pin insertion checks move a bare pin 8 mm along -X from a start pose already inside the 7.3 mm-wide slot between the leaves. They do not show how the pin reaches that pose, where the pressing tool goes, or what reacts the press force. On both pin axes the pad (x -9 to -6.5, z 10.5-17.5), the face and the shell block any straight push from outside the carrier. Access is only through the open bottom into the leaf gap, 0.7 mm from each leaf. The press force for 0.05 mm radial interference over 3 mm plus 0.03 mm over 4 mm in printed ABS is not estimated, and neither is the load the tool puts on the leaves or pad if it braces against them.",
+   "evidence": [
+    "pin-1/2-insertion: start_translation +8 mm X; obstacles leaf_a, leaf_b and button only; leaf distance constant 0.7 mm",
+    "pin axes y15/z10.5 and y17.7/z16.5 intersect the pad_box z range 10.5-17.5 at x -9..-6.5",
+    "No tool envelope, jig or press-force estimate in the recipe or flow record"
+   ],
+   "proposed_change": "Define the pressing method: a jig or tool envelope entering through the open rim, the reaction path (for example from the pin head onto a shell-side anvil, not the leaves), and an estimated press force. Add a tool-envelope motion check against the leaves, button and shell. State the disassembly path or declare the joint permanent.",
+   "required_test": "Add a motion check of the tool envelope plus pin from outside the open rim to the seated pose. Physical test: press-in force and leaf damage on a printed carrier."
+  },
+  {
+   "id": "A5-pin-tip-line-on-line-with-hole-bottom",
+   "severity": "minor",
+   "claim": "The pin tip (x -38.0) coincides exactly with the blind post-hole bottom (x -38.0). At the same time the head seats on the block face (x -31) and the block bears on the post ends (x -35). That is three X stops at nominal zero. If the printed hole is short or has debris, the head stands off and the block is not clamped against the post ends. This is the revision-15 finding A2(a), and it is not resolved.",
+   "evidence": [
+    "post_N_hole origin x -38.0, height 3.01 (to -34.99); pin_N_shank origin x -38.0, length 7.0",
+    "Reviewer probe: pin and shell overlap spans x -38.0 to -35.0; shell material is present immediately beyond the tip (x -38.2 to -38.0)",
+    "overlap-shell-carrier_block distance 0.0 (block -X face on post ends)"
+   ],
+   "proposed_change": "Make the shank 0.3-0.5 mm shorter than the hole depth (or deepen the hole), so the head-on-block and block-on-post stops are the only X datums.",
+   "required_test": "Static check that the pin-tip to hole-bottom gap is at least 0.3 mm, with the head in contact with the block face."
+  },
+  {
+   "id": "A6-carrier-path-zero-clearance-and-partial",
+   "severity": "minor",
+   "claim": "The carrier-insertion check passes with distance 0.000 to the shell at every sample: the block's -X face slides on the post-end plane at x -35. Its continuous bound is -0.75 mm (not_proven). It covers only the last 6 mm of +Y travel, not the entry from the open rim. The verification plan calls this path 'clear of the shell posts', which overstates a zero-clearance sliding contact. A reviewer probe found the vertical entry also slides on the post ends (distance 0 from z -6 up). A 0.2 mm -X misplacement during that entry overlaps the posts by 1.09 mm3.",
+   "evidence": [
+    "measurements carrier-insertion samples: shell 0.0 at t = 0, 0.25, 0.5, 0.75, 1.0; continuous_distance_lower_bound_mm -0.7475; min_mm 0.0",
+    "Reviewer probe: carrier at y -6, z -6/-3: carrier_block distance 0, overlap 0. Block shifted -0.2 mm in X: overlap 1.0859 mm3 with the shell posts.",
+    "verification_plan: 'Carrier insertion path (+Y) clear of the shell posts and lug'"
+   ],
+   "proposed_change": "Either state that the block slides on the post-end datum plane (an intended guide) and word the plan that way, or give a small X clearance during insertion with a final seating move. Extend the path check to start outside the open rim and raise samples until the continuous bound is proven.",
+   "required_test": "Carrier insertion check from z < 0 through the rim to the seated pose with continuous_swept_motion proven at the stated min_mm."
+  },
+  {
+   "id": "A7-edge-offset-parameter-inconsistent",
+   "severity": "minor",
+   "claim": "The recorded design parameter edge_press_offset_mm is 4.0. The twist that is actually computed and checked uses 4.5 mm (torque 13.5 N.mm at 3 N), and the assumption text also says 4.5 mm. The contract carries two values for the same quantity.",
+   "evidence": [
+    "design_parameters.edge_press_offset_mm = 4.0",
+    "FLOW 8_recipe.edge_press_twist: edge_offset_mm 4.5, torque_nmm 13.5",
+    "design_basis assumption: '3 N at the face edge 4.5 mm from the leaf mid-plane'"
+   ],
+   "proposed_change": "Remove the unused parameter or set it to the value that twist_v16 derives, so that the parameter table matches the check.",
+   "required_test": "Consistency check that every recorded parameter equals the value used by the derived checks."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "39ed2ec00653c296b0446dc60ebe7680229148f98451163be8f7a28865476f57",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/actuator_insert/iso.png",
+   "status": "viewed",
+   "observation": "Plain cylinder (r 1.0, 5.2 mm long, y 22.8-28.0). It has no chamfer, flat or extraction feature, and nothing on the part shows its length step."
+  },
+  {
+   "attachment_sha256": "88e13124f8e94c2e9491dc35b4efbd980eef4338fed09afa3195046d2956b89a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/assembly.png",
+   "status": "viewed",
+   "observation": "Closed shell with the orange skin-piece face in the side window. The carrier, pins, posts and lug are hidden inside, so this view shows nothing about the assembly interfaces."
+  },
+  {
+   "attachment_sha256": "e4a3eecc8eaeec54dd82eb69895b4581600cfc48ee6c0c7bf1560c4402fb7590",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/build-record.json",
+   "status": "viewed",
+   "observation": "Holds the r16 recipe. Assembly order: carrier along +Y until the tab meets the lug, then pins along -X. The 'tab meets lug' zero-gap stop is stated with no preload. Five press_fits are declared; the pin-in-block band is 0.52-0.97 mm3. edge_press_offset_mm is 4.0, but the assumption text says 4.5."
+  },
+  {
+   "attachment_sha256": "35a07f8314913bc853e641c997b81e1bdf104324fa396ce9712e6a0b4eaa2b1a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/button/iso.png",
+   "status": "viewed",
+   "observation": "Curved face with the spine/plunger arm and the stop tab on a riser at the far end. The blind insert hole faces -Y, toward the switch, and is not visible from the face side."
+  },
+  {
+   "attachment_sha256": "56933e1ce33931024824a2ae9d160d64f511489043693c28abbfa595972e3f52",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/carrier_block/iso.png",
+   "status": "viewed",
+   "observation": "Block with two diagonal pin holes and concave R1 root fillets at both leaf corners. The fillets wrap the +X face edges where the pin heads sit, and the holes have no chamfer or lead-in."
+  },
+  {
+   "attachment_sha256": "66d83ef4660635db8e9d8844fcbbb440761f161e45e58ca95e38df1b734d4184",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/leaf_a/iso.png",
+   "status": "viewed",
+   "observation": "Thin 22 x 10 mm leaf, 0.7 mm thick, with its tip fillet notch at the pad end. It is a separate output but the same carrier print."
+  },
+  {
+   "attachment_sha256": "05becee7365666a1a7f934058bb12d756fffbadac0184ea9cddaef0dbc0a9a16",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/leaf_b/iso.png",
+   "status": "viewed",
+   "observation": "Same as leaf A, mirrored. The tip fillet sits on the inner face at the pad end."
+  },
+  {
+   "attachment_sha256": "541b8d7109ae7cb9110a05e6ff21ce7dc597d94e3877864f4dada7bcdb915163",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/measurements.json",
+   "status": "viewed",
+   "observation": "All checks pass. carrier-insertion: shell distance 0.000 at all 5 samples, continuous bound -0.75 (not_proven). pin-in-block overlap 0.74668 mm3, against a pure ring of pi*(1-0.97^2)*4 = 0.74267, so 0.004 mm3 is unexplained. rest-gap-insert-to-pin is 0.050 mm at nominal only."
+  },
+  {
+   "attachment_sha256": "e35e3f8877242124ddf1db11d9ad5520b1d02d658921e7ee189d000170ab98b3",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/pin_1/iso.png",
+   "status": "viewed",
+   "observation": "Headed pin, shank r1.0 x 7 and head r1.6 x 0.8, with square ends and no lead-in chamfer on the tip."
+  },
+  {
+   "attachment_sha256": "3f0a045cf2840709b77b8fcb52a4b11e2085aca4892f61856df255bfebe90d8b",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/pin_2/iso.png",
+   "status": "viewed",
+   "observation": "Identical to pin 1: square-ended headed pin with no chamfer."
+  },
+  {
+   "attachment_sha256": "f1a58def55e3a273607ac93e078c071356930b553152b56f4c9e703f4ffc4bcb",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/rest_stop/iso.png",
+   "status": "viewed",
+   "observation": "Lug block trimmed by the cavity surface. Its flat -Y face is the rest datum the tab meets with zero designed gap."
+  },
+  {
+   "attachment_sha256": "3b4677f2c06d4d02b6eb4f39795f2d26ad0b86f835147de5ac3dbf55a0d12db4",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell with the side window opened. The internal posts are not visible from this view and the bottom is open (the only access for carrier entry and pin pressing)."
+  },
+  {
+   "attachment_sha256": "7b7ff223cd76a231584532d3550c5add6ea3acfa2b6bc33c58be318ab63c7a92",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/switch_body/iso.png",
+   "status": "viewed",
+   "observation": "Plain box placeholder (zippy_df_pin profile) on the ASSUMED PCB plane, with no PCB, mounting or retention modelled."
+  },
+  {
+   "attachment_sha256": "fd8db53b8591eaf6d4aa5d5b471e6979c55a1bc6d95246fd6c452a7485c253d3",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/switch_pin/iso.png",
+   "status": "viewed",
+   "observation": "Box placeholder for the switch plunger at its maximum free position, 0.05 mm below the insert tip."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Fixed relative to revision 15: the pins now run along X and carry the press load in shear, so the per-press pull-out is gone. The carrier is located by interference pins rather than pins in clearance holes. The twist criterion is back to 0.15 mm and passes. A carrier-insertion check exists. Owner policy is followed: all made parts are ABS, and no screws are used.",
+  "Retention of the pins and the insert in printed ABS (0.03-0.05 mm radial interference) and FDM hole accuracy are not qualified. Press-in and pull-out forces need a physical test.",
+  "Whether an FDM printer can produce a 0.05 mm length series of inserts that actually differ in length is unverified.",
+  "The real switch, the PCB position and its retention are UNKNOWN (ASSUMED plane). The assembly order relative to the real PCB and the OP1 screws cannot be checked in CAD.",
+  "Leaf creep under any preload, and fatigue, are UNKNOWN. A preload added to fix A1 makes creep relevant.",
+  "Disassembly and service of the carrier (blind press-fit pins) are not addressed. The owner should decide whether a permanent joint is acceptable.",
+  "What 'easier to press' means to the owner, and whether the measured travel and force feel right, can only be judged on a physical part."
+ ]
+}

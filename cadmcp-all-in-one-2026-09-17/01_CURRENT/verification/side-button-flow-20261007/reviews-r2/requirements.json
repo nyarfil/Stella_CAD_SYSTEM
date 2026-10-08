@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "subject_digest": "bc37a85d6af1cace9690e466bc6aa947fa55862b559444eec5dfaf387056472b",
+  "role": "requirements",
+  "discussion_round": 2,
+  "challenged_review_ids": [],
+  "reviewer_label": "Claude subagent (requirements role)",
+  "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+  "conclusion": "revise",
+  "findings": [
+    {
+      "id": "R2-captive-hinge-contradicts-contract",
+      "severity": "blocking",
+      "claim": "I confirm ASM1, MFG-CAPTIVE-PIN and V4. The CAD contradicts the chosen concept's own stated assembly method, which says 'Button barrel slides over the pin from below before the PCB is fitted' and 'Pin is part of the shell; barrel slides on'. The three reviewers' translation probes are sample counterexamples. The stronger argument comes straight from the recipe and is topological. The pin (z 6.7-21.3) is unioned with tab_low and tab_high, which are unioned with the skin into one shell solid (solid-count-shell = 1). The pin therefore forms a closed loop through the shell. The barrel is a closed ring (bore r1.3 for the whole barrel height) linked around that loop. No rigid motion of any kind can separate the two separately printed parts, so the prototype cannot be built as delivered. From the requirements side, this is the designer's own contract failing. It is not an owner preference.",
+      "evidence": [
+        "recipe op shell_part = union(shell_open, tab_low, tab_high, pin, stop_shelf, stop_post); pin origin z 6.7, height 14.6; tab_low z 6.7-9.7, tab_high z 18.3-21.3",
+        "recipe outputs: shell and button are separate parts, each expected_solids 1; measurements solid-count-shell actual 1",
+        "FLOW_RESULT chosen 3f843ccf: B_lever.assembly_method and G_pivot.assembly_method quoted above",
+        "button/iso.png (re-viewed): barrel is a closed eye with no slot",
+        "Independent probes in ASM1, MFG-CAPTIVE-PIN and V4 agree, with overlap for every translation tested"
+      ],
+      "proposed_change": "Choose a real hinge assembly route and make the concept text match it. Options are a separate pin through tab holes, an open-ended pin with a retainer, or a snap or C-barrel. Fixing the route is a CAD change. Whether an extra purchased part (dowel or clip) is acceptable is an owner decision. Note that it changes the 3-part count used to justify the selection (see R2-selection-rationale-collapses).",
+      "required_test": "An insertion-path check (translation or rotation sweep from outside to the installed pose, zero overlap or a declared snap interference) for the button and any separate pin, plus a retention check. Then re-run all existing checks."
+    },
+    {
+      "id": "R2-rest-pose-breaks-protected-outer-form",
+      "severity": "blocking",
+      "claim": "I confirm M1 and V1 as blocking. I disagree with ASM2 rating the same defect only major, for a requirements reason. The only protected constraint is 'Outer shell skin is not reshaped; the button face is the removed skin piece', and it rests on the user's explicit '外形はできるだけ変えないで' (keep the outer shape as unchanged as possible). That constraint holds only in a nominal pose that no feature enforces. Three independent probes put first outward contact at about 3.5-4 deg (M1), 3.70 deg (ASM2) and 3.9 deg (V1). These are numerically consistent: about 26-26.7 mm x sin(3.7-3.9 deg) gives 1.7-1.8 mm. So the far edge of the face can sit about 1.7 mm proud of the skin in normal use. The hinge axis is vertical (+Z), so gravity does not restore rotation, and the stem has 0.2 mm free play, so nothing returns the face to flush. I also challenge one of the proposed fixes. M1(b) and V1(b) propose 'zero free play with a stated stem preload'. That sets a value tied to real switch force and dimensions, which the user explicitly asked to leave undetermined. It also conflicts with ASM3/V2, because the designed 0.3 mm hinge play would then turn into uncontrolled preload or pre-travel. Fix (a), a designed internal outward stop, is the requirements-compatible route.",
+      "evidence": [
+        "recipe.protected_constraints and request text SRC-1 '外形はできるだけ変えないで' and '実スイッチ寸法・押下力・クリック感は未確定として残す'",
+        "rotation_checks end_deg all negative (-1.865, -2.665); no positive-angle check",
+        "measurements rest-plunger-free-play distance 0.2 mm, overlap 0: no preload at rest",
+        "M1 / ASM2 / V1 probe angles 3.5-4 / 3.70 / 3.9 deg, all at the hinge-side window edge x about -10.4",
+        "recipe hinge axis_direction [0,0,1]: gravity is axial, not rotational, for an upright mouse"
+      ],
+      "proposed_change": "Add an internal outward rest stop (lip or tab on the skin piece, rib or tongue bearing on the inside of the shell or tabs at 0 deg), keeping the outer skin untouched. If a return or preload element is needed, choose one whose force does not depend on the undetermined switch (for example the R_spring option already in the portfolio), or state any switch-dependent preload as an owner-pending assumption. State the allowed flushness or rattle tolerance as an owner question, not a designer-fixed number.",
+      "required_test": "A positive-direction rotation check (0 to about +0.5 deg) requiring designed contact at the new stop near 0 deg. Run it against the current geometry as a negative control: it must fail there, since the button swings to about +3.7-3.9 deg. Also run the outer-surface deviation check from R2-outer-preservation-unmeasured at the outward-stop pose."
+    },
+    {
+      "id": "R2-pressability-proxy-missing",
+      "severity": "major",
+      "claim": "M5 and V5 independently confirm my round-1 lever analysis with the same numbers. Thumb force factor is 21.5/(x+12): about 1.54 at the face centre, about 3.6 at x=-6, 5.4 at x=-8 and over 10 at x=-10. Travel at the stop angle is about 0.19 mm at x=-8 and 0.65 mm at the centre. The recipe also dropped a risk the designer already knew about. The chosen B_lever option lists 'Force varies along the button length', but the recipe's unverified_requirements never mention it. Defining what 'easier' means (force, travel, target size or placement) is an owner decision. Stating a proxy, carrying the known risk forward and showing the force map is a contract change and does not need the owner.",
+      "evidence": [
+        "M5-lever-dead-zone-on-face and V5-press-ease-has-no-metric: same factor table derived independently",
+        "FLOW_RESULT chosen B_lever.risks: 'Force varies along the button length.'",
+        "recipe.unverified_requirements: no item about position-dependent force",
+        "lineage baseline_subject_digest null; no baseline exists"
+      ],
+      "proposed_change": "Add the position-dependent force risk to unverified_requirements. Report a force and travel map over the face. Ask the owner which thumb zone and which quantity define 'easier', without fixing a target force (the user left it undetermined). Prefer a layout where the likely thumb zone has a factor of 1 or less.",
+      "required_test": "A grid of force factor and face travel over the button outer face computed from the built hinge axis and plunger contact, compared with a direct-plunger variant using the same placeholder switch."
+    },
+    {
+      "id": "R2-selection-rationale-collapses",
+      "severity": "major",
+      "claim": "Cross-review strengthens my round-1 point that the concept choice was not driven by the user's intent. The chosen candidate was justified by part_count 3, 'switch spring avoids an extra part' and full checkability. The other reviews show three things against that. (1) The fixes needed for R2-captive-hinge and R2-rest-pose (separate pin or clip, plus an outward stop and possibly a spring) raise the part count. (2) Two of the concept's own written assumptions are already contradicted by the geometry: 'Pin hinge play is small relative to the stroke' (0.3 mm radial play against 0.5 mm operating travel, see M2/ASM3/V2) and 'The switch spring alone returns the button' (0.2 mm free play, so no return to rest, see M1/V1). (3) V3 shows the 'fully covered by rigid rotation, clearance and wall checks' claim is false, because the switch stem is never an obstacle or target in any rotation check. The direct-plunger candidate 59ae5a17 (A_direct, drop-in from inside) avoids the captive-ring topology and the end-hinge lever penalty by construction, and nobody has evaluated it.",
+      "evidence": [
+        "FLOW_RESULT 7_engineering_evaluation.reason and rows (59ae5a17 and 3f843ccf both verifiable, part_count 3)",
+        "FLOW_RESULT 3f843ccf assumptions: B_lever 'Pin hinge play is small relative to the stroke.'; R_switch 'The switch spring alone returns the button.'",
+        "design_parameters pin_radius 1.0, barrel_inner_radius 1.3, stem_free_play 0.2, assumed_stem_operating_travel 0.5",
+        "recipe rotation_checks obstacles never include switch_stem (V3)",
+        "A_direct.assembly_method 'Drop-in button from inside the shell.'"
+      ],
+      "proposed_change": "Re-run the concept evaluation with the corrected part counts, the falsified assumptions marked as falsified, and the pressability proxy. Correct the 'fully covered' wording. Present the hinge and direct-plunger options to the owner as a real choice, or justify the hinge on the user's goal.",
+      "required_test": "An updated evaluation table in the flow record listing the pressability proxy, outer-form change, assembly route, part count and checkability for at least 3f843ccf and 59ae5a17."
+    },
+    {
+      "id": "R2-hinge-play-and-switch-travel-stack",
+      "severity": "major",
+      "claim": "I confirm M2, ASM3 and V2: the designed 0.3 mm radial play exceeds clearances it should protect. V2's counterexample is concrete: with a +x 0.29 mm offset the face binds on the window edge at -1.5 deg, after only about 0.36 mm of stem travel, before the assumed 0.5 mm operating point. I also confirm M3 (axial location by rubbing) and M4/V3 (no actuation or total-travel check). M4 gives about 0.9 mm stem displacement at the stop and V3 gives about 0.8 mm; these do not conflict, because M4 is the outer-corner maximum (23 mm lever) and V3 is the average over the stem face. I challenge one overstatement. ASM3 says a real build 'may ... be pre-actuated'. With the designed play, the worst rest pre-travel is about 0.1 mm (0.3 play minus 0.2 free play, as M2 and ASM3 measure themselves). That is well below the assumed 0.5 mm operating travel, so pre-actuation is not shown under the stated assumptions. It could only happen with a real switch whose pretravel is unknown. A requirements caution also applies. Any 'total travel' or 'pretravel' parameter added to fix M4 or V3 must be labelled as a placeholder, because the user explicitly left real switch dimensions undetermined. It must not be presented as a requirement.",
+      "evidence": [
+        "V2 counterexample: +x 0.29 mm offset, overlap 0.0564 mm3 at -1.5 deg at window edge (14.4, 30.21, 10.0)",
+        "M2/ASM3: -y 0.3 mm translation gives stem contact or about 0.1 mm interference, not 0.7 mm (free play plus operating travel)",
+        "M4 0.9 mm (outer corner, 0.1 mm step) vs V3 about 0.8 mm (overlap 3.207 mm3 / 4 mm2 stem face)",
+        "M3 / V2 axial: tongue lands on stop shelf at dz -0.3; skin hits the tab or window at dz +0.3 to +0.4; barrel-to-tab gap is 0.8",
+        "rotation certificate_scope excludes hinge play"
+      ],
+      "proposed_change": "Make radial and axial play smaller than the smallest gap they must protect, or open those gaps, and make the barrel ends the axial locator. Add a switch_stem actuation check (penetration of at least the assumed operating travel at the press angle) and a placeholder total-travel limit at the stop, both explicitly labelled as assumed values pending the real switch.",
+      "required_test": "Re-run static and rotation checks at the corners of the play envelope (radial +/-0.3 in x and y, axial at the chosen play). Add an actuation-depth check with a negative control (stem moved 0.6 mm away must fail)."
+    },
+    {
+      "id": "R2-standin-shell-not-this-mouse",
+      "severity": "major",
+      "claim": "My round-1 finding stands, and no reviewer contests it. V's uncertainties and M's uncertainties restate it. The user authorised only a provisional switch. The shell and the button location are designer inventions, so 'outer form unchanged' is met only against the stand-in. All of the hinge, play and stop findings above are also conditional on this invented internal volume. The fix is an owner input, not a CAD defect.",
+      "evidence": [
+        "SRC-1 '試作では仮のスイッチ外形を使い' (placeholder allowed for the switch only)",
+        "FLOW_RESULT 2_reference_inspection not_available; reference_uses []",
+        "assembly.png and shell/iso.png (re-viewed): generic ellipsoid with flat elliptical top"
+      ],
+      "proposed_change": "Ask the owner for the shell STEP or scan, or at least the existing side-button location and size and the PCB keep-out. Label outer-form preservation as 'relative to stand-in only' and the button placement as 'inferred' in the delivery.",
+      "required_test": "Rebuild on owner geometry and run the outer-surface deviation check against it."
+    },
+    {
+      "id": "R2-process-and-outer-preservation-labels",
+      "severity": "minor",
+      "claim": "I confirm MFG-TONGUE-ROOT, MFG-PIN-ANISOTROPY, MFG-ORIENT-SUPPORT, MFG-SUBLAYER-STEP and V7 as valid for the declared FDM process. I agree with V7 that barrel-bore (nominal = 2 x barrel_inner_radius) and rest-plunger-free-play (threshold 0.001 below nominal) are self-consistency checks. One requirements caveat: FDM and PLA/PETG are designer inferences, not user requirements. The request says only '試作' (prototype). Their severity should therefore be read as 'given the assumed process', and the process choice should go to the owner. My round-1 point also stands. The protected outer-surface constraint has no direct measurement, and the 0.4 mm gap ring (37.8 mm3 of removed skin) is not stated. The tab-into-gap 0.1 mm steps found by MFG and V7 are a further small, unintended change at the window edge.",
+      "evidence": [
+        "recipe.design_basis.assumptions 'PLA/PETG FDM prototype'; request text has no process or material",
+        "trace volumes: hollow 17421.914 = shell_open 17110.614 + skin_piece 273.477 + 37.82",
+        "V7: shell volume in window-gap band at the tabs 0.89 and 1.17 mm3",
+        "measurements barrel-bore nominal 2.6 = 2 x 1.3; rest-plunger-free-play required 0.199"
+      ],
+      "proposed_change": "Label the manufacturing process as an assumption to confirm with the owner. Reword the protected constraint to state the 0.4 mm running gap. Trim the tabs out of the window-gap band. Label identity checks as self-consistency.",
+      "required_test": "Outer-surface check: (shell_part union button) minus outer = 0, and outer minus (shell_part union button union cavity) equals only the intended gap ring, at the rest pose and at the outward-stop pose."
+    }
+  ],
+  "remaining_uncertainties": [
+    "Owner decisions, not CAD defects: the meaning of 'easier to press' (zone, force, travel or target size); the real mouse shell, button location and PCB; the real switch pretravel, total travel and force; whether extra purchased parts (dowel, clip, spring) are acceptable; the print process and material; the acceptable flushness and rattle tolerance.",
+    "All force factors are rigid-statics derivations from recipe parameters; no force was measured and no physical test was run by any reviewer.",
+    "Other reviewers' probes (rotation and translation samples on the exported STEP with the same OCCT kernel) were read, not re-run by me. The topological argument for the captive hinge needs no probe.",
+    "I did not judge whether the stop-check split proposed in M7, ASM4 and V6 is sufficient. I agree it is needed: the delivered evidence has continuous_swept_motion 'not_proven' with a -0.078 mm lower bound, and the packet summary omits end_pose_engagement, which measurements.json contains.",
+    "All five reviews come from same-family model contexts; agreement between them is not independent human or vendor confirmation."
+  ],
+  "evidence_inspections": [
+    {
+      "attachment_sha256": "310545a72cb7d655e14ee55dfc228a1999757b7fd33dae1c8cce6b88c4cfe04f",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/assembly.png",
+      "status": "viewed",
+      "observation": "Re-viewed: a generic ellipsoidal stand-in body with a flat elliptical top; the orange curved button face sits flush in the side window with a thin gap line. It shows only the nominal pose, so nothing in the image shows what holds the face flush."
+    },
+    {
+      "attachment_sha256": "72c2be9fa1560b14591bd4eb6aa4e50d942f0e2dc76f2e510c008e8e87a04bf0",
+      "kind": "json",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/build-record.json",
+      "status": "viewed",
+      "observation": "Re-checked: subject_digest bc37a85d...; protection lists all empty (no registered protected assets); lineage has no baseline; the embedded recipe unions the pin with both tabs into shell_part and lists six unverified_requirements, none about position-dependent force or F4 return."
+    },
+    {
+      "attachment_sha256": "bb5a6506f7224708bc248429c07f3b13ad0aa6ed7db385a836fe5da345d1ef18",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/button/iso.png",
+      "status": "viewed",
+      "observation": "Re-viewed: the barrel is a closed eye with no slot at one end of the curved skin strip; the plunger and a small tongue are at the other end. There is no outward-stop lip, which is consistent with the captive-ring and no-rest-stop findings."
+    },
+    {
+      "attachment_sha256": "d0c9c0eaa9e20461552c4b2c6b086a0b1121912c9e534deb1536822e1f6bf00b",
+      "kind": "json",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/measurements.json",
+      "status": "viewed",
+      "observation": "Re-checked: overtravel-stop-engages has an end_pose_engagement block (end_min_distance 0.0, required_max 0.02) alongside continuous lower bound -0.0781 'not_proven' and final_samples 9. barrel-bore nominal 2.6 equals 2 x barrel_inner_radius; rest-plunger-free-play distance 0.2 vs required 0.199. No check uses switch_stem as a rotation obstacle."
+    },
+    {
+      "attachment_sha256": "d2a8de1ef4c619b19ab874db3adc48e90518f40cf7799225ab14f754f0cbf833",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/shell/iso.png",
+      "status": "viewed",
+      "observation": "Re-viewed: a slender vertical pin spans between the lower and upper tabs at the hinge-side window end, visibly fused at both ends, plus a thin stop ledge along the lower window edge. There is no internal rest-stop feature on the shell side."
+    },
+    {
+      "attachment_sha256": "c1d58522c820403fb6bfa08f24bbc769a4b277476e814bb46e3033eec0fc4a58",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/switch_housing/iso.png",
+      "status": "viewed",
+      "observation": "Re-viewed: a plain rectangular placeholder block with no mounting, terminal or PCB datum feature, consistent with ASM3's point that the switch has no datum to the hinge."
+    },
+    {
+      "attachment_sha256": "b86a4169fec7e56e7af5756340b2d11bfe3a0a113dbdb26343bd08cacfdf7f2a",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/switch_stem/iso.png",
+      "status": "viewed",
+      "observation": "Re-viewed: a plain rigid rectangular stem block; no spring, pretravel or total-travel feature is modelled, so return force and travel limits are pure assumptions."
+    }
+  ]
+}

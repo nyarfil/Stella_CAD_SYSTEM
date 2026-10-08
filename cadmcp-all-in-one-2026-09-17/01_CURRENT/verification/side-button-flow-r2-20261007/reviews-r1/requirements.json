@@ -1,0 +1,153 @@
+{
+ "schema_version": 1,
+ "subject_digest": "a089471ed2e0975ae806c80497f335289be7080b68e096b182f742e0dd0f05d3",
+ "role": "requirements",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (requirements role, rev2)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "REQ2-pin-option-contradicts-play",
+   "severity": "major",
+   "claim": "The contract offers a hinge-pin option that the CAD and checks do not cover and that brings back the rev-1 hinge-play defect. The pin node's reason says 'Stock Ø2 pin (steel dowel or 1.75 filament per owner choice)'. 1.75 mm filament is Ø1.75, not Ø2. In the r1.1 bore it gives 0.225 mm radial play, and in the r1.02 tab holes 0.145 mm. That exceeds the 0.1 mm hinge_radial_play_mm used by stem-contact-by-free-play and housing-clear-until-stop, and also the 0.2 mm stem free play. Radial play larger than the stem free play was the rev-1 hinge-play finding (M2/V2/ASM3). An owner following the delivered text could build an unverified variant that the evidence appears to certify.",
+   "evidence": [
+    "recipe op 'pin': reason 'Stock Ø2 pin (steel dowel or 1.75 filament per owner choice)', radius_mm 1.0",
+    "design_parameters: barrel_inner_radius_mm 1.1, tab_hole_radius_mm 1.02, hinge_radial_play_mm 0.1, stem_free_play_mm 0.2",
+    "1.1-0.875=0.225 mm bore play; 1.02-0.875=0.145 mm tab-hole play",
+    "rotation_checks stem-contact-by-free-play / housing-clear-until-stop: axis_play_mm 0.1 only"
+   ],
+   "proposed_change": "Remove the 1.75 mm filament option from the pin text and state 'Ø2.0 mm h-tolerance dowel'. Alternatively, model the 1.75 variant explicitly with its own bore and hole radii and play.",
+   "required_test": "If a filament pin is kept, rebuild with pin_radius_mm 0.875 and re-run stem-contact-by-free-play, housing-clear-until-stop and the rest checks with axis_play_mm 0.225. Otherwise, a text check that every pin option named in the contract matches pin_radius_mm."
+  },
+  {
+   "id": "REQ2-return-spring-unmodeled",
+   "severity": "major",
+   "claim": "F4 (restore) and the 'hold its flush rest pose' half of F2 depend entirely on a spring that has no geometry, location, seat, envelope or installation path. The chosen candidate e79bfb3e (B_lever, G_pivot, R_spring, S_hardstop) lists 'spring' among its parts, but the outputs contain no spring and the button has no seat (button/iso.png). Without the spring, nothing holds the arm on the outward block. The hinge axis is vertical, so gravity gives no restoring torque, and the stem has 0.2 mm free play. The face can therefore drift inward by up to 0.2 mm at the plunger, about 0.36 mm at the far edge (lever 27/15). The rest-outward-blocked check proves only the outward limit, not that the button is held there. The spring's preload also adds directly to the thumb force, which bears on the explicit goal 'もっと押しやすく'. Its magnitude is rightly left open, but its existence and placement are a CAD matter, not an owner unknown.",
+   "evidence": [
+    "FLOW_RESULT 7_engineering_evaluation.chosen = e79bfb3e options [B_lever,G_pivot,R_spring,S_hardstop]; candidate part_names include 'spring'",
+    "recipe outputs: shell, button, hinge_pin, switch_housing, switch_stem (no spring)",
+    "design_basis.assumptions: 'A separate small spring preloads the stop arm against the outward block (not modeled).'",
+    "STEP probe: at rest the only button-shell contact is the arm face x=-12 against block_out (y 15..18.5, z 9.8..12)",
+    "rest-plunger-free-play 0.2 mm; hinge axis direction (0,0,1)"
+   ],
+   "proposed_change": "Add a placeholder spring envelope (for example a small compression or torsion spring volume) with a seat on the button and a reaction seat on the shell or tab, located so it preloads the arm toward block_out. Label the spring rate and preload as owner-pending. Add it to outputs and to the clearance and insertion checks.",
+   "required_test": "Static clearance of the spring envelope against the button and shell at rest and at the stop angle, with the envelope's compressed length at the stop not below its solid length. Add the spring to the insertion sequence. Also run a negative control: a seat moved off the arm side must fail a 'preload acts toward block_out' direction check."
+  },
+  {
+   "id": "REQ2-assembly-order-vs-switch",
+   "severity": "major",
+   "claim": "The declared button assembly path ('in through the open bottom, slide out onto the rest stop') passes straight through the placeholder switch, and nothing states that the switch is fitted afterwards. button-insertion-slide and button-insertion-drop use obstacles ['shell'] only. Translating the exported button by -Y along that path overlaps switch_housing by 20.4, 48.0, 74.7 and 14.3 mm3 at -3, -6, -9 and -12 mm, and the switch_stem by 4.4 mm3 at -3 and -6 mm. The user asked for the provisional switch outline to be used in the prototype. Whether the switch, and in a real mouse its PCB, can go in after the button and pin is therefore part of whether the prototype can be built. The contract leaves it unstated.",
+   "evidence": [
+    "motion_checks button-insertion-slide / button-insertion-drop: obstacles ['shell']",
+    "STEP probe (button translated (0,t,0)) housing overlap mm3: t=-3 20.4, -6 48.0, -9 74.692, -12 14.265, -15 0.0",
+    "switch_housing bbox x -1..5, y 18.7..22.7, z 11..17"
+   ],
+   "proposed_change": "State the assembly sequence in the contract: button, then pin from below, then the switch and its carrier or PCB. Give the switch an insertion direction, or include switch_housing and switch_stem as obstacles if they are meant to be present first.",
+   "required_test": "A translation check of switch_housing+switch_stem from outside the open bottom to their installed pose with button and hinge_pin as obstacles, plus a pin-insertion-path check with the switch absent or present according to the declared order."
+  },
+  {
+   "id": "REQ2-rest-flush-not-checked-with-play",
+   "severity": "minor",
+   "claim": "The protected 'outer skin not reshaped' rest pose is checked only for a perfectly centred hinge. rest-outward-blocked runs at axis_play_mm 0, while the other hinge checks sweep 0.1 mm. In my STEP probe, with the barrel offset -0.1 mm in X (inside the designed play), the button turns outward 0.57 deg before shell contact. The far skin edge (14, 30.89, 10) then sits about 0.27 mm outward (+Y) and 0.16 mm in -X. A spring preloading outward would drive the button to this limit. This is much better than rev 1 (about 1.7 mm proud), and acceptable flushness is an owner value, but the evidence should state the number instead of implying exact flush.",
+   "evidence": [
+    "rotation_checks rest-outward-blocked: axis_play_mm 0.0, end_deg 0.5",
+    "probe: offset (-0.1,0,0) last clear outward angle 0.57 deg; far-edge displacement (-0.16,+0.268) mm",
+    "offsets (+0.1,0) and (+0.071,+/-0.071) already overlap the outward block (0.53-0.77 mm3), i.e. infeasible"
+   ],
+   "proposed_change": "Run the rest-stop check across the hinge-play envelope and report the maximum outward skin deviation as a declared value for owner acceptance. Do not fix a tolerance number without the owner.",
+   "required_test": "Outward rotation with axis_play_mm 0.1 (eight offsets) reporting the maximum normal deviation of the skin piece from the outer loft. Negative control: the same check with block_out removed must report several degrees."
+  },
+  {
+   "id": "REQ2-pressability-map-and-baseline",
+   "severity": "minor",
+   "claim": "Revision 2 does respond to the rev-1 lever finding. The plunger is now at the face centre with a lever of 15 mm, so the force factor is 15/(x+13): 1.0 at x=2, against 1.54 in rev 1. The near-hinge zone is still stiff: 5.0 at x=-10, 3.0 at x=-8, 2.14 at x=-6. Half the face (x<2) needs more than the switch force. Face travel at the press angle runs from 0.14 mm (x=-10) to 1.26 mm (x=14). No force or travel map is in the evidence; unverified_requirements only says the factor 'is a rough guide'. There is still no baseline from the user's mouse, so 'easier' is only shown relative to the designer's own rev 1.",
+   "evidence": [
+    "P2 hinge_x_mm -13, plunger x 0.5..3.5 => lever 15 mm; window x -10..14",
+    "angles: press -2.674 deg, stop -3.438 deg (FLOW 8_recipe)",
+    "unverified_requirements[0]"
+   ],
+   "proposed_change": "Add the factor and travel table over the face to the delivered evidence, and ask the owner which thumb zone and which quantity define 'easier'. Do not set a target force.",
+   "required_test": "A grid of force factor and face travel derived from the built axis and plunger contact, cross-checked against a direct-plunger variant (candidate 566e9045) using the same placeholder switch."
+  },
+  {
+   "id": "REQ2-evaluation-and-labels-stale",
+   "severity": "minor",
+   "claim": "The concept table and labels lag the build. The chosen row says part_count 3, but the deliverable needs shell, button, a separate pin and a spring. The direct-plunger candidates 566e9045 and 59ae5a17 are still unevaluated, and the lever is kept 'because ... checkable', which is a verification argument, not a user one. The flow does honestly mark them as owner options. The protected constraint also still has no direct outer-surface measurement. The 0.4 mm running-gap ring (37.82 mm3 of removed skin, from the trace) is not stated in the constraint text.",
+   "evidence": [
+    "FLOW 7_engineering_evaluation chosen part_count 3; reason text",
+    "trace: hollow 17421.914 - shell_open 17110.614 - skin_piece 273.477 = 37.823 mm3",
+    "dimension_checks: only bbox length/height for shell"
+   ],
+   "proposed_change": "Update part_count, note the pin and spring, and reword the protected constraint to say 'outer skin unchanged except for a 0.4 mm running gap around the button'.",
+   "required_test": "Outer-surface check: (shell ∪ button) − outer = 0 and outer − (shell ∪ button ∪ cavity) = the gap ring only, at rest."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "5e0f3932f9c12e15593d71bf0e0fa7dfd5886c2baaf541def2b82f053db97183",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/assembly.png",
+   "status": "viewed",
+   "observation": "Stand-in ellipsoidal shell, open bottom. The orange skin-piece button sits flush in a curved rectangular window on the +Y side with a thin even running gap. No internal parts are visible, so the spring, stops and switch cannot be judged from this view."
+  },
+  {
+   "attachment_sha256": "c3f3cc1c1098879a0d2051360aa2de7f68918eaabee08c9eb999c24cc770a990",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/build-record.json",
+   "status": "viewed",
+   "observation": "sha256 matches. It holds the same recipe context as the packet, including the pin reason 'Stock Ø2 pin (steel dowel or 1.75 filament per owner choice)' against pin_radius_mm 1.0. Outputs are shell, button, hinge_pin, switch_housing and switch_stem; no spring part. overall_verdict is 'unknown'."
+  },
+  {
+   "attachment_sha256": "1d15ca598cdd6b7ea1914cf9411779ab1505a1fd949b5498ee95c9c376891639",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/button/iso.png",
+   "status": "viewed",
+   "observation": "Shows one button body: curved skin piece, rear rib, link to a bored hinge barrel, plunger block mid-face and stop arm below the barrel. There is no spring seat or boss anywhere on the part."
+  },
+  {
+   "attachment_sha256": "c780216c913acf1c7a9836582897a3bf918e8239aa68d6637fd107d2e278414f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "A plain cylinder with no head, groove or retention feature. STEP bbox x -14..-12, z 6.6..20.7, so it is Ø2.0 x 14.1 mm, matching pin_radius_mm 1.0."
+  },
+  {
+   "attachment_sha256": "d6180faf232b318453e6e23cdefbee29c318678b520599e05f69f7b9977231c0",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/measurements.json",
+   "status": "viewed",
+   "observation": "36 checks, all 'pass'; geometry_checks_verdict pass, overall_verdict unknown. button-insertion-slide (-0.469), pin-insertion-path (-0.658) and shell-clear-until-stop (-0.108) report continuous_swept_motion not_proven. rest-outward-blocked runs at axis_play_mm 0 only. The trace gives hollow 17421.914 = shell_open 17110.614 + skin_piece 273.477 + 37.82 mm3 of gap ring."
+  },
+  {
+   "attachment_sha256": "e4d8d26a57e146a31593f4a8202f1c285b4ef197852073c6e105f3c876f15d7e",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/shell/iso.png",
+   "status": "viewed",
+   "observation": "Window opening in the side wall, with the upper tab and its pin hole visible at the hinge-side end inside. The outer skin is otherwise continuous. The stop blocks are not visible in this view."
+  },
+  {
+   "attachment_sha256": "c1d58522c820403fb6bfa08f24bbc769a4b277476e814bb46e3033eec0fc4a58",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "A plain box placeholder (STEP 6 x 4 x 6 mm at x -1..5, y 18.7..22.7, z 11..17) with no mounting or PCB feature. This is consistent with the 'ASSUMED ... placeholder' label."
+  },
+  {
+   "attachment_sha256": "b86a4169fec7e56e7af5756340b2d11bfe3a0a113dbdb26343bd08cacfdf7f2a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "A plain box stem (2 x 1.1 x 2 mm, y 22.7..23.8), 0.2 mm from the plunger tip at y 24 (rest-plunger-free-play 0.2 mm). It is a placeholder, consistent with the request leaving real switch dimensions open."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Rev-1 blockers checked on rev-2 geometry. Captive hinge: the separate pin with slip holes passes pin-insertion-path, though the continuous bound is not_proven. No outward stop: my STEP probe confirms the rest contact is arm face x=-12 on block_out, and at the stop angle the closest pair is the arm corner (-14.60, 15.08) to block_in (0.0018 mm), not the cosmetic window edge. Hinge play: reduced to 0.1 mm, but see REQ2-pin-option-contradicts-play.",
+  "Owner decisions, not CAD defects: the meaning of 'easier to press' (zone, force, travel); the real mouse shell, button location and PCB, since the shell is a stand-in and the window placement is a designer proposal; real switch dimensions, pretravel, total travel and force; spring rate and preload; acceptable flushness and rattle; print process and material; whether a purchased dowel and spring are acceptable.",
+  "Pin retention: the plain pin in r1.02 slip holes has no axial retainer, and the stated fix is 'reaming or adhesive'. Whether something such as the PCB or a bottom cover captures it is not modelled. I leave this to the assembly and manufacturing roles.",
+  "Several motion certificates (button-insertion-slide, pin-insertion-path, shell-clear-until-stop) pass on samples only, with negative continuous lower bounds. I did not re-sample them.",
+  "Force factors are rigid-statics derivations. No force, click feel or physical test was measured by me or appears in the evidence.",
+  "My probes are sampled rigid-body overlaps on the exported STEP with the same OCCT kernel (0.01 deg steps for the play case, and only some play offsets completed). This is not an independent kernel or a physical test."
+ ]
+}

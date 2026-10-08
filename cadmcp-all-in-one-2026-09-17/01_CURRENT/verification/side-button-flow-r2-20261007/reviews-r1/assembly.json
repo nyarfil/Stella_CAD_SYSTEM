@@ -1,0 +1,144 @@
+{
+ "schema_version": 1,
+ "subject_digest": "a089471ed2e0975ae806c80497f335289be7080b68e096b182f742e0dd0f05d3",
+ "role": "assembly",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (assembly role, rev2)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "ASM-A1-stop-datum-amplifies-hinge-play",
+   "severity": "blocking",
+   "claim": "The rest stop (arm on block_out) and the hard stop (arm on block_in) both act on a stop arm only 1.5-10 mm from the pivot. The plunger sits about 15 mm out and the face about 27 mm out. Any bodily shift of the button inside its radial play therefore moves both stop angles by roughly +/-0.12/10 rad (about +/-0.6 deg), and that error is amplified at the plunger and at the face. The verification plan states 'Housing stays clear until the stop angle at every hinge-play offset'. housing-clear-until-stop sweeps every play offset only to the NOMINAL stop angle (-3.438 deg), not to the stop angle that the offset button actually reaches, so the check passes while the stated contract fails. Inside the declared 0.1 mm play I measured a counterexample on the exported STEP: housing clearance of 0.118 mm at the real stop, below the recipe's own 0.2 mm requirement. The same offsets also consume the 0.2 mm rest free play, leave the stem pre-pressed at rest, and let the face rest outward of flush on the opposite side. The datum that should hold the flush rest pose and the overtravel limit is not where the controlled features are.",
+   "evidence": [
+    "Exported STEP, read-only CadQuery 2.8 probe: button rotated about (-13,25) and translated by an in-plane offset. Stop angle found by bisection on overlap > 1e-6 mm3 with the shell near the hinge. Stem displacement = translation of switch_stem in -Y until no overlap.",
+    "Nominal (offset 0): stop -3.449 deg at block_in (-14.60, 15.08, 9.80); stem displacement 0.766 mm; housing clearance 0.309 mm; rest 0 deg; rest stem gap 0.200 mm.",
+    "Offset (+0.092, -0.038) mm, radius 0.1 = declared hinge_radial_play_mm: stop -3.983 deg; stem displacement 0.948 mm; housing clearance 0.118 mm (< 0.2 required); rest angle -0.819 deg with the plunger already overlapping the stem (rest gap 0, overlap 0.206 mm3).",
+    "Offset (+0.100, 0): stop -4.028 deg; housing 0.144 mm; rest -0.881 deg with the stem pre-pressed.",
+    "Offset (-0.100, 0): stop -2.872 deg; stem displacement 0.609 mm; rest +0.574 deg, i.e. rotated outward. A 2D point model of the same geometry puts the far face edge point (14, 29.03) about 0.27 mm outward of its drawn position.",
+    "The model has 0.02 mm more radial play that the checks do not count: tab_hole_radius 1.02 vs pin 1.00, overlap-shell-hinge_pin distance 0.020 mm. At radius 0.12, offset (+0.111, -0.046) gives a stop of -4.090 deg, stem displacement 0.985 mm and housing clearance 0.080 mm. Offset (-0.111, +0.046) gives a stop of -2.810 deg and stem displacement 0.546 mm, only 0.046 mm above the 0.5 mm assumed operating travel.",
+    "measurements.json housing-clear-until-stop: axis_play_mm 0.1, every offset swept with end_deg -3.4377 only; continuous lower bound 0.185 mm < min 0.2, 'not_proven', verdict pass.",
+    "measurements.json rest-outward-blocked, shell-clear-until-stop and hard-stop-blocks-past-stop all ran with axis_play_mm 0.0, so play is never applied to the stop or rest features themselves."
+   ],
+   "proposed_change": "Locate rest and overtravel at a radius at least as large as the plunger's, so that hinge play is not amplified. Examples: put the stop pair on the plunger or rib near x 0..3 against shell-fixed faces, or put the hard stop on the face/rib against the switch carrier. Or reduce the effective radial play, including the tab-hole play, until the swept envelope meets the 0.2 mm housing margin and the 0.2 mm rest free play. Count tab-hole play in hinge_radial_play_mm, or declare it separately. Whatever the fix, the stated contract must not claim housing clearance 'at every hinge-play offset' until the check measures it.",
+   "required_test": "For each of at least 16 radial offsets at the full radial play (bore play plus tab-hole play), find the actual hard-stop angle by bisection against the shell and evaluate at that angle: housing clearance >= 0.2 mm, and stem displacement >= assumed operating travel + margin. At the same offsets, find the outward rest angle and assert that the plunger-to-stem gap stays >= 0 (ideally the declared free play) and that the face does not sit outward of the skin by more than an owner-set flush tolerance. Run rest-outward-blocked and hard-stop-blocks-past-stop with axis_play_mm > 0."
+  },
+  {
+   "id": "ASM-A2-pin-axial-retention-undefined",
+   "severity": "major",
+   "claim": "The stock Ø2 pin has no axial retention. It is a slip fit in both tab holes (0.02 mm radial). Its lower end is flush with the underside of tab_low at z 6.6, and below it the shell bottom is open. In the normal use orientation (+Z up), gravity pulls the pin down along exactly the path the design certifies as its insertion path. If the pin drops about 3 mm it leaves tab_high, and the upper end of the button barrel loses its support. The design names 'reaming or adhesive' only as a possibility. No retaining feature, fit class or base-plate stop is in the CAD or the contract. Upward travel is limited only by the shell skin about 1 mm above the pin top.",
+   "evidence": [
+    "pin-insertion-path (measurements.json): pin translated -21.7 mm in Z with shell distance 0.020 mm throughout the holes, then >0.8 mm once clear of the holes, with no obstacle. The removal/escape direction is unobstructed.",
+    "My probe: pin translated +0.5 mm Z gives shell distance 0.020 mm; +1 mm gives contact; +2 mm gives overlap 0.506 mm3. Upward travel is capped by the shell roof, downward travel is not.",
+    "Recipe pin z 6.6-20.7; tab_low z 6.6-9.6; tab_high z 17.7-20.7; tab_hole_radius_mm 1.02 vs pin_radius_mm 1.0.",
+    "design_basis.assumptions: 'Stock Ø2 pin; tab holes are slip fits that may need reaming or adhesive.' The unverified_requirements also list pin retention as not qualified."
+   ],
+   "proposed_change": "Choose and model one axial retention: a press/interference hole in one tab with a slip fit in the other, stated with a fit class; a blind upper hole plus a boss or rib on the base plate/PCB carrier under the pin end with a stated gap; or a head or e-clip groove. Record the chosen fit in the contract, not as 'may need'.",
+   "required_test": "Add a translation check with the pin moving -Z from its assembled pose with the base/carrier part present as an obstacle. It must be blocked within <= 0.5 mm, while tab_high still engages the pin over its full 3 mm. If a press fit is chosen, record the target interference and verify it on a printed coupon."
+  },
+  {
+   "id": "ASM-A3-return-spring-has-no-seat-or-install-path",
+   "severity": "major",
+   "claim": "F4, and through it the F2 'hold flush rest pose', depends on 'a separate small spring' that preloads the stop arm toward block_out. No space, seat, reaction face or installation step is reserved for it, and the evident places cannot hold one. The arm-to-block_in gap is 0.6 mm and closes to 0 at the stop, which is less than any spring's solid height. The barrel sits between the tabs with 0.2 mm axial gaps, so a torsion coil cannot go on the pin. The stem has 0.2 mm free play at rest, so the switch spring does not preload the button. Without the spring the button can rattle through the whole 3.44 deg slot, about 1.6 mm at the far face edge. Once the button is in, tab_low (x -17.5..-10.6, y 14..40, z 6.6..9.6) covers the bottom access around the arm, so where and when a spring would be fitted is not just a detail for later.",
+   "evidence": [
+    "design_basis.assumptions: 'A separate small spring preloads the stop arm against the outward block (not modeled).'",
+    "Recipe: stop_arm x -14..-12, y 15..23.5, z 9.8..13.4; block_in face x -14.6; block_out face x -12; tab_low top z 9.6; barrel z 13..17.5, tab_high bottom 17.7.",
+    "rest-plunger-free-play 0.200 mm at rest; stem-contact-by-free-play shows stem contact only after rotation.",
+    "No check in verification_plan concerns a spring envelope or its assembly."
+   ],
+   "proposed_change": "Reserve a spring envelope in the CAD as a placeholder solid: for example a compression spring between a shell-fixed seat and the rib or plunger acting in +Y, or a leaf on the arm beside the slot. Give it a reaction face on the shell or carrier, and state the assembly order (spring before or after the button slide). Keep force and preload as declared unknowns.",
+   "required_test": "Include the spring envelope as a part: it must not overlap the button or shell in the rest pose or at the stop pose (its compressed length must be >= its solid height). Its installation path must be clear for the chosen assembly order (translation check with the button present or absent as stated)."
+  },
+  {
+   "id": "ASM-A4-switch-has-no-datum-to-hinge",
+   "severity": "major",
+   "claim": "The hinge and both stops are shell features, while the switch housing and stem float 5.65 mm from the shell with no carrier, boss or PCB datum. The 0.2 mm rest free play, the 0.5 mm operating travel and the housing margin are all nominal distances between parts that share no modelled locating chain. Any switch/PCB position error in Y adds directly to the play-driven variation in ASM-A1. In ASM-A1, 0.046 mm of operating margin and 0.08-0.12 mm of housing clearance remain at the extremes. A typical PCB/screw-boss tolerance is larger than those margins.",
+   "evidence": [
+    "overlap-shell-switch_housing distance 5.647 mm, overlap-shell-switch_stem 5.647 mm: no contact or locating feature between switch and shell.",
+    "unverified_requirements: 'PCB position and the real mouse shell were not measured; this is a stand-in shell.'",
+    "Probe numbers from ASM-A1: stem displacement at the stop ranges 0.546-0.985 mm across the play envelope; the nominal is 0.766 mm."
+   ],
+   "proposed_change": "Either carry the placeholder switch on a shell-fixed carrier or boss modelled in the CAD, so hinge, stops and switch share the shell datum, or state an allowed switch Y/X position tolerance and size the free play and stop for it.",
+   "required_test": "Combine the ASM-A1 sweep with switch translations of +/- the stated switch position tolerance in Y and X. Assert stem displacement >= operating travel at the hard stop, housing clearance >= 0.2 mm, and plunger-stem gap >= 0 at rest, for all combinations."
+  },
+  {
+   "id": "ASM-A5-hinge-not-serviceable",
+   "severity": "minor",
+   "claim": "Once fitted, the pin cannot be removed without damage. Its lower end is flush with the underside of tab_low (z 6.6), so there is nothing to grip. Its upper end is flush with the top of tab_high (z 20.7), only about 1 mm below the shell skin, so it cannot be pushed out from above. If adhesive is used as the design suggests, button removal for prototype iteration means cutting.",
+   "evidence": [
+    "Recipe pin z 6.6-20.7 equals tab_low bottom and tab_high top.",
+    "Probe: pin +1 mm Z reaches the shell skin."
+   ],
+   "proposed_change": "Let the pin protrude below tab_low by 1-2 mm, or provide a push-out access hole in the skin. Only the latter changes the protected outer surface, so prefer the protrusion, checked against the base/PCB envelope.",
+   "required_test": "Translation check that a Ø1.5 push rod, or a grip on the protruding pin end, can reach the pin with the base/carrier removed, without touching the protected outer skin."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Earlier blockers, checked against revision 2: the captive printed pin is replaced by a separate stock pin whose bottom insertion path is clear (pin-insertion-path, 0.020 mm in the holes); an outward rest stop exists (rest-outward-blocked, first overlap at +0.1 deg nominal); the stop tongue/shelf is removed; axial location is by 0.2 mm thrust gaps (barrel top to tab_high, arm bottom to tab_low). These are fixed at nominal; ASM-A1 is the remaining tolerance issue.",
+  "Button insertion: sliding contact (0.0 mm) with block_out over the first ~8.4 mm of the 15 mm slide, then a clear drop (lower bound 0.256 mm). With no pin fitted the button is free to shift -X by up to 0.4-0.6 mm, so I do not expect a jam, but no FDM tolerance was applied to that path.",
+  "My play probe ran on the exported B-rep at 4-16 discrete offsets with bisection to about 1e-4 deg, plus a 2D point model of arm, plunger tip and face edge. It is a rigid-body analysis; deformation of the 1.4 mm stop blocks and of the 2 mm arm under stop load is not included.",
+  "Real switch dimensions, operating/total travel, PCB position, spring force and the real mouse shell are owner inputs not supplied; all margins above are against placeholders.",
+  "Which radial play the printed bore actually achieves on a stock pin (FDM holes usually print undersize) is unknown until a coupon is measured; it may be smaller or larger than 0.1 mm.",
+  "This review was done by one same-family subagent; it is not an independent human or physical assembly trial."
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "5e0f3932f9c12e15593d71bf0e0fa7dfd5886c2baaf541def2b82f053db97183",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/assembly.png",
+   "status": "viewed",
+   "observation": "Assembly preview shows the stand-in shell with the orange button face set flush into the side window with a thin visible gap ring; internal hinge, pin and switch are hidden, so the image cannot show fit or stops."
+  },
+  {
+   "attachment_sha256": "c3f3cc1c1098879a0d2051360aa2de7f68918eaabee08c9eb999c24cc770a990",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/build-record.json",
+   "status": "viewed",
+   "observation": "kind recipe_build, subject_digest a089471e...05d3, embeds the full recipe context (P2 parameters, hinge_radial_play_mm 0.1, tab_hole_radius_mm 1.02) and file_hashes matching the PNG/STEP set; measurements block mirrors measurements.json."
+  },
+  {
+   "attachment_sha256": "1d15ca598cdd6b7ea1914cf9411779ab1505a1fd949b5498ee95c9c376891639",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/button/iso.png",
+   "status": "viewed",
+   "observation": "Button iso shows curved skin piece, rear rib, link to a bored barrel; the stop arm under the barrel and the plunger are not clearly visible from this view, so arm geometry was checked from the recipe and STEP instead."
+  },
+  {
+   "attachment_sha256": "c780216c913acf1c7a9836582897a3bf918e8239aa68d6637fd107d2e278414f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 cylinder with flat ends, no head, groove or knurl; consistent with no axial retention feature (ASM-A2)."
+  },
+  {
+   "attachment_sha256": "d6180faf232b318453e6e23cdefbee29c318678b520599e05f69f7b9977231c0",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/measurements.json",
+   "status": "viewed",
+   "observation": "geometry_checks_verdict pass, overall_verdict unknown. housing-clear-until-stop uses axis_play 0.1 but sweeps every offset only to nominal -3.4377 deg (lower bound 0.185 < 0.2, not_proven); shell/stop rotation checks use axis_play 0; button-insertion-slide has 0.0 mm contact for t<=0.5625; pin path 0.020 mm."
+  },
+  {
+   "attachment_sha256": "e4d8d26a57e146a31593f4a8202f1c285b4ef197852073c6e105f3c876f15d7e",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell iso shows the open side window and, through it, an internal tab with the small pin hole near the hinge end; stop blocks and lower tab are not distinguishable in this view."
+  },
+  {
+   "attachment_sha256": "c1d58522c820403fb6bfa08f24bbc769a4b277476e814bb46e3033eec0fc4a58",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Switch housing is a plain 6x4x6 mm box placeholder with no mounting pins, boss or carrier interface, so it has no datum to the shell (ASM-A4)."
+  },
+  {
+   "attachment_sha256": "b86a4169fec7e56e7af5756340b2d11bfe3a0a113dbdb26343bd08cacfdf7f2a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r2-20261007/workspace/studio/side-button-flow/a089471ed2e0975a-45a21640/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Switch stem is a plain 2x1.1x2 mm block placeholder; no travel limit or spring is represented."
+  }
+ ]
+}

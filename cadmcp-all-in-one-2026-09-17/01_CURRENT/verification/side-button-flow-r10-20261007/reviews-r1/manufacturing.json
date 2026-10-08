@@ -1,0 +1,177 @@
+{
+ "schema_version": 1,
+ "subject_digest": "4d06a97b3a3134d9734823568d57faa9c823807fdfd69aba4e803d8e8265cc58",
+ "role": "manufacturing",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (manufacturing role, rev10)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "MFG10-SPRING-BORE-DRILL-ACCESS",
+   "severity": "major",
+   "claim": "r10 adds a new finishing step: \"the three screw holes and the spring bore are drilled 1.6 mm after printing; the spring bore must pass a 1.45 mm pin gauge\". For the spring bore this step cannot be done as written, and it brings back the tool-access defect that r6 had (MFG-PLUG-POCKET-PROCESS) and that r7 removed by giving up hole finishing. The spring bore (axis X at y 12.4, z 11.9, block_in x -22.69..-18.69) is a blind line from both sides. Toward +X, block_out (x -12.0..-10.6, y 7.3..14.4, z 9.8..14.0) is solid on the spring axis 6.68 mm from the bore mouth, and it has no coaxial hole at y 12.4. Toward -X, the free straight line from the block face to the inner skin is 28.7 mm on the axis, and only 26.1 mm at 5 mm off the axis, where a chuck or pin-vice body would have to be. The shortest standard Ø1.6 drill (DIN 1897 stub, about 26 mm overall) fills that line by itself, with no room for a holder. A standard pin gauge in its holder does not fit either. The same applies to cutting threads in the 1.5 mm spring-screw section. The stop hole is reachable, but only from +X through the coaxial rest hole (free line about 64-72 mm), and the contract names neither the side nor the order. As written, the builder must either skip the spring-bore finishing step, which brings back the r9 spring-drag risk the step was meant to remove, or improvise by drilling through block_out.",
+   "evidence": [
+    "Recipe v10 design_basis Finishing assumption: \"the three screw holes and the spring bore are drilled 1.6 mm after printing; the spring bore must pass a 1.45 mm pin gauge\".",
+    "Recipe ops: spring_pocket r 0.8 origin (-23.19, 12.4, 11.9) axis X length 5; block_out_box center (-11.3, 10.85, 11.9) size (1.4, 7.1, 4.2); rest_hole only at y 9.3.",
+    "My ray cast on the exported shell STEP: from (-22.70, 12.4, 11.9) toward -X, first skin hit at 28.70 mm (28.03-29.35 within +/-0.8 mm; 26.13 mm at z+5).",
+    "My ray cast: from (-18.68, 12.4, 11.9) toward +X, first hit at 6.68 mm (block_out), exit at 8.08 mm.",
+    "My ray cast: from the block_out outer face (-10.59, 9.3, 11.9) toward +X the line is free for 63.9 mm, so the stop hole can be drilled through the coaxial rest hole from +X.",
+    "r6 manufacturing MFG-PLUG-POCKET-PROCESS (major) raised the same 31 mm line limit for reaming this pocket; r7 removed the finishing step instead of solving the access.",
+    "The measurements contain no tool-envelope or line-of-sight check for any finishing operation."
+   ],
+   "proposed_change": "Make every stated finishing step executable and name its side. Recommended: (1) Leave the spring section unfinished by design. Print it as a clearance bore, for example Ø2.0 with a teardrop or flat crown for the horizontal rim-down hole, over x -21.19..-18.69. Keep only the 1.5 mm spring-screw section at the 1.6 mm self-tap size, so the Ø1.2 spring keeps clearance even with typical crown droop. Check it with a short gauge pin (for example Ø1.45 x 10 mm) pushed in by hand or with tweezers. (2) State that the stop hole and the rest hole are drilled from +X with a jobber Ø1.6 drill through the rest hole before the button is fitted. Alternative to (1): add a coaxial Ø1.7 access hole through block_out at y 12.4, checking its walls, and drill the spring bore from +X through it. Do not move the screw axes, the stop contact or any protected skin.",
+   "required_test": "Add a translation check that sweeps a tool envelope (drill plus holder, for example Ø1.6 x 30 mm on a Ø8 x 40 mm holder) along each finished hole axis from the side the contract names, with the shell as the obstacle, and require zero overlap. On the first printed shell, perform the stated drilling and pin-gauge steps in the stated order and record the tool used. Record that a Ø1.2 spring slides freely through the full spring section, before and after closing the spring screw."
+  },
+  {
+   "id": "MFG10-HOLE-PROCESS-TEXT-CONFLICT",
+   "severity": "minor",
+   "claim": "The hole process is now stated inconsistently. The design basis says all three screw holes are drilled 1.6 mm after printing. The outputs still give spring_screw and rest_screw as \"self-tapped into a 1.6 mm printed hole\", and stop_screw as \"in a drilled 1.6 mm tap hole\", which does not say whether it is self-tapped or cut-tapped. The thread walls are unchanged from r9: 1.2 mm in block_in beside both holes, 1.5 mm between them, and the rest screw engaging only the 1.4 mm block_out plate, which the rest jam nut is tightened against. Drilling to 1.6 mm fixes the hole size but not this thin, cross-layer hoop wall.",
+   "evidence": [
+    "build-record outputs: spring_screw/rest_screw \"self-tapped into a 1.6 mm printed hole\"; stop_screw \"in a drilled 1.6 mm tap hole\".",
+    "design_basis Finishing: \"the three screw holes and the spring bore are drilled 1.6 mm after printing\".",
+    "Recipe: block_in y 7.3..14.4 with holes r 0.8 at y 9.3 and 12.4; block_out x -12.0..-10.6.",
+    "measurements: shell-printed-wall sampled_min 1.200 mm, minimum_proven false."
+   ],
+   "proposed_change": "Make the output process strings match the finishing text, and state for each hole whether it is self-tapped (thread-forming) or cut with an M2 tap. Give a low locking torque, or a \"snug plus 1/8 turn\" rule, for the rest jam nut against the 1.4 mm plate, or lengthen block_out toward +X where room allows. Keep the screw axes and stop contacts where they are.",
+   "required_test": "Print a coupon of block_in and block_out in the chosen material and orientation. Form the M2 threads as stated, tighten the jam nuts with the stated rule, and cycle the stop with a representative thumb force. Record whether the setting creeps and whether the threads strip."
+  },
+  {
+   "id": "MFG10-GAUGE-BAND-VS-FDM-SURFACE",
+   "severity": "minor",
+   "claim": "The new gauge band (1.47 mm, accept 1.44-1.50) is ±0.03 mm. Both surfaces it reads from are as-printed FDM skin with 0.2 mm layers. At this skin slope the layer staircase cusp alone is about 0.2 x |nz| = 0.036-0.044 mm, larger than half the band, and a flat gauge base also rocks on the doubly curved skin. The procedure reads \"at mid height\" (z about 14), but the stored normal was measured at z 12.26. My probe of the shell STEP gives the normal at z 14 as (0.1415, 0.9648, 0.2218). With that normal the reading at the nominal stop is 1.459 mm, not 1.473 mm. This offset uses about 0.013 mm of the 0.03 deg (about 0.015 mm at the front edge) check margin before any surface or gauge error counts. The physical consequence is limited: the plunger is near 18 mm from the axis, so a 0.04 mm reading error is about 0.025 mm at the plunger, within the 0.05 mm housing clearance. So this is a process-capability gap, not a blocker.",
+   "evidence": [
+    "Recipe v10: gauge_skin_normal measured at (14.6, 30.45, 12.26); Adjustment text: depth gauge at the face front edge at mid height reads 1.47 (accept 1.44-1.50).",
+    "My probe of the shell STEP: skin normal at (14.6, 30.09, 14.0) = (0.1415, 0.9648, 0.2218); at z 15.5 = (0.1420, 0.9547, 0.2615).",
+    "gauge_reading_mm with the z 14 normal: 1.4586 mm at the nominal stop and 1.5611 mm at the deepest accepted angle -3.2447 deg (vs 1.4728 / 1.5762 with the stored normal).",
+    "Reading sensitivity about 0.49 mm/deg near the stop; gauge_check_margin 0.03 deg."
+   ],
+   "proposed_change": "Either state the reading height to match the stored normal (z 12.3), or recompute the normal and reading at z 14. Name the gauge: anvil size, a narrow probe tip, and resolution of 0.01 mm. Define the reading as the mean of 3 to 5 readings, each with the base reseated. Optionally, use a printed or machined setting block indexed on the window edges, which reads the face against the skin without relying on a flat base on curved FDM skin.",
+   "required_test": "On the first article, run a gauge repeatability check: 10 reseated readings at the stated point. Require the spread to be no more than about one third of the band. Then confirm that the plunger to placeholder-housing gap at the stop matches the computed margin with a feeler or shim."
+  },
+  {
+   "id": "MFG10-CARRYOVER-MINORS",
+   "severity": "minor",
+   "claim": "r9 minor items that r10 does not change. (a) The button has unsupported flat down-facing ledges above its z 10 bed: the spine underside, 33.1 + 25.6 mm2 at z 12.6, about 4 mm deep from the skin, and the link underside, 27.4 mm2 at z 14.2. The support plan covers only the shell. (b) The skin-piece bed edge still has no first-layer chamfer, so bed flare acts on the visible lower running gap, and no deburr step or post-print gap feeler check is given. (c) The dowel holes have no printed pre-ream size, and the 0.01 mm blind press fit in reamed plastic has no retention fallback. (d) The spring closer is still M2 x 1.5, below the usual 2 mm catalogue minimum, and its point type is not stated. (e) No adjustment tool is named. The stop-screw tail now ends 27.2 mm from the inner skin, so a 0.9 mm hex L-key short leg fits, but the contract should say so. Fixed from r9: the stop screw is now a bought M2 x 8 with 2.1 mm of thread behind the nut; spring_screw is now an obstacle in the stop-nut turn check (passes, 0.10 mm away); and the spring OD limit is stated.",
+   "evidence": [
+    "My face probe of button/model.step: planar down faces at z 12.60 (33.1, 25.6 mm2) and z 14.20 (27.4 mm2).",
+    "Recipe ops: only stop_arm has the first_layer_chamfer; skin_piece has none.",
+    "Recipe: spring_screw height 1.5 mm; outputs \"Purchased M2 x 1.5 grub screw\".",
+    "Recipe: stop_screw origin x -26.39, length 8; stop_nut x -24.29..-22.69; ray from the stop axis toward -X hits the skin 30.9 mm from x -22.70.",
+    "measurements: stop_nut-turns-on-seat pass with obstacles shell and spring_screw; overlap-spring_screw-stop_nut distance 0.10 mm."
+   ],
+   "proposed_change": "(a) Chamfer the spine and link undersides at 45 deg toward the skin or web, or state tree supports for the button. (b) Add a 0.2-0.3 mm first-layer chamfer on the skin-piece bed edges, a deburr step, and a feeler check of the 0.4 mm gap on all four sides. (c) State the printed pre-ream hole sizes from a coupon, and add a dowel retention fallback such as a retaining compound or a dowel captured by the base. (d) Use a stocked M2 x 2 spring closer, or name a source for M2 x 1.5, and restate the spring length. (e) Name the tools, for example a 0.9 mm hex L-key and a 4 mm spanner.",
+   "required_test": "Test-print the button in the stated orientation and inspect the spine and link undersides for droop. Measure the four running gaps with feelers after deburring. Check dowel push-out force on a printed coupon. Confirm the catalogue availability of the spring closer."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Printer, material, nozzle, slicer settings and support interface parameters are not stated. Hole shrink, crown droop, bed flare, support scar depth and Z accuracy on the 8.0 mm tab slot can only be found on a test print.",
+  "Strength and stiffness of the cantilevered lower tab and the printed threads under repeated hard-stop loads are not analysed (no FEA); physical cycling is required.",
+  "Return-spring availability at Ø1.2 mm OD or less with an installed length of about 3.69 mm and about 3.02 mm at the stop, and its rate and preload, were not checked against a catalogue.",
+  "Real switch, real shell, PCB position and what the owner means by \"easier\" are unknown. Only the owner or a physical test can answer them; this review covers the stand-in shell and placeholder switch only.",
+  "Hex-key and spanner access with the PCB fitted was not probed by me (assembly role). My ray casts only cover the shell alone.",
+  "The gauge setting and the deepest accepted pose are rigid-model values. Real hinge play, printed skin form and skin deflection under the gauge are not known until a first article is measured.",
+  "My probes are ray casts and face listings on the exported STEPs. They are not a certified tool-path or collision analysis."
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "dbae29691a1bc803922bd760111af74f169c8a53a5fff3f230d96e6bb6036995",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/assembly.png",
+   "status": "viewed",
+   "observation": "Assembly render: stand-in shell with the gold button face flush in the side window and a thin running gap around it. All internal tabs, blocks, screws and nuts are hidden, so the image says nothing about printability or hole access."
+  },
+  {
+   "attachment_sha256": "6d1b806a732f5d9de45b9cc7072db5e1c044341561c9e026c16f5bf8c2314792",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/build-record.json",
+   "status": "viewed",
+   "observation": "Build record, attempt a08889c5..., subject_digest 4d06a97b... matches the packet; 118 file hashes. Recipe title \"revision 10 (skin-normal gauge setting, checked deepest pose)\". Outputs still say spring_screw and rest_screw are \"self-tapped into a 1.6 mm printed hole\", while stop_screw is \"in a drilled 1.6 mm tap hole\"; the Finishing assumption says all three screw holes and the spring bore are drilled."
+  },
+  {
+   "attachment_sha256": "c6c7daf38f77bc63a78477fc327505450e70f448c82952d0f1f4102b7aed74a7",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/button/iso.png",
+   "status": "viewed",
+   "observation": "Button iso: curved skin piece, full-height stop web, vertical barrel with bore, link and spine stepping up from the skin. The flat spine and link undersides are visible as ledges above the z=10 bed (STEP: 33.1 + 25.6 mm2 at z 12.6, 27.4 mm2 at z 14.2). Unchanged from r9."
+  },
+  {
+   "attachment_sha256": "7a27aec709ac4d6cb724dc8962e62653c8dedb013c5ec0f561af1d98b96edf29",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain cylinder, the purchased Ø2 dowel. No chamfer or lead-in is modeled; it is a bought part, so nothing to print."
+  },
+  {
+   "attachment_sha256": "09a16b387f06c3741df91d0a3c7f6072fe062c690478fa9a76eee399e614e701",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/measurements.json",
+   "status": "viewed",
+   "observation": "105 checks, geometry_checks_verdict pass, overall_verdict unknown. Shell wall sampled min 1.200 mm (minimum_proven false); button 1.202 mm. stop_nut-turns-on-seat now has spring_screw as an obstacle and passes; the spring_screw to stop_nut distance is 0.10 mm. stop-screw-path passes with a 3.05 mm continuous lower bound. Nothing in it measures tool or drill access to the holes."
+  },
+  {
+   "attachment_sha256": "5ea8ab38ef850bfa8b90f97851242fb569f79326219d3838925a9bfd2ab89f93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/rest_nut/iso.png",
+   "status": "viewed",
+   "observation": "Square nut, 4 x 4 x 1.6 mm, with a plain minor bore. Matches a purchased M2 square nut envelope."
+  },
+  {
+   "attachment_sha256": "dad9e60ede08194c8bdf93e104ed3ef906d27da262e822ebcd7179c8fe5bbaac",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/rest_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 x 4 cylinder for the M2 x 4 grub screw. No socket or point is modeled, and the flat point is only stated in text."
+  },
+  {
+   "attachment_sha256": "aa216734152eaf9716179d5bf387c18ef20a3fe7445ac7a4dbe04370e1623484",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Solid Ø1.2 x 3.69 mm cylinder: a spring envelope, not a coil. It is consistent with the stated maximum OD of 1.2 mm."
+  },
+  {
+   "attachment_sha256": "53c4315aa20068facd0ed3a3a584209938c8fc4378a1817c990a4f1cd8b22649",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell iso: rim-down dome with the side window open; the tabs and blocks are visible through it. The window lintel is the curved overhang that the support plan covers. The internal blocks that carry the horizontal screw holes sit deep inside the cavity, away from any opening on their axes."
+  },
+  {
+   "attachment_sha256": "cae67ebfbebb02e1c098f2aff67635f7ec2f88e241bd7e04c24f41ef9f4c56d1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/spring_screw/iso.png",
+   "status": "viewed",
+   "observation": "Short Ø2 x 1.5 cylinder for the M2 x 1.5 spring-closing grub screw, which is still below the usual 2 mm catalogue minimum for M2 set screws."
+  },
+  {
+   "attachment_sha256": "96d45587337c023e156725d2ddbed206300fa16012b17a241184437ea0fb10b8",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/stop_nut/iso.png",
+   "status": "viewed",
+   "observation": "Square nut identical to the rest nut (4 x 4 x 1.6 mm). Its corner half-diagonal of 2.83 mm is what sweeps over the flush spring screw."
+  },
+  {
+   "attachment_sha256": "213745450be22951fec4340204e29cb3f5f7ece03ba4e3079bb1acb73d1182fd",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/stop_screw/iso.png",
+   "status": "viewed",
+   "observation": "Long plain Ø2 x 8 cylinder: the stop screw is now modeled at the bought M2 x 8 length. The STEP tail is at x -26.39, 2.1 mm beyond the nut outer face at x -24.29."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Plain box: a placeholder switch-housing envelope, not a manufactured part."
+  },
+  {
+   "attachment_sha256": "1d4f98e6ffd629c862bfd1c63862d273d24e6f603569dd8dc6bc246eef48ff93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Plain narrow box: a placeholder stem envelope, not a manufactured part."
+  }
+ ]
+}

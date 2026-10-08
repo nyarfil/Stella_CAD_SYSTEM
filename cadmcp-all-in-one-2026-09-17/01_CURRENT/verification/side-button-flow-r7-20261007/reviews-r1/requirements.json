@@ -1,0 +1,153 @@
+{
+ "schema_version": 1,
+ "subject_digest": "d5ed4de93f07e55b8b1b583c0927090b270cdec1dc118f65011a1ad629afaef7",
+ "role": "requirements",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (requirements role, rev7)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "no_blocker_found",
+ "findings": [
+  {
+   "id": "R7-selection-limits-not-matched-to-adjustable-stop",
+   "severity": "minor",
+   "claim": "Rev 7 adds the owner-facing selection lines that R6-placeholder-selection-limits-unstated asked for, but they still use rev-6 numbers and the rev-6 fixed-stop logic. (1) Spring: unverified_requirements[14] says the spring shortens from about 2.9 mm to about 2.0 mm, so its solid length must be below about 2.0 mm. The rev-7 STEP spring runs from the closing screw to the web and is 3.18 mm long (x -20.68 to -17.5). At the stop (-3.033 deg, web face at 15.5 mm radius moves 0.82 mm) it is about 2.36 mm. The stated limit is too strict by about 0.36 mm and the stated installed length is wrong. The spring-screw depth, which the op reason says sets the preload, shifts both lengths by the same amount, and that is not stated. (2) Switch: [13] still gives an operating point of 0.55 mm or less and total travel of 0.84 mm or more \"so the hard stop, not the switch, ends the stroke\". Those limits come from a fixed printed stop. The rev-7 Adjustment assumption now sets the stop screw \"until the switch clicks with about 0.2 mm overtravel\", so the stroke depends on the real switch, not on the nominal -3.033 deg. The contract does not give the stop-screw adjustment range, a maximum stop angle, or how 0.2 mm of overtravel is measured at a hidden stem. It also does not say that housing-clear-past-stop (bound 0.215 mm against 0.2) was verified only at the nominal stop. A real switch with a deeper operating point would be set to a deeper stop that no check covers.",
+   "evidence": [
+    "return_spring/model.step bbox x -20.68..-17.50 (3.18 mm); spring_screw x -22.18..-20.68 (probe in /tmp/claude-0/probes-v7-requirements/)",
+    "scripts/side_button_recipe.py stop_screw_tip_x7: tip -18.380, in_x0 -22.180; spring length -17.5-(in_x0+1.5)=3.18 mm; 15.5*sin(3.033 deg)=0.820 mm, so 2.36 mm at the stop",
+    "unverified_requirements[14]: \"it shortens from about 2.9 mm to about 2.0 mm at the stop\"",
+    "unverified_requirements[13] and design_basis.assumptions[9] (Adjustment: stop screw set until the switch clicks with about 0.2 mm overtravel)",
+    "Modelled stem travel at the nominal stop at the nominal axis: 0.645 mm (stem edge x=1) to 0.751 mm (x=3)",
+    "measurements.json housing-clear-past-stop continuous bound 0.2151 mm vs min 0.2, end_deg -3.155 (nominal stop + play only)"
+   ],
+   "proposed_change": "Recompute [14] from the rev-7 geometry: installed about 3.2 mm, about 2.4 mm at the nominal stop, solid length below about 2.3 mm with the spring screw flush. Add that driving the spring screw in by d shortens both lengths by d. Rewrite [13] for the adjustable stop. State the stop-screw range allowed by the housing margin as a maximum stop angle, or as the stem travel at which the placeholder housing clearance reaches 0.2 mm. State the overtravel setting as screw turns (M2 pitch 0.4 mm: about half a turn back from first click gives about 0.2 mm at the stem). Keep the force and click feel undetermined, as the request asks.",
+   "required_test": "In CAD, find the stop angle at which housing clearance (at all 9 play offsets) reaches 0.2 mm, and report the matching stop-screw tip X and stem travel. That is the adjustment limit. Measure the spring envelope length at rest and at that angle. On the printed prototype, after setting the stop screw, check with the real switch that it clicks before the stop and is not bottomed at the stop. Check that the spring is not solid at the stop."
+  },
+  {
+   "id": "R7-window-gap-check-does-not-isolate-the-gap",
+   "severity": "minor",
+   "claim": "verification_plan[8] (new in rev 7) says the window running gap stays at least 0.2 mm up to the stop at every play offset. The recorded check window-gap-kept-until-stop uses min_mm 0.15, not 0.2. It measures the whole button against the whole shell, so every sample reports 0.19999999999999751 mm. That is the 0.2 mm tab axial gap (the same value as overlap-shell-button at rest), not the window gap. It has 3 samples per offset and continuous_swept_motion not_proven (bound -0.2485). The claim itself is true and the r6 far-edge closure (mechanism M1) is fixed: my probe cropped the shell to the window region and the button to its skin piece. Over 11 angles from 0 to -3.155 deg at all 9 play offsets, the window gap stayed at least 0.330 mm (minimum 0.3305 at -2.8 deg, offset -X), always at the far edge. The owner-facing evidence still does not show the number it is cited for.",
+   "evidence": [
+    "recipe verification_plan[8]: \"the window running gap stays at least 0.2 mm up to the stop at every play offset\"",
+    "recipe rotation_checks window-gap-kept-until-stop: min_mm 0.15, samples 3, max_samples 3, obstacles [shell]",
+    "measurements.json window-gap-kept-until-stop: all 27 samples distance 0.1999999999999975; overlap-shell-button distance 0.1999999999999975 at rest",
+    "Probe /tmp/claude-0/probes-v7-requirements/probe_rot.py on button/shell STEP: window gap min 0.365 (0 deg), 0.331 (-2.36 deg), 0.3308 (-3.033 deg), 0.338 (-3.155 deg); far-edge minimum equals window minimum at every angle",
+    "Probe /tmp/claude-0/probes-v7-requirements/probe_gap.py: removed running-gap skin 38.06 mm3, which matches unverified_requirements[5] (about 38 mm3)"
+   ],
+   "proposed_change": "Make window-gap-kept-until-stop measure only the window. Use cropped obstacles, or a shell-window and button-skin sub-part if the recipe allows it, or a clearance between named faces. Set min_mm to the 0.2 mm stated in the plan, or change the plan text to the threshold actually checked. Do not lower any existing threshold.",
+   "required_test": "Re-run the check on the window region only, at 9 play offsets and at least the angles 0, press (-2.36), stop (-3.033) and stop+play (-3.155). Record the minimum, which should be about 0.33 mm, against a 0.2 mm requirement."
+  },
+  {
+   "id": "R7-contract-text-residue-including-removed-plug",
+   "severity": "minor",
+   "claim": "Rev 7 removed the spring plug, but two design_basis lines still tell the builder to use it. (a) Assembly order: \"spring and plug into the through pocket\". The pocket is now closed by the spring_screw, and the stop and rest screws, which are new, are not in the order. (b) Finishing: \"dowel holes and the plug pocket are reamed after printing\". The pocket is now a 1.6 mm tap hole for a self-tapped M2 (spring_pocket reason), so reaming it is wrong or undefined. Two R6-pressability-and-text-residue items are also still open. The skin_piece reason still says \"so the outer shape does not change\". All six FLOW_RESULT concept records still say \"Outer shell skin is not reshaped\", and step 7 claims the contract was corrected. Further: unverified_requirements[4] still says \"line-reamed tab holes\" (r6 V6-4a). [10] still repeats the switch-position caveat that [13] now states with numbers. The outputs list the stop screw as M2 x 4, but it is modelled 3.8 mm long. No line says that no baseline button exists, so \"easier\" is a designer hypothesis the owner must judge. [11] gives the force factor 17/(x+15) for the stem only. The spring term, about (17*F_stem + 15.5*F_spring)/(x+15), appears only in words. With the spring now adjustable through the screw depth, the owner cannot see from the text how much preload costs at each face position. None of this changes a geometry verdict. It does mean the build and owner-facing text describes a part that no longer exists.",
+   "evidence": [
+    "recipe.json design_basis.assumptions: \"Assembly order: ... spring and plug into the through pocket, then switch/PCB.\"",
+    "recipe.json design_basis.assumptions: \"Finishing: ... dowel holes and the plug pocket are reamed after printing.\"",
+    "recipe outputs: no spring_plug; spring_screw \"self-tapped into a 1.6 mm printed hole\"; spring_pocket reason \"Tap hole for the spring and its closing grub screw\"",
+    "operations[skin_piece].reason \"... so the outer shape does not change.\"",
+    "FLOW_RESULT.json steps.5_6 candidates[0..5].protected_constraints \"Outer shell skin is not reshaped; the button face is the removed skin piece.\"",
+    "unverified_requirements[4], [10], [11]; outputs stop_screw \"M2 x 4\" vs STEP length 3.80 mm",
+    "Prior: side-button-flow-r6-20261007/reviews-r1/requirements.json R6-pressability-and-text-residue (a)-(d)"
+   ],
+   "proposed_change": "Assembly order: \"button in from below onto the rest screw, dowel pressed up into the upper tab, spring then spring screw into the tap hole, rest screw and stop screw driven in, then rest and stop adjusted, then switch/PCB\". Finishing: drop the plug pocket from the reaming list and say the tap holes are printed at 1.6 mm and not reamed. Fix the skin_piece reason, [4] and the M2 x 4 vs 3.8 mm length, delete [10], and add the spring term and a no-baseline sentence to [11]. Mark the FLOW_RESULT concept records as historical, or update their protected_constraints.",
+   "required_test": "Text search of recipe and FLOW_RESULT for \"plug\", \"line-reamed\", \"does not change\", \"not reshaped\" and \"M2 x 4\". Each hit must match a modelled part or be marked historical. The force line must include the spring term, and a baseline statement must be present."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "5da76a7de624d5078d2c65f074299bb5ddd28d63200efcb3118411bc4ff95333",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/assembly.png",
+   "status": "viewed",
+   "observation": "Assembly iso: the stand-in elliptical shell with the button face (tan) set flush in the side skin, with a thin even running gap visible on all four sides. The far (right) edge looks nearly vertical; its 8.8 deg tilt in plan, normal to the hinge radius, is not visible at this scale. No internal parts are visible, so the screws, spring and switch cannot be judged from this image."
+  },
+  {
+   "attachment_sha256": "4f1e1a4457d36db3520472cd69a4e6b2fa6ba08263b9e3dee1abb7e4a67697bb",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/build-record.json",
+   "status": "viewed",
+   "observation": "Build record (attempt 007eeddb...) holds the full rev-7 recipe context and measurements. 78 checks, geometry_checks_verdict pass, overall_verdict unknown, human_approval false. It still has the stale text: design_basis Assembly order says \"spring and plug into the through pocket\" and Finishing says \"plug pocket ... reamed\", but no plug part exists in outputs."
+  },
+  {
+   "attachment_sha256": "c6c7daf38f77bc63a78477fc327505450e70f448c82952d0f1f4102b7aed74a7",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/button/iso.png",
+   "status": "viewed",
+   "observation": "Button iso: one printed body with the curved skin face, rear rib, link, a hinge barrel with a vertical bore, the stop web along the bottom and the spine. The far end of the face is cut at a slight angle, in line with the new radial far edge. The plunger is hidden in this view."
+  },
+  {
+   "attachment_sha256": "562ca66e8007272cd5fd7b8c247bc4132fa14d91f772d2fc3484a302bc9e3a79",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Hinge pin iso: a plain cylinder with no shoulder or chamfer. This matches the purchased Ø2 h7 dowel (z 5.8 to 19.6, 13.8 mm long), whose depth stop is the floor of the blind upper hole."
+  },
+  {
+   "attachment_sha256": "7fd1c75613bf83cd72b138c7b8ef3b00400bbf1861a248c7b5a9ebaf6a9571d0",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/measurements.json",
+   "status": "viewed",
+   "observation": "Measurements: every check passes. window-gap-kept-until-stop uses min_mm 0.15 and samples only 3 angles. All its sampled distances are 0.1999999999999975 mm, the global button-shell minimum (the 0.2 mm tab axial gap), so the check never isolates the window gap. continuous_swept_motion is not_proven (bound -0.2485). stop-screw-reached ends 0.0020 mm from the screw at -3.033 deg. housing-clear-past-stop bound is 0.215 mm against 0.2. rest-band-stem-free bound is 0.111 mm against 0.05."
+  },
+  {
+   "attachment_sha256": "c07300dff15c81864071425d7b93ed10a42337543f5ba9e95f2803acc4f0a672",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/rest_screw/iso.png",
+   "status": "viewed",
+   "observation": "Rest screw iso: a plain Ø2 x 3 mm cylinder, the envelope of the M2 x 3 grub screw. No hex socket or point is modelled. In the STEP it runs from x -12.5 to -9.5, so it stands about 1.1 mm proud of the 1.4 mm thick outward block."
+  },
+  {
+   "attachment_sha256": "678716bd6741d3edbebc970c03126f181aa2f158f00e72dc571c7461a946949b",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Return spring iso: a solid Ø1.5 cylinder envelope. In the STEP it is 3.18 mm long (x -20.68 to -17.5). That differs from the 2.9 mm installed length stated in unverified_requirements[14]."
+  },
+  {
+   "attachment_sha256": "6432529df07f7f7626e153f5814c8963c8c0ee0488709dcc432e0da8340f5b3f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell iso: the stand-in shell with the side window open. The hinge tabs and internal blocks show through it, and the outer skin is unchanged away from the window. The window outline is the button outline plus the gap."
+  },
+  {
+   "attachment_sha256": "cae67ebfbebb02e1c098f2aff67635f7ec2f88e241bd7e04c24f41ef9f4c56d1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/spring_screw/iso.png",
+   "status": "viewed",
+   "observation": "Spring screw iso: a short Ø2 x 1.5 mm cylinder, the envelope of the M2 x 1.5 grub screw that closes the spring pocket at x -22.18 to -20.68."
+  },
+  {
+   "attachment_sha256": "c46aac7b312bc962f3d4754c7b888b1daadc4fc5af86123d944d76edde16d2d9",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/stop_screw/iso.png",
+   "status": "viewed",
+   "observation": "Stop screw iso: a Ø2 cylinder. In the STEP it is 3.8 mm long (x -22.18 to -18.38), while the outputs list a purchased M2 x 4. The tip stands 0.3 mm proud of the inward block face."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Switch housing iso: a plain rectangular block, the placeholder envelope only. Its manufacturing_process says it is not a part, which follows the request to keep the real switch undetermined."
+  },
+  {
+   "attachment_sha256": "269790e02304a1521b5881b73ce5730093d356b24797aa0c9d79ba1e489987e1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r7-20261007/workspace/studio/side-button-flow/d5ed4de93f07e55b-ad08377f/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Switch stem iso: a plain rectangular block, the placeholder stem. Its top is at y 23.8, which gives the 0.20 mm modelled free play to the plunger tip at y 24.0."
+  }
+ ],
+ "remaining_uncertainties": [
+  "What 'もっと押しやすく' means to the owner (lighter force, shorter travel, position on the face, click feel) is still not stated. There is no baseline button and no target value. The lever layout makes the hinge-side third of the face up to about 3.4x heavier (rigid estimate), and the adjustable spring preload adds to thumb force everywhere. Only the owner can judge whether this is easier.",
+  "Owner acceptance of the outer-form changes. The 0.4 mm running gap removes 38.06 mm3 of skin (my probe confirms the stated 38 mm3), and the far edge is now cut in plan about 8.8 deg from the Y direction (normal to the hinge radius). The face may stand proud by up to about 0.14 mm within hinge play: my probe found first rest-screw contact at 0.00-0.13 deg outward across the 9 offsets, about 0.10 mm at the free edge, which is inside the stated bound. Flushness now depends on how the rest screw is set. human_approval is false. 'このマウス' is not identified, and the shell is a stand-in (2_reference_inspection not_available).",
+  "As the request asks, the real switch dimensions, operating force, travel and click feel remain undetermined. The housing and stem are placeholders. Every rest, stop and housing margin moves with the real switch and PCB, and no PCB datum is modelled.",
+  "Whether the owner accepts an added return spring (adjustable preload) instead of relying on the switch's own return (concept 72bd228f / R_switch).",
+  "Physical tests not done: actuation force and travel at x=-10, 2 and 14; return against dowel friction; holding of self-tapped M2 threads in printed plastic under repeated hard-stop loads; dowel press-fit retention; FDM hole accuracy; stop and skin stiffness under a firm press; wear; whether a 0.9 mm hex key can reach both screws in the real mouse before the PCB is fitted.",
+  "Rev-6 requirements findings checked. R6-calibration-moves-face-proud is fixed: the rest screw now sets flushness in both directions, and free play and stroke are set separately by the stop screw. R6-placeholder-selection-limits-unstated is partly fixed: the lines exist but use rev-6 numbers (see R7-selection-limits-not-matched-to-adjustable-stop). R6-pressability-and-text-residue is mostly open (see R7-contract-text-residue-including-removed-plug). The r6 mechanism far-edge gap closure is fixed according to my probe (window gap at least 0.33 mm through the stroke).",
+  "My window-gap probe sampled 11 angles at 9 play offsets with cropped rigid solids. It is not a continuous sweep and does not include tilt or axial play.",
+  "This review is one Claude subagent of the same model family as the designer. It is not an independent human or vendor review, and no physical test was run."
+ ]
+}

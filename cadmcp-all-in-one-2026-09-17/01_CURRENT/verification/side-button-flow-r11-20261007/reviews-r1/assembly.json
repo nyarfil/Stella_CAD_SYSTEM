@@ -1,0 +1,153 @@
+{
+ "schema_version": 1,
+ "subject_digest": "31cfb2eb28dd1a3b4994c06c61cba6d8be6d54a74c6cb40726896c396680acd6",
+ "role": "assembly",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (assembly role, rev11)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "ASM11-1-gauge-calibration-point-not-the-stated-read-point",
+   "severity": "major",
+   "claim": "The r10 major ASM10-1 (gauge value not computed where it is read) is not fixed; it has moved to a different place. The r11 contract tells the builder to read the gauge 'rod normal to the skin, 1.0 mm in from the face front edge at mid height (z 14)', target 1.44 mm, accept 1.41-1.47 mm, 'about 0.05 mm at rest'. The calibration in parameter_basis was not taken there. I re-cast the stated ray (start (13.895, 30.267, 13.726), direction -(0.1483, 0.966, 0.2116)) on the r11 button STEP. It hits the face at x 13.888, z 13.716 at rest, which is the face front edge itself (about 0.0-0.03 mm in), and at z 13.42 at the stop, not z 14. Its start point lies on the tangent plane of the skin at about x 14.4, so it reads 0.047 at rest. At the stated point (rod at x 12.86, 1.0 mm in from the front edge at x about 13.86, z 14; foot on the skin tangent plane at (14.6, 30.095, 14.0)), I measure 0.016 mm at rest, 1.3985 mm at the nominal stop -3.0333 deg, and 0.4525 mm/deg. So a part set exactly at the CAD stop reads 0.044 mm below the 1.4429 target, outside the +/-0.03 mm accept band. The procedure as written makes the builder turn the stop about 0.10 deg deeper. Separately, the play term is still incomplete. deepest_accepted_angle_v11_deg adds gauge_play_reading 0.035 mm, which is only the n·delta translation. But the axis shift while gauging also moves the stop angle reached while gauging (stop_play 0.12 deg, about 0.054 mm of reading). In a 2-D contact model (web -X face on the stop-tip edge at y 8.3, 72 play directions; it reproduces the STEP reading at the stated point, 1.3983 mm), the reading at the nominal screw position spans 1.336-1.461 mm over the play circle, i.e. +/-0.062 mm, not +/-0.035. Worst pairing (gauged at the low-reading offset, used at the deep offset) with the stated read point and the 1.4729 upper limit: the in-use stop reaches about -3.454 deg. Even with the designer's own calibration datum it reaches about -3.357 deg. The recorded housing and shell sweeps, and the contract numbers derived from 'deep', end at -3.3219 deg. So the verification-plan line ('... down to -3.322 deg: the deepest gauge-accepted stop plus hinge play while gauging and in use') does not bound the stated procedure. Rigid consequences I measured are inside the placeholder margins, so this is not blocking. At -3.4536 deg over 9 offsets: housing min 0.085 mm (at least 0.05 required) and shell min 0.169 mm (at least 0.15 required). Two stated contract numbers are wrong at that pose. The stem push is about 0.88 mm, not 'up to about 0.84 mm'. The spring is compressed to about 2.93 mm, below the stated 'solid length below 2.96 mm'.",
+   "evidence": [
+    "Recipe v11 design_basis Adjustment: 'depth gauge whose foot rests on the skin beside the front edge, rod normal to the skin, 1.0 mm in from the face front edge at mid height (z 14), reads 1.44 mm (accept 1.41-1.47 mm; it reads about 0.05 mm at rest)'.",
+    "parameter_basis gauge_stop_reading_mm: 'ray along the inward skin normal (0.1483, 0.966, 0.2116) from the skin tangent plane at (13.895, 30.267, 13.726), 1.0 mm in from the face front edge at z 14; 0.047 mm at rest, 1.443 mm at the nominal stop, 0.469 mm per degree'. P11 gauge_mm_per_deg 0.4694, gauge_play_reading_mm 0.035.",
+    "My re-cast of that exact ray on r11 button/model.step: rest 0.0469 mm, hit (13.888, 30.222, 13.716); nominal stop -3.0333 deg 1.4425 mm, hit (13.681, 28.873, 13.421); -3.3219 deg 1.5779 mm. So the value is reproduced, but the hit point is at the front edge and z 13.4-13.7.",
+    "My STEP probe at z 14: the face front edge is at x about 13.86 (the face skin ray hits at x 13.8; at x 13.9 the ray hits the slanted far edge). Shell skin beside the edge: (14.6, 30.0947, 14.0), outward normal (0.1415, 0.9648, 0.2218).",
+    "Reading at the stated point (rod x 12.86, z 14, along -normal from that tangent plane): rest 0.0159, stop 1.3985, -3.3219 deg 1.5291 mm; 0.4525 mm/deg. Rod at x 13.5: stop 1.4192. Rod at x 13.8: stop 1.4304. With the z 12.26 normal at x 12.86: stop 1.4085.",
+    "deepest_accepted_angle_v11_deg = -3.0333 - 0.1201 (stop_play) - (0.03+0.035)/0.4694 - 0.03 = -3.3219, used as end_deg of housing-clear-past-stop and nearest-shell-gap-until-stop.",
+    "2-D contact model (stop_screw_tip_x7 = -18.390, contact edge y 8.3, web half-width 2.5, axis offsets on a 0.035 mm circle, 72 directions): nominal reading 1.3983; reading span over play 1.3362-1.4605; in-use stop span -3.159 to -2.921 deg; a screw 0.087 mm deeper still reads at most 1.4729 at some gauging offset and gives -3.454 deg in use.",
+    "My BRepExtrema distances, button rotated about (-15,25) at 9 offsets (nominal plus 8 x 0.035 mm): housing min 0.2206 at -3.0333, 0.1277 at -3.3219, 0.1041 at -3.3951, 0.0853 at -3.4536, 0.0703 at -3.50 deg. Shell min 0.2000 at -3.3219 and 0.1688 at -3.4536 deg.",
+    "stem_push_mm at -3.4536 deg: 18*sin(3.4536 deg) - 0.2 = 0.884 mm (contract: up to about 0.84). Spring: 3.6905 - 12.6*sin(3.4536 deg) = 2.931 mm (contract: solid length below 2.96 mm)."
+   ],
+   "proposed_change": "Make the calibration and the procedure name the same point. Either (a) keep the stated read point (1.0 mm in, z 14, foot on the skin beside the edge) and restate the target from a STEP measurement there (about 1.40 mm at the nominal stop, 0.45 mm/deg, about 0.02 mm at rest), or (b) restate the read point as the one actually calibrated, with an explicit rod position measured from a physical datum the builder can find. Option (a) is preferable: a rod 0.0-0.2 mm from the face edge sits on the 0.4 mm gap edge, so its reading is not repeatable. Replace gauge_play_reading_mm with the full reading spread over the play circle at a fixed screw position (both the stop-angle shift and the translation, about 0.062 mm), or state a gauging load case that fixes the play direction (press point and direction, e.g. 5 N at the face centre, z 14, normal to the skin). Recompute 'deep'. Extend housing-clear-past-stop and nearest-shell-gap-until-stop to it, and restate the stem push and the spring solid-length limit from it. Do not lower the 0.05 mm housing or 0.15 mm shell thresholds, and do not move the switch, shell, stop contact or skin.",
+   "required_test": "Add a recorded measurement on the exported button and shell STEPs: the depth along the local skin normal at the exact stated rod position, at rest, at the nominal stop and at 'deep'. It must match the contract target and per-degree value within 0.005 mm. Compute the worst gauging/in-use play pairing (at least 8 directions each) for a screw set at the upper accept limit, and run housing-clear-past-stop (min 0.05 mm) and nearest-shell-gap-until-stop (min 0.15 mm) to that angle at all 9 offsets. On the first article, take 10 reseated readings at the stated point with the stated press load, and check that the spread is within one third of the band."
+  },
+  {
+   "id": "ASM11-2-carryover-assembly-gaps",
+   "severity": "minor",
+   "claim": "Assembly items from r10 ASM10-2/ASM10-3 that r11 leaves open. (a) The gauging press point is still not stated. The procedure says only 'press the face with about 5 N'. Where the face is pressed decides which way the hinge play is taken up while gauging, and that is the term in ASM11-1. (b) pin-insertion-path still has only the shell as obstacle. The dowel is still a square-ended cylinder (hinge_pin iso), and no lead-ins are stated for the 2.02 mm lower hole, the 2.05 mm button bore (0.025 mm radial play) or the 1.98 mm blind press-fit hole. Lining up three holes by hand with no chamfer is the most likely place for the press fit to shave or cock. (c) The rest-screw tail still stands only about 0.5 mm past its jam nut. The usable inward rest adjustment with full nut engagement is not stated. (d) The nut quarter-turn and insertion-path checks are still sampled and not_proven (bound -0.37 mm for the nut turns). Fixed in r11: the spring screw is now a stated cut-down M2 grub set flush; the drilling side and order for the stop and rest holes are stated (from +X, before the button); the switch Y band is now -0.15/+0.00; a first-article test with and without the switch is defined.",
+   "evidence": [
+    "Recipe v11 Adjustment text: 'press the face with about 5 N' (no location or direction).",
+    "motion_checks pin-insertion-path: obstacles ['shell']; samples show 0.010 mm to the shell over t 0-0.625, then free; pin op is a plain cylinder of radius 1.0 and height 14.8 with no chamfer (hinge_pin/iso.png).",
+    "operations rest_screw origin x -12.5, height 4.0 (to x -8.5); rest_nut_body x -10.6..-9.0.",
+    "measurements stop_nut-turns-on-seat / rest_nut-turns-on-seat: 7 samples, continuous_distance_lower_bound_mm -0.3702, continuous_swept_motion not_proven, verdict pass."
+   ],
+   "proposed_change": "State the gauging press point and direction (for example 5 N at the face centre, mid height, normal to the skin) and use it in ASM11-1. Specify a 0.2 mm x 45 deg chamfer on the dowel lead end and 0.2-0.3 mm countersinks on the lower tab hole and both bore ends. Add the button at rest (and at the 8 play offsets) as an obstacle in pin-insertion-path. State the rest and stop screw adjustment range that keeps full jam-nut engagement. Give the nut checks a final-pose sweep at 5 deg or smaller steps.",
+   "required_test": "Re-run pin-insertion-path with obstacles shell and button and a chamfered dowel envelope. Record the rest-screw adjustment range against nut engagement. On the first article, press the dowel through the button and into the blind hole, check that the button swings freely by hand, and check that the dowel cannot be pushed out with the stated retention."
+  }
+ ],
+ "remaining_uncertainties": [
+  "The real switch (stem position, operating point, bottoming depth, force and click feel) and the owner PCB position are unknown. All housing and stem margins, including my 0.085 mm at -3.454 deg, are against placeholders. Only the owner or the real parts can settle them.",
+  "Whether the 0.4 mm running gap and the about 0.1 mm proud face after flush adjustment are acceptable under 'change the outer form as little as possible'. That is the owner's decision.",
+  "What 'easier to press' means to the owner (lower force, shorter travel, larger effective area). The 17/(x+15) force factor is a rigid-body estimate, and the return spring rate and preload that add to thumb force are not selected.",
+  "Gauge repeatability on printed FDM skin across a 0.4 mm gap edge (layer cusps about 0.04 mm, curved skin under a flat foot) can only be found on a printed part.",
+  "Elastic deflection of the stop path (web, printed threads, block) under the 5 N setting force and harder thumb presses is not modelled. The designer's 0.01 mm/N is an estimate, and the 5-10 N first-article test is the only check.",
+  "Jam-nut locking shift in self-tapped printed threads, and creep of the setting over repeated hard-stop hits, are not known without a printed coupon and cycling.",
+  "My 2-D play model assumes the stop contact is the tip edge at y 8.3 and that the hinge offset is anywhere in the 0.035 mm circle, independently at gauging and in use. Real loading may take up the play the same way both times. Then the deep pose is closer to the designer's value.",
+  "My clearance probes are BRepExtrema distances at single poses and 9 axis offsets. They are not a continuous swept proof. I did not re-sample the button insertion drop leg or probe pin cocking about X."
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "dbae29691a1bc803922bd760111af74f169c8a53a5fff3f230d96e6bb6036995",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/assembly.png",
+   "status": "viewed",
+   "observation": "Shell exterior with the gold button face flush in its side window and a thin running gap visible around it. No internal hinge, stop or screw parts are visible, so this image says nothing about the mating interfaces."
+  },
+  {
+   "attachment_sha256": "172163b29f79149e7dea9fb9ed2807603b510dec9748a93fcf3343b5f346d06d",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/build-record.json",
+   "status": "viewed",
+   "observation": "Build record for attempt 543ee54a..., subject digest 31cfb2eb...; it has 118 file hashes and the same measurements block as measurements.json. The recipe context is r11: housing-clear-past-stop and nearest-shell-gap-until-stop end at -3.3219 deg, and pin-insertion-path has only the shell as obstacle."
+  },
+  {
+   "attachment_sha256": "c6c7daf38f77bc63a78477fc327505450e70f448c82952d0f1f4102b7aed74a7",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/button/iso.png",
+   "status": "viewed",
+   "observation": "One-piece button: curved skin face, rear rib, link to a vertical bored barrel, full-height stop web and plunger block. The bore is open at the barrel top, and no lead-in chamfer is visible at the bore mouth."
+  },
+  {
+   "attachment_sha256": "7a27aec709ac4d6cb724dc8962e62653c8dedb013c5ec0f561af1d98b96edf29",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Dowel modelled as a plain cylinder with square ends. There is no entry chamfer for the lower clearance hole, the 0.025 mm button bore or the 1.98 mm blind press-fit hole."
+  },
+  {
+   "attachment_sha256": "ec944f0c5fbeec6908a80f091fbe01657f50a8f1395626d4c1e31c163e3984c6",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/measurements.json",
+   "status": "viewed",
+   "observation": "overall_verdict unknown, geometry checks pass. housing-clear-past-stop and nearest-shell-gap-until-stop end at -3.3219 deg over 9 axis offsets (shell gap samples 0.200 mm; housing continuous bound 0.064 mm). Nut-turn, pin and insertion paths are sampled and not_proven. stop-screw-reached end pose is 0.002 mm at -3.0333 deg. No check measures the gauge reading itself."
+  },
+  {
+   "attachment_sha256": "5ea8ab38ef850bfa8b90f97851242fb569f79326219d3838925a9bfd2ab89f93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/rest_nut/iso.png",
+   "status": "viewed",
+   "observation": "Square jam nut, 4 x 4 x 1.6 mm, with the thread modelled as a plain 1.6 mm minor bore. It is the same body as the stop nut."
+  },
+  {
+   "attachment_sha256": "dad9e60ede08194c8bdf93e104ed3ef906d27da262e822ebcd7179c8fe5bbaac",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/rest_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain 2 mm cylinder, M2 x 4 grub screw envelope, with flat ends and no hex socket modelled. In the recipe its tail stands about 0.5 mm past the rest jam nut (x -12.5..-8.5 against nut -10.6..-9.0)."
+  },
+  {
+   "attachment_sha256": "aa216734152eaf9716179d5bf387c18ef20a3fe7445ac7a4dbe04370e1623484",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "The return spring is a solid 1.2 mm cylinder envelope, 3.69 mm long. It has no coils, so solid length and rate are not represented."
+  },
+  {
+   "attachment_sha256": "53c4315aa20068facd0ed3a3a584209938c8fc4378a1817c990a4f1cd8b22649",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/shell/iso.png",
+   "status": "viewed",
+   "observation": "Stand-in shell with the side window opened. The internal tabs and blocks are partly visible through the window. The outer skin otherwise looks unchanged."
+  },
+  {
+   "attachment_sha256": "cae67ebfbebb02e1c098f2aff67635f7ec2f88e241bd7e04c24f41ef9f4c56d1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/spring_screw/iso.png",
+   "status": "viewed",
+   "observation": "Short 2 mm cylinder, 1.5 mm long (the cut-down M2 spring closer), with no socket modelled. The recipe sets it flush with the inward block face at x -22.69."
+  },
+  {
+   "attachment_sha256": "96d45587337c023e156725d2ddbed206300fa16012b17a241184437ea0fb10b8",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/stop_nut/iso.png",
+   "status": "viewed",
+   "observation": "Square jam nut, 4 x 4 x 1.6 mm, with a 1.6 mm bore. Its quarter-turn sweep (corner radius 2.83 mm) passes 0.10 mm from the flush spring screw, per the overlap check."
+  },
+  {
+   "attachment_sha256": "213745450be22951fec4340204e29cb3f5f7ece03ba4e3079bb1acb73d1182fd",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/stop_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain 2 mm x 8 mm cylinder for the M2 x 8 stop grub screw, with a flat tip. Its tip is the hard stop contact."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Placeholder switch housing box, 6 x 4 x 8 mm. Its top face is the assumed stem bottoming plane (1.00 mm stem travel in r11). It is not a real part."
+  },
+  {
+   "attachment_sha256": "13868d50c010a4871a6d9847fed7d261176926a5db97b66c3d97f1760b05b125",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Placeholder stem box, 2 x 1 x 4 mm. It is the obstacle for the free-play and contact checks and is not a real switch."
+  }
+ ]
+}

@@ -1,0 +1,211 @@
+{
+ "schema_version": 1,
+ "subject_digest": "2977ef89492e90ae71cfc7c406d751e41de4e622452f5937e98a504461370f1c",
+ "role": "requirements",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (requirements role, rev16 parallel)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "R1-rest-gap-rule",
+   "severity": "major",
+   "claim": "The stated assembly rule for the actuator insert contradicts the checked geometry and the switch hysteresis. The design basis says \"the longest [insert] that does not operate the switch at rest is fitted (gap 0-0.05 mm above the release point side)\", but the CAD and every travel number assume a 0.05 mm gap above the pin FREE position (rest-gap-insert-to-pin 0.05 mm; travel_to_operate 0.60 mm; travel_to_pin_flush 1.00 mm). Following the written rule with 0.05 mm steps leaves the insert within 0.05 mm of the operating point, i.e. pre-depressing the pin by up to the pretravel and inside the registered movement differential (Zippy DF MD 0.12 mm max), so after the first click the switch may never release. This was the fix offered for the r15 \"rest gap set only by print accuracy\" finding, so the fix is not yet coherent.",
+   "evidence": [
+    "context.recipe.design_basis.assumptions[6] (rest-gap rule)",
+    "clearance check rest-gap-insert-to-pin: distance 0.050 mm, i.e. CAD gap above free position",
+    "FLOW_RESULT 8_recipe.switch_profile_fit zippy_df_pin travel_to_operate_max_mm 0.60 (computed with the gap above free_position)",
+    "cadmcp_brain/studio/switch_profiles.py zippy_df_pin movement_differential 0.12 max, pretravel 0.62 max"
+   ],
+   "proposed_change": "Rewrite the selection rule to match the CAD: fit the longest insert that leaves the pin at its free position (no contact, or contact without pin movement), or, if pre-load on the pin is intended, state the target band relative to the release position (above RP by at least one step) and recompute travel/force numbers for that band.",
+   "required_test": "Physical: with the chosen insert, press and release 20 times and confirm the switch releases every time (continuity meter); record insert length and pin position. CAD: keep rest-gap-insert-to-pin consistent with the written rule."
+  },
+  {
+   "id": "R2-leaf-tip-joint",
+   "severity": "major",
+   "claim": "The leaf stress check passes on geometry that is not what was built. parallel-leaves-beam models each leaf as a 10 mm wide guided beam fixed over its full width at both ends, but the built tip joint is only 7 mm wide: the leaf tip face spans z 8.5-18.5 while the pad (and the tip fillets) span z 10.5-17.5, leaving unattached corners and sharp in-plane re-entrant corners at z 10.5 and 17.5. A guided leaf carries the same end moment at the tip as at the root, so the nominal tip-joint stress is about 9.69 x 10/7 = 13.8 MPa and, with the design own Kt 1.5, about 20.8 MPa, above the stated 16.7 MPa allowance. The r15 \"sharp leaf corners\" finding is therefore only partly fixed and the reported pass is not supported.",
+   "evidence": [
+    "STEP probe of leaf_a/leaf_b: tip faces at x=-9 span z 8.5-18.5 (area 7.0 mm2); button material at x -9..-8.98 spans only z 10.5-17.5",
+    "context.recipe.design_parameters pad_z_min_mm 10.5, pad_z_max_mm 17.5, leaf_z_min_mm 8.5, leaf_z_max_mm 18.5",
+    "measurements parallel-leaves-beam: nominal 9.69 MPa, peak 14.54 MPa, allowed 16.7 MPa, beam_mm width 10",
+    "leaf_a/iso.png and leaf_b/iso.png show the tip fillet over only part of the width"
+   ],
+   "proposed_change": "Make the pad (at least below the window, y < ~26) cover the full leaf width z 8.5-18.5 with the R1 tip fillets over the same width, or make the leaves 7 mm wide; then rerun the flexure check so the modelled beam ends match the built joints.",
+   "required_test": "Rerun parallel-leaves-beam after the change and add a geometric check that each leaf end face is fully joined to block/pad (contact area equals t x w). Physical: cycle a printed carrier to the deep pose and inspect the tip corners."
+  },
+  {
+   "id": "R3-rest-flush-no-preload",
+   "severity": "major",
+   "claim": "F2 states the face is \"held flush at rest against the lug\", but there is no designed preload: the stop tab touches the lug at exactly 0.0 mm and the leaves are modelled undeflected at rest. Whether the face is held against the lug, or sits proud/recessed with the lug idle, then depends only on the print and press-fit stack (pin holes in block vs posts, lug position), which is the same kind of print-accuracy dependence r15 asked to remove. The rest-outward-blocked-by-lug check proves only geometric blocking (first blocked at 0.1 mm), not that the face is held flush. Keeping the outer form (\"外形はできるだけ変えないで\") includes the face sitting flush, so this is a requirement-level gap.",
+   "evidence": [
+    "overlap-rest_stop-button distance 0.0, overlap 0.0",
+    "motion check rest-outward-blocked-by-lug: first_blocked_t 0.333 of 0.3 mm",
+    "context.recipe.functions.F2_guide_button text",
+    "design_parameters: no preload parameter; stop_lug_y_mm 26.5 equals the tab top"
+   ],
+   "proposed_change": "Either add a nominal preload (tab overlaps the lug by a stated delta so the leaves are pre-deflected, with the leaf force and stress rechecked at that delta) or reword F2 to \"rest position set by the leaves; lug limits outward motion\" and list face flushness as a print-dependent, physically tested item.",
+   "required_test": "CAD: a check that the rest pose has the declared tab-lug preload and the face stays inside the base form. Physical: measure face height vs. surrounding skin on the printed assembly and confirm the tab is in contact."
+  },
+  {
+   "id": "R4-easier-is-inference",
+   "severity": "minor",
+   "claim": "The explicit request is \"もっと押しやすく\"; the contract equates this with \"same force anywhere on the face\" without labelling that as an interpretation for the owner to confirm. The design also adds a leaf return force on top of the switch (0.82 N at the 0.60 mm operating travel, 1.44 N at the deepest pose); for the OP1 switch the registry names (Kailh GM 2.0, 80 gf max) this roughly doubles the force at the operating point vs. the bare switch. The reported 2.91 N mixes the leaf force at the deepest pose with the 150 gf switch operating force, so it is neither the force to click nor the bottoming force.",
+   "evidence": [
+    "context.recipe.unverified_requirements[0] and [1]",
+    "measurements parallel-leaves-beam force: beam_n 1.439 at 1.05 mm, switch_operating_max_n 1.471",
+    "FLOW_RESULT 1_intent: explicit \"もっと押しやすく\", unknown \"target force\"",
+    "switch_profiles.py kailh_gm20 operating_force 80 gf max, note \"side buttons of the Endgame Gear OP1 8k\""
+   ],
+   "proposed_change": "State in the contract that \"easier\" is interpreted as position-independent force (inference, owner to confirm), and report the press force at the operating point separately from the deepest-pose force, per registered switch, noting the added leaf force.",
+   "required_test": "Owner comparison of the printed prototype against the current OP1 side button; force gauge at the face centre and at the edges at the click point."
+  },
+  {
+   "id": "R5-stale-text",
+   "severity": "minor",
+   "claim": "Some contract and flow text is stale or inconsistent: design_parameters.edge_press_offset_mm is 4.0 and labelled ASSUMED but is not used (twist_v16 derives 4.5 mm from the window and leaf geometry, which the assumption text states); FLOW_RESULT step 3 still describes F5 as \"Motion stops before the switch housing is loaded\" and F6 as carrying \"the button and hinge\", while the chosen concept is S_switch (the switch takes the overtravel) on parallel leaves.",
+   "evidence": [
+    "context.recipe.design_parameters.edge_press_offset_mm 4.0 vs FLOW_RESULT 8_recipe.edge_press_twist.edge_offset_mm 4.5",
+    "scripts/side_button_leaf_recipe.py twist_v16 computes offset from window_z and leaf_z, ignoring edge_press_offset_mm",
+    "FLOW_RESULT 3_function_decomposition F5/F6 behaviour vs 7_engineering_evaluation.chosen.options [C_flexure, G_leaf, S_switch]"
+   ],
+   "proposed_change": "Drop or use edge_press_offset_mm; regenerate the step-3 behaviour text from the chosen concept (or mark it as pre-selection text).",
+   "required_test": "Regenerate the flow record and confirm every listed parameter is consumed by the generator and every function behaviour matches the chosen options."
+  },
+  {
+   "id": "R6-sampled-not-proven",
+   "severity": "minor",
+   "claim": "The verification plan says \"Carrier insertion path (+Y) clear of the shell posts and lug\", but the measurement is 5 samples over 5.98 mm with continuous_swept_motion not_proven (lower bound -0.748 mm); press-leaves-the-lug is likewise not_proven (-0.253 mm). Both are reported as pass. The path into the cavity before the last 6 mm (through the open rim) is not checked at all.",
+   "evidence": [
+    "measurements carrier-insertion: continuous_distance_lower_bound_mm -0.7475, not_proven",
+    "measurements press-leaves-the-lug: -0.2526, not_proven",
+    "context.recipe.verification_plan[4]"
+   ],
+   "proposed_change": "Label these as sampled-only in the verification plan and unverified list, or raise max_samples until the continuous bound is satisfied; add the entry path from the open rim if the assembly claim is kept.",
+   "required_test": "Rerun carrier-insertion and press-leaves-the-lug with enough samples for distance_bound_satisfied_under_stated_assumptions, or record them as unproven."
+  },
+  {
+   "id": "R7-pin-head-fillet",
+   "severity": "minor",
+   "claim": "Both pin heads intersect the block root fillets (about 0.004 mm3 each, up to 0.046 mm along X), so a head cannot seat flat on the block face as drawn. The collision is hidden because it falls inside the declared press-fit overlap band (measured 0.74668 vs ring 0.74267 mm3, band 0.52-0.97), and the pin-insertion checks list only leaf_a, leaf_b and button as obstacles.",
+   "evidence": [
+    "STEP probe: pin_1 head (x > -31) overlap with carrier_block 0.004012 mm3, bbox x -31.000..-30.954, y 13.4..13.7",
+    "measurements overlap-carrier_block-pin_1 and -pin_2: 0.74668 mm3 each",
+    "context.recipe.motion_checks pin-1/2-insertion obstacles"
+   ],
+   "proposed_change": "Reduce the head radius or move the pins so the head clears the R1 fillets, and declare the press fit on the shank only (or check the head separately against the block).",
+   "required_test": "Pair check of pin head vs carrier_block with zero allowed overlap; pin insertion check including carrier_block outside the bore."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "39ed2ec00653c296b0446dc60ebe7680229148f98451163be8f7a28865476f57",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/actuator_insert/iso.png",
+   "status": "viewed",
+   "observation": "Plain solid cylinder (r 1.0, 5.2 mm long in STEP, y 22.8-28.0); no length marking or series feature visible, so the 0.05 mm length series exists only as text."
+  },
+  {
+   "attachment_sha256": "88e13124f8e94c2e9491dc35b4efbd980eef4338fed09afa3195046d2956b89a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/assembly.png",
+   "status": "viewed",
+   "observation": "Stand-in ellipsoidal shell with one curved button face (orange) in a side window and a visible running gap; outer form elsewhere looks unchanged; internal carrier not visible in this view."
+  },
+  {
+   "attachment_sha256": "e4a3eecc8eaeec54dd82eb69895b4581600cfc48ee6c0c7bf1560c4402fb7590",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/build-record.json",
+   "status": "viewed",
+   "observation": "Holds the same recipe context as the packet: design_basis assumption says edge press 4.5 mm from leaf mid-plane while design_parameters.edge_press_offset_mm is 4.0; rest-gap assumption says longest insert that does not operate the switch is fitted."
+  },
+  {
+   "attachment_sha256": "35a07f8314913bc853e641c997b81e1bdf104324fa396ce9712e6a0b4eaa2b1a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/button/iso.png",
+   "status": "viewed",
+   "observation": "Curved skin piece with spine, pad running back to the leaves and plunger/tab features; pad is narrower in Z (10.5-17.5) than the leaves (8.5-18.5), visible as a stepped end at the pad."
+  },
+  {
+   "attachment_sha256": "56933e1ce33931024824a2ae9d160d64f511489043693c28abbfa595972e3f52",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/carrier_block/iso.png",
+   "status": "viewed",
+   "observation": "Block with two diagonal pin holes and concave R1 root fillets on both inner leaf faces running the full block height; consistent with the r15 location fix."
+  },
+  {
+   "attachment_sha256": "66d83ef4660635db8e9d8844fcbbb440761f161e45e58ca95e38df1b734d4184",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/leaf_a/iso.png",
+   "status": "viewed",
+   "observation": "0.7 mm leaf, 22 x 10 mm; the tip fillet strip at the pad end covers only the middle part of the leaf width, leaving notched free corners at the tip (confirmed in STEP: tip face z 8.5-18.5, pad joint z 10.5-17.5)."
+  },
+  {
+   "attachment_sha256": "05becee7365666a1a7f934058bb12d756fffbadac0184ea9cddaef0dbc0a9a16",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/leaf_b/iso.png",
+   "status": "viewed",
+   "observation": "Mirror of leaf A at y 19-20.7: tip fillet again only over the middle of the 10 mm width, outer corners of the tip unattached."
+  },
+  {
+   "attachment_sha256": "541b8d7109ae7cb9110a05e6ff21ce7dc597d94e3877864f4dada7bcdb915163",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/measurements.json",
+   "status": "viewed",
+   "observation": "96 checks, geometry_checks_verdict pass, overall_verdict unknown. parallel-leaves-beam: beam_n 1.439, switch 1.471, total 2.910 N, peak 14.54 vs allowed 16.7 MPa on a full-width guided beam. carrier-insertion and press-leaves-the-lug report continuous_swept_motion not_proven (lower bounds -0.748 and -0.253 mm). Twist checks lower bound 0.27-0.34 mm vs 0.15 required."
+  },
+  {
+   "attachment_sha256": "e35e3f8877242124ddf1db11d9ad5520b1d02d658921e7ee189d000170ab98b3",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/pin_1/iso.png",
+   "status": "viewed",
+   "observation": "Headed ABS pin (shank r 1.0 x 7 mm, head r 1.6 x 0.8 mm), no lead-in chamfer. STEP probe: head overlaps the block root fillet by 0.004 mm3 (x -31.0 to -30.954, y 13.4-13.7)."
+  },
+  {
+   "attachment_sha256": "3f0a045cf2840709b77b8fcb52a4b11e2085aca4892f61856df255bfebe90d8b",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/pin_2/iso.png",
+   "status": "viewed",
+   "observation": "Identical headed pin; measured pin_2/block overlap 0.74668 mm3 equals pin_1, i.e. the same ~0.004 mm3 head-to-fillet excess over the 0.74267 mm3 ring."
+  },
+  {
+   "attachment_sha256": "f1a58def55e3a273607ac93e078c071356930b553152b56f4c9e703f4ffc4bcb",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/rest_stop/iso.png",
+   "status": "viewed",
+   "observation": "Small lug (2.7 x 2.7 x 4 mm bbox) trimmed by the curved inner skin; its flat underside is the rest face that the stop tab touches at distance 0.0 (no designed interference/preload)."
+  },
+  {
+   "attachment_sha256": "3b4677f2c06d4d02b6eb4f39795f2d26ad0b86f835147de5ac3dbf55a0d12db4",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/shell/iso.png",
+   "status": "viewed",
+   "observation": "Stand-in loft shell with a rectangular through window; window edges parallel to the press direction; no other skin change visible."
+  },
+  {
+   "attachment_sha256": "7b7ff223cd76a231584532d3550c5add6ea3acfa2b6bc33c58be318ab63c7a92",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/switch_body/iso.png",
+   "status": "viewed",
+   "observation": "Plain box placeholder 12.7 x 6.65 x 5.8 mm (Zippy DF catalogue) on an ASSUMED PCB plane; no terminals or mounting holes, correctly a placeholder."
+  },
+  {
+   "attachment_sha256": "fd8db53b8591eaf6d4aa5d5b471e6979c55a1bc6d95246fd6c452a7485c253d3",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/switch_pin/iso.png",
+   "status": "viewed",
+   "observation": "Rectangular pin placeholder at maximum free position; X size 1.2 mm is labelled ASSUMED/UNKNOWN in the recipe."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Revision-15 items: carrier location is fixed in CAD (two diagonal pins with 0.03/0.05 mm interference; block clamped between post ends at distance 0 and pin heads); twist criterion restored to 0.15 mm and met (lower bounds 0.27-0.34 mm); pins are loaded in shear by geometry; print orientation is stated; sharp corners and rest gap only partly fixed (R2, R1); stale flow text partly fixed (R5).",
+  "Owner policy: all printed parts are ABS (Polymaker PolyLite ABS datasheet) and no screws are used; the only non-ABS item is the purchased switch placeholder. Compliant as modelled.",
+  "Owner questions: what \"easier\" means (lighter force, uniform force, shorter travel, larger face), the real switch (likely Kailh GM 2.0 per registry note; its dimensions, free/operating position are UNKNOWN), and the real OP1 shell/PCB geometry; the shell is a stand-in loft and the PCB plane is ASSUMED.",
+  "Only zippy_df_pin has a derived insert; omron_d2f_pin, huano_mouse_generic and kailh_gm20 are unverified for fit and travel.",
+  "Twist angle 0.17 deg is a generator calculation (independently reproduced: k about 4553 N mm/rad, 13.5 N mm) from ASSUMED force and Poisson ratio; rotation about Z for a press near the face X ends (up to about 23 mm beyond the leaf tips) is not checked.",
+  "Switch bottoming load, leaf creep and fatigue, pin and insert retention in printed ABS, and print accuracy of 0.03-0.05 mm interferences are UNKNOWN and need physical tests.",
+  "Manufacturing (not this role): in the stated carrier orientation leaf B bridges 22 mm unsupported and the button has about 189 mm2 of downward-facing area above the bed; supports for the carrier are not described.",
+  "Wall checks are sampled (minimum_proven false; oblique exits down to 0.005 mm in the button).",
+  "This review is one Claude subagent context, not an independent human or vendor review; no physical test was executed."
+ ]
+}

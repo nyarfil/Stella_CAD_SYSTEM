@@ -1,0 +1,173 @@
+{
+ "schema_version": 1,
+ "subject_digest": "075c873ae78986ae2a6fc54055dc099d946bae1152dd56270c75f211d19edb1c",
+ "role": "manufacturing",
+ "reviewer_label": "Claude subagent (manufacturing role, rev6)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "conclusion": "revise",
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "d7c9bc8cc99681775bfc4bc1cab68ad1ba637b8395b54a6a8c61e6e09ec4f78d",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/assembly.png",
+   "status": "viewed",
+   "observation": "Shell exterior with the button (orange) flush in the side window. The running gap is visible as a thin line on all four sides. The flat elliptical top at z 34 is the last loft section. No internal features are visible, so print orientation and supports cannot be judged from this image."
+  },
+  {
+   "attachment_sha256": "7567cb540e12df8b4571f3c4f3b7c890de7619c4a38250617e88c38299c5d280",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/build-record.json",
+   "status": "viewed",
+   "observation": "Build record carries the full v6 recipe context. The design basis now states the shell support plan (tree supports under the lintel, tab undersides and cavity roof), gauge-block sanding of the thrust faces, reaming of dowel holes and the plug pocket, and the rest-face feeler calibration. Outputs name the purchased Ø2 h7 dowel and a Ø1.6 steel dowel as the plug. It does not name a reaming tool or side for the pocket, or printed pre-ream sizes."
+  },
+  {
+   "attachment_sha256": "310dd870d6bb2f03c2965fca5ac92a4fc646c2ace26729b92af52b0eb9a5eedf",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/button/iso.png",
+   "status": "viewed",
+   "observation": "Button: curved skin piece, rib, plunger, the horizontal spine shelf along the skin, the link to the barrel, and the full-height stop web. The barrel top chamfer and bore are visible. The spine and link undersides are flat downward faces above the z 10 bed plane. These match the overhang scan (58.7 mm2 at z 12.6 and 27.4 mm2 at z 14.2)."
+  },
+  {
+   "attachment_sha256": "562ca66e8007272cd5fd7b8c247bc4132fa14d91f772d2fc3484a302bc9e3a79",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain cylinder, Ø2 x 13.8 mm per the recipe (z 5.8 to 19.6). No shoulder, groove or chamfer is modeled, and nothing in the geometry retains it except the 1.8 mm blind press hole. It protrudes only 1.0 mm below tab_low to grip for removal."
+  },
+  {
+   "attachment_sha256": "358b0058e4a4cc5436646dac29a399f092cce4e2e94aef731970e7ef97ea0028",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/measurements.json",
+   "status": "viewed",
+   "observation": "All checks pass. Shell sampled wall minimum is 1.2000 mm at (-15.41, 24.56, 20.8), i.e. the cap of the blind upper dowel hole. Button minimum is 1.2021 mm at the chamfered barrel top. Both have minimum_proven false. The press-fit checks report 0.1125 mm3 (dowel) and 0.0759 mm3 (plug) of rigid overlap, with scope stating retention and printed hole accuracy are not verified. The insertion paths are sampled only (continuous bound not_proven)."
+  },
+  {
+   "attachment_sha256": "1197b6bc6558047bbc2bbad676adc48bb7f54ee273c078082cd236a731647d2f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Plain solid cylinder envelope (Ø1.5, about 2.9 mm long per the recipe). No coil, wire or solid length is modeled, so OD growth under compression and fit in a reamed Ø1.58 pocket cannot be judged from the model."
+  },
+  {
+   "attachment_sha256": "1cfb3a5503546f2981b55d1c06f1ce630ceaeb3d3938c5aad7747d1e76c477de",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell with the window opened. Through the window you can see an internal tab edge and part of the stop-block region near the hinge end. The lintel above the window is the thin curved skin strip that the support plan says is supported, not bridged. The tab and block details are only partly visible here, so they were checked from STEP/STL probes instead."
+  },
+  {
+   "attachment_sha256": "fa573248f940ae549ee1ecad1edc459670bd0cf5967ca1acc2c6f6bfa5357f9a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/spring_plug/iso.png",
+   "status": "viewed",
+   "observation": "Short plain cylinder (modeled r 0.81 = Ø1.62 x 1.5 mm) with no end chamfer. The text describes a Ø1.6 dowel in a pocket reamed to 1.58 mm, so the modeled size does not match the stated hardware."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Rectangular placeholder box for an unspecified switch, labelled as a placeholder in outputs. It is not a manufactured part and has no mounting features."
+  },
+  {
+   "attachment_sha256": "269790e02304a1521b5881b73ce5730093d356b24797aa0c9d79ba1e489987e1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r6-20261007/workspace/studio/side-button-flow/075c873ae78986ae-c2999554/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Rectangular placeholder stem box. Its position sets the 0.20 mm free play that the rest-face calibration is meant to tune. It is not a manufactured part."
+  }
+ ],
+ "findings": [
+  {
+   "id": "MFG-PLUG-POCKET-PROCESS",
+   "severity": "major",
+   "claim": "The r5 plug finding is only partly fixed. The plug is now a bought steel part, but the process that sets the fit still cannot be carried out as stated. (1) Tool access: 'the plug pocket is reamed after printing', but no tool or side is named, and r5 asked for both. The pocket is horizontal (axis X at y 9.5, z 11.9). From the mouth (x -21.9) the straight free line toward -x is only 31.1-32.1 mm to the inner skin. From the inner end toward +x, block_out stands 5.9 mm away on the axis. A standard hand or machine reamer of about Ø1.6 plus any holder is longer than 31 mm, so it cannot be held coaxially. (2) No reaming stock: the STEP pocket is Ø1.60, which is larger than the stated reamed size of 1.58. A reamer cannot make a hole smaller, so the fit depends on the print happening to come out undersize. The declared press fit models a Ø1.62 plug in a Ø1.60 pocket, which matches neither the stated Ø1.6 dowel nor the 1.58 pocket. (3) Spring section: the same through pocket holds about 1.5-2 mm of the Ø1.5 spring. If it is reamed to 1.58 there is only 0.04 mm diametral clearance for a coil spring whose OD grows when compressed. If it is not reamed, it stays a printed horizontal Ø1.6 hole of unknown size. (4) Anisotropy: rim-down, hoop tension around this horizontal hole acts in Z across layers at the pocket's ±y sides, where the walls are 1.3-1.4 mm. The press force goes into block_in, a freestanding 3.5 x 4.4 x 4.2 mm block whose only root is the z 9.8 layer interface on tab_low, and there is no backing on the slot side.",
+   "evidence": [
+    "Recipe v6 spring_pocket: radius 0.8 (Ø1.60), through length ibw+1 = 4.5 mm, origin x in_face-ibw-0.5, axis X; plug radius 0.81 (Ø1.62), length 1.5; spring radius 0.75, length 2+gin = 2.896 mm.",
+    "design_basis: \"dowel holes and the plug pocket are reamed after printing\"; press_fits basis: \"Ø1.6 steel dowel in a pocket reamed to 1.58 mm\". No tool, side or pre-ream size is stated.",
+    "Probe (BRepClass3d ray march on shell/model.step): free line from pocket mouth toward -x = 31.6 mm on axis (31.1-32.1 mm at ±0.79 mm offsets); toward +x from the pocket inner end = 5.9 mm to block_out (x -12.5).",
+    "Probe: pocket walls = 1.40 mm in ±y, 1.30 mm above, 1.30 mm to tab_low top; block_in x -21.90 to -18.40, y 7.3 to 11.7, z 9.8 to 14.0, joined only to tab_low.",
+    "Overhang scan (shell STL, rim-down): flat downward faces at z 12.5-12.7 over the pocket (pocket ceiling prints as an overhang/teardrop).",
+    "measurements.json overlap-shell-spring_plug: 0.0759 mm3 rigid overlap; scope says retention force and printed hole accuracy are not verified.",
+    "Rough estimate, not calibrated: rigid pin, 0.01 mm radial interference on r 0.8, PLA E about 3.5 GPa, ring to r about 2.1 gives about 35 MPa hoop tension at the bore. That is the same order as typical FDM interlayer strength."
+   ],
+   "proposed_change": "Make the plug retention executable with a named tool and side. Either: (a) step the pocket. Model the plug section at a stated printed pre-ream size taken from a coupon, give the spring section its own clearance diameter from the chosen spring's catalogue OD plus its growth when compressed, and name a short tool and its side, e.g. a stub-length drill or a cut-down reamer in a short holder that fits the 31 mm line, or a Ø1.7 access hole through block_out on the pocket axis if the rest face allows it. Or: (b) retain the spring with a vertical cross pin in block_in, drilled or reamed from the open bottom. A vertical hole is XY-accurate rim-down and its hoop stress stays in-plane. Or: (c) use a named adhesive at the plug only. In every case, fix the model and the press-fit check so the plug and pocket sizes match the stated hardware (Ø1.6 plug, stated pocket size). Add a root fillet, or backing, so block_in is not loaded across one layer line during pressing.",
+   "required_test": "Print the shell, or a coupon of tab_low, block_in and the pocket in the same orientation and material. Finish the pocket with the named tool from the named side inside the real shell. Measure the pocket with pin gauges. Press the Ø1.6 plug in and check block_in for layer splits at the pocket's ±y sides. Measure the push-out force against the compressed spring force with margin. Confirm the chosen spring moves freely through its working stroke in the finished spring section."
+  },
+  {
+   "id": "MFG-REST-CALIBRATION-ORDER",
+   "severity": "major",
+   "claim": "The new rest-face calibration cannot be done in the order the contract gives, and it only corrects error in one direction. The contract says 'after assembly the rest face of the outward block is sanded until a 0.20 mm feeler fits between plunger and stem'. The rest face is block_out's -x face at x -12.5. In the assembled state the spring holds the web against it, so the face can be sanded only with the button out. The button comes out only after the dowel is removed. The dowel is pressed up into a blind hole, so it cannot be pushed out from above. Only its 1.0 mm protrusion below tab_low can be gripped. Each sand-and-check cycle therefore pulls a 0.01 mm interference fit out of a reamed printed hole, which will not hold its interference after one or two pulls. Also, sanding the rest face only moves the button outward. The spring pushes the web +x, which is +rotation, and that moves the plunger +y away from the stem. So sanding only increases free play. The face sits at nominal with zero sanding stock, so a print where the free play is already over 0.20 mm cannot be corrected. When the error comes from the switch or PCB position rather than the rest face, sanding to 0.20 mm moves the free edge of the face proud by about 1.7 times the plunger shift (lever 29 mm vs 17 mm). That proud step is on the protected outer form.",
+   "evidence": [
+    "design_basis Calibration: \"after assembly the rest face of the outward block is sanded until a 0.20 mm feeler fits between plunger and stem\".",
+    "design_basis Assembly order: \"button in from below and slid onto the rest block, dowel pressed up from below into the upper tab\".",
+    "Recipe v6: pin_hole_high is blind (depth 1.8, cap to z 20.8); pin z 5.8 to 19.6, so it protrudes 1.0 mm below the tab_low underside at z 6.8. Probe: 1.85 mm free above the tab_high top to the inner dome on the axis, so no push-out from above.",
+    "Recipe v6: block_out x from out_face = -12.5 to -10.6; web x -17.5 to -12.5; spring between block_in and the web pushes +x. With the hinge at (-15, 25), +x at the web tip (y about 9.5) is +rotation, which moves the plunger (x about 2) toward +y, away from the stem.",
+    "Lever: plunger centre 17 mm from the axis, face free edge (x 14) 29 mm from the axis."
+   ],
+   "proposed_change": "Write the calibration as a sequence that can actually be done. For example: calibrate with the dowel slipped only through tab_low and the barrel (not yet pressed into the upper tab), check the feeler, remove, sand, repeat, and press the dowel only once at the end. Or make the rest stop an exchangeable printed or stainless shim in 0.05-0.1 mm steps, so it works in both directions without sanding. If sanding stays, print the rest face with stated sanding stock, sized from a coupon, so every build is corrected by removing material. State the access path for the feeler with the switch/PCB fitted, and a flushness limit at which sanding must stop (e.g. the 0.14 mm proud allowance).",
+   "required_test": "On a printed shell and button, run the stated calibration sequence end to end. Record free play and face flushness at x -10, 2 and 14 after each step. Then confirm the dowel press fit still holds after the final press, e.g. by push-out force or no movement under the hinge load."
+  },
+  {
+   "id": "MFG-DOWEL-STOCK-AND-RETENTION",
+   "severity": "minor",
+   "claim": "The dowel seating from r5 is fixed: the blind upper hole now sets the depth. Retention is still defined only by a 0.01 mm radial overlap at the final reamed size. The STEP upper hole is already Ø1.98, the reamed size, so no printed pre-ream size is stated. Whether the reamer cuts anything depends on the printer's hole error. Engagement is 1.8 mm into a printed blind hole whose ceiling is a bridged 3.1 mm2 flat at z 19.6, and a reamer does not square a blind floor. 'No adhesive' removes the fallback r5 asked for. In the use orientation (rim down) a loose dowel slides down out of the upper tab under gravity, and nothing modeled stops it. Four reamer sizes (2.05, 2.02, 1.98, 1.58) are needed. 1.98 and 1.58 are special sizes.",
+   "evidence": [
+    "Recipe v6 pin_hole_high radius 0.99, depth 1.8+0.1 from z 17.7; pin_hole_low radius 1.01; barrel_bore radius 1.025.",
+    "Overhang scan: 3.1 mm2 flat downward face at z 19.6 over x -16 to -14 (blind-hole ceiling, printed as a bridge).",
+    "measurements.json shell-printed-wall minimum 1.2000 mm at (-15.41, 24.56, 20.8): the cap above the blind hole.",
+    "Probe: pin axis is clear from z -1 up to the blind floor at z 19.65, so reaming from below is accessible (this part is feasible)."
+   ],
+   "proposed_change": "State printed pre-ream diameters for the dowel holes and bore, taken from a test coupon of the chosen printer and material. Model a small chamfer on the dowel entry of tab_low. Add a fallback, e.g. retaining compound on the tab_high hole only, or a stop under the dowel's lower end such as the PCB or a printed clip, kept clear of the barrel. List the reamer set and say that the 1.98 mm reamer is run first through the lower hole as a pilot.",
+   "required_test": "Push-out force of the pressed dowel in a printed tab coupon. Then cycle the hinge and check that the dowel has not migrated (protrusion still 1.0 mm)."
+  },
+  {
+   "id": "MFG-STOP-BLOCK-ROOTS",
+   "severity": "minor",
+   "claim": "block_in (the hard stop) and block_out (the rest stop) are freestanding blocks, about 3.5 or 1.9 x 4.4 x 4.2 mm, on top of tab_low. Each block's only root is the z 9.8 layer interface, with sharp corners. The hard-stop reaction acts in X at about 2 mm above that root. It is the thumb force times the lever ratio, up to about 1.7x for a press at x 14 (lever 29 vs stop radius 17). It bends the root with tension across the layer lines, which is the weak FDM direction. The plug press loads the same root. tab_low itself is a 3 mm plate cantilevered about 21 mm from the skin (y 6.8 to about 29) with the blocks at its free tip. It is loaded in-plane, so it is stiff, but no check covers the joint.",
+   "evidence": [
+    "Recipe v6 block_in_box [in_face-ibw, by0, tab_low_top]-[in_face, by1, bzt] = x -21.9 to -18.4, y 7.3 to 11.7, z 9.8 to 14.0; block_out x -12.5 to -10.6 over the same y and z.",
+    "Overhang scan: tab_low underside 262 mm2 at z 6.8 spanning y 6.8 to 30.1, so the blocks sit at the far end of the plate.",
+    "Rough estimate, not calibrated: section modulus of block_in about the root = 4.4*3.5^2/6 = 9.0 mm3; a 30 N firm press at x 14 gives about 51 N at the stop and about 12 MPa root tension before stress concentration."
+   ],
+   "proposed_change": "Add root fillets or gussets of about 1 mm between the blocks and tab_low, or extend the blocks down through tab_low as one continuous column, or tie block_in to the skin side. Keep the rest, stop and pocket faces unchanged.",
+   "required_test": "On a printed shell, apply a static load at the hard stop through the button, e.g. 2-3x the expected firm thumb force at x 14, plus a cyclic press test. Inspect the block roots for layer cracking."
+  },
+  {
+   "id": "MFG-SPINE-LEDGE",
+   "severity": "minor",
+   "claim": "Carry-over from r5, unchanged in v6. The spine is a horizontal shelf whose flat underside (58.7 mm2) is at z 12.6, 2.6 mm above the button bed plane. It projects about 3.8 mm inward from the skin. It bridges between the rib and the plunger, but from x 3.5 to 12.5 it is a ledge held only along the skin. No chamfer or support is stated, so its first layers will droop. It is not a contact face, so the risk is stiffener quality, not motion.",
+   "evidence": [
+    "Overhang scan (button STL, bed z 10): 58.7 mm2 flat downward face at z 12.6, x -6.0 to 12.5, y 26 to 30.",
+    "Recipe v6 spine_box z 12.6 to 15.4, y 26 to 40, intersected with the outer skin; P6 does not change spine parameters from P5."
+   ],
+   "proposed_change": "Give the spine a 45-degree chamfer from its inner edge down toward the skin, or extend it to the bed plane if the motion checks still clear. Otherwise, state the support for it.",
+   "required_test": "Re-run the button overhang scan. On a printed button, inspect the spine underside and compare the face stiffness with the design intent."
+  },
+  {
+   "id": "MFG-VISIBLE-GAP-EDGES",
+   "severity": "minor",
+   "claim": "The edges that form the owner-visible running gap still have no finishing step. (a) The button skin's outer bottom edge lies on the bed plane (z 10) with no relief or first-layer compensation, so first-layer flare narrows the lower gap and stands out from the protected surface. Only the stop web got the 0.4 mm chamfer. This is an r5 carry-over. (b) The lintel underside (z 18.4, 37.7 mm2) is now declared supported, which fixes the r5 bridging issue. Support contact scars the top gap edge, though, and no deburr step or post-print gap check is stated.",
+   "evidence": [
+    "Recipe v6: only stop_arm has a <Z chamfer (first_layer_chamfer_mm 0.4); skin_piece is intersection(hollow, window) starting at z 10.",
+    "Overhang scan: lintel underside 37.7 mm2 flat at z 18.4, x -10.4 to 14.4.",
+    "design_basis support plan: \"tree supports under the curved window lintel (supported, not bridged)\"."
+   ],
+   "proposed_change": "Add a small relief on the skin bottom outer edge sized to the printer's measured flare, or state slicer elephant-foot compensation. State deburring of the lintel and sill edges and a feeler check of the 0.4 mm gap on all four sides after finishing.",
+   "required_test": "After printing and finishing, measure the running gap at several points on each side with feelers and check the face step to the shell at the bottom edge."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Printer, nozzle, material, slicer hole compensation and support settings are not named. Every droop, flare and strength figure here is a typical range or a rough estimate, not a calibration.",
+  "Fixed since r5 and confirmed here: bore play text now reads 2.05 mm / 0.025 mm; the blind upper hole sets the dowel depth; the link is deepened to y 20; the shell support plan is stated; the thrust faces get a gauge-block sanding step; the plug is a named bought steel part.",
+  "Gauge sanding sets the 8.0 mm slot, but the printed barrel height (nominal 7.6 mm) is not checked. A caliper check of the barrel is needed before assembly.",
+  "Real switch, PCB position and real shell are unknown placeholders; whether the PCB or bottom cover would also stop a loose dowel from falling is an owner question.",
+  "Spring wire, rate, free and solid length are not selected, so pocket sizing for the spring section and the preload cannot be checked in CAD.",
+  "Whether the owner accepts the 0.4 mm running gap, the up to 0.14 mm proud face, and what \"easier to press\" means in force and travel: owner questions.",
+  "The cavity shoulder band (about z 23 to 32.5, faces down to about 25 degrees from horizontal) also needs support in addition to the flat roof. It is internal and reachable through the open rim, so it is cosmetic only.",
+  "Wall checks are sampled (minimum_proven false). Insertion paths are sampled with continuous bounds not_proven.",
+  "No physical print, reaming, press-fit or load test was executed in this review. Findings rely on the recipe, the STEP/STL probes (ray-march access lines, overhang scan) and rough uncalibrated estimates."
+ ]
+}

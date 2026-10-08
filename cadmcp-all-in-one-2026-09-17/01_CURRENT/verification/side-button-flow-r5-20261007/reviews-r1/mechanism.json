@@ -1,0 +1,172 @@
+{
+ "schema_version": 1,
+ "subject_digest": "68f182bc0420784d4f5a41d6e8e2c947fdd7ddd98db37a9bb81c17b27b0220e4",
+ "role": "mechanism",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (mechanism role, rev5)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "M1-barrel-rim-rubs-inner-skin",
+   "severity": "major",
+   "claim": "The outer top rim of the hinge barrel (r2.35, z=17.6) runs 0.067 mm from the sloping inner skin at rest. Inside the play the design allows, it touches the skin. With the barrel lifted 0.17-0.19 mm (it has a 0.2 mm axial gap) and shifted 0.025 mm toward +Y (the bore play), the rim overlaps the inner skin: overlap 1.1e-4 to 2.7e-4 mm3, at about (-15.1, 27.37, 17.77). So on an upward thumb component, or when the mouse is lifted, the first axial or radial contact is the barrel rubbing the skin, not the barrel end on the upper tab as the recipe claims. The inner skin here is an inward-sloping overhang on a shell printed rim-down, and FDM droop of 0.1-0.3 mm is typical there, so a rub is likely even at nominal pose. A rub on the hinge barrel adds friction to the press and to a return driven by an unselected, weak spring, which works against 'easier to press'. Revision 4 flagged this (M5, 0.10 mm). In revision 5 the clearance is smaller (0.067 mm), and no check isolates it. The tilt checks shift the axis only in -X, so they never test play toward the skin.",
+   "evidence": [
+    "measurements.json shell-clear-until-stop: distance 0.0671 mm constant at all 7 intermediate angles (a coaxial feature, unchanged by rotation)",
+    "Probe /tmp/claude-0/probes-v5-mechanism/p1.py: closest pair button (-15.374, 27.32, 17.6) to shell (-15.384, 27.382, 17.623), 0.0671 mm",
+    "Probe p4.py: +Y 0.025 mm gives 0.0439 mm; +Y 0.025 plus X-tilt -0.377 deg gives 0.0261 mm; rise 0.17 mm gives 0.0079 mm; rise 0.17 plus +Y 0.025 gives distance 0 and overlap 1.05e-4 mm3; rise 0.19 plus +Y 0.025 gives overlap 2.7e-4 mm3",
+    "Probe p4.py: barrel +Y line to shell is 0.297 mm at z=17.0 and 0.095 mm at z=17.6, so the skin closes in only over the top 0.6 mm of the barrel",
+    "recipe rotation_checks tilt-down/tilt-up: start_translation [-0.035, 0, +/-0.17], so the offset is never toward +Y",
+    "side-button-flow-r4-20261007/reviews-r1/mechanism.json M5 (0.10 mm, suggested >=0.3 mm)"
+   ],
+   "proposed_change": "Clear the barrel from the skin by at least about 0.3 mm over the full play envelope while keeping the outer skin unchanged. Options: chamfer or round the barrel top outer edge by about 0.6 x 0.6 mm (the skin closes in only above z of about 17); flat the barrel on its +Y side; or move hinge_y about 0.3 mm toward -Y and re-derive the stop and stem angles.",
+   "required_test": "Add a static clearance check: barrel (or the whole button) against the shell at least 0.3 mm. Run it at the rest pose and at the stop pose, with axis offsets in all 8 radial directions combined with axial offsets of +0.2 and -0.2 mm and +/-0.377 deg tilt about both X and Y. On the printed part, rotate the button by hand with the mouse inverted and confirm there is no rub mark on the inner skin."
+  },
+  {
+   "id": "M2-thin-link-is-weak-compliant-path",
+   "severity": "major",
+   "claim": "Between the barrel (x of about -12.65) and the rib (x=-9), the only material joining the hinge to the face is the link: a 4.5 mm (Y) x 3.3 mm (Z) bar, about 3.6 mm long, A=14.85 mm2, I about Z = 25 mm4 by measured section. Every press, and every load past the hard stop, goes through it in bending. Rigid stop analysis therefore does not bound plunger travel. My PLA-FDM estimate (E about 2500 MPa, 10 N thumb at x=14, stem reaction about 1.5 N at x=2): M about 230 N·mm at mid-link. Nominal stress is about 21 MPa, before any concentration at the sharp re-entrant corners into the barrel and rib. Extra face rotation is about 0.8 deg past the stop, which moves the plunger about 0.19 mm, close to the 0.20 mm modeled housing margin. At 5 N the stress is about 10 MPa nominal, which is in the fatigue range for printed PLA over many clicks. Revision 5 stiffened the skin (sections at x=-4..10 now 38-50 mm4, about 0.04 mm extra plunger travel at 5 N), so the link is now the weakest and most compliant member of the force path.",
+   "evidence": [
+    "Probe p3.py sections of button/model.step: x=-12.4..-10.1 give A 14.85 mm2, I 25.06 mm4, y 23.0-27.5, z 14.0-17.3. Jump at x=-9.5 to the rib (I 167), then x=-8 (I 800)",
+    "Probe p2.py face sections: I 47.8 (x=-4), 50.2 (x=0), 205.8 (x=2, plunger), 46.0 (x=6), 38.6 (x=10), 5.5 (x=13)",
+    "recipe link_box size [7.15, 4.5, 3.3], z 14.0-17.3, 'kept above the stop blocks for the insertion path'",
+    "measurements housing-clear-past-stop continuous lower bound 0.202 mm (rigid)",
+    "button/iso.png: the barrel joins the face only by the small top link"
+   ],
+   "proposed_change": "Deepen the link in -Y to match the rib (y about 20.0 to 27.5 at z 14.0-17.3). That gives I about 116 mm4, roughly 4.6x stiffer and about 2.8x lower stress. It still clears block_out (z<=13.8) on the slide-in path and the upper tab (z>=17.8). Add about 1 mm fillets where the link meets the barrel and the rib. Optionally declare a design thumb force (for example 10 N at x=14) as the case the stop must hold.",
+   "required_test": "Hand-calc or FEA of the button with the web held at block_in, under 10 N at x=14 and z=14. Report extra plunger travel past the rigid stop (must stay below the housing margin) and peak link stress. Re-run insertion-slide and housing-clear-past-stop on the new link. Physically: 1,000 hard presses at the far end, then inspect the link roots for whitening or cracks."
+  },
+  {
+   "id": "M3-plug-and-dowel-retention-only-0p01-interference",
+   "severity": "major",
+   "claim": "Two reaction members carry their load only through a declared 0.01 mm radial interference, with no positive capture. (a) The spring plug reacts the return spring at all times. It is a plain Ø1.62 cylinder in a Ø1.6 pocket that is printed, not reamed, with its axis horizontal. Printed hole error (typically 0.05-0.15 mm, plus teardrop sag on a horizontal hole) is 5-15x the interference, so the plug will be either loose or crushed. Nothing stops it walking out toward -X into the cavity, or being pushed past the mouth and raising preload. Loss of the plug loses F4 return and the rest preload of F2. (b) The headless vertical dowel is held in the 3 mm upper tab only by its press fit. Nothing is modeled under its lower end (z=5.8, open shell). If it drifts about 3 mm the button loses its upper bearing. The press_fits checks prove only that the modeled overlap volume is in band (0.188 and 0.076 mm3), not retention. Revision-4 finding M2 was answered by changing the modeled radius, not the retention mechanism.",
+   "evidence": [
+    "recipe press_fits plug-in-pocket 0.01 mm radial, 1.5 mm long; dowel-in-upper-tab 0.01 mm radial over 3 mm",
+    "recipe plug op: r0.81, origin x=-21.896, flush with the block_in outer face (x=-21.896); spring_pocket r0.8 through hole x -22.396..-17.896 with no shoulder",
+    "recipe assumptions: upper tab hole 'reamed to 1.98 mm'; no reaming stated for the spring pocket",
+    "spring_plug/iso.png and hinge_pin/iso.png: plain cylinders, no flange, groove or head",
+    "side-button-flow-r4-20261007/reviews-r1/mechanism.json M2, M4"
+   ],
+   "proposed_change": "Give the plug positive retention. Options: a flange on the plug bearing on the block's outer face plus adhesive or heat-staking; a pocket with a step (shoulder) so the plug seats at a defined depth; or state 'drill or ream the pocket to D and bond the plug' with a real interference (for example 0.03-0.05 mm radial after reaming). For the dowel, add axial capture: a boss on the base plate or PCB under the dowel end, a blind upper hole that sets the depth, or a stated adhesive. Keep the declared press-fit bands consistent with the new geometry.",
+   "required_test": "Physical: measure printed and reamed pocket and hole diameters on 3 prints, assemble, then apply an axial pull of at least 3x the expected maximum spring force to the plug, and a 1 N push-out to the dowel, after 24 h at 40 °C. CAD: a check that the plug seat depth is fixed by geometry (shoulder contact), not by the press only."
+  },
+  {
+   "id": "M4-stop-line-contact-on-web-corner",
+   "severity": "minor",
+   "claim": "The hard stop is still a line contact on a printed corner. At the stop angle the web's -X tip edge (y about 8.16) meets the flat, vertical block_in face along a line z 10.4-13.8 (about 3.4 mm, shortened by the new 0.4 mm chamfer). The stop load for a far-end press is about 1.7x the thumb force (29/17). Corner crush or creep grows the stop angle with use, and that eats directly into the 0.20 mm housing margin. The block also sits on the 3 mm tab_low plate cantilevered from the side wall. Revision-4 M3 is unchanged.",
+   "evidence": [
+    "Probe p2.py at -3.0333 deg: contact point button = shell = (-18.4, 8.16, 10.4); at -3.0533 deg overlap 1.1e-3 mm3",
+    "recipe block_in_box is an axis-aligned box (vertical face at x=-18.396); the stop_arm chamfer only touches the bed edges",
+    "measurements hard-stop-blocks-within-play first blocked at -3.2013 deg at all offsets"
+   ],
+   "proposed_change": "Angle the block_in face by the nominal stop angle (about 3.03 deg about Z) so the web lands flat over y of about 8-11.5, or put a radius of at least 1 mm on the web tip. Add a gusset tying the tab_low end (y 7-12) to the wall.",
+   "required_test": "End-pose contact check reporting contact area or length at the stop. Physically: measure the stop angle (face travel at x=14) before and after 10,000 far-end presses at 5 N."
+  },
+  {
+   "id": "M5-rest-pinch-and-arm-underside-thrust",
+   "severity": "minor",
+   "claim": "(a) Revision-4 M6 is unchanged. The spring line (y=9.5, z=11.8, along X) passes through the block_out rest patch (y 8-11.5, z 9.8-13.8), so at rest the spring and the rest reaction nearly cancel, and the dowel is not preloaded in any direction. The barrel floats in its bore play, which is a rattle source. (b) The whole button underside is one bed plane at z=10.0, so the web underside (5 x 17 mm, out to r=17) sits on tab_low at the same 0.2 mm gap as the barrel end. Under X-axis tilt within bore play plus axial drop, the web tip lands on tab_low first (overlap 2.04 mm3 at drop 0.17, +0.377 deg about X). Downward thumb load is then carried by sliding at r up to 17 mm, not by the barrel thrust face the recipe names. The friction torque is small but unmodeled, and X-axis tilt is not checked.",
+   "evidence": [
+    "recipe spring origin y=9.5 z=11.8; block_out y 7.5-11.5, z 9.8-13.8",
+    "Probe p2.py X-tilt: drop -0.17, +0.377 deg about the X axis through (-15,25,13.8): contact at (-12.9, 8.43, 9.72), overlap 2.04 mm3",
+    "unverified_requirements: 'pin tilt is checked about one horizontal axis'"
+   ],
+   "proposed_change": "(a) Move the rest contact or the spring line so their couple loads the barrel against the dowel in one direction (for example rest contact only at the web tip y 8-9, spring nearer the barrel). (b) Either relieve the web underside by 0.2-0.4 mm except at the barrel end, so the barrel end is the only thrust face, or declare the web underside as the intended thrust face and check it.",
+   "required_test": "Rotation check about the X axis with axial drop and rise. Rest-pose force balance showing a non-zero dowel reaction of known sign. Physically: shake test for audible rattle at rest."
+  },
+  {
+   "id": "M6-contract-text-inconsistent",
+   "severity": "minor",
+   "claim": "Some recipe text contradicts the geometry. The barrel_bore reason says '0.05 mm radial play', but the bore is r1.025 on an r1.0 pin (0.025 mm), as the assumptions state. The pin reason says 'press fit in line-reamed tab holes' (plural), but only the upper hole is a press fit (r0.99); the lower is clearance (r1.01). A builder reading the op reasons would ream wrongly.",
+   "evidence": [
+    "recipe barrel_bore reason 'Reamed bore on the h7 dowel, 0.05 mm radial play.' with radius_mm 1.025",
+    "recipe pin reason vs pin_hole_low r1.01 / pin_hole_high r0.99"
+   ],
+   "proposed_change": "Correct the two reason strings to match the parameters (0.025 mm radial bore play; press fit in the upper tab only, clearance in the lower).",
+   "required_test": "A text-to-parameter consistency check on the regenerated recipe."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "d7c9bc8cc99681775bfc4bc1cab68ad1ba637b8395b54a6a8c61e6e09ec4f78d",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/assembly.png",
+   "status": "viewed",
+   "observation": "Outside view of the assembly: a smooth, closed shell with the button skin (orange) flush in a narrow side window and a thin running gap around it. No internal mechanism is visible, so this image cannot show the hinge, stops, spring or the barrel-to-skin clearance."
+  },
+  {
+   "attachment_sha256": "99e9dea25e8a49512f7abe8c8f016160fc95c2016e28fdaee4e728e3e01ef2c9",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/build-record.json",
+   "status": "viewed",
+   "observation": "Build record for attempt 9d00e5f3. It holds the full revision-5 recipe (same as the packet): axial_gap 0.2, bore r1.025, upper tab hole r0.99 (press fit), lower hole r1.01, plug r0.81 in pocket r0.8, link_z 14.0-17.3, spine y>=26 and z 12.6-15.4. The barrel_bore reason text still says '0.05 mm radial play', but the assumptions say 0.025 mm."
+  },
+  {
+   "attachment_sha256": "2c68734737e73434235e45628867eef99cf8b7be08727ef7c47f07a72234470a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/button/iso.png",
+   "status": "viewed",
+   "observation": "One-piece button: a tall stop web runs back from the bored barrel, and the curved skin carries the rib, spine and plunger behind it. The barrel joins the rib only through a short, thin link bar at the top (the small block between the barrel and the skin assembly). This view shows that the link is the only member between the hinge and the face."
+  },
+  {
+   "attachment_sha256": "040abb9cf3a096dd91a69bd54181d06b0375e5d4a66cb17335e43cb520112d9e",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "A plain headless cylinder, Ø2 x 15 mm. It has no groove, head or other feature for axial capture, so the dowel is retained axially only by its 0.01 mm radial press in the upper tab."
+  },
+  {
+   "attachment_sha256": "80d661b8d820c6d25ef31f9c65b361ecfa64896dd0ef23945d4dfaf5272a9794",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/measurements.json",
+   "status": "viewed",
+   "observation": "geometry_checks_verdict pass; overall_verdict unknown. Stem contact at -1.011 deg at all 9 offsets. Hard stop blocks by -3.201 deg. Housing min 0.20 mm. In shell-clear-until-stop, the button-to-shell distance is a constant 0.0671 mm at every intermediate angle. My probe shows this is the barrel top rim (z 17.6) against the inner skin, not a stop face. tilt-down-with-axial-drop reaches 0.0146 mm. Both tilt checks shift the axis only in -X, never toward +Y (the skin)."
+  },
+  {
+   "attachment_sha256": "1197b6bc6558047bbc2bbad676adc48bb7f54ee273c078082cd236a731647d2f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "A plain cylinder envelope for the spring, about Ø1.5 x 2.9 mm. It has no coils, rate or free length, so the return force and preload cannot be judged from the CAD."
+  },
+  {
+   "attachment_sha256": "1cfb3a5503546f2981b55d1c06f1ce630ceaeb3d3938c5aad7747d1e76c477de",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell with the side window open. Through the window you can see part of the upper tab and the inner skin above the hinge region. The inner skin curves inward over the hinge, which is the overhang that sits just above the barrel top rim."
+  },
+  {
+   "attachment_sha256": "fa573248f940ae549ee1ecad1edc459670bd0cf5967ca1acc2c6f6bfa5357f9a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/spring_plug/iso.png",
+   "status": "viewed",
+   "observation": "A plain cylinder plug, about Ø1.62 x 1.5 mm, with no flange, shoulder, barb or snap. Its retention against the spring rests on the 0.01 mm radial interference alone."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "A plain rectangular block, 6 x 4 x 8 mm: the placeholder switch housing, with no datum or mounting features."
+  },
+  {
+   "attachment_sha256": "ac71ede0dba808202e9fc3eb8ca24246e3e2d388bed08d433233ea343c5e2349",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r5-20261007/workspace/studio/side-button-flow/68f182bc0420784d-eb9f9a25/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "A plain rectangular block, 2 x 1.1 x 4 mm: the placeholder stem. It is modeled as rigid, with no spring force and no internal end of travel."
+  }
+ ],
+ "remaining_uncertainties": [
+  "No real switch: stem position, operating force, pre-travel, overtravel and housing are placeholders. The modeled stop allows about 0.6-0.7 mm of stem travel after contact, which would overload a real low-travel tact switch; the owner must give the switch.",
+  "Return spring rate, free length, preload and solid height are not selected. Whether it returns the button reliably against hinge and barrel friction, and how much it adds to thumb force, is unknown.",
+  "What 'easier to press' means to the owner (lower force, shorter travel, larger effective area) is not defined. Under the rigid lever estimate, the hinge-side third of the face needs 1.5-3.4x the stem force and gives only 0.2-0.4 mm of travel.",
+  "Real mouse shell, PCB datum and the switch position relative to the dowel are not modeled. The stated -0.20/+0.10 mm switch window must be held by the owner's PCB.",
+  "Print accuracy of the window gap, overhang droop of the inner skin near the hinge, reamed hole sizes and press-fit retention need physical measurement.",
+  "No FEA or physical stiffness, fatigue or wear test was run. My link and skin deflection numbers are rigid-support beam estimates with an assumed E of about 2500 MPa.",
+  "Click feel, sound and tactile response cannot be judged in CAD.",
+  "This review is by one Claude subagent context, the same model family as the designer. It is not an independent human or physical test."
+ ]
+}

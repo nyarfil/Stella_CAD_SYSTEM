@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "subject_digest": "5438bbd8ddb792ddea9436bfdff5e0f90cfc188fe68362a6a96e95e786c3013b",
+  "role": "verification",
+  "discussion_round": 1,
+  "challenged_review_ids": [],
+  "reviewer_label": "Claude subagent (verification role, rev18)",
+  "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+  "evidence_inspections": [
+    {
+      "attachment_sha256": "5354ecb8ebb7e5acad55a3dc8dbfa36bcfcf41ee74d9823d892c6aa7ab3feb57",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/assembly.png",
+      "status": "viewed",
+      "observation": "Assembly at the drawn (free, unbent) pose: shell with the face in the side window and the counterbore with pull notch visible; the internal carrier, stop jaw, switch and PCB are hidden, so the image cannot show any stroke pose, tolerance corner or the insert-to-switch relation."
+    },
+    {
+      "attachment_sha256": "c6856ac1186199e2081522f44a6427678c1490b74d528e55ee518e6f1b6da6c2",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/button/iso.png",
+      "status": "viewed",
+      "observation": "Button: curved face with the counterbore and pull notch, the lower pad toward the leaves, the spine/plunger behind the face and the far-end stop tab riser. The rest lip is a separate part (not shown), although it is printed joined to the face band."
+    },
+    {
+      "attachment_sha256": "bae73813aecc48b7da334c13c71a3c8d0c32739bc272538b8accebb5494558ae",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/actuator_insert/iso.png",
+      "status": "viewed",
+      "observation": "Actuator insert: head, short press band, slip shank and the 1.0 mm tip. Tip length is what decides contact with the switch body at the stop + tolerance (probe: contact at 0.85 mm, overlap at 0.90 mm from the free pose)."
+    },
+    {
+      "attachment_sha256": "f8cd0f8b2ffe4c1595bd6a77271bc372e5efafedd27b4de350d4e2e12a41296f",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/rest_lip/iso.png",
+      "status": "viewed",
+      "observation": "Rest lip: closed curved ring that follows the inner skin around the window, drawn 0.3 mm into the skin (free pose). It is rigid with the face, but it is not a carried part in the press-to-stop or twist/yaw/corner rotation checks."
+    },
+    {
+      "attachment_sha256": "d56d8e6e9e1527c085bfe6be8dc0e4dd9927c7eff19f5d97bb2781c5bc1c3d97",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/stop_jaw/iso.png",
+      "status": "viewed",
+      "observation": "Stop jaw: plain rectangular block (arm plus key). Its top face is the hard stop. Contact with the button stop tab starts at 0.80 mm from the free pose (probe), which matches the nominal stop."
+    },
+    {
+      "attachment_sha256": "69ee56b39a3dc3e8f00c364bbdcedca938c944a55307b20137ec1c87670efe5b",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/shell/iso.png",
+      "status": "viewed",
+      "observation": "Shell from outside, rim down: the open window with the running gap, and the inner tabs/post visible through the window. The outer skin outside the window looks unchanged, consistent with outer-form-matches-base (248 points, 0 off-form)."
+    },
+    {
+      "attachment_sha256": "7376c0a08eb3cb92a783a0e23bf96f0071bb495952d0d45688091b1dfbdd5002",
+      "kind": "json",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/measurements.json",
+      "status": "viewed",
+      "observation": "157 checks, all verdict pass; overall_verdict unknown, geometry_checks_verdict pass. Six translation sweeps report continuous_swept_motion not_proven (press-lip-leaves-skin -0.139, press-insert-clear-of-switch-body -0.0125, carrier-insertion -0.694, carrier-block-final-leg 0.0725 < its 0.1 threshold, pin-1/2 approach -1.007). No rotation check carries tolerance_ids."
+    },
+    {
+      "attachment_sha256": "225c0db15f794ae5a7fae109956ce80b83377f26b1473182e544e681f832ac5e",
+      "kind": "json",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/build-record.json",
+      "status": "viewed",
+      "observation": "Build record: subject_digest 5438bbd8...013b and recipe context. Its embedded recipe matches the packet (12 motion checks, 12 rotation checks, one carrier-placement tolerance of +/-0.05 mm X/Z and +/-0.182 deg about Z, flexure thickness tolerance 0.05)."
+    }
+  ],
+  "findings": [
+    {
+      "id": "V18-1-insert-bottoms-before-stop-tolerance",
+      "severity": "major",
+      "claim": "Nothing checks the insert against the switch body at the stop + tolerance pose. In the drawn nominal geometry the insert tip reaches the switch body before the stop at its declared + tolerance, so in that corner the switch, not the shell stop, takes the thumb force. This contradicts F5 (\"thumb and insert press-in forces go into the shell\") and the design basis (\"travel no longer depends on it because the shell stop ends it\"). press-insert-clear-of-switch-body stops at the nominal stop (0.80 mm from the free pose), while every other stroke check runs to 0.90 mm.",
+      "evidence": [
+        "press-insert-clear-of-switch-body: start pose(rest)= -0.30, translation_end -0.50, so it ends at 0.80 mm from the free pose; last sample distance 0.050 mm; continuous bound -0.0125 (not_proven).",
+        "Own probe on the exported STEP (actuator_insert vs switch_body, pose(dy)=(-0.6*dy^2/24,-dy,0)): dy 0.80 -> 0.050 mm; dy 0.85 -> 0.000 mm; dy 0.90 (stop + tolerance) -> distance 0, overlap 0.039 mm3 (about 0.05 mm into the body).",
+        "Own probe button vs stop_jaw: contact at dy 0.80, overlap 0.327 mm3 at 0.85, so the jaw itself is at the nominal stop and the + tolerance pose is reached only when the jaw is 0.1 mm deeper (as declared).",
+        "stack_v18 already reports \"pin may bottom first: yes (tolerance corner)\" for zippy_df_pin and omron_d2f_pin. The geometry shows this happens with the nominal drawn insert and switch, not only at datasheet tolerance limits.",
+        "Revision-17 V1 (insert-fitting load) is therefore only partly closed: the inserts are pressed in \"with the face held on the hard stop\", but with the jaw at + tolerance the press-in/thumb force reaches the switch body first."
+      ],
+      "proposed_change": "Either move the jaw (or shorten the nominal insert) so the drawn insert clears the switch body at the stop + tolerance with a stated margin, or keep the geometry and correct F5, the design basis and the verification plan: the stop protects the switch only for stops at or below about 0.55 mm after rest, with the drawn insert. Make the insert rule bound the tip against body-flush at the deepest stop, not only against OP.",
+      "required_test": "Extend press-insert-clear-of-switch-body to pose(stop_max) (translation_end -(T+dT)) with min_mm >= 0 and the drawn insert. Add a variant with the longest insert the rule can select, and one at the carrier-placement corners. The check must pass without lowering min_mm, or the plan and F5 text must state the measured contact pose."
+    },
+    {
+      "id": "V18-2-rotation-checks-without-placement-corners",
+      "severity": "minor",
+      "claim": "The twist, yaw and corner-press clearance checks run only at the nominal carrier placement. The declared carrier-placement tolerance is applied to the translation press and the rest gap, but not to any rotation check, although it takes about 0.10 mm out of the face-to-shell gap. My end-pose probe shows the combined case still meets 0.15 mm, with about 0.025 mm margin. This is not recorded evidence, and the sweeps between the end poses are not certified.",
+      "evidence": [
+        "All 12 rotation_checks have tolerance_ids [] (recipe.json).",
+        "press-to-stop-clear-of-shell: nominal sample minimum 0.380 mm, worst placement corner 0.279 mm (rotation +0.182 deg, X -0.05, Z -0.05), so placement takes about 0.10 mm.",
+        "Own probe, face+insert vs shell, end angle combined with all 8 placement corners: twist-negative at dy 0.5/0.9 nominal 0.227 -> worst 0.176 mm; corner tn-yp at 0.9 nominal 0.226 -> worst 0.175 mm; yaw-positive at 0.9 nominal 0.289 -> worst 0.188 mm. All >= 0.15, minimum margin 0.025 mm.",
+        "The probe moves the rotation axis with the carrier and samples only the end angle, not the sweep."
+      ],
+      "proposed_change": "Add tolerance_ids [\"carrier-placement\"] to the twist, yaw and corner rotation checks. If the checker does not support this for rotations, extend _with_tolerances to rotation checks rather than leaving the combination unmeasured.",
+      "required_test": "Re-run all rotation checks with the carrier-placement corners. Each corner must keep >= 0.15 mm to the shell and >= 0.3 mm to the PCB, without lowering any threshold."
+    },
+    {
+      "id": "V18-3-corner-press-mid-pose-missing",
+      "severity": "minor",
+      "claim": "The verification plan says \"Twist, yaw and corner press at rest + 0.2 mm and at the stop + tolerance\", but the corner-press checks exist only at the stop + tolerance pose (four checks named *-stop). No corner-press check is run at rest + 0.2 mm.",
+      "evidence": [
+        "rotation_checks ids: corner-press-tp-yp-stop, -tp-yn-stop, -tn-yp-stop, -tn-yn-stop; there is no corner-press-*-mid.",
+        "Own probe, corner press at dy 0.5 (rest + 0.2), face+insert vs shell: nominal 0.226-0.246 mm; with placement corners 0.175-0.195 mm. Passes, but this is not in measurements.json."
+      ],
+      "proposed_change": "Add four corner-press-*-mid rotation checks at pose(mid), or reword the plan item so it says the corner press is checked at the stop pose only.",
+      "required_test": "Corner-press checks at pose(rest+0.2) for all four sign combinations, min_mm 0.15 to the shell, with the carrier-placement corners."
+    },
+    {
+      "id": "V18-4-rest-lip-not-carried",
+      "severity": "minor",
+      "claim": "The rest lip is rigid with the face (same print, joined to the face band), but it is not a carried part in press-to-stop-clear-of-shell or in any twist/yaw/corner rotation check. Lip-to-skin clearance is checked only in pure translation (press-lip-leaves-skin). Under the declared positive yaw, and the corner presses that contain it, the lip end goes back into the skin near the click.",
+      "evidence": [
+        "moving = {button, carried [actuator_insert]} for every press and rotation check. rest_lip appears only in rest-outward-blocked-by-lip, press-lip-leaves-skin, carrier-insertion and stop-jaw-approach-from-below.",
+        "Own probe, rest_lip vs shell at nominal placement: yaw +0.325 deg at dy 0.4 (rest + 0.1, inside the 0.1-0.32 mm click window) -> overlap 0.332 mm3. Corner tp-yp at dy 0.4 -> overlap 0.594 mm3. Corner tp-yp at dy 0.5 -> gap 0.015 mm. Twist +0.60 deg at dy 0.4 -> gap 0.040 mm.",
+        "Negative yaw (the far-end press direction) keeps the lip 0.13-0.17 mm clear at dy 0.5. The positive-yaw cases may not be producible by a press on the face, but the recipe declares and checks them for the face, so the lip result is inconsistent with that declaration."
+      ],
+      "proposed_change": "Carry rest_lip in every press-to-stop and rotation check (shell min 0 for the lip, or a stated value). If positive yaw cannot occur, remove it with a stated basis. Do not keep it for the face and drop it for the lip.",
+      "required_test": "Rotation checks with carried_parts [actuator_insert, rest_lip] at rest + 0.1, rest + 0.2 and the stop + tolerance. Either they show no lip-to-skin overlap, or the contact is recorded as an intended secondary rest contact with its effect on the press force stated."
+    },
+    {
+      "id": "V18-5-carrier-insertion-threshold-lowered",
+      "severity": "minor",
+      "claim": "The carrier-insertion clearance threshold was lowered from 0.15 mm (r17) to 0.01 mm. The new end sample is 0.036 mm (the rest lip approaching the inner skin), which would fail 0.15. The lip approach is intended, and the code comment explains the split into an insertion leg and a final leg. Even so, the lowered threshold now applies to the whole 11.68 mm sweep, so a lateral clash down to 0.01 mm anywhere on the path would pass.",
+      "evidence": [
+        "r17 recipe: carrier-insertion min_mm 0.15. r18: min_mm 0.01.",
+        "r18 samples: shell distance 0.150 mm for t 0.25-0.875, then 0.0364 mm at t=1.0. Continuous bound -0.694 (not_proven).",
+        "Own probe at translation (0,-0.32,-0.15): rest_lip-shell 0.0364 mm, button-shell 0.25, block/leaves-shell 0.15. The 0.036 mm is the lip, not a lateral guide surface."
+      ],
+      "proposed_change": "Keep 0.15 mm for the lateral sliding path: end the main sweep before the lip approach (or leave out rest_lip there), and add a separate short lip-approach check with min_mm 0 that expects first contact at the stated pose. Record why each threshold differs from r17.",
+      "required_test": "carrier-insertion at min_mm 0.15 over the sliding path, plus a lip-approach sweep (min 0, expect contact at about 0.30-0.32 mm before seating). Both pass without lowered thresholds."
+    },
+    {
+      "id": "V18-6-stop-post-gap-not-toleranced",
+      "severity": "minor",
+      "claim": "tab-to-stop-post is a nominal-only static check. Its threshold is the designed gap minus 0.01 mm (0.29), not a functional value. Under the declared carrier-placement corners the gap falls to 0.215 mm, below that threshold. stop_post is also not an obstacle in any press or rotation check, although the stop tab runs past it during the stroke and yaw moves the tab toward it.",
+      "evidence": [
+        "recipe: tab-to-stop-post min_mm = bracket_gap_mm - 0.01 = 0.29, tolerance_ids []. Measured 0.300 mm.",
+        "Own probe, button vs stop_post with the carrier-placement corners: rot -0.182 deg / X +0.05 -> 0.2147 mm; rot +0.182 / X +0.05 -> 0.281 mm (both < 0.29).",
+        "Estimated: yaw -0.325 deg at the stop moves the tab about 0.055 mm in +X toward the post, so the combined gap is about 0.16 mm (not measured)."
+      ],
+      "proposed_change": "Give tab-to-stop-post a functional threshold (for example the 0.15 mm running gap) with a basis. Apply the carrier-placement corners, and add stop_post as an obstacle to the press-to-stop and yaw/corner rotation checks.",
+      "required_test": "Static and swept tab-to-post clearance at all placement corners and at the stop + tolerance with yaw. The functional threshold must be stated before running."
+    },
+    {
+      "id": "V18-7-stop-location-resolution",
+      "severity": "minor",
+      "claim": "press-blocked-by-hard-stop sweeps 0.9 mm past rest (1.20 mm from the free pose) with 5 samples, 0.225 mm apart. It only shows that blocking occurs somewhere between 0.75 and 0.975 mm from the free pose. Together with press-to-stop-clear-of-jaw-before-stop (clear to 0.69 mm), the stop is bracketed to 0.69-0.975 mm, which is wider than the declared 0.70-0.90 mm band. A jaw that stopped the face at 0.95 mm would still pass both checks.",
+      "evidence": [
+        "press-blocked-by-hard-stop samples: t 0.5 (dy 0.75) distance 0.050 mm, no overlap; t 0.75 (dy 0.975) overlap 1.154 mm3.",
+        "Plan item 2: \"inward motion blocked by the stop jaw by 1.20 mm from the free pose\". The sweep end is 0.3 mm beyond the stop + tolerance.",
+        "Own probe: jaw contact starts at exactly dy 0.80 mm; overlap 0.327 mm3 at 0.85 mm."
+      ],
+      "proposed_change": "End the blocking sweep at the stop + tolerance (translation_end -(T+dT)), so the check proves blocking by 0.90 mm from the free pose. Keep the clear-before-stop check at T - dT.",
+      "required_test": "Blocking check from rest to pose(stop_max), expect blocked, with blocking found at or before 0.90 mm. The clear-before-stop check stays at 0.69 mm."
+    },
+    {
+      "id": "V18-8-rest-blocking-on-phantom-overlap",
+      "severity": "minor",
+      "claim": "rest-outward-blocked-by-lip reports first_blocked_t = 0.0 with 81.77 mm3 overlap at the exact rest pose. That value is a kernel artifact of coincident faces, not real interference. The verdict still holds because later samples overlap for real, but the recorded first blocking pose is wrong. The same artifact could make a min_mm-0 clearance check fail falsely.",
+      "evidence": [
+        "measurements: t 0.0 overlap 81.770 mm3, t 0.5 8.470 mm3, t 1.0 16.942 mm3 (real overlap grows linearly at about 56.5 mm2 x depth).",
+        "Own probe with cadmcp_brain pair_clearance on the exported STEP, rest_lip translated by pose(dy): dy 0.300 -> 81.77 mm3; dy 0.299 -> 0.054 mm3; dy 0.301 -> 0 mm3 (distance 0.00065).",
+        "The check also proves only that skin lies within 0.3 mm outward of rest. That the lip actually touches at rest comes from the declared press-fit overlap (16.94 mm3 at the free pose), not from this check."
+      ],
+      "proposed_change": "Start the blocking sweep at least 0.001-0.01 mm off the coincident pose, or treat coincident-face overlaps as contact (distance 0, overlap 0) in pair_clearance. For example, reject a common solid whose volume disagrees with its triangulated volume, or cross-check with a small offset.",
+      "required_test": "Re-run rest-outward-blocked-by-lip so the first blocked sample has real overlap consistent with depth x lip area. Add a regression test in the checker that two exactly touching boxes give overlap 0."
+    },
+    {
+      "id": "V18-9-not-proven-sweeps-summarised-as-pass",
+      "severity": "minor",
+      "claim": "Six of the ten translation clearance sweeps report continuous_swept_motion = not_proven, yet each check verdict and geometry_checks_verdict read pass. carrier-block-final-leg is not_proven even by its own threshold: lower bound 0.0725 mm against min_mm 0.1, with max_samples reached. These are sampled passes only. The measurement notes say so generically, but the unverified_requirements list does not name these checks.",
+      "evidence": [
+        "not_proven: press-lip-leaves-skin (-0.139), press-insert-clear-of-switch-body (-0.0125), carrier-insertion (-0.694), carrier-block-final-leg (0.0725 < 0.1), pin-1-approach (-1.007), pin-2-approach (-1.007).",
+        "geometry_checks_verdict \"pass\"; overall_verdict \"unknown\". unverified_requirements mentions only that wall checks are sampled and placement corners are rigid."
+      ],
+      "proposed_change": "Report a distinct verdict for sampled-only results (for example \"sampled_pass_not_proven\"), list the not_proven checks in unverified_requirements, or raise max_samples until the bound clears min_mm.",
+      "required_test": "Re-run with a higher max_samples or an analytic bound for monotonic translations. Any check that is still not_proven is named in the summary and is not counted as proven clearance."
+    },
+    {
+      "id": "V18-10-flexure-min-force-vacuous",
+      "severity": "minor",
+      "claim": "The lower bound of the force band (0.3 N) is evaluated at the deepest deflection (1.09 mm) plus the largest registered switch force. That case cannot fail, so it says nothing about the lightest press: thin leaves, minimum preload 0.11 mm, and the lowest switch force. The minimum switch force is not published (UNKNOWN), which the text states, but the check field reads as a passed lower bound.",
+      "evidence": [
+        "parallel-leaves-beam: total_n_at_minus_tolerance 1.905 N (beam 0.43 N at 0.55 mm thickness + switch 1.471 N) vs band min 0.3 N.",
+        "force_basis: \"ASSUMED band 0.3-3 N at the deepest deflection (highest preload plus the longest stop travel) plus the largest registered switch operating force\"."
+      ],
+      "proposed_change": "Evaluate the lower force band at the shallowest click pose with the thin leaf and the lowest switch force. If that force is UNKNOWN, mark the lower bound unverified instead of pass.",
+      "required_test": "A flexure or force check with deflection = minimum preload + earliest click (about 0.11 + 0.1 mm), thickness 0.55 mm and the minimum switch force. Where that force is UNKNOWN, a stated unverified result, not pass."
+    },
+    {
+      "id": "V18-11-tip-footprint-on-pin-unchecked",
+      "severity": "minor",
+      "claim": "Revision-17 V4 asked for a check that the 1.0 mm tip stays on the switch pin, whose X size is UNKNOWN (1.2 mm assumed). There is still no such check. Adding the declared X placement tolerance, the carrier rotation, the stop-pose yaw and the 0.05 mm shank clearance can move the tip centre more than the 0.1 mm X margin.",
+      "evidence": [
+        "switch_pin x 1.4-2.6 (1.2 mm, \"pin x size UNKNOWN, 1.2 mm assumed\"); tip radius 0.5 centred at x 2.0, margin 0.1 mm per side.",
+        "Estimated tip-centre X offsets (not measured): placement +/-0.05; carrier rotation 0.182 deg x 7.45 mm = 0.024; yaw 0.325 deg x 7.5 mm = 0.043; shank clearance up to 0.05. The sum, about 0.17 mm, is more than the 0.1 mm margin."
+      ],
+      "proposed_change": "Add a footprint check: project the tip disc along -Y onto the pin top at the rest, click and stop poses, at the placement corners and the yaw extremes, and report the overlap fraction. Or record the tip-on-pin coverage as an UNKNOWN that depends on the real pin width.",
+      "required_test": "Tip-to-pin overlap area >= a stated fraction (for example 80 % of the tip disc) at all placement corners and yaw extremes, with the pin width labelled ASSUMED."
+    }
+  ],
+  "remaining_uncertainties": [
+    "Revision-17 verification findings: V1 (insert-fitting load) is partly fixed. A hard stop jaw now exists and the flexure check covers 1.09 mm at the thick limit, but with the jaw at + tolerance the drawn insert reaches the switch body first (V18-1). V2 (pose datum) is fixed: every stroke pose is measured from the preloaded rest, with parasitic shortening at each pose. V3 (deep yaw and combined press) is mostly fixed: yaw at mid and stop and corner press at the stop exist, but there is no corner press at mid (V18-3) and no rotation check with placement corners (V18-2). V4 (switch-body sweep wording) is partly fixed: the plan now says \"to the nominal stop\", but the stop + tolerance pose is not covered (V18-1) and the tip-footprint check is still missing (V18-11).",
+    "My probes sample end poses only (no swept certificate), use the exported STEP rigid bodies, and model each placement corner as a rigid rotation and translation of the carrier without re-seating the button on the lip. The lip results at rotated placement corners are therefore partly artifacts. I base V18-4 on the nominal-placement results.",
+    "I did not verify the twist/yaw angles themselves (thin-limit linear model; whether leaf buckling under the yaw axial load is relevant is left to the mechanism review), the switch datasheet values in the profiles, or the material data.",
+    "The PCB, the switch, the shell and the carrier placement tolerance are ASSUMED stand-ins. None of the clearances transfers to real parts until first-article measurement.",
+    "I reviewed only the verification role. No physical test, FEA or independent human review was done.",
+    "Submission note (designer session): the inspection entry for recipe.json was removed before submission because recipe.json is not a registered packet attachment; the findings are unchanged."
+  ],
+  "conclusion": "no_blocker_found"
+}

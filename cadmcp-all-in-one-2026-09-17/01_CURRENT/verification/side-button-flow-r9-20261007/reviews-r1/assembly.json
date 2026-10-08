@@ -1,0 +1,161 @@
+{
+ "schema_version": 1,
+ "subject_digest": "2f33ec505f74e846c7798a93dc6981a1efd15336c3c5b8114b1c75b9bae940e6",
+ "role": "assembly",
+ "reviewer_label": "Claude subagent (assembly role, rev9)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "ASM9-1-gauge-datum-and-recovery-exceed-checked-stroke",
+   "severity": "major",
+   "claim": "The r8 gauge finding (ASM8-2) was answered with a datum, but the number does not match the datum, and the new no-click recovery step leaves the checked range. (1) The adjustment says to set a 1.53 mm depth gauge \"referenced on that skin\" (the shell skin beside the front edge). 1.53 is front_edge_travel_at_stop_mm, the Y travel 29*sin(3.0333 deg)=1.5346. It is not a depth below the skin. A depth gauge whose base sits on the skin reads along the skin normal. At the front edge that normal is about 8 deg from Y, and the edge moves about 8-9 deg the other way from Y, so the reading is about cos(16.6 deg)=0.96 of the travel. My probe on the exported STEPs puts the depth below the adjacent shell tangent plane at the nominal CAD stop at about 1.45-1.46 mm (z 12-16). Read along the skin normal, 1.53 corresponds to about -3.17..-3.20 deg, and the accept limit of 1.58 mm to about -3.28..-3.31 deg. The housing check stops at -3.2034 deg. At the gauge setting the plunger centre pushes the stem about 0.74-0.78 mm, not the \"about 0.68-0.70 mm\" in the switch-selection line given to the owner. (2) The no-click step allows backing the stop screw out by up to 0.15 mm \"keeping the housing margin\". At the 16.7 mm stop-contact radius, 0.15 mm is 0.51 deg. Rotating the button STEP to -3.548 deg (CAD stop + 0.15 mm) leaves 0.005 mm (worst of 9 axis offsets) to the placeholder housing, below the 0.05 mm margin. From the 1.58 gauge limit it reaches the housing (0.000 mm). Rigid clearance at -3.30 deg is still 0.085 mm, so the gauge alone does not bottom the placeholder. But the adjustment chain written into the contract sets the stroke outside the verified band, and the recovery step contradicts its own margin claim.",
+   "evidence": [
+    "scripts/side_button_recipe.py side_button_recipe_v9 assumption: \"...until a 1.53 mm depth gauge referenced on that skin just touches the face front edge at the stop (accept 1.48-1.58 mm)... back the stop screw out 1/8 turn... at most 0.15 mm, keeping the housing margin.\"",
+    "front_edge_travel_at_stop_mm(P9)=1.5346 = 29*sin(3.0333 deg): Y travel, not a skin-normal depth.",
+    "Probe /tmp/claude-0/probes-v9-assembly/p2.py: shell skin normal at the window front edge is 8.2-8.6 deg from +Y. Depth below the shell tangent plane at the nominal stop is 1.450/1.455/1.464 mm at z 12/14/16. Skin-normal gauge 1.53 maps to -3.19/-3.19/-3.17 deg and 1.58 to -3.31/-3.30/-3.28 deg.",
+    "Probe p3.py (button STEP rotated about the hinge, 9 axis offsets of 0.035 mm, distance to switch_housing): -3.0333 deg 0.171; -3.2034 deg 0.116; -3.30 deg 0.085; -3.3763 deg 0.060; -3.548 deg 0.005; -3.815 deg 0.000.",
+    "measurements.json housing-clear-past-stop ends at -3.2034 deg (continuous bound 0.0532 mm), so the gauge accept band is only partly covered.",
+    "r8 V8-3 already noted that 1.53 mm of Y travel reads as about 1.49 mm normal to the skin; v9 moved the gauge figure the wrong way for a skin reference."
+   ],
+   "proposed_change": "Make the gauge number match its datum. Either state the skin-normal depth at the CAD stop (about 1.46 mm) with a band whose deep limit stays inside the checked angle (for example 1.42-1.49 mm), or define a fixture that reads front-edge travel along Y and keep 1.53. Recompute the \"stem pushed 0.68-0.70 mm\" figure from the chosen band. Limit the no-click back-out to what keeps 0.05 mm to the placeholder housing from the deep end of the band (about 0.05-0.10 mm of screw travel from nominal, i.e. one 1/8 turn), or extend the housing check to the deepest permitted pose. If more is needed, state that no click at that limit means the switch is out of specification. Do not move the stop screw, web or housing placeholder.",
+   "required_test": "Add a rotation check of the button against switch_housing (with axis_play 0.035) ending at the deepest pose the written procedure allows (gauge deep limit plus the permitted back-out), min_mm 0.05. Add a recorded measurement of the skin-normal depth of the face front edge below the adjacent shell skin at the CAD stop, so the gauge number is derived from geometry, not from the Y-travel helper."
+  },
+  {
+   "id": "ASM9-2-stop-nut-covers-spring-screw-socket",
+   "severity": "minor",
+   "claim": "The trimmed tab fixes the r8 jam-nut defect. I spun the exported stop_nut on its seat in 5 deg steps, and at 0.2/0.5/1.0/1.7 mm off the seat, with no shell overlap anywhere. The rest nut is also clear. However, the stop nut seat now overlaps the spring-screw socket. The spring screw end is flush with the block_in face at y 11.4..13.4, and the nut flat is only 0.1 mm away at 0 deg. From about 15 to 75 deg the nut face lies over the spring screw end (distance 0). Geometrically a square-nut corner (2.83 mm about the y 9.3 axis) reaches past y 11.98 over roughly 21-69 deg, which partly covers the hex socket of the screw at y 12.4. Spring preload \"is set by the spring screw depth\" and drives the thumb force, which is the owner's main requirement. Retuning it after the stop is set and locked will often mean loosening the stop jam nut, which disturbs the gauge-set stop. The assembly order does not say this.",
+   "evidence": [
+    "Probe p1.py: stop_nut rotated 0-90 deg in 5 deg steps at dx 0, -0.2, -0.5, -1.0, -1.7 mm: shell overlap 0.00000 at every pose. Distance to spring_screw is 0.100 at 0/90 deg and 0.000 at 15-75 deg (seated).",
+    "Recipe v9: spring_screw origin x -22.690, y 12.4, radius 1.0, length 1.5. stop_nut_body x -24.29..-22.69, y 7.3..11.3. Screw axes are 3.1 mm apart in y and the nut half-diagonal is 2.83 mm.",
+    "Assembly order in design_basis: spring and spring screw, then stop screw and jam nut, then adjust. There is no step for re-setting preload after the stop is locked."
+   ],
+   "proposed_change": "State in the adjustment text that spring preload is set before the stop is gauged, and that any later preload change requires the stop to be re-gauged. Or move the spring axis or the nut seat so the nut sweep (r 2.83 mm) clears the spring screw socket by at least about 0.3 mm, for example spring_y 12.7 if the block wall allows, or a 0.3 mm proud boss under the stop nut only. Keep the stop contact unchanged.",
+   "required_test": "Add a check that the stop nut swept disk (rotation 0-90 deg) stays clear of a hex-key envelope (Ø1.04 x 3 mm) in the spring screw socket, or record the procedural constraint in the contract."
+  },
+  {
+   "id": "ASM9-3-carryover-thrust-face-pin-path-nut-check-scope",
+   "severity": "minor",
+   "claim": "Carry-over and evidence-scope items that v9 did not change. (a) ASM8-4a: tab_low top (z 9.8) and the web underside geometry are unchanged, so the web underside can still be the axial thrust face when the pin cocks about X. The tilt checks still rotate only about Y. I did not re-probe this; the geometry inputs are identical to r8. (b) ASM8-4b: pin-insertion-path still has only the shell as obstacle, and the dowel, bore and tab_low hole still have no lead-in (hinge_pin iso shows square ends). (c) The new nut-turns-on-seat checks sample only 0/45/90 deg at the seat, are not_proven (bound -1.11 mm), and do not cover run-down along the screw. My 5 deg probe at the seat and at four off-seat positions found no contact, so the geometry is fine, but the recorded evidence is thinner than the plan line \"Both jam nuts can be turned a quarter turn\". (d) The stop screw tail is only 0.1 mm proud of the nut. Any stop setting that needs the screw more than 0.1 mm further in shortens nut engagement below 1.6 mm. This is acceptable, since ASM8-3 is otherwise resolved.",
+   "evidence": [
+    "measurements.json pin-insertion-path obstacles: shell only. stop_nut-turns-on-seat: samples at 0/45/90 deg, continuous_distance_lower_bound_mm -1.1107, not_proven.",
+    "Probe p1.py results above (no overlap at 95 seated and off-seat poses for each nut).",
+    "Recipe v9 stop_screw x -24.39..-18.39 against stop nut x -24.29..-22.69."
+   ],
+   "proposed_change": "Add the button to pin-insertion-path obstacles and state a chamfered dowel plus 0.2-0.3 mm countersinks. Relieve tab_low under the web sweep or declare the web underside as a thrust face. Give the nut checks more samples, or max_samples > samples, and a coupled rotate-and-translate run-down leg. State the inward adjustment limit of the stop screw for full nut engagement.",
+   "required_test": "Tilt check about X with axial drop for web-to-tab contact; pin path with button as obstacle; nut spin checks with at least 19 samples over 0-90 deg plus a run-down sweep of 1.7 mm."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "dbae29691a1bc803922bd760111af74f169c8a53a5fff3f230d96e6bb6036995",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/assembly.png",
+   "status": "viewed",
+   "observation": "Closed assembly preview: the gold button face sits flush in the side window with a thin dark running gap all round. No internal parts are visible, so the image cannot show hinge, stops, nuts or spring."
+  },
+  {
+   "attachment_sha256": "8a1187a0a03fa033c291bbf07889753aa35c4b071388ffd4c12a02274ebc9a3e",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/build-record.json",
+   "status": "viewed",
+   "observation": "Build record for attempt 836c4201. Subject digest 2f33ec50... and recipe_context_digest 008fa11c... match the packet. file_hashes match the attachments I hashed. It embeds the same measurements block (overall_verdict unknown, geometry_checks_verdict pass)."
+  },
+  {
+   "attachment_sha256": "c6c7daf38f77bc63a78477fc327505450e70f448c82952d0f1f4102b7aed74a7",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/button/iso.png",
+   "status": "viewed",
+   "observation": "Button iso view: curved skin piece, rear rib, spine, the link to the bored hinge barrel, and the full-height stop web running back from the barrel. The plunger stub is visible. Matches the v6 to v9 button topology, which is unchanged in v9."
+  },
+  {
+   "attachment_sha256": "7a27aec709ac4d6cb724dc8962e62653c8dedb013c5ec0f561af1d98b96edf29",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 dowel cylinder with square ends. There is no chamfer or lead-in modelled on either end (carry-over ASM8-4b)."
+  },
+  {
+   "attachment_sha256": "5ea8ab38ef850bfa8b90f97851242fb569f79326219d3838925a9bfd2ab89f93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/rest_nut/iso.png",
+   "status": "viewed",
+   "observation": "Square 4x4x1.6 nut with a plain minor-diameter bore. STEP bbox x -10.6..-9.0, y 7.3..11.3, z 9.9..13.9, seated on the outward block face at x -10.6."
+  },
+  {
+   "attachment_sha256": "dad9e60ede08194c8bdf93e104ed3ef906d27da262e822ebcd7179c8fe5bbaac",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/rest_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 x 4 cylinder standing in for an M2 x 4 flat-point grub screw. No socket, chamfer or point geometry is modelled."
+  },
+  {
+   "attachment_sha256": "aa216734152eaf9716179d5bf387c18ef20a3fe7445ac7a4dbe04370e1623484",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Solid cylinder envelope for the spring. The recipe gives Ø1.2 (radius 0.6) x 3.69 mm, from x -21.19 to the web face at -17.50, with 0.2 mm radial clearance in the 1.6 mm pocket. Coils are not modelled."
+  },
+  {
+   "attachment_sha256": "53c4315aa20068facd0ed3a3a584209938c8fc4378a1817c990a4f1cd8b22649",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell iso view with the side window open. The upper tab and part of the internal blocks are just visible through the window. The trimmed lower tab cannot be judged from this view, so I checked it in the STEP (tab_low now starts at x -22.69, the block_in face)."
+  },
+  {
+   "attachment_sha256": "cae67ebfbebb02e1c098f2aff67635f7ec2f88e241bd7e04c24f41ef9f4c56d1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/spring_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 x 1.5 cylinder for the spring-closing grub screw. Its outer end is flush with the block_in outer face at x -22.69 (y 11.4..13.4), right beside the stop nut seat."
+  },
+  {
+   "attachment_sha256": "96d45587337c023e156725d2ddbed206300fa16012b17a241184437ea0fb10b8",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/stop_nut/iso.png",
+   "status": "viewed",
+   "observation": "Square 4x4x1.6 stop jam nut. STEP bbox x -24.29..-22.69, y 7.3..11.3, z 9.9..13.9. Its +y flat is 0.1 mm from the spring screw at 0 deg, and its corners sweep over the spring screw end when turned."
+  },
+  {
+   "attachment_sha256": "4d0eebbce260478b1d8e92acd60d3f7e5627cc2543440a24b416ba4085455968",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/stop_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 x 6.0 cylinder, x -24.39..-18.39, now at the bought M2 x 6 length (r8 modelled 6.4). The tail stands 0.1 mm proud of the nut outer face at -24.29."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Box placeholder for the switch housing, placed at the assumed stem bottoming depth. It is the obstacle for housing-clear-past-stop. It is not a real switch."
+  },
+  {
+   "attachment_sha256": "1d4f98e6ffd629c862bfd1c63862d273d24e6f603569dd8dc6bc246eef48ff93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Box placeholder for the switch stem. At rest it is 0.2 mm from the plunger (overlap-button-switch_stem distance 0.19999). It is not a real switch."
+  },
+  {
+   "attachment_sha256": "08a5e30f4e79555ef2fa74ec190a9fc8b4b84fd714a536f48d84b524b23d07d2",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r9-20261007/workspace/studio/side-button-flow/2f33ec505f74e846-e5260c1b/measurements.json",
+   "status": "viewed",
+   "observation": "105 checks, geometry_checks_verdict pass, overall unknown. The new stop_nut-turns-on-seat and rest_nut-turns-on-seat checks pass with only 3 samples (0/45/90 deg) and a continuous bound of -1.11 mm (not_proven). housing-clear-past-stop is checked to -3.2034 deg (bound 0.053). nearest-shell-gap-until-stop now ends at -3.1534 deg. pin-insertion-path still lists only the shell as obstacle."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Resolved since r8 (my own probes, not reviewer opinion): stop and rest jam nuts turn freely on their seats and during run-down (ASM8-1). The stop screw is modelled at its bought 6.0 mm length (ASM8-3). The spring now has 0.2 mm radial clearance in the pocket.",
+  "Real switch body position, stem position, operating point and bottoming depth are unknown. The housing margin is against a placeholder box, and stem position relative to the hinge has no modelled PCB datum.",
+  "Real shell and PCB were not provided. This is a stand-in shell, so the skin normal at the gauge reference, and so the gauge value, will change on the real part.",
+  "Repeatability of the flush rest setting by touch/eye and of a hand depth-gauge reading on a curved skin across a 0.4 mm gap (base sag over the gauge footprint) has not been measured. It needs a physical trial.",
+  "Self-tapped M2 threads in printed plastic, jam-nut locking torque and stop drift under repeated presses are not verified. This needs a physical cycling test.",
+  "Spring rate, preload and hence thumb force are not selected; whether the result is \"easier to press\" can only be judged by the owner on a built prototype.",
+  "Whether the 0.4 mm running gap and about 0.1 mm proud standing of the face are acceptable as \"outer shape unchanged\" is an owner decision.",
+  "No independent human or different-vendor review was performed; this is one same-family model role review."
+ ]
+}

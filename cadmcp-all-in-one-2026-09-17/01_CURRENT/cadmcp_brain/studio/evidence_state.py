@@ -35,6 +35,11 @@ def _summary(check):
             result[key]=value
         elif isinstance(value,list) and len(value)<=16 and all(isinstance(item,(str,int,float,bool)) or item is None for item in value):
             result[key]=list(value)
+        elif isinstance(value,dict) and 'verdict' in value:
+            # Nested sub-verdicts (end-pose engagement, blocking) decide the
+            # check verdict, so their scalar fields stay visible in the summary.
+            result[key]={k:v for k,v in value.items()
+                         if k!='scope' and (isinstance(v,(str,int,float,bool)) or v is None)}
     return result
 
 

@@ -1,0 +1,185 @@
+{
+ "schema_version": 1,
+ "subject_digest": "5438bbd8ddb792ddea9436bfdff5e0f90cfc188fe68362a6a96e95e786c3013b",
+ "role": "assembly",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (assembly role, rev18)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "5354ecb8ebb7e5acad55a3dc8dbfa36bcfcf41ee74d9823d892c6aa7ab3feb57",
+   "kind": "image",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/assembly.png",
+   "observation": "Closed shell with the green face in the side window, the insert head and pull notch visible in the face; the running gap is visible. It does not show the internal tabs, pins, post or jaw, so assembly access cannot be judged from this image."
+  },
+  {
+   "attachment_sha256": "463bdc5e852d1f0c2690bc7b2b455d24070ec9f35bea2e116295a8f7acf71bb2",
+   "kind": "image",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/carrier_block/iso.png",
+   "observation": "Block plus tongue (T shape) with two plain vertical holes 15.7 mm apart on the top face. No Y locating feature on the block other than its +Y face, which meets the back-stop lip."
+  },
+  {
+   "attachment_sha256": "c6856ac1186199e2081522f44a6427678c1490b74d528e55ee518e6f1b6da6c2",
+   "kind": "image",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/button/iso.png",
+   "observation": "Curved face with spine, plunger, pad and stop tab riser; the insert counterbore and the pull notch slot running out from the bore toward +X are visible."
+  },
+  {
+   "attachment_sha256": "d56d8e6e9e1527c085bfe6be8dc0e4dd9927c7eff19f5d97bb2781c5bc1c3d97",
+   "kind": "image",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/stop_jaw/iso.png",
+   "observation": "Stop jaw renders as a plain box 5.0 x ~1.5 x 3.5 mm (arm and key fused; the 0.03 mm key oversize is not visible). No retention or pull feature."
+  },
+  {
+   "attachment_sha256": "af6e47ea086ad8777483c4a10533a23e807f20d6f7d502842223954ed1b2090b",
+   "kind": "image",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/stop_post/iso.png",
+   "observation": "Stop post grown from the inner skin. The iso view does not show the keyway clearly; my section probe shows the keyway cuts all but a 0.5 mm side web and a 0.5 mm roof."
+  },
+  {
+   "attachment_sha256": "e8c872cd83539a567ba311e6205305ccdd5ebe830551e6dac12c840fc5e65872",
+   "kind": "image",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/pin_1/iso.png",
+   "observation": "Headed pin (head r1.6 x 0.8) with a short chamfered tip (r1.0 to r0.7 over 0.5 mm). Shank is a plain r1.0 cylinder over its whole 14.5 mm length: the full length is the press diameter."
+  },
+  {
+   "attachment_sha256": "bae73813aecc48b7da334c13c71a3c8d0c32739bc272538b8accebb5494558ae",
+   "kind": "image",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/actuator_insert/iso.png",
+   "observation": "Insert with head, short press band, slip shank and tip. Under-head ledge for the pick is the head (r1.3) beyond the band (r1.0), i.e. 0.3 mm radial."
+  },
+  {
+   "attachment_sha256": "69ee56b39a3dc3e8f00c364bbdcedca938c944a55307b20137ec1c87670efe5b",
+   "kind": "image",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/shell/iso.png",
+   "observation": "Shell with window open; tabs and post are inside and hidden. The bottom is open, so pins and jaw can be reached from below."
+  },
+  {
+   "attachment_sha256": "7376c0a08eb3cb92a783a0e23bf96f0071bb495952d0d45688091b1dfbdd5002",
+   "kind": "json",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/measurements.json",
+   "observation": "overall_verdict unknown, geometry_checks_verdict pass. tab-to-stop-post 0.300 (min 0.29) has no placement corners. carrier-insertion, carrier-block-final-leg and pin approaches are continuous not_proven. Rotation checks list only shell and pcb_slab as obstacles."
+  },
+  {
+   "attachment_sha256": "225c0db15f794ae5a7fae109956ce80b83377f26b1473182e544e681f832ac5e",
+   "kind": "json",
+   "status": "viewed",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/build-record.json",
+   "observation": "Build record for attempt 32caeeae; subject_digest 5438bbd8... matches the packet; contains the recipe context and measurement references."
+  }
+ ],
+ "findings": [
+  {
+   "id": "A1-stop-travel-stack-omits-yaw",
+   "severity": "blocking",
+   "claim": "The click-before-stop stack (stack_v18) passes only because its stop-travel range (0.5 +/- 0.1) leaves out the carrier yaw that the design itself declares (+/-0.18 deg). The parallel leaves carry the block yaw to the face. The lip then rests on its most outward end, and the stop tab (x 12-16.9) sits near the far end. When I apply the declared yaw, the travel from rest to the stop drops to 0.414 mm. With the declared -0.1 face error, the worst travel is 0.314 mm. The insert rule allows the tip to rest up to 0.32 mm above OP, so the switch can meet the hard stop before it clicks. F5 promises a stop 'after the worst-case click', and the check reports pass, so the pass is false under the design's own declared tolerances. A far-end press (the declared 0.32 deg yaw at 3 N) makes it worse. The tab corner reaches the jaw before the tip has moved its share, and no check sees this because the rotation checks leave out stop_jaw and stop_post.",
+   "evidence": [
+    "Own probe (rigid rotation of button+insert and rest_lip about (-27.65,15.35) Z by the declared carrier-placement angle, bisection on contact): rot 0 -> rest offset -0.300, stop offset -0.800, travel 0.500; rot +0.18247 deg -> travel 0.5035; rot -0.18247 deg -> rest -0.2441, stop -0.6581, travel 0.414 mm.",
+    "stack_v18: t_lo = stop_travel 0.5 - 0.1 = 0.4; rest_above_op upper = md + 2s = 0.12 + 0.2 = 0.32 (zippy/omron md 0.12) -> past_op low 0.08 reported. With the yaw: 0.414 - 0.1 - 0.32 = -0.006 mm.",
+    "carrier_tolerance_v18 uses the yaw only for the preload range (face_y_variation), never in stack_v18's travel range.",
+    "Own probe, far-end yaw -0.3249 deg about (-9,15.3) (the declared far-end press case): button to stop_jaw 0.153 mm already at the -0.5 pose and overlapping (0.61 mm3) at -0.75, i.e. the tab corner meets the jaw about 0.15 mm early; at x=2 (insert) the same yaw adds only ~0.06 mm, so tip travel at the stop drops by ~0.085 mm.",
+    "rotation_checks edge/far-end/corner obstacles = ['shell','pcb_slab'] only; stop_jaw and stop_post are not obstacles.",
+    "design_basis: 'the worst-case click is 0.32 mm after rest' and F5 'stops the far-end tab 0.5 +/- 0.1 mm after rest (after the worst-case click)'."
+   ],
+   "proposed_change": "Add the carrier-placement yaw (both signs) and the press-induced yaw to stack_v18's travel range. Measure it with the rest contact (lip) and the stop contact (tab on jaw) as here, not from the nominal 0.5 mm. Then restore a positive margin. Options: a longer nominal stop travel; putting the stop tab near the insert x so that yaw moves both by the same amount; or a smaller insert step. Also state that the insert rule has to be checked by an actual click at the stop, at a far-end press as well as a centre press.",
+   "required_test": "Re-run stack_v18 with t_lo derived from the measured rest/stop contacts at both yaw signs plus the print error, plus a far-end-press translation-with-yaw sweep that includes stop_jaw and stop_post as obstacles and reports the tip travel past the rest at tab contact; require tip travel at stop >= rest_above_op_max + margin for every insert the rule can pick."
+  },
+  {
+   "id": "A2-z-datum-friction-only",
+   "severity": "major",
+   "claim": "Revision-17 A1 is only partly fixed. The block top now bears on the upper tab, but the only thing holding it there is the ASSUMED 0.03 mm pin-in-block friction. The 0.3 mm gap below the block is still free, the normal use attitude (rim down) puts gravity in -Z, and edge presses load the carrier in Z. If the block slips down inside the declared gap, the face clearances that are checked only at +/-0.05 mm Z fail.",
+   "evidence": [
+    "Shell probe at x -30, y 15.35: lower tab top z 9.2, upper tab underside z 17.5; block z 9.5-17.5 -> 0.30 mm free gap below the block, 0 above.",
+    "placement_tolerances: Z only +/-0.05 'on the upper-tab datum'; press_fits pin-in-carrier 'ASSUMED 0.03 mm radial interference' is the only -Z retention.",
+    "Own probe (button+insert shifted dz): dz -0.15 -> rest gap to shell 0.25 mm (< 0.35 required), edge twist -0.6025 deg at mid and stop poses 0.077 mm (< twist_min_gap 0.15); dz -0.30 -> rest gap 0.10 mm, twist -0.6025 deg 0.000 mm (contact).",
+    "At dz 0 the same probe gives 0.40 rest and 0.227-0.246 twist, consistent with the recorded checks, so the failure comes from the Z float alone."
+   ],
+   "proposed_change": "Make the Z datum positive. Options: a pin shoulder or collar that clamps the block up against the upper tab; a printed spring or crush rib under the block that fills the 0.3 mm gap after insertion; or a lower tab raised to zero gap with an insertion lead-in. Otherwise declare Z placement as -0.30/+0 and run the rest, twist, yaw and corner checks at that limit.",
+   "required_test": "Static and rotation clearance checks (rest-button-shell, edge twist, far-end yaw, corner) with the carrier at dz -0.30 (block on the lower tab), and a first-article pull-down test of the carrier with the declared pins (force to slide the block 0.1 mm) vs the 3 N edge press."
+  },
+  {
+   "id": "A3-back-stop-on-wrong-side",
+   "severity": "major",
+   "claim": "The back-stop lip cannot hold the block where the pin approach check assumes it. The lip sits on the +Y side of the block, but the leaf preload pushes the block in -Y, away from the lip, once the face lip touches the skin. Before the pins go in, nothing holds the block in -Y, so it springs back by the preload. That is 0.19-0.48 mm by my corner probe and 0.11-0.49 mm as declared. The pin can only self-centre within the entry counterbore: r1.0975 minus the pin tip flat r0.70 leaves about 0.40 mm of capture. In the upper preload corner the pin tip lands on the flat underside of the block. The pin approach sweeps put the block at its back-stop pose. The stated order names no hold or fixture. Also, the 'lead-in countersinks' are cylindrical steps, not cones.",
+   "evidence": [
+    "back_stop_box y 19.6-21.1 is on the +Y side of block (y 11.0-19.6); rest_lip drawn 0.3 mm into the skin in the free pose, so the preload reaction on the block is -Y.",
+    "carrier-insertion ends at offset y -0.32 (lip 0.02 short of skin); carrier-block-final-leg moves the block alone to -0.10, not the full carrier to 0 against the preload.",
+    "Own probe preload: rest offset -0.244 to -0.432 over +/-0.18 deg, plus the declared 0.05 mm translation -> about 0.19-0.48 mm spring-back.",
+    "Own section probe of carrier_block at pin 1: z 9.55-9.75 radius 1.0975 (flat-floored step 0.31 deep), above z 9.85 radius 0.9675; pin tip flat r0.70 (profile 1.0 at z14 -> 0.7 at z14.5).",
+    "pin-1/pin-2-approach-from-below: final pin top z 6.15 (approach only) and continuous_swept_motion not_proven (lower bound -1.007 mm)."
+   ],
+   "proposed_change": "Put a locator on the -Y side, or add a light snap or detent that holds the block at the back stop against the preload before the pins go in. Or state an explicit hold step (tool pushing the block's -Y face at y 11 toward +Y) and make the entry a conical countersink of at least 0.5 mm radial capture. Rename the step feature to 'counterbore' if it stays cylindrical.",
+   "required_test": "Pin approach sweep with the carrier at the sprung-back pose (y offset -0.49 and -0.11 at both yaw signs) showing the pin tip lands inside the entry cone, or a recorded hold fixture in the assembly order."
+  },
+  {
+   "id": "A4-pin-press-force-unbounded",
+   "severity": "major",
+   "claim": "Each pin is a full-length press fit through three holes in series: lower tab 3.0 mm, block or tongue 8.0 mm and upper tab about 3.2 mm, so about 14.2 mm of interference on a Ø2 printed ABS pin pushed from its head. Nothing estimates the press-in force or compares it with what the pin can carry in compression or buckling. With ASSUMED ordinary values for ABS friction and contact pressure (0.05 mm radial interference is about 5% strain, beyond ABS yield), the force is several hundred newtons. A Ø2 ABS pin yields at roughly 125-190 N. The pins may crush or bend before they seat, so the step 'pins pressed up from the open bottom' is not shown to be possible. The same force also drags the block, and while the shell is 'supported on its top' it goes through the cantilevered tabs.",
+   "evidence": [
+    "pin profile: r1.0 from z 6.2 to 20.2 (14.0 mm) then lead-in; tab holes r0.95 (0.05 interference) through z 6.19-21.01; block holes r0.97 (0.03) over 8 mm.",
+    "Engaged lengths at seat: lower tab 6.2-9.2 = 3.0, block 9.5-17.5 = 8.0, upper tab 17.5-20.7 = 3.2 mm.",
+    "Own estimate (ASSUMED mu 0.35, contact pressure capped near ABS yield ~40 MPa in the tabs, ~31 MPa in the block): about 260 + 550 + 280 N. Pin cross-section 3.14 mm2 x 40-60 MPa = 125-190 N. Order of magnitude only.",
+    "press_fits pin-1/2-in-tabs and in-carrier are checked only as overlap volumes (1.05-2.27 mm3); no force or pin-strength check exists."
+   ],
+   "proposed_change": "Limit each interference to a short band. For example, keep the 0.05 mm band only in the upper tab and over 2 mm of the block, and make the lower tab and the rest of the block a slip fit. Or press each pin in short steps with a supported punch. Then state the expected press force and compare it with the pin's compressive and buckling capacity.",
+   "required_test": "Printed coupon test: press force vs displacement for one pin through printed lower tab + block + upper tab at the declared hole sizes, with pin crush/buckle observed; require seating force < 50% of the measured pin failure load."
+  },
+  {
+   "id": "A5-insert-press-in-not-on-stop",
+   "severity": "major",
+   "claim": "The order says the inserts are pushed in 'with the face held on the hard stop (the stop takes the press-in force)'. The design's own stack says otherwise: for both registered profiles 'pin may bottom first: yes'. In that tolerance corner the seated insert drives the switch pin to bottom before the tab reaches the jaw, so the press-in force goes through the switch and PCB. The insert rule makes it worse, because it deliberately tries longer inserts first. Where the stop does take the force, the force goes into the post floor, which hangs on a 0.5 mm side web and a 0.5 mm bridged roof (stop_post is not in wall_checks; min printed wall 1.2 mm). The jaw is also pushed up against that same 0.5 mm roof as its Z datum.",
+   "evidence": [
+    "unverified_requirements: zippy_df_pin and omron_d2f_pin both report 'pin may bottom first: yes (tolerance corner: the switch takes the force there; bottoming rating UNKNOWN)'.",
+    "stack_v18 pin_flush_from_rest_min: zippy 0.1 + (7.0-0.2) - (6.65+0.25) = 0.0 mm; omron 0.1 + (5.5-0.3) - (5.0+0.4) = -0.1 mm; stop travel up to 0.6 mm.",
+    "Insert rule: 'fit the longest insert (0.1 mm steps) with which the switch still releases', i.e. over-long inserts are pressed in before the chosen one.",
+    "Own section probe of stop_post: key slot y 22.71-24.2, open below (z 11.5-15.0), roof z 15.0-15.51; along x at y 23.45 material only x 19.70-20.205 -> the load-bearing floor (y 21.2-22.7) is joined to the skin-side post only by a 0.5 mm side web and a 0.5 mm roof.",
+    "wall_checks list shell, button and carrier_block only; stop_post is a separate output part."
+   ],
+   "proposed_change": "Use one consistent method. Either press inserts in with the switch removed, against a gauge that stands in for the pin, and fit the switch afterwards, or have a tool back the plunger directly. Then state that the switch never takes the press-in force. Thicken the post webs to at least 1.2 mm, for example by making the keyway a blind slot with full side walls on both sides, and add stop_post to wall_checks.",
+   "required_test": "For each registered profile at its tolerance corners and each insert length the rule can try, compute whether the head seats before the tip reaches the pin-bottom position (UNKNOWN until bottoming is measured); add stop_post to wall_checks with min 1.2 mm; first-article: press an insert to seat with the switch fitted and record the switch actuation and any PCB deflection."
+  },
+  {
+   "id": "A6-stop-clearances-without-corners",
+   "severity": "minor",
+   "claim": "The stop tab runs 0.30 mm beside the stop post. That is checked only at nominal (tab-to-stop-post, min 0.29, with no tolerance_ids) and is left out of every twist, yaw and corner rotation check. At the declared placement corners alone the gap is 0.215 mm. With a far-end press yaw on top it is 0.169 mm, below the check's own 0.29 mm. No contact was found, so this is a scope gap, not a collision.",
+   "evidence": [
+    "Own probe: rot -0.18247 deg + tx +0.05 -> tab to post 0.215 mm (rest and -0.9 pose); rot +0.18247/tx -0.05 -> 0.381.",
+    "Own probe: placement corner (rot -0.18247, tx +0.05) plus far-end yaw -0.3249 deg at -0.75 -> 0.169 mm; yaw +0.3249 -> 0.290.",
+    "measurements: tab-to-stop-post distance 0.300 vs required 0.29, no placement_corners entry; rotation checks obstacles shell and pcb_slab only."
+   ],
+   "proposed_change": "Add tolerance_ids ['carrier-placement'] to tab-to-stop-post and add stop_post (and stop_jaw before the stop pose) to the rotation checks. Then either set a requirement the corners meet or widen the gap.",
+   "required_test": "Re-run tab-to-stop-post with placement corners and the yaw/corner rotation checks with stop_post as an obstacle; report the minimum."
+  },
+  {
+   "id": "A7-jaw-key-fit-not-printable",
+   "severity": "minor",
+   "claim": "The jaw is retained only by a 0.03 mm interference across the key in Y, and Y is the jaw's print stacking axis (printed flat on its -Y face). At ordinary layer heights the 1.53 mm key comes out as 1.4 or 1.6 mm. The real fit is then either loose, with nothing keeping the jaw from dropping out of the open-bottom keyway in the rim-down attitude, or about 0.1 mm interference pressed against the 0.5 mm roof. If the jaw is lost, the hard stop is gone.",
+   "evidence": [
+    "recipe jaw_key size Y 1.53 vs key_slot 1.50; press_fit stop-jaw-key-in-post 'ASSUMED 0.03 mm total interference ... retention only'.",
+    "design_basis: 'Stop jaw printed flat on its -Y face'.",
+    "Own probe: keyway open to -X and to the bottom (z 11.49), roof 0.5 mm; no other jaw retention feature (stop_jaw iso is a plain box)."
+   ],
+   "proposed_change": "Print the jaw so that the fit dimension lies in the XY plane, or add a positive retention: a snap or barb on the key, or capture by the PCB or base plate. State the realised fit.",
+   "required_test": "First-article: jaw push-in force and the force to pull it out downward; drop/shake test of the assembled shell rim-down with no button pressed."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Revision-17 assembly findings: A1 (carrier Z float) partly fixed. There is now an upper-tab datum, but it is held by friction only and the 0.3 mm gap below the block remains (see A2-z-datum-friction-only). A2 (pin baseline 3.62 mm) fixed: the pins are 15.7 mm apart along X and a placement tolerance is declared. The stack still leaves the yaw out of the stop travel (A1-stop-travel-stack-omits-yaw). A3 (insert swap) mostly fixed: there is a pull notch, a 1.5 mm band and a slip shank. Extraction is untested, and the claim that the stop backs the press-in is not true at the switch tolerance corners (A5). A4 (PCB keep-out) fixed: board edge x >= -6, pcb_slab is modelled, and pad-to-pcb measures 0.50 mm. A5 (pin insertion scope) partly fixed: the pin lead-in, the entry steps and the 'approach only' wording were added, but there is no block pre-location against the preload (A3-back-stop-on-wrong-side) and the sweeps are still continuous not_proven.",
+  "The press-force numbers in A4 are my order-of-magnitude estimate with ASSUMED friction and contact pressure, not a measurement; real printed fits may differ a lot either way.",
+  "My yaw/travel numbers use rigid bodies and the declared ASSUMED tolerances; leaf compliance and lip deformation under the 0.1-0.3 N preload are ignored (preload moment estimated about 0.01 deg, negligible).",
+  "Own probes outside the recipe: PCB+switch rising from z -25 to its seat is clear (min 0.50 mm to the pad at rest, nominal only), and the carrier rising from below at y offset -12 is clear (min 2.4 mm). These steps are not recorded as checks in the recipe.",
+  "Insert extraction with a pick: the ledge under the head is about 0.3-0.43 mm radial within the 1.0 mm notch and 0.4 mm deep. Whether a pick can produce the >= 3 N retention force there without breaking the head was not tested.",
+  "Pin-bottoming position inside the switch is UNKNOWN for all profiles; A5 depends on it."
+ ],
+ "conclusion": "revise"
+}

@@ -55,9 +55,9 @@ class OriginalFixture:
 
 def test_capability_boundaries(tmp_path):
     t=Tools(Brain(tmp_path))
-    result=t.brain_studio_capabilities(['polygon_extrusion','loft','sweep'],['sampled_translation_clearance','rotational_clearance'])
+    result=t.brain_studio_capabilities(['polygon_extrusion','loft','surface_loft'],['sampled_translation_clearance','rotational_clearance'])
     assert 'loft' in result['operations']
-    assert result['unsupported_operations']==['sweep']
+    assert result['unsupported_operations']==['surface_loft']
     assert result['unsupported_checks']==['rotational_clearance']
     assert not result['requested_capabilities_supported'] and not result['design_feasibility_certified']
     assert next(x for x in t.list() if x['name']=='brain_studio_capabilities')['annotations']['readOnlyHint']

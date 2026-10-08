@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "subject_digest": "bc37a85d6af1cace9690e466bc6aa947fa55862b559444eec5dfaf387056472b",
+  "role": "verification",
+  "discussion_round": 1,
+  "challenged_review_ids": [],
+  "reviewer_label": "Claude subagent (verification role)",
+  "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+  "conclusion": "revise",
+  "findings": [
+    {
+      "id": "V1-rest-pose-unconstrained",
+      "severity": "blocking",
+      "claim": "The button has no outward stop and no preload, so its rest pose (the flush 'unchanged outer skin' state) is not defined by the geometry. With the designed 0.2 mm stem free play the stem spring cannot hold the button at rest, and nothing stops outward rotation until the rear skin edge wedges into the window edge at about +3.9 deg. At that angle the free end of the face (about 26 mm from the hinge) sits about 1.7 mm proud of the outer skin. No check covers positive rotation, F4 'return to rest' or the F2 behaviour 'moves on one controlled path without rattling'. All rotation checks sweep only negative angles.",
+      "evidence": [
+        "Independent re-measure (CadQuery 2.8, re-imported button/model.step and shell/model.step, rotation about (-12,25,z)): +1 deg d=0.2721 mm; +2 deg d=0.1828 mm at (-10.22,31.26,10.0); +3 deg d=0.0750 mm; +4 deg overlap 0.0080 mm3; +5 deg overlap 0.328 mm3; +8 deg overlap 7.14 mm3. All contacts are at the rear window edge x~-10.4, z=10.0, which is a wedge contact and not a designed stop face.",
+        "recipe rotation_checks: press-swept-clearance end_deg -1.865, overtravel-stop-engages and housing-clear-until-stop end_deg -2.665. There is no positive-angle check, and motion_checks is [].",
+        "design_parameters.stem_free_play_mm=0.2: rest-plunger-free-play measured 0.19999999999999932 mm, so at rest the plunger does not touch the stem.",
+        "FLOW_RESULT 3_function_decomposition F2 behaviour: 'moves on one controlled path without rattling against the shell'; F4: 'returns to rest after release'.",
+        "protected_constraints: 'Outer shell skin is not reshaped; the button face is the removed skin piece.' This holds only at the nominal pose, and nothing holds the button there."
+      ],
+      "proposed_change": "Add a rest-defining feature without touching the outer skin. Options: (a) an inner lip on the skin piece or tongue that bears on the inside of the shell (or the tab or stop shelf) at the rest pose; or (b) zero free play with a defined stem preload against an outward stop. State in the recipe which feature defines the rest pose.",
+      "required_test": "Add a rotation check from 0 to a small positive angle (for example +0.5 deg) against the shell with end_max_distance_mm set, so the outward stop must engage at or just after 0 deg. Also report the face protrusion at the outward stop angle (required <= a stated flushness tolerance). As a negative control, confirm the check FAILS on the current geometry (which swings to about +3.9 deg)."
+    },
+    {
+      "id": "V2-hinge-play-envelope",
+      "severity": "major",
+      "claim": "All clearance and swept-motion passes are for a perfectly centred barrel. The designed radial pin-bore play is 0.3 mm (bore r1.3 vs pin r1.0), which is larger than several of the clearances being certified: barrel to inner shell wall 0.272 mm (the rest-button-shell minimum) and front window-edge gap 0.222 mm at the press angle. Axial play is set by the skin and tongue contacts at ±0.3 mm, not by the 0.8 mm barrel-to-tab gaps. Within the designed play the button can bind on the window edge before the switch reaches its assumed operating point. The verification plan item 'static clearance of ... barrel on pin' therefore does not bound the real motion.",
+      "evidence": [
+        "Re-measure with the button translated inside the play (shell with the pin region removed): +y 0.29 mm puts the barrel 0.0016 mm from the shell inner wall at (-12.33,27.87,17.5). ±x 0.29 mm leaves a window-edge gap of 0.110 mm at rest.",
+        "Counterexample: +x 0.29 mm offset, then rotation: -1.5 deg already gives an overlap of 0.0564 mm3 at the window edge (14.4,30.21,10.0); -2.0 deg gives 0.193 mm3. At -1.5 deg the stem travel is only about 21.5*sin(1.5 deg)-0.2 ≈ 0.36 mm, below the assumed 0.5 mm operating travel.",
+        "Axial: dz -0.3 mm puts the tongue in contact with the stop shelf top at z=7.5; dz +0.3 mm puts the skin top in contact with tab_high at z=18.3; dz ±0.4 mm overlaps (0.89 / 0.14 mm3). The barrel-to-tab gap is 0.8 mm, so the barrel is not the axial locator.",
+        "certificate_scope in measurements.json: 'Deformation, hinge play, wear and tolerance variation are excluded.'",
+        "rest-button-shell required_mm 0.25 < designed radial play 0.3 mm (pin_radius_mm 1.0, barrel_inner_radius_mm 1.3)."
+      ],
+      "proposed_change": "Either reduce the designed radial play below the smallest functional gap, or open the gaps that the play can close: barrel-to-wall, window edge at the press and stop angles, and skin-to-tab. Make the axial locator explicit (barrel end faces on tabs with a gap smaller than the skin and tongue gaps).",
+      "required_test": "Repeat rest-button-shell, press-swept-clearance, overtravel-stop-engages and housing-clear-until-stop with the button offset to the corners of the play envelope (radial ±0.3 mm in x and y, axial ±0.8 mm or the chosen play). Require that no overlap occurs before the stop angle and that stem travel is at least the assumed operating travel before any contact with the shell other than the stop."
+    },
+    {
+      "id": "V3-actuation-not-measured",
+      "severity": "major",
+      "claim": "F3 (plunger moves the stem through its operating travel) has no measured check. The switch stem is excluded from every rotation check and no engagement or overlap-depth check exists. The flow's engineering evaluation nevertheless says the chosen concept is 'fully covered by rigid rotation, clearance and wall checks'. I measured actuation independently and it does occur in the nominal geometry, but the shipped evidence does not show it.",
+      "evidence": [
+        "Recipe rotation_checks obstacles: [shell, switch_housing], [shell], [switch_housing]. switch_stem is never an obstacle or engagement target, and motion_checks is [].",
+        "FLOW_RESULT 7_engineering_evaluation.reason: 'fully covered by rigid rotation, clearance and wall checks'.",
+        "Re-measure: button-stem distance 0.0429 mm at -0.4 deg and 0.0036 mm at -0.5 deg (first contact about -0.51 deg). Overlap with the rigid stem envelope: 2.003 mm3 at -1.8654 deg (about 0.5 mm average over the 2x2 mm stem face) and 3.207 mm3 at the stop angle -2.665 deg (about 0.8 mm stem compression).",
+        "Stem compression at the stop (about 0.8 mm) is beyond the assumed 0.5 mm operating travel by about 0.3 mm. No check limits this against a stem total-travel figure, because none exists for the placeholder."
+      ],
+      "proposed_change": "Add an explicit actuation check: the stem penetration depth (or the plunger-tip displacement at the stem footprint) at the press angle must be >= the assumed operating travel. Also add a stated maximum stem travel and check it at the stop angle. Correct the 'fully covered' wording in the evaluation.",
+      "required_test": "Measure plunger-tip y at the stem footprint corners at press_angle and stop_angle. Require operating travel <= penetration <= assumed total stem travel. As a negative control, shift the stem 0.6 mm away and confirm that the actuation check fails."
+    },
+    {
+      "id": "V4-assembly-claim-contradicts-cad",
+      "severity": "major",
+      "claim": "The selected concept states 'Button barrel slides over the pin from below before the PCB is fitted' and 'Pin is part of the shell; barrel slides on'. In the CAD, however, the pin is fused to both tab_low (z 6.7-9.7) and tab_high (z 18.3-21.3), and the barrel (z 10.5-17.5) is captive between them. The button is exported as a separate printed part. The stated assembly method is therefore physically impossible for this geometry, and no insertion check exists.",
+      "evidence": [
+        "Recipe op shell_part = union(shell_open, tab_low, tab_high, pin, stop_shelf, stop_post); pin origin z 6.7, height 14.6 (z 6.7-21.3).",
+        "Re-measure: button translated -12 mm in z overlaps the shell by 38.96 mm3, and +12 mm in z by 116.24 mm3. Already at dz ±0.4 mm it overlaps. There is no axial withdrawal path.",
+        "FLOW_RESULT 5_6 chosen candidate 3f843ccf... B_lever.assembly_method and G_pivot.assembly_method."
+      ],
+      "proposed_change": "Choose and model a real assembly route: a separate pin pressed through tab holes, an open-ended pin with a snap or clip retainer, a split or C-shaped barrel that snaps onto the pin, or an explicitly declared print-in-place with the shell (with orientation and clearance stated). Update the concept text to match.",
+      "required_test": "Add a translation check of the button (or the separate pin) along the stated insertion path, from fully outside to the installed pose, against the shell with zero overlap. For print-in-place, show instead that the button and shell are printed as one job with no fused contact (min distance > stated print clearance)."
+    },
+    {
+      "id": "V5-press-ease-has-no-metric",
+      "severity": "major",
+      "claim": "The primary request ('もっと押しやすく') has no measured proxy and no baseline, so the prototype cannot show an improvement. The lever geometry gives a concrete counterexample risk. The plunger sits at about 21.5 mm from the hinge, while most of the face lies inboard of it. Pressing the face centre needs about 1.5x the switch force, and pressing near the rear edge needs about 2.7-5.4x. The face travel to the stop there is only 0.19-0.37 mm. This may be harder to press than a direct-acting button over much of the face.",
+      "evidence": [
+        "Geometry: hinge x=-12, plunger x 8-11 (lever about 21.5 mm), face x -10..14.",
+        "Computed force factor vs switch force = 21.5/r: x=-8 → 5.38, x=-4 → 2.69, x=0 → 1.79, x=2 (face centre) → 1.54, x=9.5 → 1.00, x=12 → 0.90. Face travel at the stop angle 2.665 deg: 0.19 mm at x=-8, 0.65 mm at x=2, 1.12 mm at x=12.",
+        "context.lineage.baseline_subject_digest = null; correction_guarantee 'none'. FLOW_RESULT 2_reference_inspection status not_available and 4_req2cad_search FS_ENCODER_NOT_CONFIGURED.",
+        "The unverified_requirements honestly declare that press feel was not tested. No geometric proxy was offered instead."
+      ],
+      "proposed_change": "Define a measurable press-ease proxy with the owner (for example the required force factor and travel at the expected thumb contact zone) and place the plunger or hinge so that the factor is <= 1 over that zone. Alternatively, state explicitly in the delivery that the lever increases the required force over the rear of the face.",
+      "required_test": "Report the force factor and face travel on a grid over the face, compared with a stated baseline (the original button, or a direct-plunger variant built with the same placeholder switch)."
+    },
+    {
+      "id": "V6-overtravel-certificate-and-summary",
+      "severity": "minor",
+      "claim": "overtravel-stop-engages reports verdict pass with continuous_swept_motion 'not_proven' and a negative lower bound (-0.078 mm), because min_mm=0 and max_samples is capped at 9. The packet's evidence_state summary for this check also omits the end_pose_engagement block, which is present in measurements.json. My finer re-sampling closes the gap in the nominal case: the approach to the stop post is monotone and contact happens only at the stop angle. That is now shown here, not in the delivered evidence.",
+      "evidence": [
+        "measurements.json overtravel-stop-engages: final_samples 9, lower bound -0.07812246555622357, end_pose_engagement end_min_distance_mm 0.0 (verdict pass). In the packet subject.payload.evidence_state, this entry lacks the end_pose_engagement key, while press-swept-clearance shows null.",
+        "Re-measure, shell distance during inward rotation: -2.4 deg 0.1178 mm, -2.5 deg 0.0733, -2.6 deg 0.0289, -2.64 deg 0.0111, -2.66 deg 0.0022, -2.6649 deg 0.0000. The contact is at the tongue outer edge (13.47,23.81,7.8) against the stop_post top face y=23.814.",
+        "Negative control: past the stop, overlap grows (-2.7 deg 0.0041 mm3, -2.8 deg 0.059 mm3, -3.0 deg 0.340 mm3). The stop is a real blocking contact and the overlap metric detects penetration.",
+        "Stop contact is a 1.6 mm-long edge line (tongue z 7.8-13 vs post z 6.0-9.4), not a face contact."
+      ],
+      "proposed_change": "Split the stop check into (a) a clearance certificate from 0 to just before the stop angle (for example 0.99*stop) with min_mm>0, and (b) the end-pose engagement. Make the evidence_state summary carry end_pose_engagement for every rotation check that has one.",
+      "required_test": "Re-run with sub-checks (a) and (b); (a) must report distance_bound_satisfied_under_stated_assumptions. Confirm that the packet summary contains end_min_distance_mm."
+    },
+    {
+      "id": "V7-tautological-and-sliver-checks",
+      "severity": "minor",
+      "claim": "Several passes only confirm design inputs: barrel-bore 2.6 equals 2*barrel_inner_radius, and rest-plunger-free-play has its threshold set 0.001 below the nominal 0.2. Separately, the wall check ignored oblique exits down to 0.015 mm (shell) and 0.005 mm (button). The shell value is located at the tab/window junction, where tab_low and tab_high overlap the window-gap opening by 0.1 mm in z over x -10.4..-9. This leaves 0.1 mm steps in the opening edge (0.89 and 1.17 mm3 of shell inside the gap box) that are below FDM layer and nozzle resolution.",
+      "evidence": [
+        "shell-printed-wall oblique_exit_min_mm 0.014870625458211861 at (-10.34,29.32,18.30); button-printed-wall oblique_exit_min_mm 0.005044 at (14.0,29.03,12.8); rays_oblique_exit 493 and 287 are not counted.",
+        "Recipe: tab_high_box z 18.3-21.3 and tab_low_box z 6.7-9.7, x -15..-9; window_gap z 9.6-18.4, x -10.4..14.4.",
+        "Re-measure: shell volume inside box x[-10.4,-9] z[18.3,18.4] = 0.8917 mm3, and inside z[9.6,9.7] = 1.1706 mm3."
+      ],
+      "proposed_change": "Keep the tab z-extents outside the window-gap z band, or trim the tabs by window_gap. Label the identity checks as self-consistency (not verification) in the report.",
+      "required_test": "Re-run the wall checks and report the oblique-exit minimum. Require no sub-0.4 mm feature at the window edges (or an explicit print-resolution check). Re-measure the shell volume inside the window-gap box (expected 0 apart from the intended pin and tabs)."
+    }
+  ],
+  "evidence_inspections": [
+    {
+      "attachment_sha256": "310545a72cb7d655e14ee55dfc228a1999757b7fd33dae1c8cce6b88c4cfe04f",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/assembly.png",
+      "status": "viewed",
+      "observation": "Iso render of the egg-shaped stand-in shell (flat elliptical top cap at z=34) with the orange curved button face sitting in a rectangular window on the side, visually flush, with a thin gap line. Only the nominal rest pose is shown; no pressed, stop or outward pose, and the internal hinge is not visible. Labeled 'Prototype assembly / not a certified product'."
+    },
+    {
+      "attachment_sha256": "72c2be9fa1560b14591bd4eb6aa4e50d942f0e2dc76f2e510c008e8e87a04bf0",
+      "kind": "json",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/build-record.json",
+      "status": "viewed",
+      "observation": "Build record for attempt 7d46af64..., kind recipe_build, subject_digest bc37a85d... It carries the full recipe context (lineage: no baseline, correction_guarantee none), file_hashes matching the folder, and an embedded copy of the measurements with overall_verdict 'unknown' and geometry_checks_verdict 'pass'. The trace shows hollow 17421.9 mm3 and shell_open 17110.6 mm3."
+    },
+    {
+      "attachment_sha256": "bb5a6506f7224708bc248429c07f3b13ad0aa6ed7db385a836fe5da345d1ef18",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/button/iso.png",
+      "status": "viewed",
+      "observation": "Button part iso: curved skin strip with the bored barrel ring at one end, linked by a short arm. A rear rib block, plunger block and lower stop tongue protrude inward. No lip or feature is visible that would bear on the shell from inside to limit outward rotation (consistent with V1)."
+    },
+    {
+      "attachment_sha256": "d0c9c0eaa9e20461552c4b2c6b086a0b1121912c9e534deb1536822e1f6bf00b",
+      "kind": "json",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/measurements.json",
+      "status": "viewed",
+      "observation": "All checks pass with overall_verdict 'unknown'. The rotation samples are only negative angles. overtravel-stop-engages: 9 samples, end distance 0.0, lower bound -0.078 'not_proven', with end_pose_engagement present. Wall checks: shell sampled min 1.236 mm and button 1.300 mm, with minimum_proven false and oblique exits down to 0.015 and 0.005 mm excluded. No check uses switch_stem as a rotation target."
+    },
+    {
+      "attachment_sha256": "d2a8de1ef4c619b19ab874db3adc48e90518f40cf7799225ab14f754f0cbf833",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/shell/iso.png",
+      "status": "viewed",
+      "observation": "Shell part iso with the side window open. Through the window the vertical pin, the upper and lower tabs and the shelf/stop post are visible inside near one end of the opening. The pin is shown joined to the tabs at both ends, with no free end for the barrel to slide on (consistent with V4)."
+    },
+    {
+      "attachment_sha256": "c1d58522c820403fb6bfa08f24bbc769a4b277476e814bb46e3033eec0fc4a58",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/switch_housing/iso.png",
+      "status": "viewed",
+      "observation": "Plain rectangular box (6 x 4 x 6 mm placeholder housing) with no mounting features, pins or PCB interface. It floats in the assembly, attached to neither the shell nor a PCB, so the housing-clear-until-stop result depends on an unmodeled mounting position."
+    },
+    {
+      "attachment_sha256": "b86a4169fec7e56e7af5756340b2d11bfe3a0a113dbdb26343bd08cacfdf7f2a",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-20261007/workspace/studio/side-button-flow/bc37a85d6af1cace-f8743ab5/switch_stem/iso.png",
+      "status": "viewed",
+      "observation": "Plain rectangular block (2 x 1.1 x 2 mm placeholder stem), rigid, with no spring, travel or preload representation. It cannot represent return force or a travel limit, so F4 return and stem overtravel are unverifiable from this geometry."
+    }
+  ],
+  "remaining_uncertainties": [
+    "Switch housing and stem are rigid placeholder boxes not mounted to any modeled PCB or shell feature; real switch dimensions, operating/total travel, force and click feel are unknown (declared by the owner as intentionally open).",
+    "Shell is a synthetic ellipse-loft stand-in, not a real mouse; Req2CAD search was not available (FS_ENCODER_NOT_CONFIGURED) and no real-CAD reference was inspected, so no catalog or benchmark evidence exists for this concept.",
+    "FDM hinge play, pin strength (1.0 mm radius printed pin), stop edge-contact wear and skin stiffness are not modeled; rigid kernel checks cannot address them.",
+    "My re-measurements used OCCT BRepExtrema distances and Boolean intersection volumes on re-imported STEP with the same kernel as the original checks; they are not an independent kernel or a physical test.",
+    "Sampled wall thickness is not a proven minimum; no strength or FEA analysis was done.",
+    "This review was done by a same-family model in a separate context; reviewer independence and human approval are not verified."
+  ]
+}

@@ -1,0 +1,198 @@
+{
+ "schema_version": 1,
+ "subject_digest": "5438bbd8ddb792ddea9436bfdff5e0f90cfc188fe68362a6a96e95e786c3013b",
+ "role": "mechanism",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (mechanism role, rev18)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "5354ecb8ebb7e5acad55a3dc8dbfa36bcfcf41ee74d9823d892c6aa7ab3feb57",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/assembly.png",
+   "status": "viewed",
+   "observation": "Whole shell with the green button face in the side window and the insert counterbore with pull notch visible; the face sits slightly below the skin. Internal stop jaw, post and leaves are hidden, so this image cannot show the stop load path or yaw behaviour."
+  },
+  {
+   "attachment_sha256": "c6856ac1186199e2081522f44a6427678c1490b74d528e55ee518e6f1b6da6c2",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/button/iso.png",
+   "status": "viewed",
+   "observation": "Curved face with the insert counterbore, the tall pad at the leaf end, the spine and the small far-end stop tab on a riser. The tab is a short unfilleted step off the riser (STEP: tab x 12-16.9, riser only to x 13.5, so a 3.4 mm overhang carries the stop load)."
+  },
+  {
+   "attachment_sha256": "af6e47ea086ad8777483c4a10533a23e807f20d6f7d502842223954ed1b2090b",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/stop_post/iso.png",
+   "status": "viewed",
+   "observation": "Rectangular post grown from the inner skin. The keyway is on the hidden -X/bottom side and is not visible. My STEP section shows the post is only 3.25 mm2 (0.5 mm side wall plus 0.5 mm roof) across y 22.7-24.2, against 12 mm2 elsewhere."
+  },
+  {
+   "attachment_sha256": "d56d8e6e9e1527c085bfe6be8dc0e4dd9927c7eff19f5d97bb2781c5bc1c3d97",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/stop_jaw/iso.png",
+   "status": "viewed",
+   "observation": "Plain rectangular jaw block with no fillet or relief. STEP bbox x 14.7-19.7, y 22.685-24.215, z 11.5-15.0. The arm x 14.7-17.2 lies outside the post and carries the tab load as a 1.4 mm cantilever."
+  },
+  {
+   "attachment_sha256": "8c6079019cb61ee3c16340aec9d8ae4cc925c79a439750971d5973494b946413",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/leaf_a/iso.png",
+   "status": "viewed",
+   "observation": "Thin vertical leaf with R1 fillets at the root and tip ends. STEP bbox x -33 to -9 (L 24), height z 9.5-17.3 (w 7.8), 0.6 mm thick in Y. Slender in compression: clamped Euler load 15.8-26.0 N over the thickness tolerance."
+  },
+  {
+   "attachment_sha256": "87c6ba3984763f99867965fd3f31b00a915520f4c68a4dca8d33bf16cbfad300",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/leaf_b/iso.png",
+   "status": "viewed",
+   "observation": "Second leaf with tip fillets on both sides. STEP bbox y 18-20.6, 8 mm leaf pitch from leaf A, which sets the yaw stiffness (2 EA/L (d/2)^2 = 12168-14380 Nmm/rad)."
+  },
+  {
+   "attachment_sha256": "f8cd0f8b2ffe4c1595bd6a77271bc372e5efafedd27b4de350d4e2e12a41296f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/rest_lip/iso.png",
+   "status": "viewed",
+   "observation": "Rectangular lip ring around the window (x -11.6 to 15.6, z 9.5-19.6). It is drawn 0.3 mm into the skin as the preload. The ring spans 27.2 mm in X, so the declared carrier rotation of 0.182 deg leaves a 0.087 mm end-to-end seating difference."
+  },
+  {
+   "attachment_sha256": "bae73813aecc48b7da334c13c71a3c8d0c32739bc272538b8accebb5494558ae",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/actuator_insert/iso.png",
+   "status": "viewed",
+   "observation": "Insert with head, short press band, slip shank and a small tip. No snap or shoulder resists outward load, so retention against the switch pin is friction in the 1.5 mm band only."
+  },
+  {
+   "attachment_sha256": "463bdc5e852d1f0c2690bc7b2b455d24070ec9f35bea2e116295a8f7acf71bb2",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/carrier_block/iso.png",
+   "status": "viewed",
+   "observation": "Block with a tongue and two vertical pin holes 15.7 mm apart (x -35.5 and -19.8). The short pin base gives the 0.182 deg carrier rotation used in my stack recomputation."
+  },
+  {
+   "attachment_sha256": "7376c0a08eb3cb92a783a0e23bf96f0071bb495952d0d45688091b1dfbdd5002",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/measurements.json",
+   "status": "viewed",
+   "observation": "overall_verdict unknown, geometry pass. parallel-leaves-beam: deflection 1.0877 mm, stiffness 0.2593 N/mm per leaf, nominal 7.83 / peak 11.75 MPa at t 0.65 against 16.7 allowed (I reproduce this with E 2127 MPa). press-blocked-by-hard-stop: first block at t 0.75 (0.675 mm) of a 5-sample sweep. press-insert-clear-of-switch-body: swept bound -0.0125 not_proven. All twist, yaw and corner checks rotate rigidly about the leaf-tip or mid axes against shell and pcb only."
+  },
+  {
+   "attachment_sha256": "225c0db15f794ae5a7fae109956ce80b83377f26b1473182e544e681f832ac5e",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/build-record.json",
+   "status": "viewed",
+   "observation": "Build record of attempt 32caeeae with subject digest 5438bbd8...; it embeds the same recipe context and measurements. No physical test or independent review is recorded."
+  }
+ ],
+ "findings": [
+  {
+   "id": "B1-click-before-stop-false-pass",
+   "severity": "blocking",
+   "claim": "stack_v18 reports \"pass\" for zippy_df_pin and omron_d2f_pin. By its own verdict_scope this means \"the switch operates before the hard stop for every insert the rule can choose\". The proof uses only stop travel 0.5-0.1 = 0.4 mm against the worst-case click of 0.32 mm (MD 0.12 + 2 x 0.1 step), a margin of 0.08 mm. It assumes \"rest and stop are on the shell and do not move with it\". That holds for translation but not for rotation. The rest lip (27.2 mm long) and the far-end stop tab (x up to 16.9) are both on the button. The declared carrier rotation of +/-0.182 deg makes the face seat on one lip end and leaves the far end 0.087 mm deeper, which shortens the stop travel. The recipe's own far-end press yaw of 0.325 deg about the leaf tip brings the far-end tab to the jaw before the plunger at x=2 has travelled the full stop distance. With the declared tolerances and load case, the plunger travel at the stop is 0.23-0.31 mm, below the 0.32 mm worst-case click. A far-end press with an insert at the upper end of the rule can then hit the hard stop without operating the switch, so the \"pass\" is false.",
+   "evidence": [
+    "scripts/side_button_leaf_recipe.py stack_v18: past_op = (t_lo - rest_above_op[1], ...) with t_lo = 0.4 and rest_above_op = (0.1, 0.32); verdict pass when past_op[0] > 0 (0.08). Neither carrier rotation nor guide yaw enters the stack.",
+    "carrier_tolerance_v18: rotation 0.18247 deg about (-27.65, 15.35); design_basis says \"rest and stop are on the shell and do not move with it\".",
+    "twist_v18: yaw_deg 0.3249 at 3 N on a 23 mm lever (k_yaw 12168 Nmm/rad, thin limit). The rotation_checks use axis (-9, 15.3), so the tab at x 16.9 moves 25.9 x 0.00567 = 0.147 mm and the plunger at x 2 moves 0.062 mm.",
+    "Own probe (CadQuery on the exported button, rest_lip, shell and stop_jaw STEP; rest found by bisection on lip-shell overlap, then translation to the first button-jaw overlap): plunger travel from rest to the stop = 0.500 mm at nominal, 0.504 mm at carrier +0.182 deg, 0.414 mm at -0.182 deg.",
+    "Own probe with the far-end yaw -0.3249 deg (far end inward) added at rest: plunger travel at the stop = 0.415 mm (carrier nominal) and 0.330 mm (carrier -0.182 deg). With yaw -0.223 deg (the force when the tab meets the jaw, about 2 N = leaves 0.59 N + switch 1.47 N): 0.356 / 0.271 mm.",
+    "Applying the declared stop tolerance of -0.1 mm: 0.315 mm (yaw only), 0.314 mm (carrier rotation only), 0.230 mm (both), all below rest_above_op max 0.32 mm.",
+    "Insert rule (design_basis) is referenced to release only (\"longest insert with which the switch still releases ... then the next shorter one\"), so nothing at fitting checks or restores the click before the stop."
+   ],
+   "proposed_change": "Put the stop and the rest datum where rotation cannot shorten the plunger travel. One way is two stop tabs, one each side of the plunger (near end and far end), or one stop on the plunger axis (x of about 2). Alternatively, make the stop click-referenced: a jaw thickness series in 0.05 mm steps chosen at fitting so that the click occurs at least 0.1 mm before the stop. Add the carrier rotation and the far-end and corner yaw terms to stack_v18 (travel at the plunger, not at the tab), and let the verdict fail when the minimum is at or below the worst-case click.",
+   "required_test": "Extend stack_v18 to compute plunger travel at the stop under carrier-placement corners combined with +/- yaw at the declared press force, and require past_op_min > 0 with a stated margin. Add a CAD motion check that applies the yaw pose about the leaf-tip axis plus a translation and measures plunger travel at first button-jaw contact. Physical first article: with the longest insert the rule allows, press at the far end of the face with a 3 N gauge and confirm the click occurs before the stop on 3 assemblies."
+  },
+  {
+   "id": "M1-single-ended-stop-pivot-and-leaf-buckling",
+   "severity": "major",
+   "claim": "The hard stop is one tab at the far end (x 14.7-16.9). The leaves end at x=-9 and the plunger and insert are at x=2. A press anywhere nearer than the tab (the near half of the face, or the insert press-in that the design basis says \"the stop takes\") makes the button pivot about the tab after contact. The remaining moment goes into the leaf yaw (axial) stiffness and the switch, not into the shell. One leaf carries compression M/8 mm. It reaches the clamped Euler load at about 4.9 N (thin limit) to 8.1 N (thick limit) applied at the near face edge, and 9.1-15.1 N applied at the insert. Before that, the plunger travels past the stop: about 0.14 mm extra at 4.9 N near-edge, on top of up to 0.5 mm past OP. The F5 statement \"thumb and insert press-in forces go into the shell\" is false for these load positions. The revision-17 finding V1 (insert fitting load reacted only by leaves and switch) is therefore only partly fixed.",
+   "evidence": [
+    "Recipe ops: stop_tab x 12.0-16.9 (y 25-26.5), jaw_arm x 14.7-17.2; insert/plunger centre x 2.0; leaves x -33 to -9 at y 11 and 19 (pitch 8 mm); face x -10 to 14.",
+    "E = 2127 MPa (materials flexural_modulus horizontal 2.1272 GPa). Leaf 24 x 7.8 x t: clamped Euler P_cr = 4 pi^2 E I / L^2 = 15.8 / 20.5 / 26.0 N for t 0.55 / 0.60 / 0.65.",
+    "Leaf compression = F x (15.8 - x_press) / 8. At the near edge (x=-10, lever 25.8) P_cr is reached at F = 4.9 / 6.3 / 8.1 N; at the insert (x=2, lever 13.8) at F = 9.1 / 11.9 / 15.1 N.",
+    "Yaw stiffness 2 (EwT/L)(d/2)^2 = 12168-14380 Nmm/rad (matches twist_v17 k_yaw). At 4.9 N near-edge, theta = 126/12168 = 0.0104 rad, so the plunger at x=2 moves 0.0104 x 13.8 = 0.14 mm past the stop.",
+    "Leaf root stress at the thick limit for an 8.1 N near-edge press: bending 11.75 MPa x (1.088 + 0.36)/1.088 = 15.6 MPa plus axial 26/(7.8 x 0.65) = 5.1 MPa, about 20.7 MPa against 16.7 allowed.",
+    "design_basis Assembly: \"inserts pushed in from outside with the face held on the hard stop (the stop takes the press-in force)\". The band is a 0.05 mm radial interference whose press force is not stated or estimated.",
+    "No motion or rotation check models rotation about the stop contact. The yaw checks rotate about the leaf tip (-9, 15.3) and exclude stop_jaw from the obstacles."
+   ],
+   "proposed_change": "Add a second stop on the near side of the plunger, for example a tab on the pad or spine near x -6 bearing on a shell or tab feature, so that the stop pair brackets every press point and the insert. Alternatively, put the stop on the plunger axis. For insert fitting, specify a backing tool that supports the plunger directly from inside, or fit inserts before the switch with a fixture, and state the press-in force estimate. Add a leaf compressive stability check (axial force from the stop pivot against the clamped Euler load at the thin limit, with a margin) to the flexure check.",
+   "required_test": "A flexure/stability check for the stop-pivot load case: press at the near face edge and at the insert, with force up to a declared thumb or press-in maximum (for example 10 N), giving leaf axial force against P_cr at the thin limit and combined stress against the allowance. A CAD check of plunger travel past the stop under that load. Physical: measure the insert press-in force (n>=5), then press the near face edge to 10 N on an assembled first article without a switch and record any leaf buckle or permanent set of the rest position."
+  },
+  {
+   "id": "M2-stop-load-path-unrated-thin-sections",
+   "severity": "major",
+   "claim": "The hard stop has no declared load and no strength check. Its load path runs through sections the design's own rules would reject. (a) The stop tab overhangs the riser by 3.4 mm with a sharp inner corner, so it is a 1.5 x 3 mm cantilever loaded about 2.3 mm out. (b) The jaw arm is a 1.4 mm cantilever outside the post. (c) The post is cut by the keyway so that the floor carrying the jaw is held to the rest of the post only by a 0.5 mm side wall and a 0.5 mm roof (3.25 mm2 total, eccentric to the load). Both are below the 1.2 mm minimum printed wall, and stop_post is not in wall_checks. My elastic estimate puts the tab root at the 16.7 MPa allowance used for the leaves at about 8 N nominal, or about 4 N with a stress concentration of 2 at its sharp corner. The post neck reaches it at about 10 N nominal, lower with the sharp keyway corners. The tab and the post neck carry the thumb overload and, per the assembly text, the insert press-in force.",
+   "evidence": [
+    "Own STEP section of stop_post: area 12.0 mm2 at y 21.5-22.6 and 24.5-27.0, but 3.25 mm2 at y 23.0-24.0 (keyway y 22.7-24.2, x 17.2-19.7, roof z 15.0-15.5, side wall x 19.7-20.2).",
+    "Post neck L-section: centroid (19.37, 14.17), load centroid on the floor (18.45, 13.25), eccentricity 0.92 mm in X and Z. Peak elastic stress about 0.31F axial + 0.82F + 0.49F bending = 1.6F MPa, so about 10 N at 16.7 MPa before corner concentration.",
+    "Own STEP section of button at y 26.8: riser x 11.0-13.5 only. Stop tab x 12.0-16.9, y 25.0-26.5, z 12-15. Contact on the jaw spans x 14.7-16.9 (centroid 15.8), lever 2.3 mm from x 13.5. S = 3 x 1.5^2/6 = 1.125 mm3, so sigma = 2.04F MPa.",
+    "Jaw arm x 14.7-17.2 outside the post: lever about 1.4 mm, S = 3.5 x 1.5^2/6 = 1.31 mm3, so sigma = 1.07F MPa.",
+    "wall_checks cover shell, button and carrier_block only; design_parameters min_printed_wall_mm 1.2, slot_roof_mm 0.5, post_width 3.0 with key_length 2.5.",
+    "F5 text: \"thumb and insert press-in forces go into the shell\". The flexure check covers only the leaves (force band 0.3-3 N)."
+   ],
+   "proposed_change": "Declare a stop design load (for example 10 N thumb overload plus the estimated insert press-in force) and check the tab, jaw and post neck against it with a stress concentration. Thicken the post so that the keyway leaves at least 1.2 mm of wall on the +X side and a roof of at least 1.2 mm, or let the floor run full width under the key. Carry the tab directly on the riser (contact over the riser, not an overhang) and fillet the tab-to-riser corner. Add stop_post and stop_jaw to wall_checks.",
+   "required_test": "A strength check (beam or FE) of tab root, jaw arm and post neck at the declared stop load, with stress concentration, against the ABS allowance. A wall check of stop_post at 1.2 mm. Physical: on a first article, load the face over the tab to 10 N, then 20 N, 100 times each, and measure the stop travel change with a feeler gauge (must stay within the stop tolerance)."
+  },
+  {
+   "id": "M3-pin-bottoms-before-stop-at-nominal",
+   "severity": "major",
+   "claim": "The stack labels pin bottoming before the stop as a \"tolerance corner\". For the drawn Zippy at nominal datasheet values it happens for the lower part of the insert rule. OP (7.0) is 0.35 mm above the body top (6.65). An insert resting 0.1 mm above OP (the rule's lower bound) is 0.45 mm above pin flush, while the nominal stop is 0.5 mm. With bottoming ASSUMED at or above flush, the switch is the end stop and takes the thumb force before the shell stop. Even when the stop acts first, travel past OP at the stop is up to 0.50 mm against a guaranteed OT of only 0.20 mm (Zippy) or 0.25 mm (Omron). The rule (+0.22 mm spread) and the stop tolerance (+/-0.1) cannot both fit inside OT. The shell stop therefore does not deliver its purpose (protect the switch), and the drawn CAD reaches the pin flush pose at stop +tolerance (insert tip 0.05 mm below the body top at 0.6 mm).",
+   "evidence": [
+    "switch_profiles zippy_df_pin: OP 7.0 +/-0.2, body_height 6.65 +/-0.25, OT 0.2 min, MD 0.12 max; omron_d2f_pin: OP 5.5 +/-0.3, body 5.0 +/-0.4, OT 0.25 min.",
+    "stack_v18 output: travel_past_op_at_stop_mm (0.08, 0.50); pin_flush_from_rest_min_mm 0.0 (zippy) and -0.1 (omron); pin_may_bottom_before_stop \"yes (tolerance corner ...)\".",
+    "Own nominal calculation: flush from rest = 0.1 + 7.0 - 6.65 = 0.45 mm < nominal stop 0.5 mm for the shortest insert the rule can choose.",
+    "Exported geometry: insert tip at y 22.8 (free pose), rest y 22.5, switch_body top y 21.95, giving 0.55 mm from rest to body top for the design insert (0.2 above OP). Stop at +tol (0.6) passes it by 0.05 mm. press-insert-clear-of-switch-body only sweeps to the nominal stop (0.5) and its swept bound is not_proven (-0.0125).",
+    "For the stop to land within OT for every insert: t_hi - 0.1 <= 0.2 and t_lo - 0.32 > 0 cannot both hold with the stop at +/-0.1."
+   ],
+   "proposed_change": "Make the click-to-stop distance a fitted quantity: a jaw (or tab shim) series in 0.05 mm steps chosen after the insert, so that the stop lands 0.05-0.15 mm past the measured click (inside OT). Alternatively, tighten the insert rule to a click-referenced window. Correct the wording: bottoming before the stop is possible at nominal values, not only in a tolerance corner. Extend press-insert-clear-of-switch-body to the stop at +tolerance.",
+   "required_test": "A stack output that lists travel past OP at the stop for every insert and stop combination after the fitting procedure, with the maximum at or below OT min. Physical: on the real switch, measure the pin travel from OP to bottoming and the force at bottoming. With the chosen insert and jaw, confirm by feeler or dial gauge that the stop engages before pin bottoming at 10 N."
+  },
+  {
+   "id": "M4-insert-standing-load-and-drift",
+   "severity": "major",
+   "claim": "Revision-17 M3 (insert reaction on friction only) is only partly fixed. Revision 18 adds a pull notch, a declared outward load \"up to 1.47 N at the stop\" and a short-term pull-out test of at least 3 N. It does not address the standing outward load at rest. The insert rule puts the tip 0.1-0.32 mm above OP, while Zippy pretravel is up to 0.62 mm, so the pin can be depressed at rest by up to about 0.5 mm. The insert then carries a continuous outward force between the release force (0.34 N min) and the operating force (1.47 N max), held only by a 1.5 mm ABS friction band. The click margin at the stop is only 0.08 mm (less after B1), smaller than one 0.1 mm insert step. An outward creep of the insert of less than 0.1 mm therefore removes the click. A short-term 3 N pull-out does not bound long-term creep.",
+   "evidence": [
+    "switch_profiles zippy_df_pin: pretravel 0.62 max, FP 7.35 max, release_force 35 gf min, operating_force 150 gf max.",
+    "stack_v18: rest_above_op_mm (0.1, 0.32); travel_past_op_at_stop_mm minimum 0.08.",
+    "unverified_requirements: \"Insert retention: the outward load is the switch pin force (up to 1.47 N at the stop ...) first-article test = pull-out force >= 3 N\". There is no statement on the load at rest or on creep.",
+    "press_fits insert-band-in-plunger: ASSUMED 0.05 mm radial interference over 1.5 mm; the shank is a slip fit. actuator_insert/iso.png shows no positive outward retention feature."
+   ],
+   "proposed_change": "Give the insert a positive outward stop that is still removable from outside, for example a quarter-turn bayonet lug under a plunger ledge, or a snap shoulder released through the pull notch. Alternatively, declare the standing load at rest and require a creep test before relying on the 0.1 mm insert rule. State whether the pin is depressed at rest for the fitted switch.",
+   "required_test": "Physical: measure the insert head height relative to the counterbore floor before and after 72 h at rest on an assembled first article with the real switch, and after 1000 presses to the stop. Drift must stay below 0.03 mm (well under the 0.08 mm click margin). Repeat the pull-out at 3 N after the soak."
+  },
+  {
+   "id": "m1-preload-range-omits-lip-print-error",
+   "severity": "minor",
+   "claim": "The preload range 0.11-0.49 mm includes carrier placement only. The same design basis assigns +/-0.1 mm print error to the lip and jaw faces, and that error shifts the rest pose and the preload equally. Including it, the leaf deflection at rest falls to about 0.09 mm (about 0.04 N with thin leaves) at the low end. The face also seats on one lip end with up to 0.087 mm of tilt across it. The preload remains positive, so there is no rattle by this estimate, but the low end is close to creep and print noise. Revision-17 M4 (preload below print tolerance) is fixed in intent (0.3 mm nominal), but the stated range is not the full range.",
+   "evidence": [
+    "carrier_tolerance_v18: face_y_variation 0.1877 mm, preload_range (0.1123, 0.4877).",
+    "design_basis: \"Stop travel 0.5 +/- 0.1 mm from rest (ASSUMED print error of the lip and jaw faces)\".",
+    "Own probe: rest translation (leaf deflection at the seated lip end) 0.300 / 0.431 / 0.244 mm for carrier rotation 0 / +0.182 / -0.182 deg (no Y translation). Subtracting 0.05 mm Y placement and 0.1 mm lip print error gives about 0.09 mm. k_pair at t 0.55 is 0.399 N/mm, giving about 0.04 N.",
+    "measurements parallel-leaves-beam flexure deflection 1.0877 = 0.4877 + 0.6 does not include the lip print error at the deep end either (about +0.1 mm, stress +9%, still under the allowance)."
+   ],
+   "proposed_change": "Include the lip-face print error in the preload range and in the flexure deflection, and state the minimum preload force. If the minimum is below about 0.1 N, raise the nominal preload, for example to 0.4 mm, checking the leaf stress again at the deep pose.",
+   "required_test": "Recompute the preload range and the flexure check with the lip print error. First article: measure the lift-off force at both face ends with a gram gauge (n>=3) and the face-to-skin step at both ends."
+  },
+  {
+   "id": "m2-yaw-checks-wrong-pivot-and-coarse-stop-check",
+   "severity": "minor",
+   "claim": "The yaw and corner checks rotate the button rigidly about the leaf-tip axis at a pose 0.1 mm past the nominal jaw, and they leave stop_jaw out of the obstacles. After stop contact the real motion is a rotation about the tab-jaw contact (see M1), which these checks do not represent. press-blocked-by-hard-stop samples five poses and first reports blocking at 0.675 mm after rest. It proves that the jaw blocks somewhere, not that it blocks at 0.5 +/- 0.1 mm. Revision-17 M5 (no deep yaw) is fixed as worded (yaw now runs at rest + 0.2 and at the stop + tolerance), but the stop-pivot case remains open.",
+   "evidence": [
+    "rotation_checks far-end-yaw-*: axis_origin (-9, 15.3, 0), start pose(stop_max) = -0.9 mm from free (nominal jaw contact at -0.8), obstacles [\"shell\", \"pcb_slab\"].",
+    "measurements press-blocked-by-hard-stop: first_blocked_t 0.75 of a 0.9 mm sweep with 5 samples (0.675 mm), against a design stop of 0.5 mm."
+   ],
+   "proposed_change": "Add a blocking check whose end is just past the design stop (for example 0.62 mm) with dense samples, and a clear check to 0.38 mm, so that the stop position is bracketed. Add post-contact rotation checks about the tab-jaw contact line with the near-edge press moment, against the shell, PCB and switch body.",
+   "required_test": "press-blocked-by-hard-stop with translation end 0.62 mm and expect blocked, plus press-to-stop-clear-of-jaw-before-stop at 0.38 mm (already present at 0.39). A rotation check about an axis through (15.8, 24.2, 13.5) parallel to Z at the stop pose, by the angle from M1 at a 10 N near-edge press, with min 0.15 mm to the shell."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Revision-17 mechanism findings: M1 (no hard stop) is mostly fixed, with a jaw on a shell post that the measured blocking check confirms; the far-end-only placement creates the new issues B1, M1 and M2. M2 (overtravel not checked) is fixed as reporting: it is now compared with OT and labelled UNKNOWN, but see M3. M3 (insert retention on friction) is partly fixed (pull notch, declared load at the stop, pull-out test); the standing load at rest and creep are open (M4). M4 (preload below print tolerance) is fixed in intent (0.3 mm nominal), but the range omits the lip print error (m1). M5 (deep yaw plan) is fixed as worded; the stop-pivot case is open (m2).",
+  "Recomputed and matching the recipe: guided-leaf pair stiffness 0.399 / 0.519 / 0.659 N/mm (t 0.55 / 0.60 / 0.65, E 2127 MPa); root stress at 1.0877 mm is 7.83 MPa nominal and 11.75 MPa peak (Kt 1.5) at the thick limit against 16.7 MPa allowed; twist 0.6025 deg and yaw 0.3249 deg at 3 N; preload range 0.112-0.488 mm from placement only.",
+  "All my numbers are closed-form beam theory or rigid-body probes on the exported STEP (end poses found by bisection, not swept certificates), using typical datasheet E and an ASSUMED Poisson ratio 0.35. Printed ABS anisotropy, creep, fatigue and the R1 fillet effective length were not modelled.",
+  "The insert press-in force is not stated anywhere; my buckling conclusion for insert fitting holds for press-in forces above about 9 N (thin leaves), which I expect but did not measure.",
+  "Switch bottoming position and force rating are UNKNOWN (no datasheet value); the M3 conclusion relies on the recipe's own ASSUMED bottoming at or above body flush.",
+  "The actual OP1 side switch (Kailh GM 2.0) has no dimensional data registered; every stack conclusion here applies only to the Zippy and Omron profiles.",
+  "This review was done by a separate Claude subagent of the same model family as the designer, not an independent human or vendor; no physical test was run."
+ ],
+ "conclusion": "revise"
+}
