@@ -23,30 +23,33 @@ Python env used: `/tmp/claude-0/venv` (CadQuery 2.8). Full suite: `python -m pyt
 
 ## Test subject history (scripts/side_button_recipe.py, scripts/side_button_leaf_recipe.py; flow scripts/check_side_button_flow.py --revision N)
 - r1-r13 hinge (r13 multi-switch, click-referenced screws; uses purchased screws -> conflicts with the owner policy, kept as an alternative).
-- r14 leaf print-in-place (4 blocking), r15 single-leaf carrier (blocking: carrier location, twist threshold), r16 parallel leaves (0 blocking), r17 vertical pins + preload + outside insert (0 blocking, 14 major). No subject has reached an accepted 5-role review yet.
+- r14 leaf print-in-place (4 blocking), r15 single-leaf carrier (blocking: carrier location, twist threshold), r16 parallel leaves (0 blocking), r17 vertical pins + preload + outside insert (0 blocking, 14 major).
+- r18 (commit 1fd2825; evidence verification/side-button-flow-r18-20261008): rest lip preloaded on the inner skin, printed stop jaw keyed into a shell post 0.5 +/- 0.1 mm after rest, carrier located by two pins 15.7 mm apart (block + tongue) on an upper-tab Z datum, leaves 0.6 +/- 0.05 mm, ASSUMED PCB slab, placement-tolerance corners on key clearances, overtravel beyond the guaranteed minimum reported as UNKNOWN. All 157 geometry checks pass.
+- r18 5-role review round 1 (Opus subagents, not independent): NOT ACCEPTED. assembly revise (1 blocking, 4 major), mechanism revise (1 blocking, 4 major), manufacturing no blocker (4 major), requirements no blocker (2 major), verification no blocker (1 major, 10 minor). Studio status: overall_verdict unknown, peer challenge (round 2) not run. The verification review cited recipe.json, which is not a packet attachment; that one inspection entry was removed before submission (noted inside the file).
+- Owner decision: the test subject is CAPPED AT r18. Do not iterate further on it.
 
-## Open r17 review findings (verification/side-button-flow-r17-20261008/reviews-r1)
-- Leaf stress margin 3 % (16.15 vs 16.7 MPa); no hard stop protects the leaves before the switch is fitted or while inserts are pressed.
-- Carrier angle set by two pins about 4 mm apart: a 0.05 mm hole error tilts it about 0.26 deg and moves the far end about 0.24 mm, more than the 0.1 mm rest preload; Z located only by pin friction.
-- Switch overtravel beyond the guaranteed minimum is not checked (stack ignores OT; pressing to pin flush exceeds it); bottoming rating UNKNOWN.
-- Insert: no extraction feature; retention only by friction against the switch's outward force.
-- PCB keep-out text wrong (moving pad crosses the assumed board plane at x -9 to -6.5).
-- Checks stop at 1.52 mm, not the 1.62 mm pin-flush pose that includes the preload; yaw only at 0.3 mm.
-- Supports for the carrier incomplete; pin-hole wall 0.83 mm in the block; upper-tab blind holes open downward.
-
-## r18 plan
-1. Rest lug becomes a separately printed shim (thickness series chosen at assembly) so the preload no longer depends on carrier placement.
-2. Shell C-bracket with a lower lug as a hard stop at about 1.72 mm CAD travel (protects leaves; also takes insert press-in).
-3. Leaves 0.5 +/- 0.05 mm, flexure judged at +tolerance; declare carrier placement tolerance (+/-0.05 mm, +/-0.26 deg) on key clearances.
-4. Insert head pull slot; retention UNKNOWN with a first-article pull-out test; OT beyond the guaranteed minimum reported as UNKNOWN rating.
-5. Pin wall fix, through holes in the upper tab, full support list, measured PCB keep-out, checks to deep+preload, yaw at the deep pose.
-Then build, run the 5-role review, and report. If r18 does not reach acceptance, report to the coordinator before further subject iterations.
+## Open r18 findings (verification/side-button-flow-r18-20261008/reviews-r1*, for the system lessons)
+- Blocking (assembly A1, mechanism B1): stack_v18 "clicks before the stop" ignores the declared carrier yaw (+/-0.18 deg) and far-end-press yaw; probe gives 0.31 mm rest-to-stop at the corner vs a 0.32 mm worst click. Lesson for the system: tolerance stacks must take every declared placement tolerance, and the stop must be checked under the rotation checks (obstacles omitted the jaw/post).
+- Single far-end stop lets a near-end press pivot about the stop (leaf buckling / extra travel); stop tab, post floor (0.5 mm walls) and jaw key have no declared load or strength check; stop_post and stop_jaw not wall-checked; 0.03 mm key fit is in the layer direction.
+- At the stop + tolerance the insert reaches the switch body (switch takes force at nominal values, not only in a corner); insert-vs-body check only ran to the nominal stop.
+- Insert retention still friction-only under a standing pin force; pin press fits exceed ABS strength (no sizing route, press force unbounded); Z datum held by friction and is a support-interface face; back-stop lip on the wrong side of the preload.
+- Face recess at rest (0.3 mm) not stated or checked; counterbore placed from an ellipse approximation (1.8 mm deep, not 1.0); blocked-motion checks can pass on a touching-face kernel artifact; sweeps sampled too coarsely to bracket the stop; carrier-insertion threshold lowered to 0.01 mm over the whole path (should be split by leg); minimum-force check cannot fail as posed.
 
 ## Assumptions in force (ASSUMED / UNKNOWN)
 - ASSUMED: press-force band 0.3-3 N; stress allowance half of the ABS tensile strength; stress concentration 1.5 at R1 fillets; Poisson ratio 0.35; edge press 3 N; PCB plane placed from the Zippy profile; print orientations; press-fit interferences 0.03-0.05 mm.
 - UNKNOWN: fatigue and creep of printed ABS; switch bottoming rating; Huano/Kailh geometry; real PCB and shell; OP1 screw size; pin/insert retention force.
 
-## Next steps after r18
-- Report "what the system can now do" to the coordinator (session_01GnHdA119EyChgR9VrE9XVp), Japanese, short.
-- Then the in-house encoder (held-out evaluation against the text search; keep the old path selectable, no fallback).
-- Next 4 (port of the Req2CAD checkpoint) stays blocked: upstream weights are not published.
+## Test-suite state
+- Full suite: 616 passed at 12a2e01 (807 s). After r18 (1fd2825) only the new/affected tests were run: 3 passed (r18 build-and-checks, r18 contract, flow brief). Full suite not rerun after r18.
+
+## Model delegation rule (owner, 2026-10-08)
+- Subagents: "sonnet" for routine work (running/triaging tests, bulk edits with a clear spec, schema regeneration, docs, datasheet lookups, and the 5-role reviewers: a different model family also eases the independence caveat); "haiku" for trivial lookups. Opus only for architecture, geometry/mechanism design and judging review findings.
+- So far in this thread all subagents (including the r18 reviewers) ran on Opus; the rule applies from now on.
+
+## Next-steps queue (owner: side-button subject capped at r18; work moves to the owner machine)
+1. Rerun the full suite on the owner machine.
+2. System fixes suggested by the r18 findings (no new subject revision): tolerance stacks that take all declared placement tolerances; placement corners on rotation checks; blocked-motion checks robust to touching faces; sweep sampling that brackets a declared stop; load/strength checks for stops and press fits; checks against the real skin surface instead of an ellipse approximation.
+3. Mouse plan stage A (02_DOCUMENTS/planning/mouse_mcp_architecture_2026-09-16.md): scan -> hollow solid pipeline.
+4. Freeform / class-A surface quality checks (curvature continuity, zebra-style metrics).
+5. In-house encoder last (held-out evaluation against the text search; old path selectable, no fallback). Next 4 (Req2CAD checkpoint port) stays blocked: upstream weights not published.
+6. Report "what the system can now do" to the coordinator when work resumes.

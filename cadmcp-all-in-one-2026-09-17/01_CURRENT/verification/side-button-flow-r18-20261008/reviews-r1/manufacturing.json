@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "subject_digest": "5438bbd8ddb792ddea9436bfdff5e0f90cfc188fe68362a6a96e95e786c3013b",
+  "role": "manufacturing",
+  "discussion_round": 1,
+  "challenged_review_ids": [],
+  "reviewer_label": "Claude subagent (manufacturing role, rev18)",
+  "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+  "evidence_inspections": [
+    {
+      "attachment_sha256": "af6e47ea086ad8777483c4a10533a23e807f20d6f7d502842223954ed1b2090b",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/stop_post/iso.png",
+      "status": "viewed",
+      "observation": "Plain block grown from the inner skin; the keyway is hidden from this view. My section probe shows the keyway x 17.2-19.7, y 22.7-24.2, z 11.5-15.0: the 1.5 mm floor (y 21.2-22.7) joins the rest of the post only through a 0.5 mm end wall (x 19.7-20.2) and a 0.5 mm slot roof (z 15.0-15.5)."
+    },
+    {
+      "attachment_sha256": "d56d8e6e9e1527c085bfe6be8dc0e4dd9927c7eff19f5d97bb2781c5bc1c3d97",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/stop_jaw/iso.png",
+      "status": "viewed",
+      "observation": "Plain rectangular jaw, no chamfer or lead-in on the key. STEP: key y 22.685-24.215 (1.53 mm, 0.015 mm per side over the 1.5 mm keyway), arm y 22.7-24.2, x 14.7-19.7, z 11.5-15.0. Printed flat on -Y, so the key fit dimension is the layer-stacking direction."
+    },
+    {
+      "attachment_sha256": "f8cd0f8b2ffe4c1595bd6a77271bc372e5efafedd27b4de350d4e2e12a41296f",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/rest_lip/iso.png",
+      "status": "viewed",
+      "observation": "Curved rectangular frame (1.0 mm band following the inner skin, 1.2 mm wide) around the window, including a thin strip under the window at z 9.5-10. Probe: thickness along Y about 0.95 mm; no overhang above 45 deg in the z-up carrier print; not in any wall check and not declared as a wall exception."
+    },
+    {
+      "attachment_sha256": "c6856ac1186199e2081522f44a6427678c1490b74d528e55ee518e6f1b6da6c2",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/button/iso.png",
+      "status": "viewed",
+      "observation": "Curved face with counterbore and pull notch, pad, spine, plunger, riser and far-end stop tab. Probe: the stop tab is a cantilever from the riser edge x 13.5 to x 16.9, cross-section 1.5 mm (Y) x 3.0 mm (Z), loaded in -Y by the jaw over x 14.7-16.9."
+    },
+    {
+      "attachment_sha256": "463bdc5e852d1f0c2690bc7b2b455d24070ec9f35bea2e116295a8f7acf71bb2",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/carrier_block/iso.png",
+      "status": "viewed",
+      "observation": "Block plus tongue with two vertical pin holes, now well inside the outline (pin x -35.5 and -19.8, y 15.35). Sampled wall minimum 1.25 mm at the tongue countersink; carrier_block is now in wall_checks."
+    },
+    {
+      "attachment_sha256": "8c6079019cb61ee3c16340aec9d8ae4cc925c79a439750971d5973494b946413",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/leaf_a/iso.png",
+      "status": "viewed",
+      "observation": "Plain 24 mm leaf with R1 root and tip fillets on the inner side. Probe: 0.605 mm thick at x -21, z 13.5 (y 11.0-11.6), z 9.5-17.3; stands on the z 9.5 bed as a free single-line wall."
+    },
+    {
+      "attachment_sha256": "87c6ba3984763f99867965fd3f31b00a915520f4c68a4dca8d33bf16cbfad300",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/leaf_b/iso.png",
+      "status": "viewed",
+      "observation": "Leaf B, 0.6 mm (y 19.0-19.6 at mid-length), fillets on both sides at the tip and inner side at the root; z 9.5-17.5 up to the upper-tab datum."
+    },
+    {
+      "attachment_sha256": "69ee56b39a3dc3e8f00c364bbdcedca938c944a55307b20137ec1c87670efe5b",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/shell/iso.png",
+      "status": "viewed",
+      "observation": "Domed shell with the window. Down-facing probe (rim-down): flats at z 6.2 (385.5 mm2 lower tab), 11.5 (18.1 post), 15.0 (3.75 keyway roof), 17.5 (328.7 upper tab = Z datum), 18.4 (37.6 lintel), 32.5 (1786.8 roof), plus 1882.5 mm2 of curved cavity ceiling at 20-45 deg from horizontal between z 20.7 and 32.1 not in the support list."
+    },
+    {
+      "attachment_sha256": "e8c872cd83539a567ba311e6205305ccdd5ebe830551e6dac12c840fc5e65872",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/pin_1/iso.png",
+      "status": "viewed",
+      "observation": "Pin Dia 2.0 with Dia 3.2 x 0.8 head and the new 0.5 mm lead-in at the top; STEP z 5.4-20.7. Upright head-down print has no overhang; bed contact is only the 8 mm2 head."
+    },
+    {
+      "attachment_sha256": "bae73813aecc48b7da334c13c71a3c8d0c32739bc272538b8accebb5494558ae",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/actuator_insert/iso.png",
+      "status": "viewed",
+      "observation": "Insert with head, short press band, slimmer slip shank and Dia 1.0 tip; no overhang when printed head down. Band r 1.0 in a 1.9 mm drilled bore (0.05 mm radial interference over 1.5 mm)."
+    },
+    {
+      "attachment_sha256": "5354ecb8ebb7e5acad55a3dc8dbfa36bcfcf41ee74d9823d892c6aa7ab3feb57",
+      "kind": "image",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/assembly.png",
+      "status": "viewed",
+      "observation": "Closed shell with the face in the window and the insert head visible in its counterbore with the pull notch; the running gap shows along the lower edge. No interior features (tabs, post, jaw) are visible from outside."
+    },
+    {
+      "attachment_sha256": "225c0db15f794ae5a7fae109956ce80b83377f26b1473182e544e681f832ac5e",
+      "kind": "json",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/build-record.json",
+      "status": "viewed",
+      "observation": "kind recipe_build, attempt 32caeeae..., subject_digest 5438bbd8...3c13b matches the packet. Carries the recipe context with the r18 support list, assembly order and the leaf single-line exception text."
+    },
+    {
+      "attachment_sha256": "7376c0a08eb3cb92a783a0e23bf96f0071bb495952d0d45688091b1dfbdd5002",
+      "kind": "json",
+      "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r18-20261008/workspace/studio/side-button-flow/5438bbd8ddb792dd-b399c438/measurements.json",
+      "status": "viewed",
+      "observation": "157 checks, geometry_checks_verdict pass, overall unknown. Flexure: peak 11.75 MPa at 0.65 mm vs 16.7 allowed, stiffness 0.259 N/mm per leaf. Wall checks only for shell (1.236), button (1.5) and carrier_block (1.25); none for stop_post, stop_jaw or rest_lip. Press fits checked only as rigid overlap volume."
+    }
+  ],
+  "findings": [
+    {
+      "id": "MF1-stop-load-path-thin-roots",
+      "severity": "major",
+      "claim": "The hard stop now takes the thumb force and the full insert press-in force (\"inserts pushed in from outside with the face held on the hard stop (the stop takes the press-in force)\"), but every member of that load path has a thin, unchecked root. (1) In the stop_post the jaw key bears on a 1.5 mm floor (y 21.2-22.7) that is joined to the rest of the post only by a 0.5 mm end wall (x 19.7-20.2, key_length 2.5 in a 3.0 mm post) and a 0.5 mm bridged slot roof (z 15.0-15.5). In the rim-down shell print the end wall is about one extrusion line and the roof is two layers bridged over the 1.5 mm keyway. Both are below the design's own 1.2 mm minimum and are not declared as exceptions. (2) The stop tab on the button is a 3.4 mm cantilever from the riser (x 13.5 to 16.9) with a 1.5 x 3.0 mm section, loaded about 2.3 mm from its root. Beam theory gives sigma = 6*F*2.3/(3*1.5^2), about 2.0 MPa per N: the ASSUMED 16.7 MPa allowance is reached at about 8 N and the 33.4 MPa datasheet strength at about 16 N. No load is declared for the stop, no strength check exists, and stop_post and stop_jaw are not in wall_checks.",
+      "evidence": [
+        "Recipe P18: post_width_mm 3.0, key_length_mm 2.5 (end wall 0.5 mm), slot_roof_mm 0.5, post_floor_mm 1.5, stop_tab_thickness_mm 1.5, stop_z 12-15",
+        "My stop_post section raster at z 13.5: slot x 17.2-19.7, y 22.7-24.2; post material at x 19.7-20.2 only between floor and body; roof face z 15.0 (3.75 mm2)",
+        "Button raster at z 13.5: tab y 25.0-26.5 from x 12 to 16.9, riser x 11-13.5 from y 26 to the face",
+        "measurements.json wall checks: shell, button, carrier_block only",
+        "design_basis Assembly text: the stop takes the press-in force; F5: thumb and insert press-in forces go into the shell",
+        "Insert band press-in force is UNKNOWN; an elastic Lame estimate (E 2.247 GPa from materials.py, 0.05 mm radial, 1.5 mm band, friction 0.3 ASSUMED) gives on the order of 100 N, far above the 8-16 N tab estimate even if the real value is several times lower"
+      ],
+      "proposed_change": "Declare a stop load (thumb overload plus the measured or bounded insert press-in force) and size the path for it: thicken the post end wall and roof to at least min_printed_wall_mm (for example post_width 4.0 with key 2.5, roof 1.2), or close the keyway so the floor is backed by the post body; deepen the stop tab in Z or shorten its overhang. Better, react the insert press-in with a hand-held backing tool through the cavity instead of through the stop. Add stop_post and stop_jaw to wall_checks and add a stop-load strength check.",
+      "required_test": "Wall checks on stop_post and stop_jaw with min 1.2 mm; a beam check of the stop tab and of the post webs at the declared stop load; print a post plus jaw and a carrier, press an insert to seat with a force gauge on the face, and load the face to the declared overload on the stop. Inspect the post web, roof and tab root for cracks or whitening."
+    },
+    {
+      "id": "MF2-jaw-key-fit-in-layer-direction",
+      "severity": "major",
+      "claim": "The stop jaw is retained only by its key, a 0.03 mm total (0.015 mm per side) interference in Y. The stated orientation prints the jaw \"flat on its -Y face\", so the key fit dimension (1.53 mm) is the layer-stacking direction, and one of the two fit faces, which is also the stop bearing face (y 22.685), is the first layer on the bed. The fit is about one tenth of a typical layer height, and the layer height is not stated. A layer-quantized key thickness turns it into a clearance or a much larger interference, and elephant foot on the bed face adds more. The jaw is pushed up into a keyway open to the bottom. If the key is loose, nothing holds the jaw when the mouse sits rim-down in use, and the hard stop falls out. The overlap check (0.2625 mm3, pass) only proves the nominal CAD overlap.",
+      "evidence": [
+        "stop_jaw STEP: key y 22.685-24.215 (1.53 mm), keyway y 22.7-24.2 (1.5 mm); no chamfer on the key",
+        "Recipe: key_interference_mm 0.03; outputs stop_jaw \"separate print, flat on its side\"; design_basis \"Stop jaw printed flat on its -Y face\"",
+        "press_fits stop-jaw-key-in-post basis: \"ASSUMED 0.03 mm total interference ... retention only\"",
+        "No layer height appears in recipe.json or the support text"
+      ],
+      "proposed_change": "Print the jaw so that the key fit faces are perimeter walls (for example standing on its -Z face, so Y is in the layer plane), or put the fit on X/Z faces that print as walls. Add a chamfer or relief so the bed face is not a fit face. Add a positive retention that does not depend on a 15 um fit, for example a snap bump or the PCB or bottom cover blocking the keyway opening. Then state the layer height and line width used to size the fit.",
+      "required_test": "Print 3-5 jaws in the stated orientation and measure the key thickness with a micrometer against the printed keyway width. Push each into a printed post and check the hold with the shell held rim-down and with a stated pull-down force (to be set). Repeat after one press-to-stop cycle series."
+    },
+    {
+      "id": "MF3-press-fits-beyond-elastic-range-no-sizing-route",
+      "severity": "major",
+      "claim": "The declared ABS-in-ABS press fits are far past the elastic range of the material the design itself cites, and the vertical pin holes have no sizing step (only the insert bore is drilled). With E 2.247 GPa and tensile strength 33.4 MPa from materials.py (elastic strain at strength about 1.5%), a Lame estimate gives about 59 MPa interface pressure and bore hoop stress for the 0.05 mm radial fit of the pins in the tabs (r 0.95). The 0.03 mm fit in the block or tongue (wall about 1.4 mm) gives about 29 MPa pressure and 41 MPa hoop stress. Both are above the 33.4 MPa strength, so the fits can only seat by yielding, and retention and carrier location are unpredictable. The order of the holes also undoes the locating fit. Each pin passes first through the 0.05 mm lower-tab hole and only then into the 0.03 mm block hole that \"locates the carrier\". If the first hole shaves or compresses the pin, the locating fit becomes a clearance. With an ASSUMED friction 0.3 over the about 84 mm2 engaged length, the elastic press-in estimate is several hundred N. That is well above what a 3.1 mm2 upright-printed Dia 2 pin column carries (about 100 N at 33.4 MPa). Pressing would then crush or buckle the pin before it seats.",
+      "evidence": [
+        "Recipe: pin_radius 1.0, tab hole r 0.95 (pin_interference 0.05), block hole r 0.97 (pin_block_interference 0.03), lower tab 3.0, block 8.0, upper tab engagement 3.2 minus 0.5 lead-in",
+        "materials.py PolyLite ABS: tensile modulus 2.2466 GPa (horizontal), tensile strength 33.4 / 29.7 MPa",
+        "measurements.json press-fit checks: rigid overlap volume only (\"retention force, hoop stress and printed hole accuracy are not verified\")",
+        "Insert bore: \"printed horizontal at 1.9 mm and opened with a 1.9 mm drill\"; no equivalent step for the four vertical pin holes",
+        "unverified_requirements: pin retention ASSUMED; first-article tests cover the insert pull-out and face step only"
+      ],
+      "proposed_change": "Give the pin holes a sizing route like the insert bore (print undersize and ream or drill to a stated size), and make the hole that locates the carrier the tightest one, or make the lower-tab hole a clearance hole so the pin first meets the locating hole. Choose interferences from a printed coupon series, not a nominal value. Alternatively, locate with a slip-fit pin and retain it with the head and a crush rib. Label the press-in force UNKNOWN until measured.",
+      "required_test": "Coupon series: tab, block and tongue hole coupons printed in the stated orientations, sized by the stated route, with pins at 0.00/0.02/0.04/0.06 mm interference. Measure press-in force, push-out force and carrier play after seating, and inspect for pin crushing and hub cracks. Then fix the interference values from the results."
+    },
+    {
+      "id": "MF4-z-datum-is-support-interface",
+      "severity": "major",
+      "claim": "Revision 18 makes the underside of the upper shell tabs the Z datum: the pins drag the block and tongue up onto it. In the rim-down shell print this is exactly the 328.7 mm2 flat at z 17.5 that the support list puts under support. A support-interface underside is the least accurate surface of an FDM part (sag, scars, interface roughness), and it is the face the carrier is registered on with an ASSUMED +/-0.05 mm Z placement tolerance. The revision-17 finding m9 (support interface on the block mating face) is therefore not fixed. It is now more serious, because the face changed from a 0.2 mm clearance face to the datum.",
+      "evidence": [
+        "Shell down-facing probe (rim-down): z 17.5, 328.74 mm2, x -38.5 to -17.0",
+        "Recipe up_tab_box reason \"Upper shell tab: Z datum face for the block and tongue\"; block_z_max 17.5 = ut0 (zero gap)",
+        "Support text: \"supports under the lower tab (z 6.2), upper tab (z 17.5)\"",
+        "placement_tolerances carrier-placement: 0.05 mm in Z \"on the upper-tab datum\" (ASSUMED)"
+      ],
+      "proposed_change": "Put the Z datum on an up-facing printed surface. In the rim-down print the lower tab top (z 9.2) is a top skin. Seat the block down onto it (pin head under the lower tab pulling down, or a bump), and keep the upper tab as a clearance face. Otherwise add raised datum pads on the upper tab that are machined or sanded flat after support removal, and state that step.",
+      "required_test": "Print the shell in the stated orientation, remove supports, and measure the flatness and height of the datum face against the lower tab with a height gauge. Seat a carrier and measure the face-to-window gap at top and bottom at both ends against the 0.4 mm running gap and the 0.15 mm corner clearance."
+    },
+    {
+      "id": "mf5-support-list-omits-curved-overhangs",
+      "severity": "minor",
+      "claim": "The support list is stated as \"measured on the revision-18 export (flat down-facing faces above each print bed)\" and called the \"full support list\". The carrier flats match: z 10 about 61 mm2 measured against the stated about 83, z 10.5 24, z 12 10, z 12.6 38, plus the bridged countersink rings, pull-notch roof and bore crown. The shell, however, also has 1882.5 mm2 of curved cavity ceiling between z 20.7 and 32.1 at 20-45 deg from horizontal (995 mm2 at 35-40 deg), which needs support or a slicer overhang strategy in the rim-down print, and the list does not name it. The Dia 2.9 counterbore crown in the face (z about 14.1-14.5) is also a horizontal, undrilled overhang next to the insert head datum.",
+      "evidence": [
+        "My shell probe: down-facing triangles >45 deg from vertical, z 19-32.4, all on the cavity side (radial ray hits the skin), total 1882.5 mm2; by angle from horizontal 20-25: 6.9, 25-30: 223, 30-35: 331, 35-40: 996, 40-45: 326 mm2",
+        "Carrier probe (fused block+leaves+button+lip, 1 solid): z 9.8 1.7, z 10.0 60.6, z 10.5 23.9, z 12.0 10.2, z 12.6 37.8, z 13.5 2.3, z 13.7-14.5 11.7 mm2"
+      ],
+      "proposed_change": "Extend the listed scope to all faces past the stated overhang limit (not only flats), name the dome interior support and its removal through the open bottom, and state that the counterbore is opened with the same drill step, or give its crown a self-supporting teardrop.",
+      "required_test": "Slice the shell and carrier with the stated profile, export the support islands and compare them with the list. After printing, check the counterbore floor flatness where the insert head seats."
+    },
+    {
+      "id": "mf6-running-gap-edges-on-support-interfaces",
+      "severity": "minor",
+      "claim": "Both horizontal edges of the 0.4 mm running gap are support-interface surfaces. On the carrier, the face lower strip at z 10 is only 0.5 mm above the bed, so with the ASSUMED 0.2 mm Z gap the support under it is about 0.3 mm tall (one or two layers), which many slicers drop or fuse. On the shell, the window lintel underside at z 18.4 (37.6 mm2) is supported. The 0.4 mm gap and the 0.35 mm rest clearance have no allowance for interface roughness or droop; the contract only says \"deburred before fit\".",
+      "evidence": [
+        "Carrier probe: z 10.0, 60.6 mm2, 0.5 mm above the z 9.5 bed; z 10.5, 23.9 mm2",
+        "Shell probe: z 18.4, 37.6 mm2 (window lintel)",
+        "clearance_checks rest-button-shell min 0.35; window_gap_mm 0.4"
+      ],
+      "proposed_change": "Remove the shallow overhangs instead of supporting them: bring the face lower strip and the pad step down to the z 9.5 bed where the shell clearance allows, or chamfer them to 45 deg. Bridge the lintel (about 24.8 mm span) without support, or add a 45 deg chamfer on its inside so the gap edge prints as a wall.",
+      "required_test": "Print the carrier and the shell, then measure the face-to-window gap at the top and bottom edges with feeler gauges at three X positions before and after deburring."
+    },
+    {
+      "id": "mf7-thin-features-and-print-profile-not-bound",
+      "severity": "minor",
+      "claim": "The leaf exception is now declared (\"one 0.6 mm wide extrusion line from a 0.4 mm nozzle (ASSUMED slicer setting)\"), and the stress margin at +0.05 mm is adequate (11.75 MPa against 16.7). The other thin features are not declared. The rest lip is 1.0 mm (about 0.95 mm along Y), the post web and roof are 0.5 mm (MF1), and none of these is in wall_checks. No layer height or slicer profile is bound to the build, so the +/-0.05 mm leaf tolerance, the single-line leaf and the 0.015 mm-per-side key fit all depend on settings that are not recorded. At the R1 root fillets the slicer changes from one line to perimeters plus infill or gap fill, at the point of peak stress. Finally, the carrier is one print but is exported as five touching bodies (carrier_block, leaf_a, leaf_b, button, rest_lip), so there is no single print-ready carrier file.",
+      "evidence": [
+        "Probe: leaf_a 0.605 mm, leaf_b 0.605 mm at x -21 z 13.5; rest_lip y 28.45-29.40 at x -10.8 z 14",
+        "measurements.json parallel-leaves-beam: at_thickness_mm 0.65, peak 11.75 MPa, allowed 16.7",
+        "wall_checks: shell, button, carrier_block only",
+        "Fused carrier: 1 solid, 2218.66 mm3, from 5 separate STEP bodies"
+      ],
+      "proposed_change": "Bind a named print profile (nozzle, line width, layer height, wall count) to the build record. Declare every intended wall exception (lip, post web and roof, jaw) and add wall checks for rest_lip, stop_post and stop_jaw. Export one fused carrier STEP/STL for printing.",
+      "required_test": "Slice with the bound profile and confirm the leaves print as one line with no gap fill. Print leaf coupons and measure the thickness at the root fillet and mid-length. Run wall checks on the added parts."
+    }
+  ],
+  "remaining_uncertainties": [
+    "Revision-17 manufacturing findings: M1 support list fixed for the carrier (the list now matches the measured flats; shell curved ceiling still missing, see mf5); M2 fixed (peak 11.75 MPa at 0.65 mm vs 16.7 allowed; margin about 30% at the thick limit); M3 fixed (pins moved to x -35.5 and -19.8, carrier_block in wall_checks, sampled min 1.25 mm); M4 fixed in geometry (upper-tab holes are through holes, no down-facing roof on the pin axes; blockers stated); M5 fixed in geometry (pull notch 1.0 x 0.4 mm under the head; pull-out force UNKNOWN with a stated first-article test); M6 partly fixed (preload 0.3 mm nominal, stated range 0.11-0.49 mm from carrier placement only; lip and skin print error not in that range); m7 fixed by a stated drilling step (hand-drill alignment to the switch pin untested); m8 stale flow text not re-checked here (flow record not in this packet); m9 not fixed and more serious now (MF4).",
+    "Owner policy check: all printed parts are ABS and no screws are used; the policy is followed.",
+    "All press-fit values (pins 0.05/0.03, insert band 0.05, jaw key 0.03 total, lip preload 0.3) are ASSUMED. My Lame and beam numbers are elastic estimates with ASSUMED friction 0.3 and datasheet typical values. They show the order of magnitude, not measured forces.",
+    "Real thumb overload and insert press-in force are UNKNOWN; the stop-path finding (MF1) depends on them.",
+    "Fatigue and creep of the 0.6 mm single-line ABS leaves and of the lip preload are UNKNOWN.",
+    "No slicing, printing or physical test was executed in this review. Findings come from the STEP exports, recipe source and measurements.json.",
+    "The shell is a stand-in for the real OP1 shell, so its support and dome findings may not carry over to the owner part.",
+    "This review is a same-model-family subagent, not an independent human or vendor review."
+  ],
+  "conclusion": "no_blocker_found"
+}
