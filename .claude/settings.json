@@ -1,0 +1,7 @@
+{
+  "model": "sonnet",
+  "effortLevel": "medium",
+  "permissions": {
+    "deny": ["Agent(Explore)", "Agent(general-purpose)"]
+  }
+}
