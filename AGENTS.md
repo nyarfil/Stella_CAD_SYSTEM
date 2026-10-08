@@ -10,7 +10,7 @@ MCPのdoctor等を開発開始条件にしない。接続試験は明示した�
 Sol/Terra/Lunaへの限定委任を使い、主担当が統合・最終監査する。
 Factory OSが分類・予算・モデル・委譲を管理し、cadMCPは下位のCAD実行・証拠管理能力として使う。下記は実際のCAD設計用であり、本体開発の統括手順ではない。利用入口は docs/MCP_PREVIEW_JA.md。
 
-このファイルは Cursor / Codex 共通の入口です。Cursor は `.cursor/skills/cadmcp-cursor/SKILL.md`、Codex は `.agents/skills/cadmcp-design-brain/SKILL.md` を参照します。
+このファイルは Cursor / Codex / Claude Code 共通の入口です（Claude Code は `CLAUDE.md`・`.claude/skills/stella-cad-design`・`docs/CLAUDE_CODE_JA.md`）。Cursor は `.cursor/skills/cadmcp-cursor/SKILL.md`、Codex は `.agents/skills/cadmcp-design-brain/SKILL.md` を参照します。
 
 ## 正式CADバックエンド選択（2026-10-04）
 

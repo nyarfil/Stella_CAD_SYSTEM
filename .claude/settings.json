@@ -1,0 +1,56 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__cadmcp-design-brain__brain_doctor",
+      "mcp__cadmcp-design-brain__brain_fs_status",
+      "mcp__cadmcp-design-brain__brain_fs_search",
+      "mcp__cadmcp-design-brain__brain_fs_search_tasks",
+      "mcp__cadmcp-design-brain__brain_fs_case",
+      "mcp__cadmcp-design-brain__brain_fs_compare",
+      "mcp__cadmcp-design-brain__brain_fs_evidence",
+      "mcp__cadmcp-design-brain__brain_fs_interfaces",
+      "mcp__cadmcp-design-brain__brain_fs_portfolio",
+      "mcp__cadmcp-design-brain__brain_schema",
+      "mcp__cadmcp-design-brain__brain_studio_schema",
+      "mcp__cadmcp-design-brain__brain_studio_capabilities",
+      "mcp__cadmcp-design-brain__brain_studio_attempts",
+      "mcp__cadmcp-design-brain__brain_studio_review_status",
+      "mcp__cadmcp-design-brain__brain_projects",
+      "mcp__cadmcp-design-brain__brain_get",
+      "mcp__cadmcp-design-brain__brain_history",
+      "mcp__cadmcp-design-brain__brain_patterns",
+      "mcp__cadmcp-design-brain__brain_get_project_protection",
+      "mcp__cadmcp-design-brain__brain_mouse_knowledge_status",
+      "mcp__cadmcp-design-brain__brain_mouse_knowledge_plan",
+      "mcp__cadmcp-design-brain__brain_mouse_knowledge_search",
+      "mcp__cadmcp-design-brain__brain_mouse_knowledge_get",
+      "mcp__cadmcp-design-brain__brain_mouse_knowledge_schema",
+      "mcp__cadmcp-design-brain__brain_mouse_knowledge_brief",
+      "mcp__cadmcp-design-brain__brain_mouse_list_board_packs",
+      "mcp__cadmcp-design-brain__brain_mouse_list_shell_packs",
+      "mcp__cadmcp-design-brain__brain_mouse_get_board_pack",
+      "mcp__cadmcp-design-brain__brain_mouse_get_shell_pack",
+      "mcp__cadmcp-design-brain__brain_mouse_inspect_inputs",
+      "mcp__cadmcp-design-brain__brain_mouse_structure_gate",
+      "mcp__cgal-mcp__discover_capabilities",
+      "mcp__cgal-mcp__describe_capability",
+      "mcp__cgal-mcp__search_api",
+      "mcp__cgal-mcp__route_goal",
+      "mcp__cgal-mcp__job_status",
+      "mcp__mouse-library"
+    ],
+    "ask": [
+      "Edit(LLM_cad_Projects/**)",
+      "Write(LLM_cad_Projects/**)",
+      "mcp__cadmcp-design-brain__brain_set_project_protection",
+      "mcp__cadmcp-design-brain__brain_backend_call",
+      "mcp__cadmcp-design-brain__brain_fusion_handoff",
+      "mcp__cadmcp-design-brain__brain_export"
+    ],
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/*.pem)"
+    ]
+  },
+  "enabledMcpjsonServers": ["cadmcp-design-brain", "cgal-mcp", "mouse-library"]
+}
