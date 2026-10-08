@@ -1,0 +1,83 @@
+# Install log - STEVE add-in (Stella bridge build)
+
+Date: 2026-10-08. Installed by `scripts/install.py --seed-config` under explicit owner authorization.
+
+- Target: `%APPDATA%\Autodesk\Autodesk Fusion 360\API\AddIns\STEVE` (new; no earlier STEVE install existed: AddIns held only `AdamFusion`, Scripts was empty; AdamFusion untouched).
+- Source: `addin/STEVE` (STEVE v0.8.1 @17e684e, RMFG removed, Stella seam). No STEVE installer, no `fetch_runtime.py`, no `steve-install-marker.txt`, no binaries downloaded.
+- Manifest sha256 (`STEVE.manifest`): `2db26b0f2391822cf559efd2807d365fcde146d89c203eda1632781a636a0969`
+- Verification (Fusion not launched): `python -I` py_compile over the installed tree = 0 errors; installed vs source SHA-256 = 69 files, 0 mismatches; 129 tests passed.
+- Seeded (only if absent): `%LOCALAPPDATA%\STEVE\stella-seam\config.json` = `{"enabled": true, "port": 47615}` (token is generated on first start; server allow-list stays EMPTY); `%LOCALAPPDATA%\STEVE\provider.json` = `{"provider": "claude", ...}` (no key/token).
+- Not installed / missing: Codex runtime (`runtime/` or `%LOCALAPPDATA%\STEVE\runtimes\`). Needed only for ChatGPT-mode chat; the Claude provider uses the `claude` CLI on PATH. Whether the panel starts cleanly without a Codex runtime is unverified.
+
+## Files (sha256  path)
+```
+65df6c0de9ea1ddabec74b1ad52033282210fa292d459e283aae29e6506ebfdc  panel/fusion.css
+eef7f7db0d2f3a770c4121d4d64b5b552260f98a63cc2657c0f3711ee5919a4a  panel/gallery.js
+0d0432b2b3267de9242e4c3fcdd3b04e82ff541f6c7add5bcdd16e78a70bdaac  panel/images.js
+8edecfc919fc00fb59a40db33168952da87bc7c14142c425904457f90f6fc479  panel/index.html
+88bb939b3d4be626b3aca64b06e70eaf0b63cb14eef78359bd57440e0ecac4f5  panel/mark.svg
+91d2dea21d6013a3dd7afa0018916bee4f0897c585eb5f51d0a6e74ff37b4819  panel/markdown.js
+341e6da4eb1c4eddb5cbf5ade4478b93fdd78b232372adeecf419297b5a5e57a  panel/panel.js
+b9c4af32e1bc3fb077d6ba6ea0c25731dc5487c9b1f87c4462d3d28c7a3f7ba1  panel/style.css
+548b129fb26f2f3cc9add0763614c73899093c8a61b54886ec22f3922ffafb8f  resources/16x16.png
+ae6670e0761656836f433b33e54a8859d5c0202476ad4976a85a4aaede3d7305  resources/32x32.png
+56d6a80c04e2dfe40d32f1668ea6d8f39a193f562b3c877aa41d84b42bdcf56a  resources/64x64.png
+fa56d768fb696dd0f1f9b1165eb3a9672f2e1ce14d903f5247584556d1d920da  steve/__init__.py
+09477fae0b35f9241a8715ea2fc1a6d235f3e4736a4493954d038f2a9f4ac469  steve/app_update.py
+e071b6ece5492c007f340df8fc7c2fa11fe7a1dfae05d0c40ea3a5470911ad1a  steve/cam_guard.py
+7fbb40ade3faf2bad11c4dfd6cd23383521b4b8060056940e3901630288d7d20  steve/claude_native/__init__.py
+52a145d5604a9aa867af93c8a40ae2f8bc897022474d4acb23f14d5944d8805a  steve/claude_native/admission.py
+4b6eedd671b62db561e24e103b7fcb28d2aec1f1b98e2bb4fedd8ca71d87d3cd  steve/claude_native/directsdk.py
+56aedea68b2d35968f931b24163493a256272e6146de8b936c1969a83d653a4d  steve/claude_native/inventory.py
+d1410a18033e51061f8a81279632cfe5d7e8041af30be9810a750f96edf1e0d5  steve/claude_native/LICENSE
+2700c4852dd35539b7205f21f25219573524cb8e546b03faca7c265c9969bb01  steve/claude_native/model_catalog.py
+7e54ec3b3088497bf5a827435dae9cc8ec1783fdc4aa42a8a119df325ea8981f  steve/claude_native/NOTICE.md
+2f511706305f9170fe9f82a6bcc64528cc3fee8e04c77ddae1cd90f406bc6660  steve/claude_responses.py
+87ff5f891f4e5c4a25eff79f98a6e690f81fb8a710432b250873418a85c917b9  steve/claude_setup.py
+0ce73dc134df865c4da8ed10db4991d3d845b48394a40f5b82ce7512e3a42e2f  steve/claude_transport.py
+23b691b9a40320c276c5a6e46fd0cf3dbf2552dbf8307f5a692b9ef2a232f4c9  steve/clipboard.py
+4393f485ae5b8ea3b8cea9c8bd1d4cca6db91731a35155d022de573703004720  steve/controller.py
+0dc6ab3d25de03a002449c8135b2164c56ef0c51d8900c88ca34d26717869834  steve/custom_server.py
+59854c6eac4c13023983219ea4e713d9a73ca5b7c5a19e165d8f2dfd4240a3e3  steve/debug_log.py
+f19f7652aad8f5a324d262cff0b00b6fe52b6bd139a70fa7f648fab503744759  steve/dfm.py
+805fb624e102085d770bfc596e0de1b92f323e5e25d2cbe9bb8198f26fe2c48a  steve/dfm_geometry.py
+8ceb7874c8261de66f470e821b673d5648d5da5c3f18ed678b9a98e3e8ee814d  steve/document_summary.py
+de1cd07bd12f2f8c2b0b0ee7875da1723cf1fc359af89dd248df21a2fba8d074  steve/documentation.py
+c59c23591e7db6939d34f071ff1cfc806f057f7135e292987b640743d0a6481f  steve/downloads.py
+d92bd5016a3f6bda512470939b7598011e428a02ef130bd60586ca11660ab8e3  steve/dream.py
+1ac8d8563070892cebc6e20ef15593424be3afb8b9865f7e9a50386c7d9bc2a0  steve/fusion_tools.py
+5c560445d17d8ccea61ffdde07b2bdaf2b14e9dcff7ce04f48619385fe68b9c9  steve/gallery.py
+460f88ab1cb7b9992cb4085439395ebfb834d2c158dd0a262c9630db7542c900  steve/grok_auth.py
+d120565bb4222cf934d99aca9fe4abcb2a0ee533b7dc0b6e52ac6c33ae913adb  steve/grok_transport.py
+e3a181a7aa977e266c7fddfcf6eb659820f2988e9f868edee523f93246a7c002  steve/images.py
+bc53b4e1705d9c4cdd7b2a2000524b3857bbb1a59116081becd62a6b89c2ec00  steve/jobs.py
+0b339043ce464266acdc5857a2d30ec3f173bf74669f9ae3e4b50f9a40757734  steve/loopback_http.py
+ef518aacc055e6b187aee145b8139f2b8159e4f6f2c6db71f3ef1550504e8853  steve/machine_definitions/formlabs-form-4.json
+0f64729ac02bc7d51726255f1fb13a6de1d9f9bcda20134668010955569f8f8a  steve/machine_definitions/formlabs-fuse-1-plus-30w.json
+abcdef4a1d16f026e39585d83b714fc859732103046e0f93f68fa1afca253939  steve/machine_definitions/prusa-core-one.json
+de8914d54362623815c7b4a35cc4b9096ed6bb808594ff9828ebd81a78277806  steve/machine_definitions/prusa-mk4s.json
+544d56cdaa091ab1095a9038f08dcfd226f92f9fca2c6bc83c23879876858053  steve/machines.py
+95a7a705c909bc9ecd83334c40bd8b7f7e6ead1f83e6196f6e3a593aa8d26377  steve/ollama_transport.py
+fdf464300d8df7176b12885f318e06dd907e7da852993a718f55bcf66919e03b  steve/openai_compat_transport.py
+81daf0fb4ecf9d4f1608c5430779cb3898c69ca8b32ac55b65c14b61311dd24a  steve/openrouter_auth.py
+516be1ab3adf9672d06fdd160aee988033d68c52ae1530977ed0fe9ff2c8e0f0  steve/openrouter_transport.py
+a8804c6d3697ec24ca666d703a2961088522b873c22c36a01530769ada835085  steve/preferences.py
+f3879fdc029cbef57339b8ec7d0d44a5535d50f204107eb91c95665b96db42e6  steve/python_helpers.py
+f345d2b5793e83309315fb4a6562e81dd553f45d948ac66c9687f8223049931d  steve/python_runner.py
+7b972b67a3d7c722e9bd8d86c1e3f3d680d2203b2690365e03c6662b76fd5b3d  steve/release_notes.py
+5e62b2ab3723a139d4083e3f54025fe88676d5d37c8c140c75e30db2196df41c  steve/runtime_updates.py
+b9b7d8afa8385de444b74463758de19cdffecd5618461a5e489ffcb744d808cd  steve/secure_store.py
+23acf152a35616d2cc1c3b682158c62d031a2bd6aaf5e2cd1abe14aa2ccc047b  steve/stella_seam.py
+2a2a8b4d2c0d8d2ab6f1e702952ce4d3467c01dcc752856ee85994fe1cc156d2  steve/tool_protocol.py
+47fce6ec325ea43fc045c791ca2885bcc755e44744d47ee45b0890decc3e7d38  steve/transport.py
+f40d86c33d09a974f6b0e8a0b79064dfb6ae8cd596cf364d03b4608d3f60343e  steve/update_helper.py
+0539fbcc28211ec7f9a6bbae16b9c1b720af1dbcda9dfc39d81e67c99ffb4b60  steve/update_transaction.py
+acd0bfb43dddffa0675da66b813d87c8206c2560563d25488135b2c66037095a  steve/updates.py
+8eafbc62aa625572ab155b1dae97d2d5146cfd93ed1093c50e2066b21c69f958  steve/upgrade.py
+1b7cb1e23ab4d51dc3f0d7148989c540656f537271903b3f99a79a1e6b9d7179  steve/verification.py
+4cad17f437893e11bc5d62adf7f9f0f7ef0a7e95646656c1263a4e11835d0279  steve/version.py
+671d58d826c190f56ef4b8df744ec47c4064117ccb05b5d00adc24a40466fddf  steve/viewport.py
+e6950731641c0b7e69b3403505e24d641992690eff452fb7b72090e7250bf497  steve/viewport_isolation.py
+2db26b0f2391822cf559efd2807d365fcde146d89c203eda1632781a636a0969  STEVE.manifest
+166768fa46efc22b6c4f7b1cb579f5299c3e17a7a30481ca17753044969d6871  STEVE.py
+```

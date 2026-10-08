@@ -3,7 +3,13 @@
     "cadmcp-design-brain": {
       "type": "stdio",
       "command": "E:/aiwork/Stella_CAD_SYSTEM/cadmcp-all-in-one-2026-09-17/01_CURRENT/.venv/Scripts/python.exe",
-      "args": ["-m", "cadmcp_brain", "--workspace", "E:/aiwork/Stella_CAD_SYSTEM/cadmcp-workspace", "serve"],
+      "args": [
+        "-m",
+        "cadmcp_brain",
+        "--workspace",
+        "E:/aiwork/Stella_CAD_SYSTEM/cadmcp-workspace",
+        "serve"
+      ],
       "env": {
         "CADMCP_REQ2CAD_ROOT": "E:/aiwork/Stella_CAD_SYSTEM/cadmcp-workspace/knowledge/req2cad",
         "CADMCP_REQUIRE_CAD_REFERENCES": "1",
@@ -15,7 +21,9 @@
     "cgal-mcp": {
       "type": "stdio",
       "command": "E:/aiwork/cgal-mcp/.venv/Scripts/python.exe",
-      "args": ["E:/aiwork/Stella_CAD_SYSTEM/integration/cgal/stella_cgal_mcp.py"],
+      "args": [
+        "E:/aiwork/Stella_CAD_SYSTEM/integration/cgal/stella_cgal_mcp.py"
+      ],
       "env": {
         "CGAL_MCP_WORKER": "E:/aiwork/cgal-mcp/build/Release/cgal-worker.exe",
         "CGAL_MCP_DISTANCE": "E:/aiwork/cgal-mcp/build/Release/cgal-distance.exe",
@@ -27,12 +35,31 @@
     "mouse-library": {
       "type": "stdio",
       "command": "E:/aiwork/Stella_CAD_SYSTEM/cadmcp-all-in-one-2026-09-17/01_CURRENT/.venv/Scripts/python.exe",
-      "args": ["-m", "mouse_library"],
+      "args": [
+        "-m",
+        "mouse_library"
+      ],
       "env": {
         "PYTHONUTF8": "1",
         "PYTHONIOENCODING": "utf-8",
         "PYTHONPATH": "E:/aiwork/Stella_CAD_SYSTEM/integration/mouse-library"
       }
+    },
+    "stella-fusion-steve": {
+      "type": "stdio",
+      "command": "python",
+      "args": [
+        "E:/aiwork/Stella_CAD_SYSTEM/integration/steve-bridge/server/stella_steve_bridge_mcp.py",
+        "--allow-document",
+        "STELLA_FUSION_SANDBOX"
+      ],
+      "env": {
+        "PYTHONUTF8": "1"
+      }
+    },
+    "fusion": {
+      "type": "http",
+      "url": "http://127.0.0.1:27182/mcp"
     }
   }
 }

@@ -1,0 +1,14 @@
+/* Fusion's embedded browser can supply a light body style. Paint the document explicitly; everything else lives in style.css. */
+html, html body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: var(--sans);
+}
+#app { width: 100%; min-height: 0; background: var(--bg); color: var(--text); }
+#scroll-area, #welcome, #conversation { background: var(--bg); color: var(--text); }
+#app h1 { color: var(--text); }

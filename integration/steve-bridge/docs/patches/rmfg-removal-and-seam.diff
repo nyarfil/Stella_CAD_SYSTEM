@@ -1,0 +1,1670 @@
+diff -ruN '--exclude=__pycache__' V:/DevCache/Temp/steve_src/addin/STEVE/STEVE.py addin/STEVE/STEVE.py
+--- V:/DevCache/Temp/steve_src/addin/STEVE/STEVE.py	2026-10-08 19:03:42.010729100 +0900
++++ addin/STEVE/STEVE.py	2026-10-08 19:35:06.261481100 +0900
+@@ -272,6 +272,10 @@
+             control.isPromoted = True
+         _bind(ui.workspaceActivated, WorkspaceActivated(), _handlers)
+         _fusion_tools = FusionTools(_app)
++        try:  # STELLA SEAM hook (see NOTICE.md); a seam failure must never abort run()
++            from .steve.stella_seam import safe_start as _stella_seam_start; _stella_seam_start(_fusion_tools)
++        except Exception:
++            traceback.print_exc()
+         _controller = Controller(_publish, fusion_tools=_fusion_tools)
+         _controller.dispatch("connect")
+         handoff_file = data_home() / 'update-handoff.json'
+diff -ruN '--exclude=__pycache__' V:/DevCache/Temp/steve_src/addin/STEVE/panel/index.html addin/STEVE/panel/index.html
+--- V:/DevCache/Temp/steve_src/addin/STEVE/panel/index.html	2026-10-08 19:03:42.011729600 +0900
++++ addin/STEVE/panel/index.html	2026-10-08 19:19:03.419455600 +0900
+@@ -33,7 +33,7 @@
+         <nav id="settings-root" class="settings-root" aria-label="Settings categories">
+           <span class="eyebrow">Connection</span>
+           <button class="settings-row" type="button" data-page="account"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20v-2a7 7 0 0 1 14 0v2"/></svg><span class="row-copy"><span class="row-title">AI provider</span><span id="row-account-value" class="row-value"></span></span><span class="chevron" aria-hidden="true"></span></button>
+-          <button class="settings-row" type="button" data-page="manufacturing"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M6 20V9l6-5 6 5v11M10 20v-5h4v5"/></svg><span class="row-copy"><span class="row-title">Manufacturing</span><span id="row-manufacturing-value" class="row-value"></span></span><span id="rmfg-badge" class="settings-badge" hidden>Reconnect</span><span class="chevron" aria-hidden="true"></span></button>
++          <button class="settings-row" type="button" data-page="manufacturing"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M6 20V9l6-5 6 5v11M10 20v-5h4v5"/></svg><span class="row-copy"><span class="row-title">Manufacturing</span><span id="row-manufacturing-value" class="row-value"></span></span><span class="chevron" aria-hidden="true"></span></button>
+           <span class="eyebrow">STEVE</span>
+           <button class="settings-row" type="button" data-page="updates"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg><span class="row-copy"><span class="row-title">Updates</span><span id="row-updates-value" class="row-value"></span></span><span id="updates-badge" class="settings-badge" hidden>Available</span><span class="chevron" aria-hidden="true"></span></button>
+           <button class="settings-row" type="button" data-page="diagnostics"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span class="row-copy"><span class="row-title">Diagnostics</span><span id="row-diagnostics-value" class="row-value"></span></span><span class="chevron" aria-hidden="true"></span></button>
+@@ -52,19 +52,6 @@
+         <div id="settings-manufacturing" class="settings-page" hidden>
+           <label class="switch-row" for="dfm-enabled"><span>Design for manufacturing<small>Experimental · STEVE considers how the part will be made</small></span><input id="dfm-enabled" type="checkbox" role="switch" aria-describedby="dfm-note"></label>
+           <p id="dfm-note" class="note">Tell STEVE how the part will be made and it can run measured checks. Pause or finish your task before changing this.</p>
+-          <div id="rmfg-settings" class="settings-subsection" hidden>
+-            <h4>RMFG sheet metal <span class="settings-badge">Experimental</span></h4>
+-            <p class="note">Connect to let STEVE upload relevant parts for DFM checks and prepare quotes and checkout when you ask. You review and pay on RMFG.</p>
+-            <p id="rmfg-status" class="note" role="status"></p>
+-            <p id="rmfg-code" class="note" hidden></p>
+-            <div class="button-row">
+-              <button id="rmfg-connect" class="secondary-button">Connect RMFG</button>
+-              <button id="rmfg-enable-checkout" class="secondary-button" hidden>Enable quotes &amp; checkout</button>
+-              <button id="rmfg-refresh" class="secondary-button">Check RMFG connection</button>
+-              <button id="rmfg-cancel" class="secondary-button" hidden>Cancel sign-in</button>
+-              <button id="rmfg-disconnect" class="text-button" hidden>Disconnect RMFG</button>
+-            </div>
+-          </div>
+         </div>
+         <div id="settings-updates" class="settings-page" hidden>
+           <div class="update-settings">
+@@ -163,10 +150,6 @@
+       <div id="thinking" class="thinking" role="status" hidden><span class="spinner" aria-hidden="true"></span><span id="thinking-label">Thinking</span></div>
+     </main>
+     <footer class="composer-area">
+-      <section id="rmfg-checkout" class="supplier-checkout" aria-label="RMFG checkout" hidden>
+-        <div><strong>Your RMFG checkout</strong><span>Quoted part snapshots · review delivery and final pricing on RMFG.</span></div>
+-        <button id="rmfg-open-checkout" type="button" class="secondary-button">Open checkout ↗</button>
+-      </section>
+       <div class="context-row">
+         <button id="job-strip" class="chip" type="button" aria-label="Manage current job" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg><span id="job-strip-title" class="chip-label"></span><span id="job-strip-status" class="chip-meta"></span></button>
+         <div id="task-target" class="chip" role="status" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v4h4"/></svg><span id="task-target-label" class="chip-label"></span><span id="task-target-meta" class="chip-meta"></span></div>
+diff -ruN '--exclude=__pycache__' V:/DevCache/Temp/steve_src/addin/STEVE/panel/panel.js addin/STEVE/panel/panel.js
+--- V:/DevCache/Temp/steve_src/addin/STEVE/panel/panel.js	2026-10-08 19:03:42.011729600 +0900
++++ addin/STEVE/panel/panel.js	2026-10-08 19:19:03.419455600 +0900
+@@ -550,19 +550,6 @@
+   $("dfm-enabled").checked=!!state.dfmEnabled;
+   $("dfm-enabled").disabled=!!state.busy || !!state.jobBusy || state.job?.status==="active";
+   $("dfm-chip").hidden=!signed || !state.dfmEnabled;
+-  $("rmfg-settings").hidden=!state.dfmEnabled;
+-  $("rmfg-status").textContent=state.rmfgError || ({connected:"Connected to RMFG",authorizing:"Approve the connection in your browser.",reconnect:"Reconnect RMFG to continue.",unchecked:"Check your saved connection or connect RMFG."}[state.rmfgState] || "Not connected");
+-  $("rmfg-code").hidden=!state.rmfgCode;
+-  $("rmfg-code").textContent=state.rmfgCode ? "Browser approval code: "+state.rmfgCode : "";
+-  $("rmfg-connect").hidden=state.rmfgState==="connected" || !!state.rmfgBusy;
+-  $("rmfg-enable-checkout").hidden=state.rmfgState!=="connected" || !!state.rmfgCheckoutEnabled;
+-  $("rmfg-enable-checkout").disabled=!!state.rmfgBusy;
+-  $("rmfg-checkout").hidden=!state.rmfgCheckout || state.rmfgCheckout.threadId!==state.threadId;
+-  $("rmfg-open-checkout").disabled=!!state.rmfgCheckoutOpening;
+-  $("rmfg-refresh").disabled=!!state.rmfgBusy;
+-  $("rmfg-cancel").hidden=state.rmfgState!=="authorizing" || !state.rmfgBusy;
+-  $("rmfg-disconnect").hidden=state.rmfgState!=="connected";
+-  $("rmfg-disconnect").disabled=!!state.rmfgBusy;
+   $("open-logs").title=state.debugLogPath || "Open local debug logs";
+   $("release-notice").hidden=!state.releaseNotes || !state.releaseNotesUnread;
+   $("release-notice-title").textContent=state.releaseNotes?`New in STEVE ${state.releaseNotes.version}`:"";
+@@ -600,9 +587,7 @@
+   $("account-plan").textContent=local?`${ollamaAddress} · ${state.ollamaApiKeySet?"API key saved":"No sign-in needed"}`:openai?`${state.openaiBaseUrl||"No server set"} · ${state.openaiApiKeySet?"API key saved":"No API key"}`:signed?`${state.account.planType||providerName} · Connected`:`Use your ${providerName} account`;
+   // Settings rows summarize each page so the list doubles as a status check.
+   $("row-account-value").textContent=custom?`Custom server · ${local?"Ollama":"OpenAI-compatible"}`:`${providerName} · ${signed?(state.account?.email||"Connected"):"Not signed in"}`;
+-  const rmfgSummary={connected:"RMFG connected",authorizing:"RMFG connecting",reconnect:"RMFG needs reconnect"}[state.rmfgState]||"RMFG not connected";
+-  $("row-manufacturing-value").textContent=`DFM ${state.dfmEnabled?"on":"off"}${state.dfmEnabled?` · ${rmfgSummary}`:""}`;
+-  $("rmfg-badge").hidden=!state.dfmEnabled || state.rmfgState!=="reconnect";
++  $("row-manufacturing-value").textContent=`DFM ${state.dfmEnabled?"on":"off"}`;
+   $("row-updates-value").textContent=update?`STEVE ${update.version} is available`:state.codexPendingVersion?`Codex ${state.codexPendingVersion} ready · restart to use it`:`${state.version?`STEVE ${state.version}`:"STEVE"}${state.codexVersion?` · Codex ${state.codexVersion}`:""}`;
+   $("row-diagnostics-value").textContent=`Debug logging ${state.debugLogging?"on":"off"}`;
+   $("settings-version").textContent=`${state.version?`STEVE v${state.version}`:"STEVE"}${state.codexVersion?` · Codex ${state.codexVersion}`:""}`;
+@@ -892,12 +877,6 @@
+ $("install-codex").onclick=()=>act("setupHelp",{page:"codex"});
+ $("debug-logging").onchange=(event)=>act("debugLogging",{enabled:event.target.checked});
+ $("dfm-enabled").onchange=(event)=>act("dfm",{enabled:event.target.checked});
+-$("rmfg-connect").onclick=()=>act("rmfgConnect");
+-$("rmfg-enable-checkout").onclick=()=>act("rmfgEnableCheckout");
+-$("rmfg-open-checkout").onclick=()=>state.rmfgCheckout && act("rmfgOpenCheckout",{checkoutId:state.rmfgCheckout.id});
+-$("rmfg-refresh").onclick=()=>act("rmfgRefresh");
+-$("rmfg-disconnect").onclick=()=>act("rmfgDisconnect");
+-$("rmfg-cancel").onclick=()=>act("rmfgCancel");
+ $("open-logs").onclick=()=>act("openLogs");
+ $("check-updates").onclick=()=>{dismissedUpdate="";act("checkUpdates");};
+ $("menu-update").onclick=()=>act("openUpdate",{page:"notes"});
+diff -ruN '--exclude=__pycache__' V:/DevCache/Temp/steve_src/addin/STEVE/steve/controller.py addin/STEVE/steve/controller.py
+--- V:/DevCache/Temp/steve_src/addin/STEVE/steve/controller.py	2026-10-08 19:03:42.015733100 +0900
++++ addin/STEVE/steve/controller.py	2026-10-08 19:19:03.418460400 +0900
+@@ -18,8 +18,6 @@
+ from .documentation import Documentation
+ from .preferences import ProviderChoice
+ from .dfm import DfmStore
+-from .rmfg_connection import RMFGConnection
+-from .rmfg_service import RMFGService
+ from .grok_transport import GrokTransport
+ from .ollama_transport import (OllamaSettings, OllamaTransport, connection_status, normalize_api_key,
+                                normalize_endpoint, normalize_url_extra)
+@@ -71,15 +69,12 @@
+     return result
+ 
+ 
+-def manufacturing_context(context, enabled, rmfg_state='unchecked'):
++def manufacturing_context(context, enabled):
+     # Real Fusion messages always carry context. Preserve context-free callers
+     # when DFM is off while explicitly refreshing the switch in bound chats.
+     if context is None and not enabled:
+         return None
+-    result = {**(context or {}), 'dfmEnabled': enabled}
+-    if enabled:
+-        result['rmfgConnection'] = rmfg_state
+-    return result
++    return {**(context or {}), 'dfmEnabled': enabled}
+ 
+ 
+ def thread_config(provider="chatgpt"):
+@@ -227,16 +222,12 @@
+                       "codexUpdateChecking": False, "codexUpdateStatus": "", "codexUpdating": False, "codexPendingVersion": "", "codexRestarting": False,
+                       "threadId": None, "history": [], "historyCursor": None, "historyLoading": False,
+                       "runtimeIssue": False, "debugLogging": self.debug.enabled, "dfmEnabled": self.dfm.enabled,
+-                      "rmfgState": "unchecked", "rmfgBusy": False, "rmfgError": "", "rmfgCode": "", "rmfgCheckoutEnabled": False, "rmfgCheckout": None,
+                       "debugLogPath": str(self.debug.path)}
+-        self.rmfg = RMFGConnection(self.debug.folder.parent, self._update_state, self.open_browser)
+-        self.rmfg_service = RMFGService(self.debug.folder.parent, self.rmfg.auth, self._update_state, self.fusion_tools)
+         self._worker = threading.Thread(target=self._work, name="STEVE-Actions", daemon=True)
+         self._worker.start()
+         self.updates = UpdateChecker(self._release_checked)
+         self.downloader = UpdateDownloader(self._update_state, home=self.debug.folder.parent)
+         self.runtime_updater = RuntimeUpdater(self._update_state, home=self.debug.folder.parent)
+-        self.rmfg.action('rmfgRefresh')
+ 
+     def _update_state(self, changes):
+         queue_install = False
+@@ -293,7 +284,7 @@
+                     or self._handling_command or self._commands.unfinished_tasks
+                     or self._send_queued or self._active_tools
+                     or any(self.state.get(k) for k in ('busy', 'jobBusy', 'loginPending', 'codexUpdating',
+-                                                     'codexRestarting', 'rmfgBusy', 'rmfgCheckoutOpening'))
++                                                     'codexRestarting'))
+                     or (self.state['job'] or {}).get('status') == 'active'
+                     or self.state['connection'] == 'starting'):
+                 return None
+@@ -352,30 +343,6 @@
+         with self._lock:
+             if self._update_handoff and action != 'sync':
+                 return False
+-        if action == 'rmfgOpenCheckout':
+-            with self._lock:
+-                checkout = self.state.get('rmfgCheckout')
+-                if self._closed or self.state.get('rmfgCheckoutOpening'):
+-                    return False
+-                if not checkout or checkout['id'] != payload.get('checkoutId') or checkout['threadId'] != self.thread_id:
+-                    raise ValueError('Open the checkout shown for this conversation.')
+-                self.state['rmfgCheckoutOpening'] = True
+-            def open_checkout():
+-                try:
+-                    url = self.rmfg_service.checkout.open_url(checkout['id'])
+-                    if not self._closed and self.open_browser(url) is False:
+-                        self._update_state({'error': 'The browser could not open RMFG checkout. Try again after checking your default browser.'})
+-                except Exception:
+-                    self._update_state({'error': 'Checkout could not open. Check your RMFG connection and ask STEVE to refresh this checkout.'})
+-                finally:
+-                    self._update_state({'rmfgCheckoutOpening': False})
+-            threading.Thread(target=open_checkout, name='STEVE-RMFG-checkout', daemon=True).start()
+-            self.emit()
+-            return True
+-        if action in ('rmfgConnect', 'rmfgEnableCheckout', 'rmfgRefresh', 'rmfgDisconnect', 'rmfgCancel'):
+-            if not self._closed:
+-                self.rmfg.action(action)
+-            return True
+         if action in ("send", "steer"):
+             command = job_command(str(payload.get("text", "")))
+             if command:
+@@ -1078,7 +1045,7 @@
+             return  # Native goal activation does not start a competing turn.
+         if self.state["busy"]:
+             raise ValueError("Pause the current task before changing the job.")
+-        context = manufacturing_context(payload.get("fusionContext"), self.dfm.enabled, self.state['rmfgState'])
++        context = manufacturing_context(payload.get("fusionContext"), self.dfm.enabled)
+         self._task_context = context
+         self.state.update(taskDocument={"id": context.get("document_id"), "name": context.get("name")} if context else None,
+                           jobNotice="", error="", busy=True, status="Preparing job")
+@@ -1191,9 +1158,6 @@
+                             # The panel shows the exception text on the failed step; results stay private otherwise.
+                             code_message["error"] = result["error"][:400]
+                     self.state["status"] = "Stopping" if self._cancel else "Thinking"
+-                    if params.get('tool') == 'rmfg_checkout' and result.get('checkoutId'):
+-                        self.state['rmfgCheckout'] = ({'id': result['checkoutId'], 'threadId': self.thread_id}
+-                                                      if result.get('checkoutAvailable') else None)
+             self.emit()
+             client.reply(request_id, tool_response(result))
+         try:
+@@ -1205,7 +1169,7 @@
+             if tool in {entry["name"] for entry in TOOLS}:
+                 self.debug.record("tool.started", **identifiers, arguments=arguments)
+             validate_call(tool, arguments)
+-            if tool in ('fusion_dfm_plan', 'fusion_dfm_check', 'fusion_rmfg', 'rmfg_materials', 'rmfg_checkout') and not self.dfm.enabled:
++            if tool in ('fusion_dfm_plan', 'fusion_dfm_check') and not self.dfm.enabled:
+                 raise ToolError('dfm_disabled', 'DFM is off in STEVE.')
+             with self._lock:
+                 if cancelled():
+@@ -1218,19 +1182,10 @@
+                         "view_chat_image": "Reopen saved picture",
+                         "list_gallery_images": "Search image gallery",
+                         "view_gallery_image": "View gallery image",
+-                        "fusion_rmfg": "RMFG sheet-metal check",
+-                        "rmfg_materials": "Read RMFG material catalog",
+-                        "rmfg_checkout": "Prepare RMFG checkout",
+                     }.get(tool, tool)})
+                 code_message = python_activity(tool, arguments, uuid4().hex)
+                 if code_message:
+                     self.state["messages"].append(code_message)
+-            if tool in ('fusion_rmfg', 'rmfg_materials', 'rmfg_checkout'):
+-                with self._lock:
+-                    self.state['status'] = 'Checking with RMFG'
+-                self.emit()
+-                self.rmfg_service.submit(tool, arguments, complete, cancelled)
+-                return
+             if tool in ("list_chat_images", "view_chat_image", "list_gallery_images", "view_gallery_image"):
+                 with self._lock:
+                     self.state["status"] = "Searching image gallery" if tool == "list_gallery_images" else "Looking up chat images" if tool == "list_chat_images" else "Reopening saved image"
+@@ -1429,7 +1384,7 @@
+             raise
+ 
+     def _send(self, text, context=None, images=None):
+-        context = manufacturing_context(context, self.dfm.enabled, self.state['rmfgState'])
++        context = manufacturing_context(context, self.dfm.enabled)
+         images = validate_images(images)
+         if (not text and not images) or self.state["busy"]:
+             return
+@@ -1499,7 +1454,7 @@
+                     or payload.get("threadId") != self.thread_id or payload.get("turnId") != self.turn_id):
+                 raise RuntimeError("That response has ended or is stopping. Send this message again to start a new turn.")
+             self.client.request("turn/steer", {"threadId": self.thread_id, "expectedTurnId": self.turn_id,
+-                                               "input": message_input(text, manufacturing_context(payload.get("fusionContext"), self.dfm.enabled, self.state['rmfgState']), images)})
++                                               "input": message_input(text, manufacturing_context(payload.get("fusionContext"), self.dfm.enabled), images)})
+             with self._lock:
+                 message["delivery"] = "sent"
+             self._record_chat_images(payload["threadId"], payload["turnId"], images, message=text)
+@@ -1709,8 +1664,6 @@
+ 
+     def close(self):
+         self._closed = True
+-        self.rmfg_service.close()
+-        self.rmfg.close()
+         self.updates.close()
+         self.downloader.close()
+         self.runtime_updater.close()
+diff -ruN '--exclude=__pycache__' V:/DevCache/Temp/steve_src/addin/STEVE/steve/dfm.py addin/STEVE/steve/dfm.py
+--- V:/DevCache/Temp/steve_src/addin/STEVE/steve/dfm.py	2026-10-08 19:03:42.015733100 +0900
++++ addin/STEVE/steve/dfm.py	2026-10-08 19:19:03.419455600 +0900
+@@ -27,8 +27,7 @@
+     },
+     'sheet_metal': {
+         'checks': 'Read native thickness and sheet-metal rule, bends and existing flat pattern. Compare supported radii, flange/relief dimensions and hole-to-bend/edge distances with a sourced material/tool profile and explicit distance convention. Respect cutting/forming/machining order.',
+-        'supplier': 'When rmfgConnection is connected, handle catalog lookup, scoped upload, report retrieval and rechecks as part of the design task. Match catalog material and thickness to established requirements; ask only when missing, ambiguous or unavailable. Do not substitute a different alloy or thickness silently. Apply fixes within the design intent, then recheck changed geometry. When asked for pricing or checkout, use rmfg_checkout with saved part jobs and requested quantities; create the ready cart so the customer can review and pay on RMFG. Present actionable findings and unresolved limits, not upload/job-management instructions.',
+-        'unchecked': 'Flat pattern creation is a modification. Bend sequence, springback, tooling collision and imported-solid unfolding require additional validation. Optional RMFG supplier analysis uses rmfg_materials and fusion_rmfg; once connected, relevant part snapshots upload automatically during DFM checks. Native checks need no supplier connection.',
++        'unchecked': 'Flat pattern creation is a modification. Bend sequence, springback, tooling collision and imported-solid unfolding require additional validation. Native checks only; no supplier service is connected in this build.',
+     },
+     'fdm': {
+         'checks': 'Establish FDM/FFF printer, material, orientation, nozzle/extrusion settings and supports. Compare dimensions in the proposed build frame with its envelope; measure supported walls/features/clearances against that profile. Overhang checks depend on build direction.',
+diff -ruN '--exclude=__pycache__' V:/DevCache/Temp/steve_src/addin/STEVE/steve/fusion_tools.py addin/STEVE/steve/fusion_tools.py
+--- V:/DevCache/Temp/steve_src/addin/STEVE/steve/fusion_tools.py	2026-10-08 19:03:42.016748900 +0900
++++ addin/STEVE/steve/fusion_tools.py	2026-10-08 19:19:03.419455600 +0900
+@@ -25,7 +25,6 @@
+ from .dfm_geometry import DfmGeometry
+ from . import machines
+ from .documentation import reference_candidate
+-from .rmfg_snapshot import export_snapshot
+ from .tool_protocol import API_GUIDANCE, PYTHON_CONTEXT, ToolError, tool_failure
+ from .transport import data_home
+ 
+@@ -191,7 +190,7 @@
+ 
+     def check_command(self, tool):
+         state = self.command_state()
+-        if tool in ("fusion_query_python", "fusion_capture_viewport", "fusion_dfm_plan", "fusion_dfm_check", "fusion_rmfg"):
++        if tool in ("fusion_query_python", "fusion_capture_viewport", "fusion_dfm_plan", "fusion_dfm_check"):
+             return state["readAllowed"]
+         if state["readAllowed"] and not state["executionAllowed"]:
+             raise ToolError("electronics_selection_read_only",
+@@ -323,19 +322,6 @@
+                 'plan': plan, 'persistence': 'session' if key.startswith('session:') else 'local',
+                 'scope': 'Native body definition. Compare reportBinding with historical reports before reuse; changed or unavailable revision/planHash requires a new check. Occurrence placement, assembly context and build orientation require explicit checks.'}
+ 
+-    def rmfg_snapshot(self, arguments):
+-        context = self.context()
+-        body, key, plan = self.dfm_target(arguments, context)
+-        if not plan or not any(stage['process'] == 'sheet_metal' for stage in plan['stages']):
+-            raise ToolError('dfm_plan_required', 'RMFG checks require a saved sheet_metal stage for the intended body.')
+-        if arguments['action'] == 'prepare':
+-            return export_snapshot(body, context['design'], key)
+-        binding = arguments['_binding']
+-        resolved = context['design'].findEntityByToken(binding['partToken'])
+-        if key != binding['documentKey'] or len(resolved) != 1 or native_body(resolved[0]) != body:
+-            raise ToolError('dfm_target_unavailable', 'This RMFG job belongs to a different or unavailable part.')
+-        return {'ok': True, 'snapshotMatches': body.revisionId == binding['revision']}
+-
+     def verify(self, job, result):
+         if "before" not in job:
+             return
+@@ -604,11 +590,6 @@
+             elif job["tool"] == "fusion_dfm_plan":
+                 self.check_target(job)
+                 self.finish(job, self.dfm_plan(job['arguments']))
+-            elif job['tool'] == 'fusion_rmfg':
+-                self.check_target(job)
+-                if not self.check_command('fusion_rmfg'):
+-                    raise ToolError('active_command', 'Finish the active Fusion command before preparing this check.')
+-                self.finish(job, self.rmfg_snapshot(job['arguments']))
+             else:
+                 self.check_target(job)
+                 if not self.check_command(job["tool"]):
+diff -ruN '--exclude=__pycache__' V:/DevCache/Temp/steve_src/addin/STEVE/steve/rmfg.py addin/STEVE/steve/rmfg.py
+--- V:/DevCache/Temp/steve_src/addin/STEVE/steve/rmfg.py	2026-10-08 19:03:42.018747600 +0900
++++ addin/STEVE/steve/rmfg.py	1970-01-01 09:00:00.000000000 +0900
+@@ -1,271 +0,0 @@
+-"""RMFG device OAuth, DFM and hosted checkout. Call from workers, not Fusion UI."""
+-from dataclasses import dataclass, field
+-import hashlib
+-import json
+-import math
+-import re
+-import time
+-from urllib.error import HTTPError
+-from urllib.parse import urlencode, urlsplit
+-from urllib.request import HTTPRedirectHandler, Request, build_opener
+-from uuid import uuid4
+-
+-ORIGIN = 'https://api.rmfg.com'
+-CLIENT_ID = 'rmfg-agent'
+-SCOPES = 'designs dfm quotes carts'
+-DFM_SCOPES = {'designs', 'dfm'}
+-MAX_STEP_BYTES = 50*1024*1024
+-
+-
+-class RMFGError(RuntimeError):
+-    def __init__(self, message, *, code='', status=None, retry_after=None):
+-        super().__init__(message)
+-        self.code, self.status, self.retry_after = code, status, retry_after
+-
+-
+-class NoRedirects(HTTPRedirectHandler):
+-    def redirect_request(self, *args, **kwargs):
+-        return None
+-
+-
+-def request(method, path, body=None, token=None, content_type=None, key=None):
+-    headers = {'Accept': 'application/json'}
+-    if not path.startswith('/v1/') or path.startswith('//'):
+-        raise ValueError('Use an RMFG API path.')
+-    if isinstance(body, dict):
+-        body = (urlencode(body).encode('ascii') if content_type == 'application/x-www-form-urlencoded'
+-                else json.dumps(body, sort_keys=True, allow_nan=False, separators=(',',':')).encode('utf-8'))
+-        content_type = content_type or 'application/json'
+-    if content_type:
+-        headers['Content-Type'] = content_type
+-    if token:
+-        headers['Authorization'] = 'Bearer ' + token
+-    if key:
+-        headers['Idempotency-Key'] = identifier(key)
+-    try:
+-        try:
+-            response = build_opener(NoRedirects()).open(Request(ORIGIN+path, data=body, headers=headers, method=method), timeout=30)
+-        except HTTPError as error:
+-            response = error
+-        with response:
+-            raw = response.read(2*1024*1024+1)
+-            if len(raw) > 2*1024*1024:
+-                raise ValueError('Response too large')
+-            payload = json.loads(raw) if raw else {}
+-            if not isinstance(payload, dict):
+-                raise ValueError('Invalid response')
+-            if not 200 <= response.status < 300:
+-                code = payload.get('error')
+-                code = code if isinstance(code,str) and re.fullmatch(r'[a-z_]{1,60}',code) else ''
+-                guidance = {400:'Check the observed part/material IDs and supported request fields.',
+-                    401:'Reconnect RMFG in STEVE.', 403:'Check the connection permissions in RMFG, then reconnect.',
+-                    404:'This supplier resource is unavailable. Check the saved job ID and account.',
+-                    409:'This write conflicts with an earlier request. Keep the existing job; do not change its retry payload.',
+-                    429:'RMFG is rate-limiting requests. Wait before checking this same job again.'}.get(response.status,
+-                    'The outcome may be uncertain. Keep the same job and operation key for an identical retry.')
+-                raise RMFGError('RMFG request failed (HTTP ' + str(response.status) + '). ' + guidance,
+-                                code=code, status=response.status, retry_after=response.headers.get('Retry-After'))
+-            return payload
+-    except RMFGError:
+-        raise
+-    except (OSError, ValueError):
+-        raise RMFGError('RMFG did not return a valid response. Keep the same operation key for an identical retry.') from None
+-
+-
+-def identifier(value):
+-    if not isinstance(value,str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,255}',value):
+-        raise ValueError('Use an identifier returned by RMFG, not a URL or local path.')
+-    return value
+-
+-
+-def browser_url(value):
+-    try:
+-        parsed = urlsplit(value)
+-        if (not isinstance(value,str) or len(value)>8192 or any(ord(c)<32 or ord(c)==127 for c in value) or parsed.scheme!='https'
+-                or parsed.hostname not in ('rmfg.com','www.rmfg.com','api.rmfg.com')
+-                or parsed.username or parsed.password or parsed.port not in (None,443)):
+-            raise ValueError
+-        return value
+-    except (TypeError, ValueError):
+-        raise RMFGError('RMFG returned an invalid approval link.') from None
+-
+-
+-def secret(value):
+-    if not isinstance(value,str) or not value or len(value)>16384 or any(c.isspace() for c in value):
+-        raise RMFGError('RMFG returned incomplete credentials. Reconnect.')
+-    return value
+-
+-
+-@dataclass
+-class Attempt:
+-    generation: str
+-    device_code: str = field(repr=False)
+-    user_code: str = field(repr=False)
+-    url: str = field(repr=False)
+-    expires: float
+-    interval: int
+-    next_poll: float
+-
+-
+-class RMFGAuth:
+-    def __init__(self, store, transport=request, clock=time.time):
+-        self.store, self.transport, self.clock = store, transport, clock
+-
+-    def _post(self, path, fields):
+-        return self.transport('POST',path,{'client_id':CLIENT_ID,**fields},content_type='application/x-www-form-urlencoded')
+-
+-    def validate_tokens(self, value):
+-        lifetime = value.get('expires_in')
+-        if (str(value.get('token_type','')).lower()!='bearer' or not isinstance(value.get('scope'),str)
+-                or not DFM_SCOPES <= set(value['scope'].split())
+-                or type(lifetime) not in (int,float) or not math.isfinite(lifetime) or not 0<lifetime<=900):
+-            raise RMFGError('RMFG connection needs designs and DFM permissions and a valid expiry. Reconnect.')
+-        return {'access_token':secret(value.get('access_token')), 'refresh_token':secret(value.get('refresh_token')),
+-                'expires_at':self.clock()+lifetime, 'scope':value['scope']}
+-
+-    def begin(self):
+-        with self.store.locked():
+-            result = self._post('/v1/oauth/device/code',{'scope':SCOPES})
+-            interval, duration = result.get('interval',5), result.get('expires_in')
+-            if type(interval) is not int or not 1<=interval<=3600 or type(duration) is not int or not 1<=duration<=86400:
+-                raise RMFGError('RMFG returned invalid sign-in timing.')
+-            attempt = Attempt(uuid4().hex,secret(result.get('device_code')),secret(result.get('user_code')),
+-                browser_url(result.get('verification_uri_complete')),self.clock()+duration,interval,self.clock()+interval)
+-            self.store.write({'state':'authorizing','generation':attempt.generation})
+-            return attempt
+-
+-    def poll(self, attempt):
+-        with self.store.locked():
+-            record = self.store.read() or {}
+-            if record.get('state')!='authorizing' or record.get('generation')!=attempt.generation:
+-                raise RMFGError('That RMFG sign-in attempt ended. Start a new connection.')
+-            if self.clock()>=attempt.expires:
+-                self.store.write({'state':'disconnected'})
+-                raise RMFGError('RMFG sign-in expired. Connect again.')
+-            if self.clock()<attempt.next_poll:
+-                return 'pending'
+-            self.store.write({'state':'exchanging','generation':attempt.generation})
+-            try:
+-                payload = self._post('/v1/oauth/token',{'grant_type':'urn:ietf:params:oauth:grant-type:device_code','device_code':attempt.device_code})
+-            except RMFGError as error:
+-                if error.status==400 and error.code in ('authorization_pending','slow_down'):
+-                    attempt.interval += 5 if error.code=='slow_down' else 0
+-                    attempt.next_poll = self.clock()+attempt.interval
+-                    self.store.write({'state':'authorizing','generation':attempt.generation})
+-                    return 'pending'
+-                # A lost response may have consumed the device code. Never replay
+-                # an uncertain successful exchange or a consumed refresh token.
+-                raise RMFGError('RMFG sign-in was declined, interrupted or expired. Connect again.') from None
+-            self.store.write({'state':'connected','connection':uuid4().hex,'tokens':self.validate_tokens(payload)})
+-            return 'connected'
+-
+-    def status(self):
+-        with self.store.locked():
+-            record = self.store.read() or {}
+-            state = record.get('state','disconnected')
+-            return {'state':state if state in ('connected','disconnected','authorizing') else 'reconnect'}
+-
+-    def cancel(self, attempt):
+-        with self.store.locked():
+-            record = self.store.read() or {}
+-            if record.get('generation') == attempt.generation:
+-                self.store.write({'state':'disconnected'})
+-
+-    def connection_id(self):
+-        with self.store.locked():
+-            record = self.store.read() or {}
+-            if record.get('state') != 'connected' or not record.get('connection'):
+-                raise RMFGError('Connect RMFG in STEVE before using supplier jobs.')
+-            return identifier(record['connection'])
+-
+-    def access_token(self, required_scopes=DFM_SCOPES):
+-        with self.store.locked():
+-            record = self.store.read() or {}
+-            if record.get('state')!='connected':
+-                raise RMFGError('Connect RMFG in STEVE before requesting an external DFM check.')
+-            tokens = record.get('tokens',{})
+-            expiry = tokens.get('expires_at')
+-            if (type(expiry) not in (int,float) or not math.isfinite(expiry)
+-                    or not DFM_SCOPES <= set(str(tokens.get('scope','')).split())):
+-                raise RMFGError('The RMFG connection is invalid. Reconnect.')
+-            if not set(required_scopes) <= set(tokens.get('scope', '').split()):
+-                raise RMFGError('Reconnect RMFG in Accounts & providers to enable quotes and checkout. Your existing DFM connection still works.')
+-            if self.clock()+30<expiry:
+-                return secret(tokens.get('access_token'))
+-            refresh = secret(tokens.get('refresh_token'))
+-            self.store.write({'state':'refreshing'})
+-            try:
+-                result = self._post('/v1/oauth/token',{'grant_type':'refresh_token','refresh_token':refresh})
+-                replacement = self.validate_tokens(result)
+-                self.store.write({'state':'connected','connection':record.get('connection'),'tokens':replacement})
+-            except Exception:
+-                raise RMFGError('RMFG refresh could not be confirmed. Reconnect instead of retrying the old credential.') from None
+-            if not set(required_scopes) <= set(replacement['scope'].split()):
+-                raise RMFGError('Reconnect RMFG in Accounts & providers to enable quotes and checkout.')
+-            return replacement['access_token']
+-
+-    def checkout_available(self):
+-        with self.store.locked():
+-            record = self.store.read() or {}
+-            return record.get('state') == 'connected' and {'quotes', 'carts'} <= set(record.get('tokens', {}).get('scope', '').split())
+-
+-    def disconnect(self):
+-        with self.store.locked():
+-            record = self.store.read() or {}
+-            refresh = record.get('tokens',{}).get('refresh_token')
+-            self.store.write({'state':'disconnected'})
+-            if refresh:
+-                self._post('/v1/oauth/revoke',{'token':refresh})
+-
+-
+-class RMFGClient:
+-    def __init__(self, access_token, transport=request):
+-        self.access_token, self.transport = access_token, transport
+-
+-    def materials(self, cursor=None):
+-        query = {'limit':20}
+-        if cursor is not None:
+-            if not isinstance(cursor,str) or not 0<len(cursor)<=1000:
+-                raise ValueError('Use the returned catalog cursor.')
+-            query['cursor']=cursor
+-        return self.transport('GET','/v1/materials?'+urlencode(query),token=self.access_token())
+-
+-    def analyze(self, step_bytes, operation_key):
+-        if not isinstance(step_bytes,bytes) or not 0<len(step_bytes)<=MAX_STEP_BYTES:
+-            raise ValueError('Provide a nonempty STEP snapshot no larger than 50 MiB.')
+-        boundary='steve-'+hashlib.sha256(step_bytes).hexdigest()
+-        body=(f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="part.step"\r\nContent-Type: application/octet-stream\r\n\r\n'.encode()
+-              +step_bytes+f'\r\n--{boundary}--\r\n'.encode())
+-        return self.transport('POST','/v1/analyze',body,token=self.access_token(),
+-            content_type='multipart/form-data; boundary='+boundary,key=identifier(operation_key))
+-
+-    def design(self, design_id):
+-        return self.transport('GET','/v1/designs/'+identifier(design_id),token=self.access_token())
+-
+-    def create_dfm(self, design_id, parts, operation_key):
+-        if not isinstance(parts,list) or not 1<=len(parts)<=20:
+-            raise ValueError('Configure 1 to 20 analyzed parts.')
+-        for part in parts:
+-            if not isinstance(part,dict) or set(part)!={'part_id','material_id'}:
+-                raise ValueError('Initial DFM supports observed part_id and material_id only; no accepted risks or manufacturing operations.')
+-            identifier(part['part_id'])
+-            identifier(part['material_id'])
+-        return self.transport('POST','/v1/dfm',{'design_id':identifier(design_id),
+-            'configuration':{'parts':parts},'generate_production_files':False},token=self.access_token(),key=identifier(operation_key))
+-
+-    def dfm(self, dfm_id):
+-        return self.transport('GET','/v1/dfm/'+identifier(dfm_id),token=self.access_token())
+-
+-    def create_quote(self, items, operation_key):
+-        return self.transport('POST', '/v1/quotes', {'items': items},
+-                              token=self.access_token(), key=identifier(operation_key))
+-
+-    def quote(self, quote_id):
+-        return self.transport('GET', '/v1/quotes/'+identifier(quote_id), token=self.access_token())
+-
+-    def create_cart(self, items, operation_key):
+-        return self.transport('POST', '/v1/carts', {'items': items},
+-                              token=self.access_token(), key=identifier(operation_key))
+-
+-    def cart(self, cart_id):
+-        return self.transport('GET', '/v1/carts/'+identifier(cart_id), token=self.access_token())
+diff -ruN '--exclude=__pycache__' V:/DevCache/Temp/steve_src/addin/STEVE/steve/rmfg_checkout.py addin/STEVE/steve/rmfg_checkout.py
+--- V:/DevCache/Temp/steve_src/addin/STEVE/steve/rmfg_checkout.py	2026-10-08 19:03:42.019747500 +0900
++++ addin/STEVE/steve/rmfg_checkout.py	1970-01-01 09:00:00.000000000 +0900
+@@ -1,208 +0,0 @@
+-"""Durable quotes and multi-part hosted carts using saved, scoped RMFG jobs."""
+-from datetime import datetime, timezone
+-import hashlib
+-import json
+-from uuid import uuid4
+-from urllib.parse import urlsplit
+-
+-from .rmfg import RMFGError, browser_url, identifier
+-from .rmfg_jobs import fields
+-
+-
+-def material_configuration(config):
+-    """Compare effective supplier defaults without accepting extra operations."""
+-    if not isinstance(config, dict):
+-        raise RMFGError('RMFG returned invalid manufacturing settings.')
+-    if any(value for key, value in config.items() if key not in ('parts', 'defaults')):
+-        raise RMFGError('RMFG returned unrequested manufacturing settings. Review the configuration.')
+-    defaults = config.get('defaults') or {}
+-    if not isinstance(defaults, dict) or any(value for key, value in defaults.items() if key != 'material_id'):
+-        raise RMFGError('RMFG returned unrequested material defaults.')
+-    result = []
+-    for part in config.get('parts', []):
+-        if any(value for key, value in part.items() if key not in ('part_id', 'material_id')):
+-            raise RMFGError('RMFG returned unrequested part operations. Review the configuration.')
+-        result.append({'part_id': identifier(part.get('part_id')), 'material_id': identifier(part.get('material_id', defaults.get('material_id')))})
+-    return {'parts': sorted(result, key=lambda row: row['part_id'])}
+-
+-
+-def validate_quote(quote, items):
+-    actual = quote.get('items', [])
+-    if len(actual) != len(items):
+-        raise RMFGError('RMFG quote does not match the requested parts.')
+-    for row, expected in zip(actual, items):
+-        report = row.get('dfm', {})
+-        if (row.get('design_id') != expected['design_id'] or row.get('quantity') != expected['quantity']
+-                or report.get('design_id') != expected['design_id']
+-                or material_configuration(report.get('configuration')) != expected['configuration']):
+-            raise RMFGError('RMFG quote does not match the selected parts, quantities or materials.')
+-
+-
+-def expired(quote):
+-    expiry = quote.get('expires_at')
+-    if quote.get('status') == 'expired':
+-        return True
+-    if not expiry:
+-        return False
+-    try:
+-        value = datetime.fromisoformat(expiry.replace('Z', '+00:00'))
+-        return value.tzinfo is None or value <= datetime.now(timezone.utc)
+-    except (ValueError, TypeError, AttributeError):
+-        raise RMFGError('RMFG returned an invalid quote expiry.') from None
+-
+-
+-def ready(quote):
+-    return (quote.get('status') == 'ready' and not expired(quote) and not quote.get('requirements')
+-            and all(row.get('status') == 'ready' and not row.get('requirements')
+-                    and row.get('dfm', {}).get('status') == 'ready'
+-                    and not row.get('dfm', {}).get('requirements') for row in quote.get('items', [])))
+-
+-
+-class RMFGCheckout:
+-    def __init__(self, jobs, client):
+-        self.jobs, self.client = jobs, client
+-
+-    def prepare(self, entries):
+-        items, references = [], []
+-        for entry in sorted(entries, key=lambda row: row['job_id']):
+-            job = self.jobs.read(entry['job_id'])
+-            if not job.get('designId') or not job.get('configuration'):
+-                raise RMFGError('Check each saved part with its intended material before requesting a quote.')
+-            items.append({'design_id': job['designId'], 'quantity': entry['quantity'],
+-                          'configuration': material_configuration({'parts': json.loads(job['configuration'])})})
+-            references.append({'job_id': job['id'], 'binding': job['binding']})
+-        if len({item['design_id'] for item in items}) != len(items):
+-            raise RMFGError('Include each design once; use quantity for repeated parts.')
+-        connection = self.jobs.auth.connection_id()
+-        fingerprint = json.dumps([connection, references, items], sort_keys=True, separators=(',', ':'))
+-        checkout_id = 'checkout_' + hashlib.sha256(fingerprint.encode()).hexdigest()[:32]
+-        with self.jobs.guard.locked():
+-            if (self.jobs.folder / (checkout_id+'.json')).exists():
+-                return self.read(checkout_id)
+-            record = {'id': checkout_id, 'kind': 'checkout', 'connection': connection,
+-                      'items': items, 'references': references, 'quoteKey': uuid4().hex}
+-            self.jobs._write(record)
+-            return record
+-
+-    def read(self, checkout_id):
+-        record = self.jobs.read(checkout_id)
+-        if record.get('kind') != 'checkout':
+-            raise RMFGError('Use the checkoutId returned by rmfg_checkout.')
+-        return record
+-
+-    def quote(self, checkout_id):
+-        with self.jobs.guard.locked():
+-            record = self.read(checkout_id)
+-            quote = self.client.quote(record['quoteId']) if record.get('quoteId') else None
+-            if quote is not None and quote.get('id') != record['quoteId']:
+-                raise RMFGError('RMFG returned a different quote.')
+-            if quote is not None and expired(quote) and not record.get('cartId'):
+-                record.pop('quoteId')
+-                record['quoteKey'] = uuid4().hex
+-                self.jobs._write(record)
+-                quote = None
+-            if quote is None:
+-                quote = self.client.create_quote(record['items'], record['quoteKey'])
+-                record['quoteId'] = identifier(quote.get('id'))
+-                self.jobs._write(record)
+-            return self.summary(record, quote)
+-
+-    def status(self, checkout_id, offset=0):
+-        with self.jobs.guard.locked():
+-            record = self.read(checkout_id)
+-            if not record.get('quoteId'):
+-                return {'ok': True, 'checkoutId': checkout_id, 'status': 'unconfirmed',
+-                        'recovery': 'Retry quote with this checkout_id to reuse the saved request.'}
+-            quote = self.client.quote(record['quoteId'])
+-            if quote.get('id') != record['quoteId']:
+-                raise RMFGError('RMFG returned a different quote.')
+-            result = self.summary(record, quote, offset)
+-            if record.get('cartId'):
+-                cart = self._cart(record)
+-                result.update(cartStatus=cart['status'], checkoutAvailable=cart['status'] == 'open',
+-                              cartQuoteStatus=cart.get('quote', {}).get('status'))
+-            elif record.get('cartKey'):
+-                result['recovery'] = 'Checkout outcome is uncertain. Retry create with this checkout_id; the exact cart request and key are saved.'
+-            return result
+-
+-    def create(self, checkout_id):
+-        with self.jobs.guard.locked():
+-            record = self.read(checkout_id)
+-            if record.get('cartId'):
+-                cart = self._cart(record)
+-            else:
+-                if not record.get('quoteId'):
+-                    raise RMFGError('Request a quote before creating checkout.')
+-                if not record.get('cartKey'):
+-                    quote = self.client.quote(record['quoteId'])
+-                    if quote.get('id') != record['quoteId']:
+-                        raise RMFGError('RMFG returned a different quote.')
+-                    validate_quote(quote, record['items'])
+-                    if not ready(quote):
+-                        return self.summary(record, quote)
+-                # An uncertain create retries its original request, even if its
+-                # source quote expired after the supplier accepted the cart.
+-                record['cartKey'] = record.get('cartKey') or uuid4().hex
+-                self.jobs._write(record)
+-                cart = self.client.create_cart(record['items'], record['cartKey'])
+-                record['cartId'] = identifier(cart.get('id'))
+-                self.jobs._write(record)
+-                self._validate_cart(record, cart)
+-            return {'ok': True, 'checkoutId': checkout_id, 'cartStatus': cart['status'],
+-                    'checkoutAvailable': cart['status'] == 'open',
+-                    'cartQuoteStatus': cart.get('quote', {}).get('status'),
+-                    'note': 'The RMFG checkout button lets the customer review delivery, final pricing and pay. No payment was submitted.'}
+-
+-    def _validate_cart(self, record, cart):
+-        if cart.get('id') != record['cartId'] or cart.get('status') not in ('open', 'checked_out', 'expired'):
+-            raise RMFGError('RMFG returned an unexpected cart.')
+-        items = cart.get('items', [])
+-        if len(items) != len(record['items']):
+-            raise RMFGError('RMFG checkout contains different parts.')
+-        for row, expected in zip(items, record['items']):
+-            if (row.get('design_id') != expected['design_id'] or row.get('quantity') != expected['quantity']
+-                    or material_configuration(row.get('configuration')) != expected['configuration']):
+-                raise RMFGError('RMFG checkout contains different quantities or manufacturing settings.')
+-
+-    def _cart(self, record):
+-        cart = self.client.cart(record['cartId'])
+-        self._validate_cart(record, cart)
+-        return cart
+-
+-    def open_url(self, checkout_id):
+-        with self.jobs.guard.locked():
+-            record = self.read(checkout_id)
+-            if not record.get('cartId'):
+-                raise RMFGError('Ask STEVE to create checkout for the quoted parts first.')
+-            cart = self._cart(record)
+-            if cart['status'] != 'open':
+-                raise RMFGError('This checkout is already paid or expired. Ask STEVE to check its status.')
+-            url = browser_url(cart.get('cart_url'))
+-            if urlsplit(url).hostname not in ('rmfg.com', 'www.rmfg.com'):
+-                raise RMFGError('RMFG returned an invalid checkout website.')
+-            return url
+-
+-    @staticmethod
+-    def summary(record, quote, offset=0):
+-        # Persist only IDs and request payloads. Private checkout links never enter tools or logs.
+-        if quote.get('status') == 'ready':
+-            validate_quote(quote, record['items'])
+-        findings = []
+-        def collect(rows):
+-            for row in rows:
+-                if row.get('customer_visible', True):
+-                    findings.append(fields(row, 'code message severity part_id field'))
+-        collect(quote.get('requirements', []))
+-        for item in quote.get('items', []):
+-            collect(item.get('requirements', []))
+-            dfm = item.get('dfm', {})
+-            collect(dfm.get('requirements', []))
+-            collect(dfm.get('assembly_issues', []))
+-            for part in dfm.get('parts', []):
+-                collect(part.get('issues', []))
+-        return {'ok': True, 'checkoutId': record['id'], 'status': 'expired' if expired(quote) else quote.get('status'),
+-                **fields(quote, 'currency amount_subtotal_cents amount_shipping_cents amount_tax_cents expires_at'),
+-                'canCheckout': ready(quote), 'findings': findings[offset:offset+20],
+-                'nextOffset': offset+20 if len(findings)>offset+20 else None,
+-                'items': [{'jobId': ref['job_id'], 'quantity': item['quantity']} for ref, item in zip(record['references'], record['items'])],
+-                'note': 'Prices are in USD cents. Shipping, tax and final pricing are reviewed on RMFG checkout.'}
+diff -ruN '--exclude=__pycache__' V:/DevCache/Temp/steve_src/addin/STEVE/steve/rmfg_connection.py addin/STEVE/steve/rmfg_connection.py
+--- V:/DevCache/Temp/steve_src/addin/STEVE/steve/rmfg_connection.py	2026-10-08 19:03:42.019747500 +0900
++++ addin/STEVE/steve/rmfg_connection.py	1970-01-01 09:00:00.000000000 +0900
+@@ -1,80 +0,0 @@
+-"""Optional supplier connection. Network and credential access stay off the UI thread."""
+-import threading
+-import time
+-
+-from .rmfg import RMFGAuth, RMFGError
+-from .secure_store import SecureStore
+-
+-
+-class RMFGConnection:
+-    def __init__(self, home, publish, open_browser, auth=None):
+-        self.auth = auth or RMFGAuth(SecureStore(home, 'rmfg'))
+-        self.publish, self.open_browser = publish, open_browser
+-        self._lock = threading.Lock()
+-        self._closed = threading.Event()
+-        self._cancel = threading.Event()
+-        self._running = False
+-        self._attempt = None
+-
+-    def action(self, action):
+-        if action == 'rmfgCancel':
+-            self._cancel.set()
+-            return
+-        if action not in ('rmfgConnect', 'rmfgEnableCheckout', 'rmfgRefresh', 'rmfgDisconnect'):
+-            raise ValueError('Unknown RMFG connection action.')
+-        with self._lock:
+-            if self._closed.is_set() or self._running:
+-                return
+-            self._running = True
+-            self._cancel.clear()
+-        self.publish({'rmfgBusy': True, 'rmfgError': ''})
+-        threading.Thread(target=self._work, args=(action,), name='STEVE-RMFG-connection', daemon=True).start()
+-
+-    def _state(self, **changes):
+-        if not self._closed.is_set():
+-            self.publish(changes)
+-
+-    def _work(self, action):
+-        try:
+-            if action == 'rmfgDisconnect':
+-                self.auth.disconnect()
+-            elif action in ('rmfgConnect', 'rmfgEnableCheckout') and not self._restore(action):
+-                attempt = self.auth.begin()
+-                self._attempt = attempt
+-                self._state(rmfgState='authorizing', rmfgCode=attempt.user_code)
+-                # Only the validated provider URL is opened. It never enters logs/model context.
+-                if not self.open_browser(attempt.url):
+-                    self._state(rmfgError='The browser did not open. Cancel and connect again after checking your default browser.')
+-                while not self._closed.is_set() and not self._cancel.is_set():
+-                    if self._closed.wait(min(1, max(0.05, attempt.next_poll-time.time()))):
+-                        break
+-                    if self.auth.poll(attempt) == 'connected':
+-                        break
+-                if self._closed.is_set() or self._cancel.is_set():
+-                    self.auth.cancel(attempt)
+-                self._attempt = None
+-            elif action == 'rmfgRefresh':
+-                if self.auth.status()['state'] == 'connected':
+-                    self.auth.access_token()
+-            state = self.auth.status()['state']
+-            self._state(rmfgState='reconnect' if state == 'authorizing' else state,
+-                        rmfgCheckoutEnabled=self.auth.checkout_available())
+-        except Exception as error:
+-            # Only our bounded errors can be displayed; OS/network exceptions can include secrets.
+-            message = str(error) if isinstance(error, RMFGError) else 'RMFG connection unavailable. Unlock the system credential store or reconnect.'
+-            self._state(rmfgError=message, rmfgState='reconnect')
+-        finally:
+-            with self._lock:
+-                self._running = False
+-            self._state(rmfgBusy=False, rmfgCode='')
+-
+-    def close(self):
+-        self._closed.set()
+-        self._cancel.set()
+-
+-    def _restore(self, action):
+-        """Reuse saved credentials; only missing checkout permissions need new consent."""
+-        if self.auth.status()['state'] != 'connected':
+-            return False
+-        self.auth.access_token()
+-        return action == 'rmfgConnect' or self.auth.checkout_available()
+diff -ruN '--exclude=__pycache__' V:/DevCache/Temp/steve_src/addin/STEVE/steve/rmfg_jobs.py addin/STEVE/steve/rmfg_jobs.py
+--- V:/DevCache/Temp/steve_src/addin/STEVE/steve/rmfg_jobs.py	2026-10-08 19:03:42.019747500 +0900
++++ addin/STEVE/steve/rmfg_jobs.py	1970-01-01 09:00:00.000000000 +0900
+@@ -1,152 +0,0 @@
+-"""Durable, revision-bound supplier jobs; no Autodesk access or arbitrary file uploads."""
+-import hashlib
+-import json
+-import os
+-from pathlib import Path
+-import tempfile
+-from uuid import uuid4
+-
+-from .rmfg import RMFGClient, RMFGError, identifier
+-from .secure_store import SecureStore
+-
+-
+-def fields(value, names):
+-    return {key: value[key] for key in names.split() if key in value}
+-
+-
+-class RMFGJobs:
+-    def __init__(self, home, auth, client=None):
+-        self.folder = Path(home) / 'rmfg-jobs'
+-        self.auth = auth
+-        self.client = client or RMFGClient(auth.access_token)
+-        self.guard = SecureStore(home, 'rmfg-job-write')
+-
+-    def _write(self, job):
+-        self.folder.mkdir(parents=True, exist_ok=True)
+-        path = self.folder / (identifier(job['id']) + '.json')
+-        data = json.dumps(job, allow_nan=False).encode('utf-8')
+-        if len(data) > 2*1024*1024:
+-            raise RMFGError('RMFG job metadata is too large. Inspect this report on RMFG.')
+-        temporary = None
+-        try:
+-            with tempfile.NamedTemporaryFile(dir=self.folder, suffix='.tmp', delete=False) as stream:
+-                temporary = Path(stream.name)
+-                stream.write(data)
+-                stream.flush()
+-                os.fsync(stream.fileno())
+-            temporary.replace(path)
+-        finally:
+-            if temporary is not None:
+-                temporary.unlink(missing_ok=True)
+-
+-    def read(self, job_id):
+-        path = self.folder / (identifier(job_id)+'.json')
+-        if not path.exists() or path.stat().st_size > 2*1024*1024:
+-            raise RMFGError('RMFG job is unavailable. Use a job ID previously returned by STEVE on this computer.')
+-        job = json.loads(path.read_text(encoding='utf-8'))
+-        if job.get('connection') != self.auth.connection_id():
+-            raise RMFGError('This job belongs to an earlier RMFG connection. Request a new check under the current connection.')
+-        return job
+-
+-    def prepare(self, snapshot):
+-        """Store exact exported bytes for upload; never accepts an input path."""
+-        with self.guard.locked():
+-            self.folder.mkdir(parents=True, exist_ok=True)
+-            files = list(self.folder.glob('*.step'))
+-            if len(files) >= 100 or sum(p.stat().st_size for p in files)+len(snapshot['step']) > 200*1024*1024:
+-                raise RMFGError('Local RMFG snapshots reached the storage limit. Remove old rmfg-jobs files when STEVE is stopped.')
+-            job = {'id': uuid4().hex, 'connection': self.auth.connection_id(),
+-                   'binding': fields(snapshot, 'documentKey partToken revision'),
+-                   'body': snapshot['body'], 'sha256': hashlib.sha256(snapshot['step']).hexdigest(),
+-                   'bytes': len(snapshot['step']), 'state': 'prepared', 'uploadKey': uuid4().hex}
+-            (self.folder / (job['id']+'.step')).write_bytes(snapshot['step'])
+-            self._write(job)
+-            return job
+-
+-    def upload(self, job_id):
+-        with self.guard.locked():
+-            job = self.read(job_id)
+-            if job.get('designId'):
+-                raise RMFGError('This snapshot was already uploaded. Use status for this same job; do not submit another upload.')
+-            if job['state'] not in ('prepared', 'uploading'):
+-                raise RMFGError('This snapshot is not ready for upload. Prepare a new snapshot.')
+-            data = (self.folder / (job['id']+'.step')).read_bytes()
+-            if hashlib.sha256(data).hexdigest() != job['sha256']:
+-                raise RMFGError('The stored snapshot changed. Prepare a new snapshot; do not reuse this job.')
+-            job['state'] = 'uploading'
+-            self._write(job)  # Persist the write key before a possibly ambiguous network result.
+-            result = self.client.analyze(data, job['uploadKey'])
+-            job['designId'] = identifier(result['id'])
+-            job['state'] = 'analyzing'
+-            self._write(job)
+-            return self.status(job['id'])
+-
+-    def materials(self, cursor=None):
+-        result = self.client.materials(cursor)
+-        rows = result.get('data', [])
+-        if not isinstance(rows, list) or len(rows)>20:
+-            raise RMFGError('RMFG returned an unexpected catalog page.')
+-        return {'ok': True, 'materials': [fields(row, 'id material type thickness_mm display_thickness description bendable') for row in rows],
+-                **fields(result, 'has_more next_cursor')}
+-
+-    def status(self, job_id, offset=0):
+-        with self.guard.locked():
+-            job = self.read(job_id)
+-            if job.get('reportId'):
+-                report = self.client.dfm(job['reportId'])
+-                return self.report(job, report, offset)
+-            result = {'ok': True, 'jobId': job['id'], 'snapshot': fields(job, 'body sha256 bytes binding'), 'state': job['state']}
+-            if job.get('designId'):
+-                design = self.client.design(job['designId'])
+-                parts = design.get('parts', [])
+-                job['parts'] = [fields(part, 'id name suggested_process analysis_status detected_thickness_mm bend_count') for part in parts]
+-                job['designState'] = design.get('status')
+-                self._write(job)
+-                result.update(designState=job['designState'], parts=job['parts'][offset:offset+20],
+-                              nextOffset=offset+20 if offset+20<len(parts) else None)
+-            if job['state'] == 'uploading':
+-                result['recovery'] = 'The upload outcome is uncertain. Retry this same job ID to reuse the exact bytes and write key; do not upload a new snapshot.'
+-            return result
+-
+-    def check(self, job_id, parts):
+-        with self.guard.locked():
+-            job = self.read(job_id)
+-            if job.get('designState') != 'ready':
+-                raise RMFGError('Read this job status until analysis is ready, then configure its returned parts.')
+-            observed = {part['id']: part for part in job.get('parts', [])}
+-            requested = {p.get('part_id') for p in parts}
+-            if (not observed or requested != set(observed) or len(requested)!=len(parts)
+-                    or any(part.get('suggested_process')!='sheet_metal' or part.get('analysis_status')=='failed' for part in observed.values())):
+-                raise RMFGError('Configure every analyzed sheet-metal part exactly once. Unsupported or failed parts need review in RMFG.')
+-            canonical = json.dumps(parts, sort_keys=True, separators=(',', ':'))
+-            # An ambiguous request can only be retried identically. Start a new snapshot
+-            # after a deliberate material/configuration change, preserving old evidence.
+-            if job.get('configuration') not in (None, canonical):
+-                raise RMFGError('This job already has a different material configuration. Use a new job for the changed configuration.')
+-            job.update(configuration=canonical, dfmKey=job.get('dfmKey') or uuid4().hex, state='checking')
+-            self._write(job)
+-            report = self.client.create_dfm(job['designId'], parts, job['dfmKey'])
+-            if report.get('design_id') != job['designId']:
+-                raise RMFGError('RMFG returned a report for an unexpected design. Keep this job for investigation; do not apply the report.')
+-            job.update(reportId=identifier(report['id']), state='reported')
+-            self._write(job)
+-            return self.report(job, report, 0)
+-
+-    @staticmethod
+-    def report(job, report, offset):
+-        if report.get('design_id') != job['designId']:
+-            raise RMFGError('The RMFG report no longer matches this snapshot. Do not apply its findings.')
+-        # Never expose signed model links, credentials, files or supplier-internal issues.
+-        issues = []
+-        for part in report.get('parts', []):
+-            for issue in part.get('issues', []):
+-                if issue.get('customer_visible', True):
+-                    issues.append({'part_id': part.get('part_id'), **fields(issue, 'code message severity accepted source hole_id bend_id')})
+-        for issue in report.get('assembly_issues', []):
+-            if issue.get('customer_visible', True):
+-                issues.append(fields(issue, 'code message severity accepted source part_id'))
+-        return {'ok': True, 'jobId': job['id'], 'snapshot': fields(job, 'body sha256 bytes binding'),
+-                'state': 'reported', **fields(report, 'id status configuration_hash dfm_ruleset_version'),
+-                'issues': issues[offset:offset+20], 'nextOffset': offset+20 if offset+20<len(issues) else None,
+-                'coverage': 'RMFG supplier report for the exported snapshot and chosen materials; not universal manufacturing approval. Read all issue pages and review unresolved requirements in RMFG.',
+-                'requirementsPresent': bool(report.get('requirements')), 'productionFilesRequested': False}
+diff -ruN '--exclude=__pycache__' V:/DevCache/Temp/steve_src/addin/STEVE/steve/rmfg_service.py addin/STEVE/steve/rmfg_service.py
+--- V:/DevCache/Temp/steve_src/addin/STEVE/steve/rmfg_service.py	2026-10-08 19:03:42.019747500 +0900
++++ addin/STEVE/steve/rmfg_service.py	1970-01-01 09:00:00.000000000 +0900
+@@ -1,125 +0,0 @@
+-"""Coordinate main-thread export and automatic, detached supplier requests."""
+-import threading
+-import json
+-
+-from .rmfg import RMFGClient, RMFGError
+-from .rmfg_jobs import RMFGJobs
+-from .rmfg_checkout import RMFGCheckout
+-from .tool_protocol import ToolError, tool_failure
+-
+-
+-class RMFGService:
+-    def __init__(self, home, auth, publish, bridge):
+-        self.jobs = RMFGJobs(home, auth)
+-        self.checkout = RMFGCheckout(self.jobs, RMFGClient(lambda: auth.access_token({'designs', 'dfm', 'quotes', 'carts'})))
+-        self.publish, self.bridge = publish, bridge
+-        self.closed = threading.Event()
+-        self.slot = threading.Lock()
+-
+-    def submit(self, tool, arguments, complete, cancelled):
+-        if not self.slot.acquire(blocking=False):
+-            complete(tool_failure(ToolError('rmfg_unavailable', 'Another RMFG request is running. Finish it before starting another.')))
+-            return
+-        threading.Thread(target=self._run, args=(tool, dict(arguments), complete, cancelled),
+-                         name='STEVE-RMFG-job', daemon=True).start()
+-
+-    def _run(self, tool, arguments, complete, caller_cancelled):
+-        job_id = arguments.get('job_id')
+-        checkout_id = arguments.get('checkout_id')
+-        def cancelled():
+-            return self.closed.is_set() or caller_cancelled()
+-        def check_cancelled():
+-            if cancelled():
+-                raise ToolError('cancelled', 'RMFG request cancelled. Any already submitted supplier work may continue on RMFG.')
+-        try:
+-            check_cancelled()
+-            self.jobs.auth.access_token()
+-            if tool == 'rmfg_materials':
+-                result = self.jobs.materials(arguments.get('cursor'))
+-            elif tool == 'rmfg_checkout':
+-                if not self.bridge:
+-                    raise ToolError('bridge_unavailable', 'Open this task inside Fusion.')
+-                action = arguments['action']
+-                if 'items' in arguments:
+-                    checkout_id = self.checkout.prepare(arguments['items'])['id']
+-                record = self.checkout.read(checkout_id)
+-                matches = True
+-                for reference in record['references']:
+-                    check_cancelled()
+-                    binding = reference['binding']
+-                    received, values = threading.Event(), []
+-                    self.bridge.submit('fusion_rmfg', {'action': 'status', 'document_id': arguments['document_id'],
+-                        'part_token': binding['partToken'], '_binding': binding},
+-                        lambda value: (values.append(value), received.set()), cancelled)
+-                    while not received.wait(0.2):
+-                        check_cancelled()
+-                    check_cancelled()
+-                    if not values[0].get('ok'):
+-                        raise ToolError('rmfg_unavailable', 'A checkout part is unavailable in the pinned document. Resolve the original parts before continuing.')
+-                    matches = matches and values[0]['snapshotMatches']
+-                if not matches and action != 'status':
+-                    raise ToolError('rmfg_unavailable', 'A checkout part changed. Prepare and check its current snapshot, then request a new quote with the current jobs.')
+-                check_cancelled()
+-                result = (self.checkout.quote(checkout_id) if action == 'quote' else
+-                          self.checkout.create(checkout_id) if action == 'create' else
+-                          self.checkout.status(checkout_id, arguments.get('offset', 0)))
+-                result['snapshotMatchesAtStart'] = matches
+-                if not matches:
+-                    result['checkoutAvailable'] = False
+-                    result['canCheckout'] = False
+-                result['snapshotScope'] = 'Quoted snapshots only. Changed parts need new snapshots and a new quote.'
+-            else:
+-                if not self.bridge:
+-                    raise ToolError('bridge_unavailable', 'Open this task inside Fusion.')
+-                action = arguments['action']
+-                if action != 'prepare':
+-                    arguments['_binding'] = self.jobs.read(job_id)['binding']
+-                received, values = threading.Event(), []
+-                def capture(value):
+-                    values.append(value)
+-                    received.set()
+-                self.bridge.submit('fusion_rmfg', arguments, capture, cancelled)
+-                while not received.wait(0.2):
+-                    check_cancelled()
+-                check_cancelled()
+-                snapshot = values[0]
+-                if not snapshot.get('ok'):
+-                    complete(snapshot)
+-                    return
+-                if action == 'prepare':
+-                    job = self.jobs.prepare(snapshot)
+-                    job_id = job['id']
+-                    check_cancelled()
+-                    self.publish({'status': 'Uploading part to RMFG'})
+-                    check_cancelled()
+-                    result = self.jobs.upload(job_id)
+-                elif action == 'status':
+-                    result = self.jobs.status(job_id, arguments.get('offset',0))
+-                else:
+-                    if not snapshot['snapshotMatches']:
+-                        raise ToolError('rmfg_unavailable', 'The body changed since this snapshot. Read the old report as historical evidence, or prepare a new snapshot for upload.')
+-                    check_cancelled()
+-                    result = (self.jobs.upload(job_id) if action == 'retry_upload'
+-                              else self.jobs.check(job_id, arguments['parts']))
+-                result['snapshotMatchesAtStart'] = snapshot.get('snapshotMatches', True)
+-                result['currency'] = 'Exported snapshot only. Geometry may have changed while RMFG processed it; recheck its revision before applying findings.'
+-            check_cancelled()
+-            if len(json.dumps(result, ensure_ascii=False, allow_nan=False)) > 24000:
+-                raise RMFGError('The supplier response exceeded the 24,000 character limit. Review this job in RMFG; do not repeat the upload.')
+-            complete(result)
+-        except Exception as error:
+-            if not isinstance(error, (ToolError, RMFGError)):
+-                error = RMFGError('RMFG could not complete this request. Check connection and job status before retrying.')
+-            if not isinstance(error, ToolError):
+-                error = ToolError('rmfg_unavailable', str(error))
+-            result = tool_failure(error)
+-            if job_id:
+-                result['jobId'] = job_id
+-            if checkout_id:
+-                result['checkoutId'] = checkout_id
+-            complete(result)
+-        finally:
+-            self.slot.release()
+-
+-    def close(self):
+-        self.closed.set()
+diff -ruN '--exclude=__pycache__' V:/DevCache/Temp/steve_src/addin/STEVE/steve/rmfg_snapshot.py addin/STEVE/steve/rmfg_snapshot.py
+--- V:/DevCache/Temp/steve_src/addin/STEVE/steve/rmfg_snapshot.py	2026-10-08 19:03:42.019747500 +0900
++++ addin/STEVE/steve/rmfg_snapshot.py	1970-01-01 09:00:00.000000000 +0900
+@@ -1,29 +0,0 @@
+-"""Main-thread STEP snapshots. Refuse exports that include unintended geometry."""
+-from pathlib import Path
+-import tempfile
+-
+-from .rmfg import MAX_STEP_BYTES
+-from .tool_protocol import ToolError
+-
+-
+-def export_snapshot(body, design, document_key):
+-    component = body.parentComponent
+-    if (not body.isSolid or component.bRepBodies.count != 1
+-            or component.bRepBodies.item(0) != body or component.occurrences.count
+-            or component.meshBodies.count):
+-        raise ToolError('rmfg_export_scope', 'This STEP exporter needs a component containing exactly the chosen solid body, no meshes and no child occurrences.')
+-    revision = body.revisionId
+-    if not revision:
+-        raise ToolError('rmfg_export_scope', 'Fusion did not provide a geometry revision for this part.')
+-    with tempfile.TemporaryDirectory(prefix='steve-rmfg-') as folder:
+-        path = Path(folder) / 'part.step'
+-        options = design.exportManager.createSTEPExportOptions(str(path), component)
+-        if options is None or not design.exportManager.execute(options) or not path.is_file():
+-            raise ToolError('rmfg_export_scope', 'Fusion could not export this component as STEP.')
+-        if not 0 < path.stat().st_size <= MAX_STEP_BYTES:
+-            raise ToolError('rmfg_export_scope', 'The exported STEP snapshot must be between 1 byte and 50 MiB.')
+-        data = path.read_bytes()
+-    if body.revisionId != revision:
+-        raise ToolError('rmfg_export_scope', 'Geometry changed during export. Inspect before preparing another snapshot.')
+-    return {'ok': True, 'step': data, 'body': body.name, 'documentKey': document_key,
+-            'partToken': body.entityToken, 'revision': revision}
+diff -ruN '--exclude=__pycache__' V:/DevCache/Temp/steve_src/addin/STEVE/steve/stella_seam.py addin/STEVE/steve/stella_seam.py
+--- V:/DevCache/Temp/steve_src/addin/STEVE/steve/stella_seam.py	1970-01-01 09:00:00.000000000 +0900
++++ addin/STEVE/steve/stella_seam.py	2026-10-08 19:35:06.260479900 +0900
+@@ -0,0 +1,341 @@
++"""STELLA ADDITION (not part of upstream STEVE; see integration/steve-bridge/NOTICE.md).
++
++Minimal loopback control seam. A 127.0.0.1 HTTP server with a bearer token that
++validates a call with STEVE's own validate_call and hands it to the existing
++FusionTools.submit() path (custom-event marshalling, command-based Undo grouping,
++document/command gating). It adds no model, network or UI behaviour.
++
++Opt-in: it starts only when <STEVE data home>/stella-seam/config.json contains
++{"enabled": true}. The token is generated on first start and stored next to it;
++it is never logged. This is NOT a sandbox and does not apply the Stella MCP
++guards (allow-list, code policy); those live in the Stella-side server.
++"""
++import base64
++import hmac
++import json
++import os
++import secrets
++import socket
++import sys
++import threading
++import traceback
++from http.server import BaseHTTPRequestHandler
++from pathlib import Path
++from uuid import uuid4
++
++from .loopback_http import ThreadingLoopbackHTTPServer
++from .tool_protocol import ToolError, tool_failure, validate_call
++from .transport import data_home
++from .version import VERSION
++
++SEAM_VERSION = "1"
++MAX_BODY = 256 * 1024
++MAX_RESPONSE = 256 * 1024
++DEFAULT_TIMEOUT = 60.0
++MAX_TIMEOUT = 120.0
++ROUTES = {
++    "inspect": "fusion_inspect_document",
++    "query": "fusion_query_python",
++    "execute": "fusion_execute_python",
++    "viewport": "fusion_capture_viewport",
++    "api_help": "fusion_api_help",
++}
++_state = {"server": None, "thread": None, "home": None}
++
++
++class ExclusiveLoopbackServer(ThreadingLoopbackHTTPServer):
++    """No address sharing: on Windows SO_REUSEADDR would let another process bind the same port."""
++    allow_reuse_address = False
++
++    def server_bind(self):
++        if sys.platform == "win32":
++            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
++        super().server_bind()
++
++
++def log_error(home, message):
++    """Seam failures never abort STEVE; they go to stderr and a local file only."""
++    print("[stella-seam] " + message, file=sys.stderr)
++    try:
++        Path(home).mkdir(parents=True, exist_ok=True)
++        with open(Path(home) / "seam-error.log", "a", encoding="utf-8") as handle:
++            handle.write(message + "\n")
++    except OSError:
++        pass
++
++
++def restrict_to_owner(path):
++    """Owner-only access. POSIX: chmod 600. Windows: protected DACL with one ACE for the current user
++    (SetNamedSecurityInfoW). Returns True on success; False means the default profile ACL still applies."""
++    if sys.platform != "win32":
++        os.chmod(path, 0o600)
++        return True
++    import ctypes
++    from ctypes import wintypes
++    adv = ctypes.WinDLL("advapi32", use_last_error=True)
++    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
++    k32.GetCurrentProcess.restype = wintypes.HANDLE
++    k32.LocalFree.argtypes = [ctypes.c_void_p]
++    k32.LocalFree.restype = ctypes.c_void_p
++    k32.CloseHandle.argtypes = [wintypes.HANDLE]
++    adv.OpenProcessToken.argtypes = [wintypes.HANDLE, wintypes.DWORD, ctypes.POINTER(wintypes.HANDLE)]
++    adv.GetTokenInformation.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD,
++                                        ctypes.POINTER(wintypes.DWORD)]
++    adv.ConvertSidToStringSidW.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_void_p)]
++    adv.ConvertStringSecurityDescriptorToSecurityDescriptorW.argtypes = [
++        wintypes.LPCWSTR, wintypes.DWORD, ctypes.POINTER(ctypes.c_void_p), ctypes.c_void_p]
++    adv.GetSecurityDescriptorDacl.argtypes = [ctypes.c_void_p, ctypes.POINTER(wintypes.BOOL),
++                                              ctypes.POINTER(ctypes.c_void_p), ctypes.POINTER(wintypes.BOOL)]
++    adv.SetNamedSecurityInfoW.argtypes = [wintypes.LPWSTR, ctypes.c_int, wintypes.DWORD, ctypes.c_void_p,
++                                          ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
++    adv.SetNamedSecurityInfoW.restype = wintypes.DWORD
++    token, sid_text, descriptor = wintypes.HANDLE(), ctypes.c_void_p(), ctypes.c_void_p()
++    if not adv.OpenProcessToken(k32.GetCurrentProcess(), 0x0008, ctypes.byref(token)):  # TOKEN_QUERY
++        return False
++    try:
++        size = wintypes.DWORD()
++        adv.GetTokenInformation(token, 1, None, 0, ctypes.byref(size))  # TokenUser, size probe
++        if size.value == 0:
++            return False
++        buffer = ctypes.create_string_buffer(size.value)
++        if not adv.GetTokenInformation(token, 1, buffer, size, ctypes.byref(size)):
++            return False
++        user_sid = ctypes.c_void_p.from_buffer(buffer).value  # TOKEN_USER.User.Sid
++        if not adv.ConvertSidToStringSidW(user_sid, ctypes.byref(sid_text)):
++            return False
++        sid = ctypes.wstring_at(sid_text.value)
++        k32.LocalFree(sid_text)
++        sddl = "D:PAI(A;;FA;;;%s)" % sid  # protected, no inheritance, full access for this user only
++        if not adv.ConvertStringSecurityDescriptorToSecurityDescriptorW(sddl, 1, ctypes.byref(descriptor), None):
++            return False
++        present, defaulted, dacl = wintypes.BOOL(), wintypes.BOOL(), ctypes.c_void_p()
++        if not adv.GetSecurityDescriptorDacl(descriptor, ctypes.byref(present), ctypes.byref(dacl), ctypes.byref(defaulted)):
++            return False
++        # SE_FILE_OBJECT=1; DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION
++        return adv.SetNamedSecurityInfoW(str(path), 1, 0x00000004 | 0x80000000, None, None, dacl, None) == 0
++    finally:
++        if descriptor.value:
++            k32.LocalFree(descriptor)
++        k32.CloseHandle(token)
++
++
++def seam_home(home=None):
++    return Path(home) if home else data_home() / "stella-seam"
++
++
++def load_config(home):
++    try:
++        return json.loads((home / "config.json").read_text(encoding="utf-8"))
++    except (OSError, ValueError):
++        return {}
++
++
++def ensure_token(home):
++    path = home / "token"
++    if path.is_file():
++        token = path.read_text(encoding="utf-8").strip()
++        if len(token) >= 32:
++            return token
++    token = secrets.token_urlsafe(32)
++    home.mkdir(parents=True, exist_ok=True)
++    fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
++    os.close(fd)  # empty file first: restrict the ACL before the secret is written
++    try:
++        restricted = restrict_to_owner(path)
++    except Exception:
++        restricted = False
++    if not restricted:
++        log_error(home, "token file ACL could not be restricted; relying on the user-profile default ACL")
++    path.write_text(token, encoding="utf-8")
++    return token
++
++
++def _save_png(result, folder):
++    """Replace the base64 imageUrl by a local file path (path + size only)."""
++    url = result.pop("imageUrl", None)
++    if not isinstance(url, str) or not url.startswith("data:image/png;base64,"):
++        return result
++    data = base64.b64decode(url.split(",", 1)[1], validate=True)
++    if not data.startswith(b"\x89PNG\r\n\x1a\n") or len(data) > 8 * 1024 * 1024:
++        return tool_failure(ToolError("viewport_capture_failed", "Invalid or oversized PNG."))
++    folder.mkdir(parents=True, exist_ok=True)
++    path = folder / (uuid4().hex + ".png")
++    path.write_bytes(data)
++    result["path"] = str(path)
++    result["bytes"] = len(data)
++    return result
++
++
++def make_handler(fusion_tools, token, port_getter, captures):
++    class Handler(BaseHTTPRequestHandler):
++        protocol_version = "HTTP/1.0"
++
++        def log_message(self, *args):  # never log request lines
++            pass
++
++        def _send(self, status, payload):
++            body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
++            if len(body) > MAX_RESPONSE:
++                body = json.dumps({"ok": False, "errorCode": "response_too_large",
++                                   "error": "Result exceeded the bridge response cap.",
++                                   "executionStarted": True}).encode("utf-8")
++            self.send_response(status)
++            self.send_header("Content-Type", "application/json; charset=utf-8")
++            self.send_header("Content-Length", str(len(body)))
++            self.end_headers()
++            self.wfile.write(body)
++
++        def _authorized(self):
++            port = port_getter()
++            if self.headers.get("Origin") is not None:
++                return False
++            if self.headers.get("Host") not in ("127.0.0.1:%d" % port, "localhost:%d" % port):
++                return False
++            supplied = self.headers.get("Authorization", "")
++            return hmac.compare_digest(supplied.encode("utf-8"), ("Bearer " + token).encode("utf-8"))
++
++        def _dispatch(self, name, arguments):
++            if name == "health":
++                return 200, {"ok": True, "seam": SEAM_VERSION, "steve": VERSION,
++                             "closed": bool(fusion_tools.closed), "queued": fusion_tools.queue.qsize()}
++            tool = ROUTES.get(name)
++            if tool is None:
++                return 404, {"ok": False, "errorCode": "unknown_route", "error": "Unknown route."}
++            timeout = arguments.pop("_timeout_seconds", DEFAULT_TIMEOUT)
++            if type(timeout) not in (int, float) or not 1 <= timeout <= MAX_TIMEOUT:
++                timeout = DEFAULT_TIMEOUT
++            if tool == "fusion_execute_python":
++                if arguments.get("execution_mode", "command") != "command":
++                    return 400, tool_failure(ToolError("invalid_arguments", "Only command mode is exposed (Undo-grouped)."))
++                arguments["execution_mode"] = "command"
++            try:
++                validate_call(tool, arguments)
++            except ToolError as exc:
++                return 400, tool_failure(exc)
++            except (ValueError, SyntaxError) as exc:
++                return 400, tool_failure(ToolError("invalid_arguments", str(exc)[:500]))
++            done, box, cancelled = threading.Event(), {}, threading.Event()
++
++            def complete(result):
++                box["result"] = result
++                done.set()
++
++            complete.stella = True  # lets the run_script wrapper recognise Stella-originated jobs
++
++            try:
++                fusion_tools.submit(tool, arguments, complete, cancelled.is_set)
++            except Exception as exc:
++                return 503, tool_failure(ToolError("bridge_unavailable", str(exc)[:300]))
++            if not done.wait(timeout):
++                cancelled.set()
++                return 504, tool_failure(ToolError("cancelled", "Bridge timeout; a started operation cannot be interrupted."))
++            result = box["result"]
++            if tool == "fusion_capture_viewport" and result.get("ok"):
++                result = _save_png(result, captures)
++            return 200, result
++
++        def do_POST(self):
++            self._handle()
++
++        def do_GET(self):
++            self._handle()
++
++        def _handle(self):
++            if not self._authorized():
++                self._send(401, {"ok": False, "errorCode": "unauthorized", "error": "Unauthorized."})
++                return
++            parts = self.path.strip("/").split("/")
++            if len(parts) != 2 or parts[0] != "v1":
++                self._send(404, {"ok": False, "errorCode": "unknown_route", "error": "Unknown route."})
++                return
++            arguments = {}
++            if self.command == "POST":
++                try:
++                    length = int(self.headers.get("Content-Length", "0"))
++                    if not 0 <= length <= MAX_BODY:
++                        raise ValueError
++                    arguments = json.loads(self.rfile.read(length) or b"{}")
++                    if not isinstance(arguments, dict):
++                        raise ValueError
++                except ValueError:
++                    self._send(400, {"ok": False, "errorCode": "invalid_arguments", "error": "Bad JSON body."})
++                    return
++            status, payload = self._dispatch(parts[1], arguments)
++            self._send(status, payload)
++
++    return Handler
++
++
++def start(fusion_tools, home=None):
++    """One-line hook called from STEVE.run(). Returns the server, or None when not enabled."""
++    home = seam_home(home)
++    config = load_config(home)
++    if config.get("enabled") is not True or _state["server"] is not None:
++        return None
++    token = ensure_token(home)
++    port = config.get("port", 0)
++    if type(port) is not int or not 0 <= port <= 65535:
++        port = 0
++    server = ExclusiveLoopbackServer(("127.0.0.1", port), make_handler(
++        fusion_tools, token, lambda: server.server_address[1], home / "captures"))
++    thread = threading.Thread(target=server.serve_forever, name="Stella-Seam", daemon=True)
++    thread.start()
++    _state.update(server=server, thread=thread, home=home)  # set first so stop() can clean up a partial start
++    try:
++        (home / "endpoint.json").write_text(json.dumps(
++            {"host": "127.0.0.1", "port": server.server_address[1], "pid": os.getpid(), "seam": SEAM_VERSION}),
++            encoding="utf-8")
++    except Exception:
++        stop()
++        raise
++    original_close = fusion_tools.close
++    original_run_script = fusion_tools.run_script
++
++    def close():
++        stop()
++        original_close()
++
++    def run_script(job):
++        """Stella-originated jobs run with context['data'] (Data Panel / cloud) removed. Runs on the Fusion main thread."""
++        if not getattr(job.get("complete"), "stella", False):
++            return original_run_script(job)
++        original_context = fusion_tools.context
++
++        def context():
++            value = original_context()
++            value["data"] = None
++            return value
++
++        fusion_tools.context = context
++        try:
++            return original_run_script(job)
++        finally:
++            del fusion_tools.context
++
++    fusion_tools.close = close
++    fusion_tools.run_script = run_script
++    return server
++
++
++def safe_start(fusion_tools, home=None):
++    """The hook used by STEVE.py: a seam failure must never abort STEVE's run()."""
++    try:
++        return start(fusion_tools, home)
++    except Exception:
++        log_error(seam_home(home), "seam failed to start:\n" + traceback.format_exc())
++        return None
++
++
++def stop():
++    server, _state["server"] = _state["server"], None
++    home, _state["home"] = _state["home"], None
++    if server is not None:
++        try:
++            server.shutdown()
++            server.server_close()
++        finally:
++            if home is not None:
++                try:
++                    (home / "endpoint.json").unlink()
++                except OSError:
++                    pass
+diff -ruN '--exclude=__pycache__' V:/DevCache/Temp/steve_src/addin/STEVE/steve/tool_protocol.py addin/STEVE/steve/tool_protocol.py
+--- V:/DevCache/Temp/steve_src/addin/STEVE/steve/tool_protocol.py	2026-10-08 19:03:42.020747700 +0900
++++ addin/STEVE/steve/tool_protocol.py	2026-10-08 19:19:03.418460400 +0900
+@@ -252,29 +252,6 @@
+ 
+ 
+ TOOLS = [
+-    {"type": "function", "name": "rmfg_checkout", "deferLoading": False,
+-     "description": "Quote checked sheet-metal parts and create an RMFG website checkout when requested. Requires DFM on and RMFG connected. quote takes saved fusion_rmfg job IDs and quantities, using their checked materials; retries use checkout_id. status reads paged findings; do not busy-poll. create requires a ready matching quote and unchanged parts, then shows an Open checkout button. Changed parts need new snapshots and a new quote. The customer reviews delivery and pays on RMFG; this tool cannot pay or accept manufacturing risks.",
+-     "inputSchema": {"type": "object", "properties": {
+-         "document_id": {"type": "string"}, "action": {"type": "string", "enum": ["quote", "status", "create"]},
+-         "checkout_id": {"type": "string", "description": "Returned checkoutId; required for status/create and quote retries."},
+-         "items": {"type": "array", "minItems": 1, "maxItems": 20, "description": "New quote only; each saved job once. Quantity is completed copies of that design.",
+-             "items": {"type": "object", "properties": {"job_id": {"type": "string"}, "quantity": {"type": "integer", "minimum": 1, "maximum": 1000000}},
+-                       "required": ["job_id", "quantity"], "additionalProperties": False}},
+-         "offset": {"type": "integer", "minimum": 0, "maximum": 100000, "default": 0, "description": "status only; continue with nextOffset."}},
+-         "required": ["document_id", "action"], "additionalProperties": False}},
+-    {"type": "function", "name": "rmfg_materials", "deferLoading": False,
+-     "description": "Read RMFG's sheet-metal material catalog. Requires DFM enabled and RMFG connected in STEVE. Returns materials[].id for fusion_rmfg checks; no geometry upload.",
+-     "inputSchema": {"type": "object", "properties": {"cursor": {"type": "string", "description": "Omit for the first page; use next_cursor while has_more is true."}}, "additionalProperties": False}},
+-    {"type": "function", "name": "fusion_rmfg", "deferLoading": False,
+-     "description": "Request RMFG supplier DFM for a pinned BRepBody. Requires DFM enabled, RMFG connected and a saved sheet_metal plan. prepare exports and automatically uploads a folded STEP of a single-solid leaf component. status reads analysis/report pages; do not busy-poll. check starts DFM after designState is ready. retry_upload repeats an interrupted upload using its original bytes/key. Results describe the exported snapshot; snapshotMatchesAtStart does not prove currency after processing. Unsupported scope requires review, not assembly uploads or restructuring. No orders or payments.",
+-     "inputSchema": {"type": "object", "properties": {
+-         "document_id": {"type": "string"}, "part_token": {"type": "string"},
+-         "action": {"type": "string", "enum": ["prepare", "status", "check", "retry_upload"]},
+-         "job_id": {"type": "string", "description": "Non-prepare actions only; required. Use the returned jobId."}, "offset": {"type": "integer", "minimum": 0, "maximum": 100000, "default": 0, "description": "status only; continue with nextOffset."},
+-         "parts": {"type": "array", "description": "check only, required: every analyzed parts[].id exactly once as part_id, paired with a material_id from rmfg_materials matching the established material/thickness requirements.", "minItems": 1, "maxItems": 20, "items": {"type": "object", "properties": {
+-             "part_id": {"type": "string"}, "material_id": {"type": "string"}},
+-             "required": ["part_id", "material_id"], "additionalProperties": False}}},
+-         "required": ["document_id", "part_token", "action"], "additionalProperties": False}},
+     {"type": "function", "name": "fusion_dfm_plan", "deferLoading": False,
+      "description": "Read or replace a pinned BRepBody's local manufacturing plan; requires DFM enabled. Resolve part_token through Fusion inspection/query. Repeated occurrences share the native part's plan. Changes affect STEVE metadata, not geometry. Saved-document plans persist locally; unsaved plans last this session. Read fusion_api_help path steve.dfm for the plan/report contract.",
+      "inputSchema": {"type": "object", "properties": {
+@@ -411,8 +388,6 @@
+         "execution_error": "Inspect the current document and the reported failing line. Use fusion_api_help for the API involved, correct the cause, and query existing geometry or CAM operations before retrying changes. Do not repeat unchanged code.",
+         "dfm_disabled": "DFM is off. Do not retry DFM tools or change the setting yourself; the user can enable DFM in STEVE's menu. Continue the requested work using the ordinary Fusion tools.",
+         "machine_definition_unavailable": "Read fusion_api_help steve.machines or steve.machines.<id>. Confirm the intended machine/process and review changed capabilities before updating the plan's machine reference. Missing capabilities stay unknown. Do not silently substitute a machine or use stale limits.",
+-        "rmfg_export_scope": "No geometry was uploaded. The installed STEP exporter exports a whole component. Use a single-solid component with no children/meshes, or report that the current part scope is unsupported. Do not export the parent assembly, hide neighbors, restructure the design, or copy it into a new document without an explicit user request.",
+-        "rmfg_unavailable": "Follow the specific RMFG error. Connect through STEVE's account menu. Preserve the returned job ID for retries; do not repeat uploads as new jobs. For stale geometry, prepare a new snapshot. Supplier processing is not a Fusion failure; do not modify geometry just to retry.",
+         "dfm_plan_required": "Read the body's plan with fusion_dfm_plan. Resolve manufacturing intent and consequential missing inputs, save its stages, then check an existing stage index. Do not invent limits.",
+         "dfm_target_unavailable": "Inspect the pinned Design and obtain a current BRepBody token. Do not substitute another body for a deleted or ambiguous target. DFM currently checks one native body definition per call.",
+     }.get(code)
+@@ -429,62 +404,6 @@
+         raise ValueError("Unknown Fusion tool.")
+     if not isinstance(arguments, dict):
+         raise ValueError("Tool arguments must be an object.")
+-    if tool == 'rmfg_checkout':
+-        from .rmfg import identifier
+-        action = arguments.get('action')
+-        optional = {'quote': {'items', 'checkout_id'}, 'status': {'checkout_id', 'offset'}, 'create': {'checkout_id'}}
+-        if (action not in optional or not {'document_id', 'action'} <= set(arguments)
+-                or set(arguments) - {'document_id', 'action'} - optional[action]):
+-            raise ValueError('Use quote with items or checkout_id; status/create require checkout_id.')
+-        if not isinstance(arguments['document_id'], str) or not 0 < len(arguments['document_id']) <= 100:
+-            raise ValueError('Use the pinned document_id.')
+-        if ('items' in arguments) == ('checkout_id' in arguments):
+-            raise ValueError('Provide either items for a new quote or the returned checkout_id.')
+-        if 'checkout_id' in arguments:
+-            identifier(arguments['checkout_id'])
+-        if 'items' in arguments:
+-            items = arguments['items']
+-            if not isinstance(items, list) or not 1 <= len(items) <= 20:
+-                raise ValueError('Quote 1 to 20 saved jobs.')
+-            seen = set()
+-            for item in items:
+-                if not isinstance(item, dict) or set(item) != {'job_id', 'quantity'}:
+-                    raise ValueError('Each item needs job_id and quantity only.')
+-                identifier(item['job_id'])
+-                if item['job_id'] in seen or type(item['quantity']) is not int or not 1 <= item['quantity'] <= 1000000:
+-                    raise ValueError('Include each job once with an integer quantity from 1 to 1000000.')
+-                seen.add(item['job_id'])
+-        if type(arguments.get('offset', 0)) is not int or not 0 <= arguments.get('offset', 0) <= 100000:
+-            raise ValueError('Use a bounded nonnegative findings offset.')
+-        return
+-    if tool == 'rmfg_materials':
+-        if set(arguments) - {'cursor'} or ('cursor' in arguments and (not isinstance(arguments['cursor'], str) or not 0 < len(arguments['cursor']) <= 1000)):
+-            raise ValueError('Use the returned catalog cursor or omit it for the first page.')
+-        return
+-    if tool == 'fusion_rmfg':
+-        from .rmfg import identifier
+-        required = {'document_id', 'part_token', 'action'}
+-        action = arguments.get('action')
+-        optional = {'status': {'job_id', 'offset'}, 'check': {'job_id', 'parts'}, 'retry_upload': {'job_id'}, 'prepare': set()}
+-        if action not in optional or not required <= set(arguments) or set(arguments) - required - optional[action]:
+-            raise ValueError('Use the RMFG arguments for the requested action.')
+-        for key, limit in (('document_id',100), ('part_token',4096)):
+-            if not isinstance(arguments[key],str) or not 0<len(arguments[key])<=limit:
+-                raise ValueError('Invalid RMFG target.')
+-        if action != 'prepare':
+-            identifier(arguments.get('job_id'))
+-        if type(arguments.get('offset',0)) is not int or not 0<=arguments.get('offset',0)<=100000:
+-            raise ValueError('Use a bounded nonnegative issue offset.')
+-        if action == 'check':
+-            parts = arguments.get('parts')
+-            if not isinstance(parts,list) or not 1<=len(parts)<=20:
+-                raise ValueError('Configure all analyzed parts, at most 20.')
+-            for part in parts:
+-                if not isinstance(part,dict) or set(part) != {'part_id','material_id'}:
+-                    raise ValueError('Use observed part_id and material_id only.')
+-                identifier(part['part_id'])
+-                identifier(part['material_id'])
+-        return
+     if tool in ("fusion_dfm_plan", "fusion_dfm_check"):
+         required = {"document_id", "part_token"}
+         optional = {"stages"}
