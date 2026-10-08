@@ -1,0 +1,162 @@
+{
+ "schema_version": 1,
+ "subject_digest": "4d06a97b3a3134d9734823568d57faa9c823807fdfd69aba4e803d8e8265cc58",
+ "role": "mechanism",
+ "reviewer_label": "Claude subagent (mechanism role, rev10)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "conclusion": "no_blocker_found",
+ "findings": [
+  {
+   "id": "MECH10-1",
+   "severity": "minor",
+   "claim": "The gauge number was computed with a skin normal sampled at z 12.26, but the procedure reads the gauge \"at mid height\" (z 14). At z 14 the normal and the edge point differ enough to move the stated value by about 0.024 mm, most of one side of the ±0.03 mm band. On the shell STEP at x 14.6, z 14.0 the outer skin is at y 30.095 with outward normal (0.1415, 0.9648, 0.2218). The recipe normal is (0.141, 0.9739, 0.1779), measured at (14.6, 30.45, 12.26). The face front edge at z 14 is at about (13.89, 30.20), not at the reference (14, 29.5). With those values the reading at the nominal stop is 1.449 mm, not 1.473 mm. A builder who sets 1.47 mm at mid height is about 0.045 deg deeper than nominal, and the 1.50 mm upper limit falls at -3.140 deg (nominal axis), not -3.089 deg. This does not leave the checked range. A play-induced reading shift of 0.035 mm is about 0.073 deg, so the deepest rigid rotation the procedure can accept is about -3.21 deg, inside the -3.245 deg housing check. So the r9 major (gauge read along Y) is genuinely fixed in direction. Only the stated read height and the number disagree.",
+   "evidence": [
+    "side_button_recipe.py P10: gauge_skin_normal_* = (.1410,.9739,.1779), parameter_basis \"at (14.6, 30.45, 12.26)\"; gauge_reading_mm uses rx=29, ry=4.5 (far_edge_ref_y 29.5).",
+    "Adjustment text: \"depth gauge held normal to that skin, at the face front edge at mid height, reads 1.47 mm (accept 1.44-1.50 mm)\". Window z 10..18, so mid height is z 14.",
+    "My probe of shell/model.step (thin-box ray at x 14.6/14.8/15.0, z 14): skin y 30.095/30.065/30.035, normal (0.1415,0.9648,0.2218). Normals at z 11, 12.26 and 16 are (0.136,0.982,0.134), (0.137,0.978,0.160) and (0.139,0.961,0.240), so the reading varies with height.",
+    "Button face at z 14: y 30.209 at x 13.8 and 30.316 at x 13.0. Face-to-skin-plane depth at rest is about 0.004 mm, so it is flush.",
+    "gauge formula with rx 28.89, ry 5.2 and the z-14 normal: 1.449 at -3.0333 deg, 1.507 at -3.1534 deg, 1.551 at -3.2447 deg. With the z-12.26 values: 1.470/1.529/1.574, which agrees with the recipe 1.473/1.532/1.576."
+   ],
+   "proposed_change": "Pick one of two fixes. (a) Recompute gauge_skin_normal and the edge reference at the point where the gauge is actually read (x about 14.6, z 14), and restate the setting as about 1.45 mm (accept 1.42-1.48). (b) Keep 1.47 mm and change the text to read at z 12.3, which is 2.3 mm above the window bottom edge, and record that point. Also pass the edge reference point into gauge_reading_mm instead of far_edge_ref_y. Re-derive deepest_accepted_angle_deg and re-run housing-clear-past-stop.",
+   "required_test": "Regenerate the recipe, then compute the gauge reading directly on the exported STEPs. Rotate the button to the nominal stop and to the deepest accepted angle, and measure the face front edge depth along the skin normal at the stated read point. The result must match the stated value within 0.005 mm, and housing-clear-past-stop must still pass at the new deepest angle."
+  },
+  {
+   "id": "MECH10-2",
+   "severity": "minor",
+   "claim": "The housing (stem-bottoming) margin is proven only for rigid parts. At the deepest accepted pose it is now smaller than the probable elastic give of the stop path, and the gauge procedure says \"press the face\" with no force. With hinge play, I reproduced 0.137 mm at the nominal stop and 0.0695 mm at -3.2447 deg. The stop load path is a printed web cantilever (5 mm in x, 7.6 mm tall, about 14 mm from the barrel root to the contact at y about 8.3-8.8), a steel tip contact and a thread self-tapped into a printed block. A 10 N press at the front edge gives about 17 N at the stop (lever 29/16.7). Web bending alone is about F L^3/(3 E I) = 17*14^3/(3*2500*79) = 0.08 mm at the contact, before thread and contact compliance. That adds about 0.08 mm of plunger travel, which uses up the 0.07 mm margin at the deepest accepted pose. In gauge terms the compliance is about 0.012 mm of reading per newton at the front edge, so the ±0.03 mm band is equivalent to only about ±2.5 N of setting force. If the stop is set under a light press and then pressed hard in use, the switch can be driven to bottoming, which is what F5 should prevent. If it is set under a hard press, the light-press stroke is shorter. This is the r9 minor MECH9-3, now with a smaller rigid margin at the deep limit (0.07 mm against 0.11 mm before). The unverified list names skin and stiffener bending only, not the stop web or the screw thread.",
+   "evidence": [
+    "measurements.json housing-clear-past-stop: min sample 0.0695 mm at -3.2447 deg, offset (0,-0.035); continuous bound 0.0395 mm.",
+    "My STEP probe (button rotated about (-15,25) with 8 radial 0.035 mm offsets): housing distance min 0.1374 mm at -3.0333 deg and 0.0695 mm at -3.2447 deg; shell distance min 0.197 mm at -3.2447 deg.",
+    "Recipe: stop_arm_box x -17.5..-12.5 (5 mm), z 10..17.6, y 8..25; stop screw at y 9.3, z 11.9; tip x -18.39; contact radius about 16.7 mm; front edge radius 29 mm.",
+    "unverified_requirements: \"Skin and stiffener bending under a firm press beyond the hard stop is not analysed (no FEA)\". The stop web and threads are not named.",
+    "Adjustment text: \"press the face and turn the stop screw until ... reads 1.47 mm\" (no force or load point given)."
+   ],
+   "proposed_change": "Specify the setting load in the Adjustment text, for example a 2 N weight or force gauge at the face centre, and say the reading is taken at that load. Add stop-path compliance (web bending, tip contact, printed thread) to unverified_requirements with the estimate above. Either add margin so the deep limit keeps at least about 0.1 mm rigid housing clearance (for example narrow the band, or reduce stop_extra_travel_mm by about 0.05 mm while keeping actuation at stem -0.15 mm), or state a first-article stiffness acceptance.",
+   "required_test": "On the first article, after setting the stop at the stated load, measure plunger or face displacement with a dial indicator while loading the front edge from 2 to 15 N. Extra travel past the set stop must stay below the rigid housing margin at that setting, which is 0.07-0.14 mm depending on where in the band it was set. Repeat the gauge reading at 1 N and 10 N and record the difference. After about 1000 hard presses, re-read the gauge to detect creep at the screw-tip contact."
+  },
+  {
+   "id": "MECH10-3",
+   "severity": "minor",
+   "claim": "The spring solid-length condition is stated only for the flush spring-screw position, but the contract now allows the spring screw to be set \"flush or below\" to raise preload. Each 0.4 mm turn below flush shortens the spring by the same amount at rest and at the stop. The requirement \"solid length below the stop length\" (3.02 mm) is then not sufficient. A spring chosen to that line goes solid before the stop screw once the screw is driven about 3.02 minus the solid length below flush. The solid spring then becomes an unchecked stop near y 12.4, radius 12.6 mm, and the gauge procedure cannot reach its reading. The modeled nut-turn check covers only the flush case, which is the safe one.",
+   "evidence": [
+    "Assembly order text: \"spring then spring screw (set flush or below the inward block face)\"; \"preload ... is set by the spring screw depth\".",
+    "Return spring selection: \"installed length about 3.69 mm, about 3.02 mm at the stop; solid length below the stop length\".",
+    "Spring node x -21.19..-17.50 (3.69 mm) with spring_screw x -22.69..-21.19 (1.5 mm, flush at x -22.69)."
+   ],
+   "proposed_change": "State the selection as solid length < 3.02 mm minus the spring-screw depth below flush, and give a maximum screw depth, for example at most 0.8 mm below flush, together with the spring rate needed at that depth.",
+   "required_test": "Arithmetic check of the stated limits. On the first article, at the final spring-screw depth, press to the gauge setting and confirm the stop screw, not the spring, is the contact. Back the stop screw off one flat and check the face goes deeper."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "dbae29691a1bc803922bd760111af74f169c8a53a5fff3f230d96e6bb6036995",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/assembly.png",
+   "status": "viewed",
+   "observation": "Stand-in shell with the orange button face flush in the side window and a thin running gap all round. No internal hinge, stop, spring or nut is visible, so the image shows only the outer form, not the mechanism."
+  },
+  {
+   "attachment_sha256": "6d1b806a732f5d9de45b9cc7072db5e1c044341561c9e026c16f5bf8c2314792",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/build-record.json",
+   "status": "viewed",
+   "observation": "Build record for attempt a08889c5...; subject_digest 4d06a97b... matches the packet. Recipe title is revision 10. The stop_screw node is an 8.0 mm cylinder from x -26.39 to tip -18.39. housing-clear-past-stop end_deg is -3.2447. The Adjustment text gives a 1.47 mm reading (accept 1.44-1.50) and says not to back the stop out for a click."
+  },
+  {
+   "attachment_sha256": "c6c7daf38f77bc63a78477fc327505450e70f448c82952d0f1f4102b7aed74a7",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/button/iso.png",
+   "status": "viewed",
+   "observation": "One printed button: curved skin face, rib, link, vertical barrel with bore, the full-height stop web below the barrel and the spine/plunger region. The web and barrel look continuous. The web is a plain rectangular block, so the stop contact is web plastic against a steel screw tip."
+  },
+  {
+   "attachment_sha256": "7a27aec709ac4d6cb724dc8962e62653c8dedb013c5ec0f561af1d98b96edf29",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain cylinder dowel with square ends and no chamfer or lead-in, consistent with the Ø2 x 14.8 mm pin node."
+  },
+  {
+   "attachment_sha256": "09a16b387f06c3741df91d0a3c7f6072fe062c690478fa9a76eee399e614e701",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/measurements.json",
+   "status": "viewed",
+   "observation": "Geometry checks pass. housing-clear-past-stop min sample 0.0695 mm at offset (0,-0.035) at -3.2447 deg (continuous bound 0.0395). hard-stop-blocks-within-play blocks at -3.2034 deg at all 9 offsets on stop_screw. stop-screw-reached 0.0020 mm at nominal axis. stop_nut-turns-on-seat now includes spring_screw, 7 samples, pass. Wall checks minimum_proven false."
+  },
+  {
+   "attachment_sha256": "5ea8ab38ef850bfa8b90f97851242fb569f79326219d3838925a9bfd2ab89f93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/rest_nut/iso.png",
+   "status": "viewed",
+   "observation": "Square nut, 4 x 4 x 1.6 mm, with a 1.6 mm minor bore. No thread is modeled (the thread is an overlap band in press_fits)."
+  },
+  {
+   "attachment_sha256": "dad9e60ede08194c8bdf93e104ed3ef906d27da262e822ebcd7179c8fe5bbaac",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/rest_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 x 4 mm cylinder standing in for the M2 x 4 flat-point grub screw. No hex socket, chamfer or flat point is modeled, so the rest contact is a sharp rim in CAD."
+  },
+  {
+   "attachment_sha256": "aa216734152eaf9716179d5bf387c18ef20a3fe7445ac7a4dbe04370e1623484",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Solid Ø1.2 cylinder envelope about 3.69 mm long. It is an envelope only, with no coils, rate or solid length."
+  },
+  {
+   "attachment_sha256": "53c4315aa20068facd0ed3a3a584209938c8fc4378a1817c990a4f1cd8b22649",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/shell/iso.png",
+   "status": "viewed",
+   "observation": "Stand-in shell with the side window opening. The inner tab/block structure is just visible through the window. The outer skin is otherwise unbroken."
+  },
+  {
+   "attachment_sha256": "cae67ebfbebb02e1c098f2aff67635f7ec2f88e241bd7e04c24f41ef9f4c56d1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/spring_screw/iso.png",
+   "status": "viewed",
+   "observation": "Short Ø2 x 1.5 mm cylinder (spring-closing grub screw), modeled flush with the inward block outer face."
+  },
+  {
+   "attachment_sha256": "96d45587337c023e156725d2ddbed206300fa16012b17a241184437ea0fb10b8",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/stop_nut/iso.png",
+   "status": "viewed",
+   "observation": "Square jam nut identical to rest_nut, 4 x 4 x 1.6 mm with a Ø1.6 bore, seated on the inward block face at x -24.29..-22.69."
+  },
+  {
+   "attachment_sha256": "213745450be22951fec4340204e29cb3f5f7ece03ba4e3079bb1acb73d1182fd",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/stop_screw/iso.png",
+   "status": "viewed",
+   "observation": "Long plain Ø2 cylinder, 8 mm (M2 x 8). In the model it leaves about 2.1 mm of thread behind the jam nut (x -26.39 to -24.29), which fixes the r9 adjustment-range shortfall. The tip is a sharp-rim flat disk with no ISO 4026 chamfer."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Placeholder 6 x 4 x 8 mm box (y 18.85..22.85). Its top face stands for stem bottoming 0.95 mm below the stem top. It is not a real switch."
+  },
+  {
+   "attachment_sha256": "1d4f98e6ffd629c862bfd1c63862d273d24e6f603569dd8dc6bc246eef48ff93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r10-20261007/workspace/studio/side-button-flow/4d06a97b3a3134d9-4a206e48/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Placeholder 2 x 0.95 x 4 mm stem box on top of the housing (x 1..3, top at y 23.8), 0.2 mm below the plunger tip."
+  }
+ ],
+ "remaining_uncertainties": [
+  "The r9 majors are addressed in r10. The no-click back-out step is removed (\"do not back the stop out to get a click\"). The gauge is read along the skin normal (see MECH10-1 for the read height). The housing check now ends at -3.2447 deg with every play offset, and I reproduced its 0.0695 mm minimum. The r9 contract mismatches are fixed: the design-basis spring is now OD at most 1.2 mm, and the stop length 3.02 mm is stated. The M2 x 8 stop screw leaves about 2.1 mm of thread behind the nut.",
+  "Real switch: the operating point, total travel (at least 0.95 mm assumed), stem position relative to the hinge and actuation force are placeholders. At the shallow end of the band, with the stem at -0.15 mm, the push past the 0.50 mm operating point is only a few hundredths of a mm (rigid). At the deep end with the stem at +0.05 mm, the rigid housing margin falls to about 0.02 mm. Only the owner can supply the real switch and PCB datum.",
+  "Elastic and long-term behaviour: deflection of the stop web, the screw thread in printed plastic, creep or indentation at the screw-tip edge contact (the bought ISO 4026 flat point is not modeled), and jam-nut retention on printed faces are not qualified. No FEA or physical test was run.",
+  "Return spring rate, preload, buckling over the unguided span to the web and its added thumb force are not selected. Return to the rest screw against friction in the drilled bore is not verified.",
+  "\"Easier to press\" (force, travel, click feel) and acceptance of the 0.4 mm running gap and the about 0.1 mm proud face after flush adjustment are owner judgements. Only a physical prototype can settle them.",
+  "All motion checks are rigid and sampled: 8 radial play offsets, and pin tilt about one horizontal axis only. Pin cocking about X and dowel/bore wear are not covered.",
+  "Gauge practicality: a ±0.03 mm band read on an FDM skin with a depth gauge bridging a 0.4 mm gap may be close to the instrument and surface repeatability. This needs a physical repeatability check.",
+  "This review was done by a separate Claude subagent context, not an independent human or vendor. My STEP probes were read-only and limited to the poses stated in the findings."
+ ]
+}

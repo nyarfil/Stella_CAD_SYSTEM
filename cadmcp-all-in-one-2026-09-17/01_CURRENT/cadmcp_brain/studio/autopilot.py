@@ -11,17 +11,18 @@ from pathlib import Path
 from pydantic import ValidationError
 from .runtime import ROLES,Review
 from .synthesis import FunctionBrief,Matrix
-from .recipe import Recipe,Reference,Dimension,Clearance,Motion,RotationMotion,WallThickness,PressFit
+from .recipe import Recipe,Reference,Dimension,Clearance,Motion,RotationMotion,WallThickness,PressFit,BaseShapeCheck,FlexureCheck
 from ..errors import BrainError
 from ..req2cad.common import atomic_json,digest
 from .planning import capabilities,recovery_for
 
 _CHECK_MODELS={'dimension_checks':Dimension,'clearance_checks':Clearance,'motion_checks':Motion,
-               'rotation_checks':RotationMotion,'wall_checks':WallThickness,'press_fits':PressFit}
+               'rotation_checks':RotationMotion,'wall_checks':WallThickness,'press_fits':PressFit,
+               'base_shape_checks':BaseShapeCheck,'flexure_checks':FlexureCheck}
 _CHECK_PART_FIELDS={'dimension_checks':('part',),'clearance_checks':('part_a','part_b'),
                     'motion_checks':('moving_part','obstacles'),
-                    'rotation_checks':('moving_part','obstacles'),
-                    'wall_checks':('part',),'press_fits':('part_a','part_b')}
+                    'rotation_checks':('moving_part','obstacles','carried_parts'),
+                    'wall_checks':('part',),'press_fits':('part_a','part_b'),'base_shape_checks':('parts',),'flexure_checks':('part',)}
 
 
 def _output_part_map(recipe):
@@ -62,7 +63,7 @@ def _canonical_checks(recipe):
             row=copy.deepcopy(row)
             for field in _CHECK_PART_FIELDS[name]:
                 if field not in row:continue
-                if field=='obstacles':row[field]=[_resolve_check_part(value,node_to_part) for value in row[field]]
+                if field in ('obstacles','carried_parts','parts'):row[field]=[_resolve_check_part(value,node_to_part) for value in row[field]]
                 else:row[field]=_resolve_check_part(row[field],node_to_part)
             try:canonical.append(model.model_validate(row).model_dump())
             except ValidationError as exc:

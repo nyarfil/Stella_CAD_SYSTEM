@@ -186,14 +186,129 @@ def test_side_button_flow_brief_and_matrix_are_valid():
 
 
 @kernel
-def test_side_button_revision10_builds_and_passes_every_check(tmp_path):
+def test_side_button_parallel_revision16_builds_and_passes_every_check(tmp_path):
     from cadmcp_brain.studio.recipe import execute_recipe
-    from side_button_recipe import side_button_recipe_v10
-    result=execute_recipe(Recipe.model_validate(side_button_recipe_v10()),{},tmp_path/'sb10')
+    from side_button_leaf_recipe import side_button_parallel_recipe
+    result=execute_recipe(Recipe.model_validate(side_button_parallel_recipe()),{},tmp_path/'r16')
     failed=[c['id'] for c in result['checks'] if c['verdict']!='pass']
     assert result['geometry_checks_verdict']=='pass',failed
     checks={c['id']:c for c in result['checks']}
-    assert checks['stop_nut-turns-on-seat']['verdict']=='pass' and checks['housing-clear-past-stop']['verdict']=='pass'
+    assert checks['rest-outward-blocked-by-lug']['kind']=='sampled_translation_blocking'
+    beam=checks['parallel-leaves-beam']
+    assert beam['checks']['force']['end_condition']=='guided' and beam['checks']['force']['parallel_count']==2
+
+
+def test_side_button_parallel_revision16_contract():
+    from side_button_leaf_recipe import side_button_parallel_recipe,twist_v16
+    recipe=Recipe.model_validate(side_button_parallel_recipe())
+    twists=[c for c in recipe.rotation_checks if c.id.startswith('edge-press-twist')]
+    assert len(twists)==4 and all(c.min_mm==.15 for c in twists)  # the original gap criterion is kept
+    assert twist_v16()['edge_offset_mm']==4.5
+    assert {f.id for f in recipe.press_fits}>={'pin-1-in-block','pin-2-in-block','pin-1-in-post','pin-2-in-post'}
+    assert set(recipe.functions)=={'F1_transmit_force','F2_guide_button','F3_actuate_switch','F4_restore_button','F5_limit_overtravel','F6_connect_shell'}
+    processes=' '.join(o.manufacturing_process for o in recipe.outputs)
+    assert 'screw' not in processes.lower() and 'PETG' not in processes
+
+
+def test_side_button_carrier_revision15_builds_and_passes_every_check(tmp_path):
+    from cadmcp_brain.studio.recipe import execute_recipe
+    from side_button_leaf_recipe import side_button_carrier_recipe
+    result=execute_recipe(Recipe.model_validate(side_button_carrier_recipe()),{},tmp_path/'r15')
+    failed=[c['id'] for c in result['checks'] if c['verdict']!='pass']
+    assert result['geometry_checks_verdict']=='pass',failed
+    checks={c['id']:c for c in result['checks']}
+    leaf=checks['leaf-spring-beam']
+    assert leaf['material']=='polymaker_polylite_abs' and leaf['checks']['twist']['pass'] and leaf['checks']['stress']['stress_concentration']>1
+    assert checks['rest-outward-blocked-by-lug']['blocking']['verdict']=='pass'
+
+
+def test_side_button_carrier_revision15_contract():
+    from side_button_leaf_recipe import insert_fit_v15,side_button_carrier_recipe
+    from cadmcp_brain.studio.switch_profiles import PROFILES
+    recipe=Recipe.model_validate(side_button_carrier_recipe())
+    processes=' '.join(o.manufacturing_process for o in recipe.outputs)
+    assert 'screw' not in processes.lower() and 'Purchased' not in processes  # owner policy: no screws beyond the OP1 ones
+    assert all(f.material=='polymaker_polylite_abs' for f in recipe.flexure_checks)
+    fits={pid:insert_fit_v15(pr)['verdict'] for pid,pr in PROFILES.items()}
+    assert fits['zippy_df_pin']=='pass' and all(v=='unverified' for k,v in fits.items() if k!='zippy_df_pin')
+
+
+def test_side_button_leaf_variant_contract():
+    from side_button_leaf_recipe import angles_leaf,side_button_leaf_recipe,switch_fit_report_leaf
+    recipe=Recipe.model_validate(side_button_leaf_recipe())
+    parts={o.part_id for o in recipe.outputs}
+    # The leaf replaces the pin, return spring and stop/rest screws.
+    assert not parts&{'hinge_pin','return_spring','stop_screw','rest_screw','spring_screw'}
+    fits={f['profile']:f['verdict'] for f in switch_fit_report_leaf()}
+    assert fits['zippy_df_pin']=='pass' and fits['omron_d2f_pin']=='pass'
+    assert fits['huano_mouse_generic']=='unverified' and fits['kailh_gm20']=='unverified'
+    press=next(c for c in recipe.rotation_checks if c.id=='press-to-deepest-clear-of-shell')
+    assert press.end_deg<=angles_leaf()['deep']+1e-12 and press.carried_parts==['actuator_screw']
+    assert recipe.flexure_checks[0].switch_profiles and recipe.base_shape_checks
+
+
+def test_side_button_revision13_builds_and_passes_every_check(tmp_path):
+    from cadmcp_brain.studio.recipe import execute_recipe
+    from side_button_recipe import side_button_recipe_v13
+    result=execute_recipe(Recipe.model_validate(side_button_recipe_v13()),{},tmp_path/'sb13')
+    failed=[c['id'] for c in result['checks'] if c['verdict']!='pass']
+    assert result['geometry_checks_verdict']=='pass',failed
+    checks={c['id']:c for c in result['checks']}
+    assert checks['switch-body-clear-to-deepest']['carried_parts']==['actuator_screw']
+
+
+def test_side_button_revision13_checks_every_switch_profile():
+    from cadmcp_brain.studio.switch_profiles import PROFILES
+    from side_button_recipe import angles_v13,side_button_recipe_v13,switch_fit_report_v13
+    fits={f['profile']:f for f in switch_fit_report_v13()}
+    assert set(fits)==set(PROFILES)
+    assert fits['zippy_df_pin']['verdict']=='pass' and fits['omron_d2f_pin']['verdict']=='pass'
+    # Profiles without datasheet values are never reported as passing.
+    assert fits['huano_mouse_generic']['verdict']=='unverified' and fits['kailh_gm20']['verdict']=='unverified'
+    recipe=Recipe.model_validate(side_button_recipe_v13())
+    text=' '.join(recipe.unverified_requirements)
+    assert 'huano_mouse_generic: unverified' in text and 'kailh_gm20: unverified' in text
+    deep=angles_v13()['deep']
+    for check_id in ('switch-body-clear-to-deepest','nearest-shell-gap-until-stop'):
+        assert next(c for c in recipe.rotation_checks if c.id==check_id).end_deg<=deep+1e-12
+    assert not any('depth gauge' in a.lower() for a in recipe.design_basis.assumptions)
+    assert not any('housing' in x.lower() for x in recipe.verification_plan)
+
+
+def test_switch_fit_fails_when_overshoot_exceeds_overtravel():
+    from cadmcp_brain.studio.switch_profiles import PROFILES,Value
+    from side_button_recipe import P13,switch_fit_v13
+    tight=PROFILES['zippy_df_pin'].model_copy(update={'overtravel':Value(value=.05,bound='min',source='zippy_df_catalogue')})
+    fit=switch_fit_v13(tight)
+    assert fit['verdict']=='fail' and not fit['checks']['within_guaranteed_overtravel']['pass']
+    coarse=dict(P13,stop_steps_past=8)
+    assert switch_fit_v13(PROFILES['zippy_df_pin'],coarse)['verdict']=='fail'
+
+
+def test_side_button_revision12_is_a_valid_contract():
+    from side_button_recipe import P12,deepest_accepted_angle_v12_deg,gauge_stroke_v12_mm,side_button_recipe_v12
+    recipe=Recipe.model_validate(side_button_recipe_v12())
+    deep=deepest_accepted_angle_v12_deg()
+    for check_id in ('housing-clear-past-stop','nearest-shell-gap-until-stop'):
+        assert next(c for c in recipe.rotation_checks if c.id==check_id).end_deg<=deep+1e-12
+    assert gauge_stroke_v12_mm(P12,deep)>=gauge_stroke_v12_mm()+P12['gauge_band_mm']+P12['gauge_play_reading_mm']
+    text=' '.join(recipe.design_basis.assumptions)
+    assert f'changes by {gauge_stroke_v12_mm():.2f} mm' in text and 'zero it with the button at rest' in text
+    assert recipe.design_parameters['depth_gauge_mm']==P12['gauge_stroke_reading_mm']
+
+
+def test_side_button_revision11_is_a_valid_contract():
+    from side_button_recipe import P11,deepest_accepted_angle_v11_deg,gauge_reading_v11_mm,side_button_recipe_v11
+    recipe=Recipe.model_validate(side_button_recipe_v11())
+    deep=deepest_accepted_angle_v11_deg()
+    for check_id in ('housing-clear-past-stop','nearest-shell-gap-until-stop'):
+        check=next(c for c in recipe.rotation_checks if c.id==check_id)
+        assert check.end_deg<=deep+1e-12
+    # The deepest checked pose covers the gauge band plus hinge play while gauging.
+    assert gauge_reading_v11_mm(P11,deep)>=gauge_reading_v11_mm()+P11['gauge_band_mm']+P11['gauge_play_reading_mm']
+    text=' '.join(recipe.design_basis.assumptions)
+    assert f'reads {gauge_reading_v11_mm():.2f} mm' in text and 'spring bore stays as printed' in text
+    assert '+0.00 mm' in ' '.join(recipe.unverified_requirements)
 
 
 def test_side_button_revision10_is_a_valid_contract():

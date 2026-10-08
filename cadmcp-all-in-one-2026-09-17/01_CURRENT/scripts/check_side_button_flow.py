@@ -33,7 +33,14 @@ from side_button_recipe import (REQUEST,P,P2,P3,P4,P5,P6,angles_v2,angles_v3,ang
                                 side_button_recipe_v4,side_button_recipe_v5,side_button_recipe_v6,stop_angle_deg,
                                 P7,angles_v7,side_button_recipe_v7,P8,angles_v8,side_button_recipe_v8,
                                 P9,angles_v9,side_button_recipe_v9,P10,angles_v10,side_button_recipe_v10,
-                                gauge_reading_mm,deepest_accepted_angle_deg)
+                                gauge_reading_mm,deepest_accepted_angle_deg,P11,angles_v11,side_button_recipe_v11,
+                                gauge_reading_v11_mm,deepest_accepted_angle_v11_deg,P12,angles_v12,side_button_recipe_v12,
+                                gauge_stroke_v12_mm,deepest_accepted_angle_v12_deg,P13,angles_v13,side_button_recipe_v13,
+                                switch_fit_report_v13,setting_windows_v13)
+from side_button_leaf_recipe import (PL,angles_leaf,pivot_xy,side_button_leaf_recipe,switch_fit_report_leaf,
+                                    PC,angles_v15,pivot_v15,pivot_envelope_v15,side_button_carrier_recipe,insert_fit_v15,
+                                    PP,deep_travel_v16,twist_v16,side_button_parallel_recipe)
+from cadmcp_brain.studio.switch_profiles import PROFILES as SWITCH_PROFILES
 
 PROJECT_ID='side-button-flow'
 VERIFICATION_ROOT=(ROOT/'verification').resolve()
@@ -61,7 +68,7 @@ def function_brief():
                 task('F4_restore_button','仮のスイッチ外形','restore button',
                      'The button returns to rest after release.',['return spring button','snap dome return']),
                 task('F5_limit_overtravel','もっと押しやすく','limit overtravel',
-                     'Motion stops before the switch housing is loaded.',['hard stop','travel limiter']),
+                     'Travel ends at a defined limit (a hard stop, or the switch pin bottoming when no stop is used) and stays inside the checked range.',['hard stop','travel limiter']),
                 task('F6_connect_shell','外形はできるだけ変えないで','connect to shell without changing outer form',
                      'The button and hinge are carried by the shell while the outer skin stays unchanged.',
                      ['flush shell button','shell mounted hinge'])],
@@ -88,10 +95,18 @@ def morphology_matrix():
                'Button barrel slides over the pin from below before the PCB is fitted.',
                ['Force varies along the button length.'],['Hinge play is small relative to the stroke and is checked as an envelope.']),
         option('C_flexure','Flexure button',['F1_transmit_force','F3_actuate_switch','F4_restore_button'],
-               'Skin piece is joined to the shell by a thin flexure that also springs back.',['shell'],
-               'Thumb to skin piece; flexure bends and stores return energy.','Printed as one with the shell.',
-               ['Flexure stiffness and fatigue are unknown; not verifiable by rigid checks.'],
-               ['PLA/PETG flexure survives the press count.']),
+               'Skin piece is carried by printed ABS leaf springs that also spring back (the common production-mouse construction).',['shell','button'],
+               'Thumb to skin piece; the leaves bend and store return energy.','Separately printed ABS carrier fixed to the shell (owner policy: ABS only, no screws beyond the OP1 ones).',
+               ['Fatigue and creep are UNKNOWN; stiffness and static stress are checked by beam theory only.'],
+               ['ABS leaves inside the static stress allowance survive the press count (ASSUMED; fatigue UNKNOWN).']),
+        option('G_leaf','Leaf-spring guide',['F2_guide_button','F6_connect_shell'],
+               'Leaves from a carrier block fixed to shell posts guide the face (single leaf: rotation about its pseudo-rigid-body pivot; parallel leaves: translation).',['shell','button'],
+               'Reaction from the face through the leaves into the block, pins and shell posts.','Carrier located by printed press-fit pins; no screws.',
+               ['Pseudo-rigid-body approximation for a single leaf.'],['Leaf kinematics at small deflection follow beam theory.']),
+        option('S_switch','Switch overtravel',['F5_limit_overtravel'],
+               'No hard stop: the switch takes the overtravel, as in production mice; clearances are checked to the pin fully pressed. This does NOT keep the switch unloaded; it bounds travel at the pin bottoming.',['switch'],
+               'Overtravel force goes into the switch pin to its bottoming.','No extra part.',
+               ['Switch bottoming force rating is not in the registered datasheets (UNKNOWN).'],['ASSUMED: the switch tolerates bottoming at thumb force (rating UNKNOWN).']),
         option('G_pivot','Pin pivot',['F2_guide_button','F6_connect_shell'],
                'A fixed pin in shell tabs carries the button barrel.',['shell','button'],
                'Reaction from barrel to pin to tabs to shell wall.','Pin is part of the shell; barrel slides on.',
@@ -116,14 +131,18 @@ def morphology_matrix():
         {'option_a':'C_flexure','option_b':'R_spring','reason':'A flexure already returns the button.'},
         {'option_a':'C_flexure','option_b':'G_pivot','reason':'A flexure button has no separate pivot.'},
         {'option_a':'A_direct','option_b':'G_pivot','reason':'A translating button is not carried by a pivot.'},
-        {'option_a':'B_lever','option_b':'G_rails','reason':'A lever needs a pivot, not rails.'}]}
+        {'option_a':'B_lever','option_b':'G_rails','reason':'A lever needs a pivot, not rails.'},
+        {'option_a':'G_leaf','option_b':'G_pivot','reason':'One guide per button.'},
+        {'option_a':'G_leaf','option_b':'R_spring','reason':'The leaf already returns the button.'}]}
 
 
 CHOSEN={1:{'B_lever','G_pivot','R_switch','S_hardstop'},2:{'B_lever','G_pivot','R_spring','S_hardstop'},
         3:{'B_lever','G_pivot','R_spring','S_hardstop'},4:{'B_lever','G_pivot','R_spring','S_hardstop'},
         5:{'B_lever','G_pivot','R_spring','S_hardstop'},6:{'B_lever','G_pivot','R_spring','S_hardstop'},
         7:{'B_lever','G_pivot','R_spring','S_hardstop'},8:{'B_lever','G_pivot','R_spring','S_hardstop'},
-        9:{'B_lever','G_pivot','R_spring','S_hardstop'},10:{'B_lever','G_pivot','R_spring','S_hardstop'}}
+        9:{'B_lever','G_pivot','R_spring','S_hardstop'},10:{'B_lever','G_pivot','R_spring','S_hardstop'},
+        11:{'B_lever','G_pivot','R_spring','S_hardstop'},12:{'B_lever','G_pivot','R_spring','S_hardstop'},
+        13:{'B_lever','G_pivot','R_spring','S_hardstop'},14:{'C_flexure','G_leaf','S_switch'},15:{'C_flexure','G_leaf','S_switch'},16:{'C_flexure','G_leaf','S_switch'}}
 REASONS={
     1:'Lever on a pin pivot keeps the outer skin unchanged and is fully covered by rigid rotation, '
       'clearance and wall checks; the switch spring avoids an extra part. Flexure options cannot be '
@@ -157,7 +176,32 @@ REASONS={
       'the gauge procedure are refreshed.',
     10:'Revision 10 after the five-role review of revision 9 (no blocking findings): the stop is set with a depth '
        'gauge read normal to the skin (value computed from the measured skin normal), the no-click back-out step is '
-       'removed, and the housing check reaches the deepest pose the gauge band and hinge play allow.'}
+       'removed, and the housing check reaches the deepest pose the gauge band and hinge play allow.',
+    11:'Revision 11 after the five-role review of revision 10 (no blocking findings, three roles found no blocker): '
+       'the gauge value is measured on the model at the stated read point, hinge play while gauging is included in '
+       'the deepest checked pose, the spring bore stays as printed (no tool access) with a pin-gauge check, and the '
+       'switch window may not sit closer than modeled.',
+    12:'Revision 12 after the five-role review of revision 11 (no blocking findings): the gauge is zeroed on the face at '
+       'rest and the stroke is set as a change in reading, calibrated by a script that finds the face edge on the STEP '
+       'and is re-run on every build test; hinge play while zeroing and gauging is in the deepest checked pose.',
+    13:'Revision 13 for several switch types (owner: Zippy DF3, Huano and the board vendor options): datasheets differ in '
+       'operating position by about 0.5 mm while guaranteed overtravel is 0.2-0.25 mm, so both stroke ends are set against '
+       'the fitted switch click (actuator screw for rest, stop screw for the end) in 1/16-turn steps; every registered '
+       'switch profile is evaluated and profiles with UNKNOWN datasheet values stay unverified.',
+    14:'Revision 14, leaf-spring variant (the common production-mouse construction): the face hangs on a printed leaf '
+       'spring, so the pin, return spring, rest screw and stop screw are gone; the switch takes the overtravel and '
+       'clearances are checked to the pin fully pressed. The leaf is checked by beam theory (stiffness, press force incl. '
+       'the largest registered switch force, static stress vs. the cited PETG datasheet); fatigue stays UNKNOWN. '
+       'The hinge variant (revision 13) remains an alternative; neither falls back to the other.',
+    15:'Revision 15 after the five-role review of revision 14 (blocking: unreacted rest pose, print-in-place gaps) and the owner policy '
+       '(ABS only; no screws except those supplied with the OP1): a separately printed ABS carrier (face, leaf, block) on two shell posts '
+       'with printed insert pins, a rest-stop tab under a shell lug, a printed actuator insert per switch profile with a fixed gap, '
+       'and leaf checks for stress concentration (ASSUMED) and twist under an edge press.',
+    16:'Revision 16 after the five-role review of revision 15 (blocking: carrier not located; twist criterion lowered to pass): '
+       'two parallel leaves 8 mm apart so the face translates and an edge press is held inside the original 0.15 mm gap, '
+       'two diagonal pins press-fitted in both block and posts along X (no play; presses load them in shear), modeled R1 '
+       'leaf fillets, a flat-printable carrier, inserts in 0.05 mm length steps chosen at assembly, and a uniform press force '
+       'across the face.'}
 
 
 def engineering_evaluation(candidates,revision=1):
@@ -166,10 +210,10 @@ def engineering_evaluation(candidates,revision=1):
     for c in candidates:
         ids={o['id'] for o in c['options']}
         rows.append({'options':sorted(ids),'candidate_digest':c['candidate_digest'],
-                     'verifiable_with_current_checks':'C_flexure' not in ids,
+                     'verifiable_with_current_checks':True,
                      'concept_part_names':c['part_names'],
                      'concept_part_count_note':'Concept-level part names only; the built part list is recorded in step 9_10.',
-                     'note':('Flexure return/stiffness would remain UNKNOWN (no elastic check).' if 'C_flexure' in ids
+                     'note':('Leaf stiffness, force band and static stress by beam theory; fatigue and creep UNKNOWN.' if 'C_flexure' in ids
                              else 'Rigid motion, clearance and wall checks apply.')})
     chosen=next((r for r in rows if CHOSEN[revision]<=set(r['options'])),None)
     return {'rows':rows,'chosen':chosen,'revision':revision,'reason':REASONS[revision],
@@ -219,6 +263,41 @@ def run_flow(run_root,design_revision=1):
         steps['8_recipe']={'revision':2,'angles_deg':angles_v2(),'parameters':P2,
                            'lineage':'Separate prototype, not a lineage-verified correction: hinge geometry changes the '
                                      'check angles, and revision 2 adds checks that revision 1 did not carry.'}
+    elif design_revision==16:
+        recipe=side_button_parallel_recipe()
+        steps['8_recipe']={'revision':16,'variant':'parallel_leaf_carrier','deep_travel_mm':deep_travel_v16(),'edge_press_twist':twist_v16(),
+                           'parameters':{k:(list(v) if isinstance(v,tuple) else v) for k,v in PP.items()},
+                           'switch_profile_fit':[insert_fit_v15(pr,{**PC,**{k:v for k,v in PP.items() if k in PC}}) for pr in SWITCH_PROFILES.values()],
+                           'owner_policy':['ABS only (owner).','No screws except those supplied with the OP1 (owner).'],
+                           'lineage':'Separate prototype: parallel-leaf guide instead of a single leaf; not a correction of revision 15.'}
+    elif design_revision==15:
+        recipe=side_button_carrier_recipe()
+        steps['8_recipe']={'revision':15,'variant':'flexure_carrier','angles_deg':angles_v15(),'pivot_xy_mm':list(pivot_v15()),
+                           'pivot_envelope_mm':pivot_envelope_v15(),'parameters':{k:(list(v) if isinstance(v,tuple) else v) for k,v in PC.items()},
+                           'switch_profile_fit':[insert_fit_v15(pr) for pr in SWITCH_PROFILES.values()],
+                           'owner_policy':['ABS only (owner).','No screws except those supplied with the OP1 (owner).'],
+                           'lineage':'Separate prototype: separately printed carrier instead of print-in-place; not a correction of revision 14.'}
+    elif design_revision==14:
+        recipe=side_button_leaf_recipe()
+        steps['8_recipe']={'revision':14,'variant':'leaf_spring','angles_deg':angles_leaf(),'pivot_xy_mm':list(pivot_xy()),
+                           'parameters':PL,'switch_profile_fit':switch_fit_report_leaf(),
+                           'lineage':'Separate prototype (different mechanism class), not a correction of revision 13.'}
+    elif design_revision==13:
+        recipe=side_button_recipe_v13()
+        steps['8_recipe']={'revision':13,'angles_deg':angles_v13(),'parameters':P13,
+                           'switch_setting_windows_mm':setting_windows_v13(),
+                           'switch_profile_fit':switch_fit_report_v13(),
+                           'lineage':'Separate prototype, not a lineage-verified correction: actuator, switch placeholder, stroke and checks changed.'}
+    elif design_revision==12:
+        recipe=side_button_recipe_v12()
+        steps['8_recipe']={'revision':12,'angles_deg':angles_v12(),'parameters':P12,
+                           'gauge_stroke_mm':gauge_stroke_v12_mm(),'deepest_accepted_angle_deg':deepest_accepted_angle_v12_deg(),
+                           'lineage':'Separate prototype, not a lineage-verified correction: gauge procedure and checks changed.'}
+    elif design_revision==11:
+        recipe=side_button_recipe_v11()
+        steps['8_recipe']={'revision':11,'angles_deg':angles_v11(),'parameters':P11,
+                           'gauge_reading_mm':gauge_reading_v11_mm(),'deepest_accepted_angle_deg':deepest_accepted_angle_v11_deg(),
+                           'lineage':'Separate prototype, not a lineage-verified correction: housing depth, gauge procedure and checks changed.'}
     elif design_revision==10:
         recipe=side_button_recipe_v10()
         steps['8_recipe']={'revision':10,'angles_deg':angles_v10(),'parameters':P10,
@@ -303,7 +382,7 @@ def main(argv=None):
     group=parser.add_mutually_exclusive_group()
     group.add_argument('--submit-reviews',type=Path,help='Directory of reviewer-written Review JSON files.')
     group.add_argument('--delivery',action='store_true',help='Write the hash-bound human handoff for the built subject.')
-    parser.add_argument('--revision',type=int,choices=(1,2,3,4,5,6,7,8,9,10),default=10,help='Design revision to build (new runs only).')
+    parser.add_argument('--revision',type=int,choices=(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16),default=16,help='Design revision to build (new runs only).')
     args=parser.parse_args(argv)
     try:run_root=resolve_run_root(args.run_root,must_exist=bool(args.submit_reviews or args.delivery))
     except ValueError as exc:parser.error(str(exc))

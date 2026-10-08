@@ -214,7 +214,7 @@ class Studio:
         project_steps=sorted((node.id,node.artifact_id,node.sha256,node.role)
                              for node in recipe.operations if isinstance(node,ProjectStep))
         checks={name:[item.model_dump() for item in getattr(recipe,name)]
-                for name in ('dimension_checks','clearance_checks','motion_checks','rotation_checks','wall_checks','press_fits')}
+                for name in ('dimension_checks','clearance_checks','motion_checks','rotation_checks','wall_checks','press_fits','base_shape_checks','flexure_checks')}
         return {'original_request':recipe.original_request,'functions':recipe.functions,
                 'protected_constraints':recipe.protected_constraints,'project_steps':project_steps,
                 'output_part_ids':sorted(item.part_id for item in recipe.outputs),'checks':checks,

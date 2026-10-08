@@ -1,0 +1,181 @@
+{
+ "schema_version": 1,
+ "subject_digest": "391f5a67c8a4292c1eb905c247bf4d825d0af35ea739a4a16ddbf9e30072b2ca",
+ "role": "assembly",
+ "reviewer_label": "Claude subagent (assembly role, rev15 carrier)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "A1-pins-carry-press-in-pullout",
+   "severity": "major",
+   "claim": "The carrier block is held against the press load only by the press-fit friction of the two printed pins. The block sits on the +y ends of the shell posts (y=20) and the pin heads bear on its -y face (y=16.5). Pressing the face moves the button -y, so the leaf root pulls the block -y, away from the posts and onto the pin heads. Both pins are at the same x (-33.5), so the root moment about z is reacted only across the post and head radii. The moment is about 2.49 N x 22 mm = 55 N.mm (leaf tip force from beam_n 1.71 N x 27.16/18.70). The rocking arm is about 3.8 mm (post edge x -35.7 to head edge x -31.9). That puts roughly 17 N of pull-out on the 0.05 mm-interference ABS fits on every full press, plus prying at the head. The contract says only that the carrier is \"fixed by two printed insert pins\" and that retention is \"not qualified\". It does not state that the pins carry the working load in the pull-out direction.",
+   "evidence": [
+    "context.recipe.operations: block_raw y 16.5-20, post_1/post_2 origin y 20 axis +y, pin heads y 15.7-16.5, pin_z 9.0 and 14.5 at one x (-33.5)",
+    "measurements.json leaf-spring-beam: beam_n 1.7137 N at the plunger, beam_force_ratio 0.688 (tip at 18.70 mm, plunger at 27.16 mm)",
+    "measurements.json: overlap-shell-carrier_block distance 0.0 (block on post ends); overlap-carrier_block-pin_1 distance 0.0 (head on block)",
+    "Hand estimate (this review, rigid contacts): H = (2.49 N x 4.7 mm + 54.8 N.mm)/3.8 mm = about 17.5 N on the heads",
+    "unverified_requirements: \"Pin and insert retention in printed ABS ... not qualified\" (retention named, load direction not)"
+   ],
+   "proposed_change": "Give the block a shell-side bearing for -y loads so the pins only locate and retain. Options: a shell saddle or hook that the block slides under, a rib behind the block, or posts that pass the block and bear on its -y face. As a second choice, spread the pins in x across the block so the root moment has a longer arm. Then state the pin load path and its estimated magnitude in the contract.",
+   "required_test": "Add a recorded load-path calculation (force on pins and posts at the 3 N band edge). Physically, print the carrier and posts, cycle the button (for example 1,000 full presses), then measure pin back-out and block lift-off with a feeler gauge, and measure the pin pull-out force of three printed samples."
+  },
+  {
+   "id": "A2-redundant-zero-datums-no-tolerance-budget",
+   "severity": "major",
+   "claim": "The fit is defined only at nominal, using several line-on-line datums that the build tolerances will fight. (a) Pin tip y=23.000 equals the blind post-hole bottom y=23.000, and the head seats on the block at the same moment. If the FDM hole comes out short, the head stands off and the block is not clamped. (b) Block-on-post (y=20) and tab-on-lug (y=26.5) are both zero-gap stops in y on the same carrier, so any print error becomes either face play or a preloaded leaf. (c) The 0.05 mm insert-to-switch-pin rest gap is far below FDM accuracy. It depends on an unmodelled chain (ASSUMED PCB plane, board, base, shell posts, block, leaf, plunger hole depth, insert length) and is not adjustable. So the statement \"At rest the actuator does not touch the switch pin, so no switch force pushes the face outward\" is true only at nominal, but the design basis states it without that qualifier. The revision-14 blocker (unreacted rest pose) is now reacted by the lug at nominal. Whether it stays fixed under tolerance is untested.",
+   "evidence": [
+    "STEP probe: pin_1/pin_2 bbox ymax 23.000; shell material on the pin axis starts at y 23.000 (z 9.0 and 14.5)",
+    "measurements.json: overlap-carrier_block-pin_1 distance 0.0, overlap-shell-carrier_block distance 0.0, overlap-rest_stop-button distance 0.0",
+    "measurements.json rest-outward-blocked-by-lug: at axis offsets with +y play the first blocked angle is 0.0 deg (already in contact at rest)",
+    "measurements.json rest-gap-insert-to-pin 0.050 mm vs required 0.049 mm; unverified_requirements: \"PCB plane is ASSUMED\"",
+    "design_basis.assumptions: \"At rest the actuator does not touch the switch pin (fixed gap), so no switch force pushes the face outward\""
+   ],
+   "proposed_change": "Make the pins 0.3-0.5 mm shorter than the hole depth (or deepen the hole) so that only the head seats. Choose one y datum for the carrier: the block on the posts. Give the tab a small designed gap to the lug, or make the lug the single datum, and state which one sets face flushness. Write the rest-gap claim as nominal with a tolerance budget. Provide adjustment, such as a set of insert lengths in 0.1 mm steps or a sanding allowance, with a stated limit that worst-case interference stays inside the Zippy pretravel (0.62 max) and is reacted by the lug.",
+   "required_test": "A worst-case 1-D stack (PCB plane to switch pin, shell post to block to leaf to plunger to insert) recorded in the contract, plus a CAD re-run of rest-gap-insert-to-pin and the lug check at the stack extremes. Physically, print the parts, assemble them, then measure the head seating, face flushness and insert-to-pin gap (feeler or click/no-click at rest)."
+  },
+  {
+   "id": "A3-twist-case-and-threshold",
+   "severity": "major",
+   "claim": "The twist check does not match the face geometry, and its threshold was lowered below the measured values without a recorded basis. The face spans z 10-18 and the leaf centreline is z 12.5, so a press at the top edge is 5.5 mm off, not the stated 4 mm \"face edge\". A press at the bottom edge is only 2.5 mm off. The symmetric +/-1.28 deg sweep therefore under-tests the top edge and over-tests the bottom edge. The rigid-rotation probe in this review used the recipe axes. At 3 N on the top edge (1.76 deg) the gap is 0.043 mm with the face at rest, rising to 0.071 mm at the deepest press. At the start of travel it is below even the relaxed 0.05 mm. The verdicts measured for the ASSUMED case were 0.140 mm (+) and 0.099 mm (-), and the negative sweep is continuous_swept_motion not_proven (bound 0.018 mm). Both are below the first-drafted 0.15 mm. That is the same pattern as lowering a threshold until the check passes, which AGENTS.md forbids unless the basis is stated. Allowing contact in an abuse case could be defended, but the contract gives no reason for 0.05 mm. Separately, the claim that normal presses keep 0.15 mm is not checked by any recipe check. My probe of a centre press (1.5 mm off, 0.48 deg) combined with press rotation gives 0.29-0.31 mm, so that claim holds, but the recipe never measures it.",
+   "evidence": [
+    "STEP bbox: button z 10.0-18.0; leaf_spring z 6.5-18.5; twist axis origin [0, 18.3, 12.5]",
+    "measurements.json twist-positive-clear min 0.1404 mm; twist-negative-clear min 0.0993 mm, continuous bound 0.0179 mm, not_proven",
+    "Probe (this review, rigid rotation, BRepExtrema): +1.759 deg about the twist axis gives 0.0434 mm at rest, 0.0567 mm with -1.0 deg press and 0.0708 mm at -2.139 deg press; -1.759 deg gives 0.0 mm",
+    "Probe: centre press twist +/-0.48 deg combined with -0.5 to -2.139 deg press gives 0.289-0.310 mm",
+    "Task note: twist_min_gap was drafted at 0.15 mm and set to 0.05 mm by the designer before freeze"
+   ],
+   "proposed_change": "Compute the torque from the real face extremes: 5.5 mm at the top edge and 2.5 mm at the bottom, for 16.5 and 7.5 N.mm at 3 N. Sweep the two directions separately, combined with the press rotation they occur with. Either restore 0.15 mm and change the geometry (centre the leaf width on the face z range, or move the face or leaf so the twist axis sits near z 14), or keep a relaxed abuse-case criterion and record why touching the shell is acceptable (no latch, no damage). Add an explicit centre-press check that backs the claim that normal presses keep 0.15 mm.",
+   "required_test": "Re-run the rotation checks with the corrected per-edge angles combined with the press angle, recording the threshold basis. Physically, press 3 N on the top edge of a printed button in the shell and check for rubbing or catching (for example with a feeler or a witness-paint mark)."
+  },
+  {
+   "id": "A4-assembly-sequence-and-carrier-path-unchecked",
+   "severity": "minor",
+   "claim": "No check covers the stated carrier insertion (\"from the cavity side until the tab meets the lug\"); motion checks exist only for the two pins, and those exclude the shell and any PCB. My bounded probe found the straight +y approach and a vertical approach through the open rim clear (min 0.4 mm to the shell at a 0.6-1.0 mm retreat). However, the plunger and insert pass through the switch volume, so the switch and its board must be installed after the carrier and pins. The contract does not state this order, and the ASSUMED switch base plane at y 15.4 is 0.3 mm from the pin heads (y 15.7). A real board that reaches x -33.5 would block pin insertion and removal.",
+   "evidence": [
+    "context.recipe.motion_checks: only pin-1-insertion and pin-2-insertion, obstacles carrier_block, leaf_spring, button",
+    "Probe (this review): carrier compound translated -y by 0.02-6 mm gives a min distance to the shell of 0.02, 0.1, 0.3, 0.4, 0.4, 0.518, 1.372, 2.286, 4.096 mm, and to the lug equal to the offset up to 3 mm; a vertical approach at -6 mm stays at 4.76 mm or more",
+    "STEP bbox: switch_body y 15.4-22.05, x -4.35..8.35; button plunger from y 24.0 at x -0.5..4.5; insert y 22.8; pin heads y 15.7-16.5 at x -35.1..-31.9"
+   ],
+   "proposed_change": "Add a translation motion check for the carrier (button, leaf, block and insert together) against the shell and rest_stop along the stated path. Write the full order into the contract: insert, then carrier, then pins, then switch/PCB. Add a keep-out volume for pin-pressing tool access at x -33.5 (y < 15.7) that the PCB must respect, and state the disassembly path (pin extraction).",
+   "required_test": "Kernel motion check of the carrier insertion (sampled, with the obstacle list including rest_stop), and a static clearance of a pin-tool keep-out against the PCB once its outline is known."
+  },
+  {
+   "id": "A5-stale-concept-record",
+   "severity": "minor",
+   "claim": "The flow record still describes the chosen concept with revision-14 text that contradicts revision 15 and the owner policy. C_flexure reads \"Printed in place with the shell\" and \"A PETG leaf ...\", and G_leaf reads \"Printed in place; no pin or tabs\". Revision 15 is a separately printed ABS carrier with pins and a stop tab. The step 7 reason text is correct, so the two parts of the record disagree.",
+   "evidence": [
+    "FLOW_RESULT.json steps.5_6_portfolio_and_synthesis candidate 28716d57...: options C_flexure, G_leaf, S_switch with the quoted assembly_method and assumptions",
+    "FLOW_RESULT.json steps.7_engineering_evaluation reason: \"a separately printed ABS carrier ... printed insert pins ... rest-stop tab\"",
+    "Owner policy: ABS only"
+   ],
+   "proposed_change": "Regenerate or annotate the concept options for revision 15 (ABS, separately printed carrier, two printed pins, stop tab and lug) so the record matches the CAD and the owner policy.",
+   "required_test": "grep the regenerated FLOW_RESULT.json for PETG and \"printed in place\" and expect no matches for the chosen candidate."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "39ed2ec00653c296b0446dc60ebe7680229148f98451163be8f7a28865476f57",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r15-20261007/workspace/studio/side-button-flow/391f5a67c8a4292c-3cc59900/actuator_insert/iso.png",
+   "status": "viewed",
+   "observation": "Plain cylinder, no chamfer or lead-in on either end; STEP bbox y 22.8-28.0, r 1.0, so it bottoms in the 4.01 mm blind hole (y 23.99-28.0) and protrudes 1.2 mm; the hole bottom is the protrusion datum."
+  },
+  {
+   "attachment_sha256": "4efe90e84db309b5c8df95fe1f635111dcac090bc51e15f095e74c686fbf4bf4",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r15-20261007/workspace/studio/side-button-flow/391f5a67c8a4292c-3cc59900/assembly.png",
+   "status": "viewed",
+   "observation": "Outside view only: face sits flush in the window with an even running-gap line; carrier, pins, lug and switch are hidden inside, so the picture shows no mating interface or insertion path."
+  },
+  {
+   "attachment_sha256": "e3b02c8290dea7e14561223c83fee9ad9e42ca5f31cd8aa6a529bc72fd28377d",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r15-20261007/workspace/studio/side-button-flow/391f5a67c8a4292c-3cc59900/build-record.json",
+   "status": "viewed",
+   "observation": "Holds the same rev-15 recipe as the packet context: assembly assumption (carrier in until tab meets lug, pins pressed, insert pressed first), rest_gap 0.05, twist_min_gap 0.05, pin interference 0.05 / clearance 0.1; motion checks exist for the pins only, none for the carrier or the switch/PCB."
+  },
+  {
+   "attachment_sha256": "1288cba0f1e00156e0f94eadda1528bf770b2075315a52cedfe949e6b45f28d5",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r15-20261007/workspace/studio/side-button-flow/391f5a67c8a4292c-3cc59900/button/iso.png",
+   "status": "viewed",
+   "observation": "Curved skin-piece face with spine, plunger and the riser carrying the stop tab; STEP bbox z 10-18 while the leaf is z 6.5-18.5 (centre 12.5), so the face top edge is 5.5 mm and bottom edge 2.5 mm off the leaf centreline."
+  },
+  {
+   "attachment_sha256": "327aaa3a0d2499f3aa01a77c9e4af7cbf293352324cbf5555b69f8c69b4a397b",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r15-20261007/workspace/studio/side-button-flow/391f5a67c8a4292c-3cc59900/carrier_block/iso.png",
+   "status": "viewed",
+   "observation": "Rectangular block with two plain through holes (r 1.1, pin r 1.0) on one x position (x -33.5) at z 9 and 14.5; no counterbore, no locating feature other than the pins; holes are off the block z-centre."
+  },
+  {
+   "attachment_sha256": "8aa9056e46be42cee17fb832bcaca90d4c5c5365ae4ca48c85f7a8869b941346",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r15-20261007/workspace/studio/side-button-flow/391f5a67c8a4292c-3cc59900/leaf_spring/iso.png",
+   "status": "viewed",
+   "observation": "Flat 22 x 1.6 x 12 mm plate with sharp corners (no root fillet), consistent with the ASSUMED Kt 1.5 label."
+  },
+  {
+   "attachment_sha256": "8fcd8e8c9601bb5bebc333165086451510b00fbec40098fdc72d5aca00d7cce4",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r15-20261007/workspace/studio/side-button-flow/391f5a67c8a4292c-3cc59900/measurements.json",
+   "status": "viewed",
+   "observation": "82 checks all pass; twist-positive min 0.140 mm, twist-negative min 0.099 mm (continuous bound 0.018, not_proven) - both below the originally drafted 0.15 mm; rest-gap insert-pin 0.050; block-shell and pin-head-block distances 0.0; rest-outward blocked at all 9 play offsets."
+  },
+  {
+   "attachment_sha256": "2bc598036d924faf4d5c192d2f54585a54e19598e881e86d5f824a43c77033fd",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r15-20261007/workspace/studio/side-button-flow/391f5a67c8a4292c-3cc59900/pin_1/iso.png",
+   "status": "viewed",
+   "observation": "Headed pin, head r 1.6 x 0.8, shank r 1.0 to y 23.000, which equals the post hole bottom (shell material starts at y 23.000 on the axis): tip bottoming and head seating are the same nominal event."
+  },
+  {
+   "attachment_sha256": "893286530f65facc5f505e9b80488090414778d98ce542d921e1e334ffb030fa",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r15-20261007/workspace/studio/side-button-flow/391f5a67c8a4292c-3cc59900/pin_2/iso.png",
+   "status": "viewed",
+   "observation": "Identical to pin_1 (same volume 26.854 mm3); no lead-in chamfer on the press-fit end and no grip/extraction feature on the head."
+  },
+  {
+   "attachment_sha256": "223273030c95b1fd5e2dd0a106bbc8e5b77e5640a7c1844faf9a138920e29307",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r15-20261007/workspace/studio/side-button-flow/391f5a67c8a4292c-3cc59900/rest_stop/iso.png",
+   "status": "viewed",
+   "observation": "Wedge lug following the cavity curve; flat -y face at y 26.5 meets the tab top (contact area about 6.6 mm2); probed y depth 0.95-2.1 mm before it joins the skin. Exported as its own solid although described as the same print as the shell."
+  },
+  {
+   "attachment_sha256": "753014f8070ba7b2f0c8bc77095eeba4787c8504c0b9e5d3eb683ebb9b894b03",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r15-20261007/workspace/studio/side-button-flow/391f5a67c8a4292c-3cc59900/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell with the open side window; posts and lug are not visible from this view; open bottom rim gives the only entry path for the carrier."
+  },
+  {
+   "attachment_sha256": "7b7ff223cd76a231584532d3550c5add6ea3acfa2b6bc33c58be318ab63c7a92",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r15-20261007/workspace/studio/side-button-flow/391f5a67c8a4292c-3cc59900/switch_body/iso.png",
+   "status": "viewed",
+   "observation": "Plain box placeholder 12.7 x 6.65 x 5.8, base at y 15.4 on the ASSUMED PCB plane; no PCB, mounting holes or board outline modelled."
+  },
+  {
+   "attachment_sha256": "fd8db53b8591eaf6d4aa5d5b471e6979c55a1bc6d95246fd6c452a7485c253d3",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r15-20261007/workspace/studio/side-button-flow/391f5a67c8a4292c-3cc59900/switch_pin/iso.png",
+   "status": "viewed",
+   "observation": "Box pin at maximum free position (top y 22.75), 0.05 mm below the insert end face; pin x size labelled ASSUMED 1.2 mm."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Real switch part number, its free and operating positions, and how it mounts (board, PCB plane, OP1 side-switch board outline) are UNKNOWN. The 0.05 mm rest gap and the pin-tool access depend on them. Only the owner or a measurement can settle this.",
+  "Real shell geometry: the stand-in loft is not the OP1 shell. Post location, wall and lug placement must be re-derived from a scan or STEP.",
+  "Retention of 0.05 mm radial interference fits in printed ABS (pins and insert), with creep relaxation under the cyclic pull-out load: physical test only.",
+  "Whether the owner accepts face-to-shell contact under an off-centre abuse press, and what \"easier to press\" means in force and travel: owner question.",
+  "Revision-14 blockers: the rest pose is now reacted by the lug (blocked at all 9 play offsets) and print-in-place gaps are gone (separate carrier print). Twist is checked but see A3. Root stress concentration is still ASSUMED 1.5 on sharp corners.",
+  "Owner policy compliance: all printed parts are ABS and no screws are used (pins and insert are printed). The only conflicting text is the stale concept record (A5).",
+  "My probes were rigid-body BRepExtrema distances at sampled poses on the exported STEP, not continuous sweeps. The pin load figure is a hand estimate with rigid contacts, not FEA.",
+  "Disassembly and serviceability (pin extraction without damaging the posts) were not assessed in CAD."
+ ]
+}

@@ -1785,10 +1785,13 @@ def side_button_recipe_v10(request=REQUEST,p=None):
 # - Switch window no closer than modeled (+0.00 mm), so the housing margin
 #   is not spent by the switch position; setting force stated; spring screw
 #   set flush; shell-gap sweep reaches the deepest accepted pose.
+# - Hinge play while gauging is added to the deepest accepted pose; the
+#   placeholder housing moves to a 1.00 mm stem bottoming depth so the
+#   housing margin still holds there; a first-article bottoming test is set.
 # ---------------------------------------------------------------------------
 P11=dict(P10)
 P11.update({'gauge_stop_reading_mm':1.4429,'gauge_mm_per_deg':.4694,'gauge_read_z_mm':14.,'gauge_read_inset_mm':1.,
-            'gauge_setting_force_n':5.})
+            'gauge_setting_force_n':5.,'gauge_play_reading_mm':.035,'housing_margin_after_operating_mm':.5})
 
 
 def angles_v11(p=P11):
@@ -1803,7 +1806,9 @@ def gauge_reading_v11_mm(p=P11,angle_deg=None):
 
 def deepest_accepted_angle_v11_deg(p=P11):
     a=angles_v11(p)
-    return a['stop']-a['stop_play']-p['gauge_band_mm']/p['gauge_mm_per_deg']-p['gauge_check_margin_deg']
+    # Hinge play can shift the reading while gauging (up to the radial play at the read point) and the
+    # stop contact in use (stop_play); both are taken on the deep side, independently.
+    return a['stop']-a['stop_play']-(p['gauge_band_mm']+p['gauge_play_reading_mm'])/p['gauge_mm_per_deg']-p['gauge_check_margin_deg']
 
 
 def side_button_recipe_v11(request=REQUEST,p=None):
@@ -1838,9 +1843,303 @@ def side_button_recipe_v11(request=REQUEST,p=None):
         'Assembly order: button in from below and slid into the slot; dowel pressed up into the upper tab; spring then spring screw, set flush with the inward block face; stop screw and its jam nut; rest screw and its jam nut; adjust; then switch/PCB. Changing spring preload later means loosening the stop nut and re-gauging the stop.',
         f'Adjustment (no switch needed): turn the rest screw until the face is flush with the skin beside the window front edge, lock its nut; press the face with about {p["gauge_setting_force_n"]:.0f} N and turn the stop screw until a depth gauge whose foot rests on the skin beside the front edge, rod normal to the skin, 1.0 mm in from the face front edge at mid height (z 14), reads {g:.2f} mm (accept {g-band:.2f}-{g+band:.2f} mm; it reads about 0.05 mm at rest); lock its nut and re-read. Fit the PCB and confirm the click; do not back the stop out to get a click.']
     r['verification_plan']=[x for x in r['verification_plan'] if not x.startswith('Placeholder housing clear (at least 0.05 mm) down to')]+[
-        f'Placeholder housing clear (at least 0.05 mm) and nearest shell gap (at least 0.15 mm) down to {deep:.3f} deg: the deepest gauge-accepted stop plus hinge play and a {p["gauge_check_margin_deg"]:.2f} deg margin, at every play offset (sampled).']
+        f'Placeholder housing clear (at least 0.05 mm) and nearest shell gap (at least 0.15 mm) down to {deep:.3f} deg: the deepest gauge-accepted stop plus hinge play while gauging and in use, and a {p["gauge_check_margin_deg"]:.2f} deg margin, at every play offset (sampled).']
     r['unverified_requirements']=[x for x in r['unverified_requirements'] if not x.startswith(('Switch selection','Return spring selection','Gauge reading'))]+[
-        f'Switch selection: operating point no deeper than 0.50 mm and total travel to bottoming of at least 0.95 mm; the plunger pushes the far edge of the stem about {stem_push_mm(p):.2f} mm at the nominal stop and up to about {stem_push_mm(p,deep):.2f} mm at the deepest accepted pose; stem within -0.15/+0.00 mm in Y of the modeled position (never closer, which would spend the housing margin). A missing click after adjustment means the switch or PCB is outside this band.',
+        f'Switch selection: operating point no deeper than 0.50 mm and total travel to bottoming of at least 1.00 mm (the placeholder housing depth); the plunger pushes the far edge of the stem about {stem_push_mm(p):.2f} mm at the nominal stop and up to about {stem_push_mm(p,deep):.2f} mm at the deepest accepted pose; stem within -0.15/+0.00 mm in Y of the modeled position (never closer, which would spend the housing margin). A missing click after adjustment means the switch or PCB is outside this band.',
         f'Return spring selection: outside diameter at most 1.2 mm (0.2 mm radial clearance in the printed 1.6 mm bore); solid length below {spring_deep:.2f} mm (deepest accepted stop, spring screw flush). Its preload adds to thumb force.',
-        'Gauge reading: calibrated on the CAD model; printed layer cusps (about 0.04 mm) and stop-path flex under the setting force (estimated about 0.01 mm per N) are not modeled, so the first article is checked for stiffness and for a free switch at a firm press.']
+        'Gauge reading: calibrated on the CAD model; printed layer cusps (about 0.04 mm) and stop-path flex under the setting force (estimated about 0.01 mm per N) are not modeled, so the first article is tested: read the gauge at the setting force and at 10 N, with and without the switch fitted; equal readings with and without the switch show the switch does not bottom, and the 5-10 N difference is the stop-path flex.']
+    return r
+
+
+# ---------------------------------------------------------------------------
+# Revision 12: repairs the revision-11 round-1 findings.
+# - The revision-11 calibration ray hit the face at its front edge, not 1.0 mm
+#   in -> the gauge is calibrated by scripts/side_button_gauge.py, which finds
+#   the face front edge on the STEP and reads 1.0 mm in; the build test re-runs
+#   it on the built parts, so the contract number cannot drift from the model.
+# - The absolute reading moved by about 0.02 mm with the foot position on the
+#   curved skin -> the gauge is zeroed on the face at rest and the stroke is
+#   set as a change in reading (stable within 0.002 mm across foot positions).
+# - Hinge play while zeroing and while gauging (about 0.035 + 0.062 mm of
+#   reading) is added to the deepest accepted pose that the housing and shell
+#   sweeps must clear; to keep the 0.15 mm shell gap and 0.05 mm housing
+#   margin at that deeper pose the nominal stop moves to 0.15 mm past the
+#   operating point (was 0.20) and the stop-screw tip stands 0.4 mm proud of
+#   the inward block (was 0.3), so the stop web keeps its gap to the block
+#   face at the deepest pose. Press point for the setting force is stated.
+# - First-article flex test has a pass limit; the spring has a minimum free
+#   length so it preloads the face onto the rest screw.
+# ---------------------------------------------------------------------------
+P12=dict(P11)
+P12.update({'stop_extra_travel_mm':.15,'block_recess_mm':.4,'gauge_stroke_reading_mm':1.312,'gauge_mm_per_deg':.455,'gauge_play_reading_mm':.097,
+            'gauge_skin_probe_x_mm':16.,'gauge_skin_probe_y_mm':32.,'gauge_skin_probe_z_mm':14.})
+for _k in ('gauge_stop_reading_mm','gauge_skin_normal_x','gauge_skin_normal_y','gauge_skin_normal_z','gauge_read_z_mm'):
+    P12.pop(_k,None)
+
+
+def angles_v12(p=P12):
+    return angles_v11(p)
+
+
+def gauge_stroke_v12_mm(p=P12,angle_deg=None):
+    """Change in gauge reading from the rest pose (zeroed there) to a hinge angle; measured calibration."""
+    a=angles_v12(p)['stop'] if angle_deg is None else angle_deg
+    return p['gauge_stroke_reading_mm']+p['gauge_mm_per_deg']*(angles_v12(p)['stop']-a)
+
+
+def deepest_accepted_angle_v12_deg(p=P12):
+    a=angles_v12(p)
+    return a['stop']-a['stop_play']-(p['gauge_band_mm']+p['gauge_play_reading_mm'])/p['gauge_mm_per_deg']-p['gauge_check_margin_deg']
+
+
+def side_button_recipe_v12(request=REQUEST,p=None):
+    p=dict(P12 if p is None else p)
+    q=dict(P11);q.update({k:v for k,v in p.items() if k in P11})
+    q['gauge_play_reading_mm']=p['gauge_play_reading_mm']
+    r=side_button_recipe_v11(request,q)
+    p['depth_gauge_mm']=p['gauge_stroke_reading_mm']
+    r['title']='Side button improvement trial, revision 12 (zeroed gauge stroke, model-checked calibration)'
+    r['design_parameters']={k:float(v) for k,v in p.items()}
+    r['parameter_basis']={k:'Proposal for this prototype revision; not measured from a real mouse, switch or PCB.' for k in p}
+    for k in ('gauge_stroke_reading_mm','gauge_mm_per_deg','depth_gauge_mm'):
+        r['parameter_basis'][k]=('Measured on the button and shell STEP by scripts/side_button_gauge.py (foot on the skin nearest the '
+                                 'probe point, rod normal to it, 1.0 mm in from the face front edge): stop reading minus rest reading '
+                                 '1.312 mm (1.3123-1.3132 over three foot positions), 0.455 mm per degree; re-measured by the build test.')
+    r['parameter_basis']['gauge_play_reading_mm']=('Hinge radial play (0.035 mm) while zeroing at rest plus the play spread while gauging '
+                                                   'at the stop (about 0.062 mm, revision-11 assembly review contact model).')
+    a=angles_v12(p);deep=deepest_accepted_angle_v12_deg(p)
+    rot={c['id']:c for c in r['rotation_checks']}
+    rot['housing-clear-past-stop'].update(end_deg=deep)
+    rot['nearest-shell-gap-until-stop'].update(end_deg=deep)
+    r['rotation_checks']=list(rot.values())
+    g=gauge_stroke_v12_mm(p);band=p['gauge_band_mm'];ops={o['id']:o for o in r['operations']}
+    spring=ops['spring']['height_mm'];lever=p['hinge_y_mm']-p['spring_y_mm']
+    spring_stop=spring-lever*math.sin(math.radians(-a['stop']));spring_deep=spring-lever*math.sin(math.radians(-deep))
+    plunger_x=(p['plunger_x_min_mm']+p['plunger_x_max_mm'])/2;plunger_z=(p['plunger_z_min_mm']+p['plunger_z_max_mm'])/2
+    basis=r['design_basis']
+    basis['assumptions']=[x for x in basis['assumptions'] if not x.startswith(('Return spring:','Adjustment'))]+[
+        f'Return spring: compression spring, outside diameter at most 1.2 mm, installed length about {spring:.2f} mm, about {spring_stop:.2f} mm at the nominal stop and {spring_deep:.2f} mm at the deepest accepted stop; rate and preload not selected (placeholder envelope).',
+        f'Adjustment (no switch needed): turn the rest screw until the face is flush with the skin beside the window front edge, lock its nut. Put the depth-gauge foot on the skin beside the front edge at mid height, rod normal to the skin and 1.0 mm in from the face front edge, and zero it with the button at rest. Press the face over the plunger (x {plunger_x:.0f}, z {plunger_z:.0f}) with about {p["gauge_setting_force_n"]:.0f} N and turn the stop screw until the reading changes by {g:.2f} mm (accept {g-band:.2f}-{g+band:.2f} mm); lock its nut, release, re-zero and re-read. Fit the PCB and confirm the click; do not back the stop out to get a click.']
+    r['verification_plan']=[x for x in r['verification_plan'] if not x.startswith('Placeholder housing clear (at least 0.05 mm) and nearest shell gap')]+[
+        f'Placeholder housing clear (at least 0.05 mm) and nearest shell gap (at least 0.15 mm) down to {deep:.3f} deg: the deepest gauge-accepted stop including hinge play while zeroing, gauging and in use, and a {p["gauge_check_margin_deg"]:.2f} deg margin, at every play offset (sampled).',
+        'The gauge calibration is re-measured on the built button and shell STEP and must match the stated stroke reading.',
+        'The housing margin is checked against the placeholder housing at a 1.00 mm stem bottoming depth; a switch that bottoms sooner is outside the selection limit and is caught by the first-article bottoming test.']
+    r['unverified_requirements']=[x for x in r['unverified_requirements'] if not x.startswith(('Switch selection','Return spring selection','Gauge reading'))]+[
+        'Gauge reading: calibrated on the CAD model; printed layer cusps (about 0.04 mm) on the skin and face are not modeled.',
+        f'Switch selection: operating point no deeper than 0.50 mm and total travel to bottoming of at least 1.00 mm (the placeholder housing depth); the plunger pushes the far edge of the stem about {stem_push_mm(p):.2f} mm at the nominal stop and up to about {stem_push_mm(p,deep):.2f} mm at the deepest accepted pose. The switch and PCB placement is accepted by the first-article bottoming test, not by a position band; the model places the stem at its nominal position.',
+        f'Return spring selection: outside diameter at most 1.2 mm (0.2 mm radial clearance in the printed 1.6 mm bore); solid length below {spring_deep:.2f} mm (deepest accepted stop, spring screw flush); free length at least {spring+.3:.2f} mm so it preloads the face onto the rest screw (the face must not rattle when the shell is shaken). Its preload adds to thumb force.',
+        'Stop-path flex: estimated about 0.01 mm of reading per N (printed stop-web bending, unverified). First article: re-read the gauge at 10 N; the change from the 5 N reading must be at most 0.03 mm, and with the switch fitted the 10 N reading must equal the reading without it (switch not bottomed). Thumb force above 10 N is outside the checked range.']
+    return r
+
+
+# ---------------------------------------------------------------------------
+# Revision 13: one design for several switch types (owner: Zippy DF3, Huano
+# and others offered by the board vendor).
+# - Datasheets differ in operating position by about 0.5 mm while the
+#   guaranteed overtravel is only 0.2-0.25 mm, so a stop set to one gauge
+#   value cannot serve every switch. Both ends of the stroke are now set
+#   against the fitted switch's own click, in 1/16-turn (0.025 mm) steps:
+#   * an M2 dog-point actuator screw in the plunger (reached through a
+#     1.6 mm hole in the face) sets the rest position just above release;
+#   * the stop screw is set just past the click.
+# - The switch placeholder is generated from a registered switch profile;
+#   every registered profile is evaluated (switch_fit_v13) and profiles with
+#   UNKNOWN datasheet values are reported as unverified, never as passing.
+# ---------------------------------------------------------------------------
+from cadmcp_brain.studio.switch_profiles import PROFILES as SWITCH_PROFILES, missing_for_click_referenced_stop
+
+P13=dict(P12)
+for _k in [k for k in P13 if k.startswith('gauge_')]+['depth_gauge_mm','housing_margin_after_operating_mm',
+                                                       'assumed_stem_operating_travel_mm']:
+    P13.pop(_k,None)
+P13.update({'plunger_x_min_mm':-.5,'plunger_x_max_mm':4.5,
+            'adjust_step_mm':.025,               # 1/16 turn of an M2 x 0.4 thread
+            'rest_steps_back':3,'stop_steps_past':2,
+            'actuator_thread_length_mm':4.,'actuator_point_radius_mm':.5,'actuator_point_length_mm':1.,
+            'actuator_tip_below_plunger_mm':1.2,
+            'deep_check_margin_deg':.03,'design_switch_profile':0.})
+DESIGN_SWITCH='zippy_df_pin'
+
+
+def _lever13(p):
+    return (p['plunger_x_min_mm']+p['plunger_x_max_mm'])/2-p['hinge_x_mm']
+
+
+def _stop_contact_radius13(p):
+    return p['hinge_y_mm']-(p['screw_y_mm']-p['screw_radius_mm'])
+
+
+def setting_windows_v13(p=P13,md_mm=.12):
+    """Actuator-axis distances fixed by the click-referenced procedure (mm), before hinge play.
+
+    Rest: turn the actuator in until the switch operates with the button at rest, out until it
+    releases, then rest_steps_back steps further out: the tip sits above OP by
+    [rest_steps_back*s, md + (rest_steps_back+1)*s).
+    Stop: with the button pressed, turn the stop screw out one step at a time until the switch
+    operates, then stop_steps_past steps more: overshoot past OP in [k*s', (k+1)*s'),
+    s' the stop step referred to the actuator.
+    """
+    s=p['adjust_step_mm'];s_stop=s*_lever13(p)/_stop_contact_radius13(p)
+    rest=(p['rest_steps_back']*s,md_mm+(p['rest_steps_back']+1)*s)
+    over=(p['stop_steps_past']*s_stop,(p['stop_steps_past']+1)*s_stop)
+    return {'rest_above_op_mm':rest,'overshoot_mm':over,'step_mm':s,'stop_step_at_actuator_mm':s_stop}
+
+
+def _inherited_params13(p):
+    """Revision-12 parameters driven by the click-referenced nominal rest offset and overshoot."""
+    w=setting_windows_v13(p,max(_md_values()))
+    q=dict(P12);q.update({k:v for k,v in p.items() if k in P12})
+    q['stem_free_play_mm']=sum(w['rest_above_op_mm'])/2;q['assumed_stem_operating_travel_mm']=0.
+    q['stop_extra_travel_mm']=sum(w['overshoot_mm'])/2;q['housing_margin_after_operating_mm']=.5
+    return q
+
+
+def angles_v13(p=P13):
+    a=angles_v12(_inherited_params13(p))  # stop/rest play, tilt; press/stop restated below
+    lever=_lever13(p);w=setting_windows_v13(p,max(_md_values()))
+    rest_nom=sum(w['rest_above_op_mm'])/2;over_nom=sum(w['overshoot_mm'])/2
+    a['click']=-math.degrees(rest_nom/lever)
+    a['press']=a['click']
+    a['stop']=-math.degrees((rest_nom+over_nom)/lever)
+    deep=w['rest_above_op_mm'][1]+w['overshoot_mm'][1]
+    a['deep']=-math.degrees(deep/lever)-a['stop_play']-p['deep_check_margin_deg']
+    return a
+
+
+def _md_values():
+    return [pr.movement_differential.value for pr in SWITCH_PROFILES.values() if pr.movement_differential.known]
+
+
+def _op_and_body_top(profile):
+    """Operating position and body top on the profile's own height datum, with tolerances."""
+    return (profile.operating_position.value,profile.operating_position.tolerance or 0.,
+            profile.body_height.value,profile.body_height.tolerance or 0.)
+
+
+def switch_fit_v13(profile,p=P13):
+    """Check the click-referenced setting against one switch profile; UNKNOWN data gives 'unverified'."""
+    missing=missing_for_click_referenced_stop(profile)
+    if not (profile.operating_position.known and profile.body_height.known):
+        missing=sorted(set(missing)|{k for k in ('operating_position','body_height') if not getattr(profile,k).known})
+    if missing:
+        return {'profile':profile.id,'verdict':'unverified','missing':missing,
+                'reason':'Datasheet values needed by the setting procedure are UNKNOWN; no pass is claimed.'}
+    a=angles_v13(p);lever=_lever13(p)
+    w=setting_windows_v13(p,profile.movement_differential.value)
+    play_rest=math.radians(a['rest_play'])*lever;play_stop=math.radians(a['stop_play'])*lever
+    over_lo,over_hi=w['overshoot_mm'][0]-play_stop,w['overshoot_mm'][1]+play_stop
+    rest_lo=w['rest_above_op_mm'][0]-play_rest
+    ot=profile.overtravel.value
+    op,op_tol,top,top_tol=_op_and_body_top(profile)
+    # The dog point (radius point_r) presses the pin; the thread above it must stay clear of the body top.
+    thread_above_body=(op-op_tol)-over_hi+p['actuator_point_length_mm']-(top+top_tol)
+    checks={
+        'no_operation_at_rest':{'value_mm':rest_lo,'required':'> 0 (tip above the release point with rest play)','pass':rest_lo>0},
+        'operates_at_stop':{'value_mm':over_lo,'required':'> 0 (past OP with stop play)','pass':over_lo>0},
+        'within_guaranteed_overtravel':{'value_mm':over_hi,'limit_mm':ot,'margin_mm':ot-over_hi,
+                                        'required':'overshoot + stop play below the guaranteed overtravel','pass':over_hi<ot},
+        'thread_clears_body':{'value_mm':thread_above_body,'required':'> 0 at the deepest pose with OP and body tolerances','pass':thread_above_body>0},
+    }
+    return {'profile':profile.id,'verdict':'pass' if all(c['pass'] for c in checks.values()) else 'fail',
+            'checks':checks,'overtravel_left_for_flex_mm':ot-over_hi,
+            'scope':'Rigid 1-D stack along the actuator axis from datasheet limits, the adjustment step and hinge play; contact flex, '
+                    'thread backlash and the click-detection method are not modeled.'}
+
+
+def switch_fit_report_v13(p=P13):
+    return [switch_fit_v13(pr,p) for pr in SWITCH_PROFILES.values()]
+
+
+def side_button_recipe_v13(request=REQUEST,p=None):
+    p=dict(P13 if p is None else p)
+    a=angles_v13(p);lever=_lever13(p)
+    # Drive the inherited stop geometry from the click-referenced nominal stop.
+    q=_inherited_params13(p);rest_nom=q['stem_free_play_mm']
+    r=side_button_recipe_v12(request,q)
+    ops={o['id']:o for o in r['operations']}
+    order=[o['id'] for o in r['operations'] if o['id'] not in ('switch_housing','switch_stem')]
+    profile=SWITCH_PROFILES[DESIGN_SWITCH]
+    op,_,top,_=_op_and_body_top(profile)
+    px=(p['plunger_x_min_mm']+p['plunger_x_max_mm'])/2;pz=(p['plunger_z_min_mm']+p['plunger_z_max_mm'])/2
+    tip_y=p['plunger_tip_y_mm']-p['actuator_tip_below_plunger_mm']
+    op_y=tip_y-rest_nom;base_y=op_y-op
+    pl=ops['plunger_box'];pl.update(size_mm=[p['plunger_x_max_mm']-p['plunger_x_min_mm'],pl['size_mm'][1],pl['size_mm'][2]],
+                                    center_mm=[px,pl['center_mm'][1],pl['center_mm'][2]],
+                                    reason='Plunger carrying the actuator screw toward the switch pin.')
+    tap=p['tap_radius_mm'];sr=p['screw_radius_mm'];pr_=p['actuator_point_radius_mm']
+    thread_y0=tip_y+p['actuator_point_length_mm'];thread_len=p['actuator_thread_length_mm']
+    new=[{'id':'actuator_hole','op':'cylinder','function_id':'F3_actuate_switch','reason':'Tap hole for the actuator screw, open through the face for a 0.9 mm hex key.',
+          'radius_mm':tap,'height_mm':20.,'origin_mm':[px,p['plunger_tip_y_mm']-1.,pz],'axis':[0.,1.,0.]},
+         {'id':'actuator_thread','op':'cylinder','function_id':'F3_actuate_switch','reason':'M2 dog-point grub screw: thread.',
+          'radius_mm':sr,'height_mm':thread_len,'origin_mm':[px,thread_y0,pz],'axis':[0.,1.,0.]},
+         {'id':'actuator_point','op':'cylinder','function_id':'F3_actuate_switch','reason':'M2 dog-point grub screw: Ø1.0 point pressing the switch pin.',
+          'radius_mm':pr_,'height_mm':p['actuator_point_length_mm']+.01,'origin_mm':[px,tip_y,pz],'axis':[0.,1.,0.]},
+         {'id':'actuator_screw','op':'union','function_id':'F3_actuate_switch','reason':'Adjustable actuator: sets the rest position against the switch release point.',
+          'operands':['actuator_thread','actuator_point']},
+         _box('switch_body','F3_actuate_switch',f'Switch body from profile {profile.id} ({profile.model}); placed with OP {rest_nom:.3f} mm below the actuator tip at rest.',
+              [px-profile.body_length.value/2,base_y,pz-profile.body_width.value/2],[px+profile.body_length.value/2,base_y+top,pz+profile.body_width.value/2]),
+         _box('switch_pin','F3_actuate_switch','Switch pin drawn at its rest pose under the actuator (pin x size UNKNOWN; 1.2 mm assumed).',
+              [px-.6,base_y+top,pz-profile.plunger_width.value/2],[px+.6,tip_y,pz+profile.plunger_width.value/2])]
+    for o in new:ops[o['id']]=o
+    ops['button']['operands']=list(ops['button']['operands'])+['actuator_hole']
+    i=order.index('button');order[i:i]=['actuator_hole']
+    order+=['actuator_thread','actuator_point','actuator_screw','switch_body','switch_pin']
+    r['operations']=[ops[n] for n in order]
+    r['title']='Side button improvement trial, revision 13 (click-referenced stroke for several switch types)'
+    r['design_parameters']={k:float(v) for k,v in p.items()}
+    r['parameter_basis']={k:'Proposal for this prototype revision; not measured from a real mouse, switch or PCB.' for k in p}
+    r['parameter_basis']['adjust_step_mm']='1/16 turn of an M2 x 0.4 thread.'
+    r['outputs']=[o for o in r['outputs'] if o['part_id'] not in ('switch_housing','switch_stem')]+[
+        {'part_id':'actuator_screw','node':'actuator_screw','manufacturing_process':'Purchased M2 x 5 dog-point grub screw (ISO 4028: point Ø1.0 x 1.0), self-tapped into the plunger'},
+        {'part_id':'switch_body','node':'switch_body','manufacturing_process':f'Placeholder for a purchased switch (profile {profile.id}); not manufactured'},
+        {'part_id':'switch_pin','node':'switch_pin','manufacturing_process':'Placeholder for the switch pin; part of the purchased switch'}]
+    engaged=(thread_y0+thread_len)-p['plunger_tip_y_mm']
+    ring=math.pi*(sr**2-tap**2)
+    r['press_fits']=r['press_fits']+[
+        {'id':'actuator-thread','part_a':'actuator_screw','part_b':'button','min_overlap_mm3':.7*ring*engaged,'max_overlap_mm3':1.3*ring*engaged,
+         'basis':'M2 thread engaged in the printed plunger, modeled as an interference annulus.'}]
+    r['clearance_checks']=[c for c in r['clearance_checks'] if c['id']!='rest-button-housing']+[
+        {'id':'rest-button-switch-body','part_a':'button','part_b':'switch_body','min_mm':.5},
+        {'id':'rest-actuator-thread-switch-body','part_a':'actuator_screw','part_b':'switch_body','min_mm':.3}]
+    rot={c['id']:c for c in r['rotation_checks']}
+    for k in ('rest-band-stem-free','stem-contact-by-free-play'):rot.pop(k,None)
+    h=rot.pop('housing-clear-past-stop')
+    h.update(id='switch-body-clear-to-deepest',obstacles=['switch_body'],carried_parts=['actuator_screw'],end_deg=a['deep'],min_mm=.05)
+    rot['switch-body-clear-to-deepest']=h
+    rot['nearest-shell-gap-until-stop'].update(end_deg=a['deep'],carried_parts=['actuator_screw'])
+    rot['rise-with-play-clear-of-skin']['carried_parts']=['actuator_screw']
+    r['rotation_checks']=list(rot.values())
+    # Outer form: outside the side-button region the delivered shell and button must match the base skin.
+    r['base_shape_checks']=[{'id':'outer-form-matches-base','base_node':'outer','parts':['shell','button'],'tolerance_mm':.05,
+                             'samples_per_face':16,'regions':[
+        {'id':'side-button-region','kind':'allowed_change','reason':'Owner allows outer-form changes around the side buttons (window, running gap, access hole).',
+         'lo_mm':[p['window_x_min_mm']-1.,20.,p['window_z_min_mm']-1.],'hi_mm':[p['window_x_max_mm']+3.,40.,p['window_z_max_mm']+1.]},
+        {'id':'open-bottom','kind':'not_in_base','reason':'The base outer form is the skin; its bottom cap is the open rim where the base plate fits.',
+         'lo_mm':[-70.,-40.,-.1],'hi_mm':[70.,40.,.1]}]}]
+    fits=switch_fit_report_v13(p)
+    basis=r['design_basis']
+    basis['assumptions']=[x for x in basis['assumptions'] if not x.startswith(('Adjustment','Switch housing'))]+[
+        'Switch: any pin-plunger mouse micro switch with a registered profile; the placeholder is drawn from the Zippy DF datasheet. The owner board places it; the stroke is set against the fitted switch, so its height may vary.',
+        f'Adjustment (switch fitted, its output read by the mouse software or a continuity meter; M2 x 0.4 screws turned in 1/16-turn steps, {p["adjust_step_mm"]:.3f} mm): '
+        f'(1) rest screw until the face is flush, lock its nut; (2) with the button at rest, turn the actuator screw in through the face hole until the switch operates, out until it releases, then {p["rest_steps_back"]} steps further out; '
+        f'(3) press the face over the plunger with about 5 N and turn the stop screw out one step at a time until the switch operates at the stop, then {p["stop_steps_past"]} steps more; lock its nut; (4) confirm click and release ten times.',
+        'Face: a 1.6 mm access hole for the actuator screw at the plunger (side-button region, where the owner allows changes).']
+    s=setting_windows_v13(p,max(_md_values()))
+    r['verification_plan']=[x for x in r['verification_plan'] if 'gauge' not in x.lower() and not x.startswith(('Placeholder housing','The housing margin','Overtravel:','Free play:','Actuation:'))]+[
+        'Overtravel: the hard stop blocks motion by the nominal stop angle plus the play angle at every play offset.',
+        f'Switch body clear by at least 0.05 mm, and nearest shell gap at least 0.15 mm, down to {a["deep"]:.3f} deg (largest rest offset and overshoot over the profiles, stop play and a {p["deep_check_margin_deg"]:.2f} deg margin), with the actuator screw carried.',
+        'Outer form: outside the side-button region the shell and button match the base skin (no material outside it, every sampled base-skin point within 0.05 mm of material); a deviation there is a blocker.',
+        'Every registered switch profile is evaluated for the click-referenced setting (no operation at rest, operation at the stop, overshoot within the guaranteed overtravel, thread clear of the body); profiles with UNKNOWN values are reported unverified.']
+    summary='; '.join(f"{f['profile']}: {f['verdict']}"+(f" (overtravel left {f['overtravel_left_for_flex_mm']:.3f} mm)" if f['verdict']!='unverified' else f" (missing {', '.join(f['missing'])})") for f in fits)
+    spring=ops['spring']['height_mm'];spring_lever=p['hinge_y_mm']-p['spring_y_mm']
+    spring_deep=spring-spring_lever*math.sin(math.radians(-a['deep']))
+    basis['assumptions']=[x for x in basis['assumptions'] if not x.startswith('Return spring:')]+[
+        f'Return spring: compression spring, outside diameter at most 1.2 mm, installed length about {spring:.2f} mm, at least {spring_deep:.2f} mm at the deepest checked pose; rate and preload not selected (placeholder envelope).']
+    r['unverified_requirements']=[x for x in r['unverified_requirements'] if not x.startswith(('Switch selection','Gauge reading','Stop-path flex','The switch is located','Switch housing','Return spring selection','Rigid face travel','Outer-form changes'))]+[
+        'Rigid face travel at the nominal stop (designer estimate): about '+', '.join(f'{(x+15)*math.sin(math.radians(-a["stop"])):.2f} mm at x={x}' for x in (-10,2,14))+'; the stroke is short because rest and stop are both set close to the switch operating point.',
+        'Outer-form changes awaiting owner acceptance: the 0.4 mm running gap (about 38 mm3 of skin) and a 1.6 mm actuator access hole in the face; after flush adjustment hinge play lets the face stand proud by about 0.1 mm at the free edge.',
+        f'Return spring selection: outside diameter at most 1.2 mm; solid length below {spring_deep:.2f} mm; free length at least {spring+.3:.2f} mm so it preloads the face onto the rest screw. Its preload and the switch force add to thumb force.',
+        f'Switch profiles (rigid 1-D stack from datasheets): {summary}.',
+        'Switch pin x size and the hex-key access to the stop screw with the owner PCB fitted are not known; the actuator point must land on the pin top.',
+        'Stop-path and plunger flex at thumb forces above the setting force are estimated (about 0.01 mm per N) and consume the overtravel left above; first article: press at 10 N and confirm release still occurs when the face is let go and the switch shows no damage after 1000 presses.']
     return r

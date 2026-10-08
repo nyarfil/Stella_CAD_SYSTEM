@@ -1,0 +1,135 @@
+{
+ "schema_version": 1,
+ "subject_digest": "4a646ca790f037dc9f76bf4598caa593b96e924a73892d6a4a619965a2ef21f5",
+ "role": "manufacturing",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (manufacturing role, rev14 leaf)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "M1-print-in-place-horizontal-gaps",
+   "severity": "blocking",
+   "claim": "The stated manufacturing route (one FDM print, shell rim-down, leaf and button printed in place, '0.4 mm running gap separates face and shell on all sides') does not produce a free button in that orientation, and nothing checks or labels this. Rim-down, the window's top and bottom running gaps are horizontal: the shell lintel's downward face at z=18.4 is a ~25 mm unsupported bridge (x -10.4..14.6) hanging 0.4 mm over the button top at z=18, and the button's lower skin strips at z=10 are printed 0.4 mm above the shell sill. In addition the button is an unanchored island for its first 1 mm: its lowest faces are at z=10 (skin strips and plunger), but the leaf and pad that join it to anything only start at z=11. So the first button layers need support; under the plunger that support can stand on the bed, but under the skin strips it would have to sit in the 0.4 mm slot on the sill, where it cannot be removed. Without it the strips droop onto the sill. Either way the face is likely to fuse to the shell at its top and bottom edges, which defeats the 'printed in place, free running gap' claim. The unverified list only says 'print-in-place gap ... depend[s] on printer calibration', which does not disclose an orientation and overhang conflict that is purely geometric.",
+   "evidence": [
+    "My CadQuery probe on the exported STEPs: button downward-facing planar faces at z=10.00 (areas 13.13, 13.05, 6.90 mm2 on the skin strips, y 29.5-31.8; 31.97 mm2 on the plunger), at z=11.00 (pad, 9.91 mm2) and at z=12.60 (spine). Leaf bottom at z=11.00 (10 mm2). Button bbox z 10.0-18.0, leaf bbox z 11.0-16.0.",
+    "Vertical ray probe: from the button bottom strips at z=10 (x=-9..13.5, y=30.0-31.5) the shell is reached 0.42 mm below (sampling step 0.02 mm), i.e. the 0.4 mm gap sits directly above the sill. From the button top at z=18 (x=-9..13.5) the shell lintel is 0.42 mm above. Shell downward face at z=18.40 spans x -10.4..14.61, y 27.26..29.86 (37.81 mm2).",
+    "Below the plunger bottom (x=2, y=25, z=10) there is no shell within 12 mm, so it needs a 10 mm support column from the bed.",
+    "Recipe design_basis: 'Printed in place with the shell (rim-down); the 0.4 mm running gap separates face and shell on all sides.' The outputs give manufacturing_process 'FDM ... printed in place' for shell, leaf_spring and button.",
+    "measurements.json check kinds: no overhang, support, bridging or island check; verification_plan has no printability item."
+   ],
+   "proposed_change": "Make the stated route printable, or change the stated route. Option A: change the window's top and bottom gap faces (on both the shell and the button) to self-supporting slopes. For a rim-down print, cut them at an angle so that no horizontal face of the button or shell lies directly over the other part across the gap. Also give the button's lowest layer an anchor: start the leaf/pad at or below the button's lowest z, or add a declared break-off sprue to the shell. Option B: declare a different orientation or process (for example, print the button and leaf separately and attach them), with the part count and assembly step stated. In both cases add a declared support/overhang statement to the contract (which faces need support, where support goes, how it is removed) and mark print-in-place success as UNKNOWN until printed.",
+   "required_test": "Run an automated downward-facing-face scan in the declared build direction, for each printed part. Report each face with a normal below a stated overhang limit together with what lies under it: the bed, another printed part (and the gap), or nothing. Fail when a face sits over another part across a gap smaller than the declared support-plus-clearance, and fail when a part's lowest layer has no connection to the bed or to support. Then do a physical print of the stated orientation: confirm that the button deflects freely with no fused edges, and record the slicer settings."
+  },
+  {
+   "id": "M2-leaf-root-wedge-and-sharp-corner",
+   "severity": "major",
+   "claim": "The leaf root as modelled is not what will print, and it is not what the beam check assumes. The leaf's outer face (y=27) runs into a closing wedge gap against the shell's inner wall near the root. The gap is 0.10 mm at x=-18.9, 0.37 mm at x=-18.5 and 0.54 mm at the PRBM pivot x=-17.5. Material that close is likely to merge in FDM, shifting the effective root along the leaf by an amount that depends on calibration. Both leaf ends also meet the root block and the pad with sharp 90-degree concave corners. The flexure check is 'rigid root, Euler-Bernoulli' with a 10.0 mm length and no stress concentration. Its static margin (15.88 MPa against a 23.5 MPa allowance, factor 1.48) is used up by an ordinary sharp-corner bending stress concentration of about 1.5-2, and stiffness goes as 1/L^3, so a 1 mm shorter effective length raises k by about 37 %. The pivot location (-17.5, 26.5) used by every rotation check is derived from the same idealised length.",
+   "evidence": [
+    "My CadQuery BRepExtrema probe, leaf_spring vs shell excluding the root contact: x>-18.9 gives 0.100 mm; x>-18.5 gives 0.367 mm (leaf (-18.50,27.00,16.00) to shell (-18.57,27.34,16.11)); x>-17.5 gives 0.543 mm; x>-14 gives 1.083 mm; x>-10 gives 1.578 mm.",
+    "leaf_spring/iso.png and the recipe op 'leaf' (box 10 x 1 x 5 at center -14, 26.5, 13.5) show no root fillet or taper. The leaf and the root block meet with a square corner at x=-19.",
+    "measurements.json leaf-spring-beam: beam_mm length 10.0, thickness 1.0, peak_mpa 15.88, allowed_mpa 23.5, prbm_pivot_from_fixed_end_mm 1.5; scope 'rigid root ... No FEA'."
+   ],
+   "proposed_change": "Move the leaf inboard (or relieve the shell's inner wall locally) so that the leaf-to-wall gap along the free length is no smaller than the window running gap, and terminate the root on the root block face with a modelled fillet. Add fillets at the pad end too. Then rerun the flexure check with the actual free length, and either include a stated stress-concentration factor for the filleted root or state explicitly that the root concentration is UNKNOWN and not covered by the allowance.",
+   "required_test": "Run a distance check between the leaf free length (excluding a declared root zone) and the shell, with a stated minimum. Rerun the beam check with the revised length and root geometry. Physically, print a leaf coupon in the declared orientation and measure force against deflection at the plunger, to compare with k = 2.125 N/mm and the 0.3-3 N band."
+  },
+  {
+   "id": "M3-anisotropy-mapping-assumed",
+   "severity": "minor",
+   "claim": "The flexure check takes 'horizontal' datasheet values: a flexural modulus of 1.7 GPa and a tensile yield of 47 MPa, both typical values rather than minima. The Prusa datasheet's horizontal values come from specimens printed flat. The leaf is a 1.0 mm wall printed edge-on, about two perimeters wide and 25 layers tall. The design basis presents 'bending stress runs along the extrusion lines' as the reason the orientation is safe. The direction argument is sound (stress along x lies in the layer plane, so the interlayer bond is not in tension), but mapping a flat-specimen value onto a two-perimeter edge-on wall is itself an assumption, and so is the printed thickness. At fixed deflection, stiffness goes as t^3 and stress as t. Neither assumption is labelled ASSUMED in the flexure check.",
+   "evidence": [
+    "materials.py prusament_petg: flexural_modulus_gpa horizontal 1.7, tensile_yield_mpa horizontal 47, interlayer_adhesion_mpa 18; source: Prusament PETG TDS, 'Mechanical properties of 3D printed testing specimens'.",
+    "Recipe flexure_checks orientation 'horizontal'; design_basis assumption 'printed rim-down so the leaf bending stress runs along the extrusion lines in each layer'.",
+    "Recipe leaf_thickness_mm 1.0 (parameter_basis: ASSUMED proposal)."
+   ],
+   "proposed_change": "Add a statement to the flexure check's basis that the edge-on thin-wall to flat-specimen property mapping and the as-printed leaf thickness are ASSUMED. Optionally report k and peak stress for t = 0.9 and 1.1 mm so that the sensitivity is visible.",
+   "required_test": "Print the leaf coupon in the declared orientation, measure its actual thickness and its stiffness, and back-calculate the effective modulus."
+  },
+  {
+   "id": "M4-support-plan-stand-in-shell",
+   "severity": "minor",
+   "claim": "The stand-in shell, printed rim-down, has a flat interior ceiling and interior walls that overhang well beyond 45 degrees, so the cavity needs extensive support. The root block and leaf bottoms at z=11 also need support. The contract states no support plan. The removal path for that support runs through the cavity past a 1 mm leaf that sits 0.37-1.6 mm from the wall. The shell is a declared stand-in, so this does not apply to a real shell, but the prototype as built from this CAD carries the burden.",
+   "evidence": [
+    "My probe: shell downward planar face at z=32.50 of 1790.62 mm2 (x -34.5..34.6, y -16.5..16.5) and a sloped inner face with mean normal z-component -0.59. Root block downward face at z=11.00 (x -22..-19, y 26..28.47, 6.53 mm2).",
+    "Recipe cavity loft sections: z=18 (53.5 x 28.5) to z=32.5 (34.5 x 16.5); the top section is a planar cap."
+   ],
+   "proposed_change": "State in the contract the support assumption for the rim-down print: which regions are supported, that removal is through the open rim, and that the support near the leaf needs care or a support blocker. Alternatively, note that the support burden belongs to the stand-in shell and is UNKNOWN for the real one.",
+   "required_test": "Slice the declared orientation, record the support regions and confirm that none fall within the running gap or between the leaf and the wall. After printing, confirm that support removal did not damage the leaf."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "83682a39f2abe4cd310a61d66b4da8a4e73f72da52c799cd9d013a4c22d3b527",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/actuator_screw/iso.png",
+   "status": "viewed",
+   "observation": "Stepped plain cylinder: Ø2 body (no thread or hex socket modelled) with a Ø1 dog point. Matches the 'M2 x 5 dog-point grub screw' purchased-part placeholder; bbox x1-3, y22.8-27.8, z12-14."
+  },
+  {
+   "attachment_sha256": "4def080e98067214e74d80f148bd875752ccd519e6db0cf08409fbd8705c4abc",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/assembly.png",
+   "status": "viewed",
+   "observation": "Dome shell with the green button face sitting in a side window; a thin running gap line is visible around the face and the actuator access hole is visible in the face. Internal leaf/root/plunger are not visible from this view, so the print orientation and the overhangs cannot be judged from the image."
+  },
+  {
+   "attachment_sha256": "ac68017959cb524da9cbc8b3d38614810b4ce0a71a7d2c85ba96c6df1bfdb631",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/build-record.json",
+   "status": "viewed",
+   "observation": "kind recipe_build, subject_digest 4a646ca7...f5 matches the packet, measurements.json registered with sha f831b29f...; recipe context outputs declare shell/leaf/button as 'FDM ... printed in place' and the design basis says 'printed rim-down'. No printability, overhang, support or bridging check exists in the recorded recipe."
+  },
+  {
+   "attachment_sha256": "16830d3314cbb13941de01acf115b986686fe6c3c3757bf64565cbe18623cce3",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/button/iso.png",
+   "status": "viewed",
+   "observation": "Curved skin piece with the through tap hole, with pad and plunger blocks behind it. All edges are sharp; the top and bottom edges of the face are square to the build direction (no chamfer), i.e. horizontal faces that face the shell across the 0.4 mm gap when printed rim-down."
+  },
+  {
+   "attachment_sha256": "7d420ba7ee05cff21bfd17446c1fafa50932b6904fba141595dc6fe02ea5e9c1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/leaf_spring/iso.png",
+   "status": "viewed",
+   "observation": "Plain rectangular slab 10 x 5 x 1 mm with square ends; no root or tip fillet or taper is modelled where it meets the root block and the pad."
+  },
+  {
+   "attachment_sha256": "f831b29f8abf6cdaab76cb383c7c2789cf3a5bf62645f58f3372e4a7c574c6ce",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/measurements.json",
+   "status": "viewed",
+   "observation": "overall_verdict unknown, geometry_checks_verdict pass. leaf-spring-beam: peak 15.88 MPa vs allowed 23.5 MPa (0.5 x 47 MPa 'horizontal' tensile yield), E from flexural modulus 1.7 GPa, k 2.125 N/mm, strain 0.934 %, scope 'rigid root'. Wall checks minimum_proven false (oblique-exit minima 0.016 mm shell, 0.041 mm button). Check kinds contain no overhang/support/bridge/island check."
+  },
+  {
+   "attachment_sha256": "dee2acdb811d1dd7f8a40f6d5a74bcc101d4e9457e2b797a5c3dfbe5157207e5",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell with open bottom rim and a quadrilateral side window; the lintel above the window is a thin band of the skin. The root block is internal and not visible; the flat interior ceiling is not visible from outside."
+  },
+  {
+   "attachment_sha256": "7b7ff223cd76a231584532d3550c5add6ea3acfa2b6bc33c58be318ab63c7a92",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/switch_body/iso.png",
+   "status": "viewed",
+   "observation": "Plain rectangular block placeholder for a purchased switch (12.7 x 6.65 x 5.8 mm per recipe); no manufacturing relevance beyond being bought-in."
+  },
+  {
+   "attachment_sha256": "e4c7a64560fa88a5e94b3f031a7f4acdc7923efaddc91025cda54eeb35210709",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/switch_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain thin rectangular block placeholder for the switch pin (x size 1.2 mm stated as assumed in the recipe)."
+  }
+ ],
+ "remaining_uncertainties": [
+  "No physical print was made by this reviewer. Print-in-place success, fusing at the running gap, and support removal are untested.",
+  "Fatigue strength of printed PETG and creep of the leaf under repeated clicks are UNKNOWN (declared), and a mouse button sees very many cycles.",
+  "Printed leaf thickness and stiffness depend on nozzle and line width and on calibration (declared). The 0.4 mm gap value is the designer's ASSUMED parameter, and I did not judge it against a universal clearance.",
+  "The M2 self-tapped thread in a horizontal, printed Ø1.6 hole: retention, stripping torque and thread wear from repeated adjustment are not verified (the press-fit check is rigid overlap volume only).",
+  "Wall checks are sampled (minimum_proven false). Oblique-exit minima of 0.016 mm (shell, near the window's far edge) and 0.041 mm (button) were not investigated by me and may indicate wedge edges.",
+  "Owner-only questions: the real shell geometry and its print/process, the real switch and its bottoming force rating, and what 'easier to press' means as a force or travel target.",
+  "The rotation checks treat the button as rigid about a PRBM pivot; the actual leaf path and the leaf's own clearance to the wall during the +0.3 deg rise are outside the manufacturing role and were not re-checked here."
+ ]
+}

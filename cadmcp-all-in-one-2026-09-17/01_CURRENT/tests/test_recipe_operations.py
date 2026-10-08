@@ -133,6 +133,29 @@ def test_rotation_check_detects_hinge_collision_and_certifies_free_travel():
     assert check['continuous_swept_motion']=='not_proven'
 
 
+@kernel
+def test_rotation_carries_attached_parts_into_the_obstacle_check():
+    import cadquery as cq
+    from cadmcp_brain.studio.recipe import evaluate_geometry
+    # A screw hanging 1.5 mm under the button tip meets the stop long before the button does.
+    data=hinge_recipe(2.)
+    data['operations'].append({'id':'screw','op':'box','function_id':'Button','reason':'Adjusting screw fixed to the button.',
+                               'size_mm':[1.,1.,1.5],'center_mm':[25.,0.,-.75]})
+    data['outputs'].append({'part_id':'screw','node':'screw'})
+    shapes={'stop':cq.Workplane().box(10.,10.,2.).val().translate((25.,0.,-3.)),
+            'button':cq.Workplane().box(30.,10.,2.).val().translate((15.,0.,1.)),
+            'screw':cq.Workplane().box(1.,1.,1.5).val().translate((25.,0.,-.75))}
+    alone=evaluate_geometry(Recipe.model_validate(data).model_dump(),shapes)
+    assert next(c for c in alone['checks'] if c['id']=='press')['verdict']=='pass'
+    data['rotation_checks'][0]['carried_parts']=['screw']
+    carried=evaluate_geometry(Recipe.model_validate(data).model_dump(),shapes)
+    check=next(c for c in carried['checks'] if c['id']=='press')
+    assert check['verdict']=='fail' and check['carried_parts']==['screw']
+    data['rotation_checks'][0]['carried_parts']=['stop']
+    with pytest.raises(ValidationError):
+        Recipe.model_validate(data)
+
+
 @pytest.mark.parametrize('mutation',['negative_radius','spline_reverse_z','spline_winding','duplicate_face',
                                      'zero_rotation','bad_axis','unknown_selector'])
 def test_new_operation_contracts_reject_invalid_input(mutation):
@@ -237,3 +260,122 @@ def test_sweep_and_section_loft_contracts(mutation):
             'profile':'polygon','mode':'ruled','sections':sections}
     with pytest.raises(ValidationError):
         Recipe.model_validate(_single(op))
+
+
+def _base_shape_recipe(regions=()):
+    ops=[{'id':'reference','op':'box','function_id':'Shell','reason':'Reference outer form (base shape).',
+          'size_mm':[20.,20.,10.],'center_mm':[0.,0.,5.]},
+         {'id':'body','op':'box','function_id':'Shell','reason':'Delivered body compared with the base.',
+          'size_mm':[20.,20.,10.],'center_mm':[0.,0.,5.]},
+         {'id':'keep','op':'union','function_id':'Shell','reason':'Keeps the reference node in the graph.','operands':['reference','body']}]
+    return base(ops,[{'part_id':'body','node':'keep'}],
+                base_shape_checks=[{'id':'outer-form','base_node':'reference','parts':['body'],'regions':list(regions),
+                                    'tolerance_mm':.05,'samples_per_face':6}])
+
+
+@kernel
+@pytest.mark.parametrize('change',['none','bulge','dent'])
+def test_base_shape_check_flags_changes_outside_allowed_regions(change):
+    import cadquery as cq
+    from cadmcp_brain.studio.recipe import evaluate_geometry
+    reference=cq.Solid.makeBox(20.,20.,10.,cq.Vector(-10.,-10.,0.))
+    body=reference
+    if change=='bulge':body=body.fuse(cq.Solid.makeBox(2.,2.,1.,cq.Vector(-1.,-1.,10.)))
+    if change=='dent':body=body.cut(cq.Solid.makeBox(4.,4.,1.,cq.Vector(-2.,-2.,9.)))
+    region={'id':'side-button','kind':'allowed_change','reason':'Owner allows changes around the side button.',
+            'lo_mm':[-3.,-3.,8.5],'hi_mm':[3.,3.,11.5]}
+    for regions,expected in [((),'pass' if change=='none' else 'fail'),((region,),'pass')]:
+        data=_base_shape_recipe(regions)
+        result=evaluate_geometry(Recipe.model_validate(data),{'body':body},{'reference':reference})
+        check=next(c for c in result['checks'] if c['id']=='outer-form')
+        assert check['verdict']==expected and check['blocking'] is True,(change,regions,check)
+        assert check['base_points_evaluated']>0
+    if change=='bulge':
+        data=_base_shape_recipe()
+        check=next(c for c in evaluate_geometry(Recipe.model_validate(data),{'body':body},{'reference':reference})['checks'] if c['id']=='outer-form')
+        assert check['bulge_mm3']==pytest.approx(4.,rel=1e-3)
+
+
+@kernel
+def test_base_shape_check_fails_closed_without_the_base():
+    import cadquery as cq
+    from cadmcp_brain.studio.recipe import evaluate_geometry
+    body=cq.Solid.makeBox(20.,20.,10.,cq.Vector(-10.,-10.,0.))
+    check=next(c for c in evaluate_geometry(Recipe.model_validate(_base_shape_recipe()),{'body':body})['checks'] if c['id']=='outer-form')
+    assert check['verdict']=='fail' and 'not available' in check['reason']
+
+
+def test_base_shape_check_needs_a_defined_base_node():
+    data=_base_shape_recipe()
+    data['base_shape_checks'][0]['base_node']='missing'
+    with pytest.raises(ValidationError):
+        Recipe.model_validate(data)
+
+
+def _flexure_recipe(**over):
+    ops=[{'id':'leaf','op':'box','function_id':'Button','reason':'Printed leaf spring (cantilever).',
+          'size_mm':[20.,1.,5.],'center_mm':[10.,0.,2.5]},
+         {'id':'root','op':'box','function_id':'Button','reason':'Rigid root block.',
+          'size_mm':[3.,6.,5.],'center_mm':[-1.5,0.,2.5]},
+         {'id':'part','op':'union','function_id':'Button','reason':'Leaf and root printed as one part.','operands':['root','leaf']}]
+    check={'id':'leaf-spring','part':'part','beam_node':'leaf','length_axis':'x','fixed_end':'min','bend_axis':'y',
+           'material':'prusament_petg','orientation':'horizontal','strength_basis':'tensile_yield','deflection_mm':.5,
+           'min_force_n':.1,'max_force_n':3.,'force_basis':'ASSUMED thumb-force band for the test subject.',
+           'switch_profiles':['zippy_df_pin'],'stress_allowance':.5,'allowance_basis':'ASSUMED half of yield (fatigue UNKNOWN).'}
+    check.update(over)
+    return base(ops,[{'part_id':'part','node':'part'}],flexure_checks=[check])
+
+
+@kernel
+def test_flexure_check_matches_cantilever_formula():
+    import cadquery as cq
+    from cadmcp_brain.studio.recipe import evaluate_geometry
+    part=cq.Solid.makeBox(23.,6.,5.,cq.Vector(-3.,-3.,0.)).cut(cq.Solid.makeBox(20.,2.5,5.,cq.Vector(0.,.5,0.))).cut(cq.Solid.makeBox(20.,2.5,5.,cq.Vector(0.,-3.,0.)))
+    result=evaluate_geometry(Recipe.model_validate(_flexure_recipe()),{'part':part})
+    check=next(c for c in result['checks'] if c['id']=='leaf-spring')
+    # PETG flexural modulus 1.7 GPa: k = 3EI/L^3 with I = 5*1^3/12.
+    k=3*1700*(5/12)/20**3
+    assert check['stiffness_n_per_mm']==pytest.approx(k)
+    assert check['checks']['force']['beam_n']==pytest.approx(k*.5)
+    assert check['checks']['stress']['peak_mpa']==pytest.approx(k*.5*20*.5/(5/12))
+    assert check['checks']['beam_in_part']['pass'] and check['fatigue']=='UNKNOWN'
+    assert check['checks']['force']['switch_operating_max_n']==pytest.approx(150*.00980665)
+    assert check['verdict']=='pass'
+    stiff=evaluate_geometry(Recipe.model_validate(_flexure_recipe(deflection_mm=8.)),{'part':part})
+    assert next(c for c in stiff['checks'] if c['id']=='leaf-spring')['verdict']=='fail'
+
+
+@kernel
+def test_flexure_check_refuses_unknown_switch_forces_and_missing_beams():
+    import cadquery as cq
+    from cadmcp_brain.studio.recipe import evaluate_geometry
+    part=cq.Solid.makeBox(3.,6.,5.,cq.Vector(-3.,-3.,0.))  # root only: the leaf is not in the part
+    check=next(c for c in evaluate_geometry(Recipe.model_validate(_flexure_recipe()),{'part':part})['checks'] if c['id']=='leaf-spring')
+    assert check['verdict']=='fail' and not check['checks']['beam_in_part']['pass']
+    whole=cq.Solid.makeBox(23.,6.,5.,cq.Vector(-3.,-3.,0.))
+    check=next(c for c in evaluate_geometry(Recipe.model_validate(_flexure_recipe(switch_profiles=['kailh_gm20','huano_mouse_generic'])),{'part':whole})['checks'] if c['id']=='leaf-spring')
+    assert check['checks']['force']['switch_profiles_without_force']==[]  # both publish an operating force
+    with pytest.raises(ValidationError):
+        Recipe.model_validate(_flexure_recipe(material='unobtainium'))
+    with pytest.raises(ValidationError):
+        Recipe.model_validate(_flexure_recipe(bend_axis='x'))
+
+
+
+@kernel
+def test_translation_blocking_and_carried_parts():
+    import cadquery as cq
+    from cadmcp_brain.studio.recipe import evaluate_geometry
+    ops=[{'id':'stop','op':'box','function_id':'Shell','reason':'Fixed lug above the part.','size_mm':[4.,4.,1.],'center_mm':[0.,0.,2.5]},
+         {'id':'body','op':'box','function_id':'Button','reason':'Moving part touching nothing.','size_mm':[4.,4.,1.],'center_mm':[10.,0.,1.5]},
+         {'id':'tab','op':'box','function_id':'Button','reason':'Tab carried by the part, resting under the lug.','size_mm':[2.,2.,1.],'center_mm':[0.,0.,1.5]}]
+    shapes={'stop':cq.Solid.makeBox(4.,4.,1.,cq.Vector(-2.,-2.,2.)),'body':cq.Solid.makeBox(4.,4.,1.,cq.Vector(8.,-2.,1.)),
+            'tab':cq.Solid.makeBox(2.,2.,1.,cq.Vector(-1.,-1.,1.))}
+    def run(carried):
+        data=base(ops,[{'part_id':n,'node':n} for n in ('stop','body','tab')],
+                  motion_checks=[{'id':'outward','moving_part':'body','carried_parts':carried,'obstacles':['stop'],
+                                  'translation_end_mm':[0.,0.,.5],'expect':'blocked','samples':5,'max_samples':5}])
+        return next(c for c in evaluate_geometry(Recipe.model_validate(data),shapes)['checks'] if c['id']=='outward')
+    assert run([])['verdict']=='fail'            # the body alone never meets the lug
+    blocked=run(['tab'])
+    assert blocked['verdict']=='pass' and blocked['kind']=='sampled_translation_blocking'

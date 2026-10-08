@@ -1,0 +1,152 @@
+{
+ "schema_version": 1,
+ "subject_digest": "4a646ca790f037dc9f76bf4598caa593b96e924a73892d6a4a619965a2ef21f5",
+ "role": "requirements",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (requirements role, rev14 leaf)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "R1-rest-pose-ignores-switch-preload",
+   "severity": "blocking",
+   "claim": "The stated rest pose, and every check made there, assume a rigid rest, but the button hangs only on a compliant leaf and the switch pin pushes it outward. With the recipe's own numbers (leaf 2.125 N/mm at the tip, moment ratio 8.5/19.5), the stiffness at the plunger is about 0.40 N/mm. The stated adjustment procedure sets rest by force balance near the release point, where the pin force is about RF. RF is at least 0.34 N (zippy S, 35 gf min), so the button would rest roughly 0.85 mm outward at the plunger, about 2.5 deg, with the far edge of the face about 1.3 mm proud of the skin. The rise check covers only +0.3 deg. The step \"turn in until the switch operates\" needs up to OF 1.47 N (150 gf max), which means about 3.6 mm (about 10.6 deg) outward. Applying the recipe's own beam formula there gives about 40 MPa in the leaf, against the 23.5 MPa allowance. So rest-button-shell, rise-clear-of-shell, outer-form-matches-base and the switch-fit check no_operation_at_rest (0.025 mm) are all evaluated at a pose the stated procedure does not produce. The design states this pose as the rest, so the outer-form preference (\"外形はできるだけ変えないで\") is reported as kept at rest without evidence.",
+   "evidence": [
+    "recipe design_basis: \"Adjustment ... with the button at rest turn the actuator screw in until the switch operates, out until it releases, then 3 steps of 1/16 turn further out.\"",
+    "measurements leaf-spring-beam: stiffness_n_per_mm 2.125, beam_force_ratio 0.4359 (8.50 mm / 19.50 mm). Plunger stiffness = 2.125 x (8.5/19.5)^2 is about 0.40 N/mm.",
+    "switch_profiles.py zippy_df_pin: release_force 35 gf min (S), operating_force 150 gf max (S); FP 7.35 max, OP 7.0 +/-0.2 above body bottom.",
+    "STEP probe: switch_pin y 22.3025..22.8 and actuator tip y 22.8. The tip is at OP+0.1475 mm, below FP (OP+0.35 max), so the pin is drawn pressed by up to 0.2 mm at rest.",
+    "STEP probe: the button rotated outward about (-17.5, 26.5) stays clear of the shell at 0.3/1/2/3/5 deg (0.375/0.318/0.239/0.161/0.013 mm), so nothing limits the outward float. rise-clear-of-shell checks only to +0.3 deg.",
+    "Stress at the adjustment pose: tip deflection sin(10.6 deg) x 8.5 is about 1.56 mm, F = 2.125 x 1.56 is about 3.3 N, sigma = F x 10 x 0.5 / 0.4167 is about 40 MPa, above allowed_mpa 23.5 (formula from recipe.py _flexure_check).",
+    "switch_fit_leaf no_operation_at_rest: value_mm 0.025 = 0.075 - 0.05. This is a rigid-stack screw offset; with leaf compliance most of the 0.075 mm back-off goes into leaf relaxation, not pin clearance."
+   ],
+   "proposed_change": "Make the rest pose consistent with the force path. One option is a geometric outward rest stop on the shell, preloading the leaf inward so the leaf preload exceeds the largest registered pin force at rest. Another is a leaf/lever ratio stiff enough that the pin force moves the rest by a stated small amount. Then rewrite the adjustment procedure so it works with the compliant support, and recompute no_operation_at_rest with the compliance included. Until then, label the modelled rest pose and the outer-form-at-rest claim UNVERIFIED in unverified_requirements.",
+   "required_test": "For each complete switch profile, compute the rest equilibrium angle from the leaf stiffness and the pin force range (RF min to OF max, plus the pin pre-compression at the modelled tip position). Rerun rise-clear-of-shell and the outer-form/bulge comparison of the button at that angle. Check leaf stress at the adjustment pose (switch operating with no thumb force) against the 0.5 x yield allowance. Recompute the rest margin to the release point with the compliance included and pivot play subtracted."
+  },
+  {
+   "id": "R2-F5-overtravel-function-dropped",
+   "severity": "major",
+   "claim": "The flow decomposed the request into F5_limit_overtravel, defined as \"Motion stops before the switch housing is loaded\". The chosen candidate claims F5 is covered by S_switch, whose principle is the opposite: the switch takes the overtravel to bottoming. The recipe then silently drops F4 and F5 from its functions list. S_switch also rests on the unlabelled assumption \"The switch tolerates bottoming at thumb force\", while the build record itself declares the switch bottoming rating UNKNOWN. F5 is an inferred function, not an explicit owner requirement, but the contract currently reports it as covered by an option that contradicts its own behaviour statement.",
+   "evidence": [
+    "FLOW_RESULT.json steps.3_function_decomposition F5_limit_overtravel behavior: \"Motion stops before the switch housing is loaded.\"",
+    "FLOW_RESULT.json chosen candidate a43a0269...: function_coverage F5_limit_overtravel -> [\"S_switch\"]; S_switch force_path \"Overtravel force goes into the switch pin to its bottoming.\"; assumption \"The switch tolerates bottoming at thumb force.\" (not marked ASSUMED)",
+    "recipe functions: only F1_transmit_force, F2_guide_button, F3_actuate_switch, F6_connect_shell",
+    "unverified_requirements: \"Switch bottoming force is carried by the switch (no hard stop); its maximum rated force is not in the registered datasheets (UNKNOWN).\""
+   ],
+   "proposed_change": "Do one of two things. Either restate F5 in the recipe as an inferred function with the accepted behaviour (\"overtravel is taken by the switch; bottoming rating UNKNOWN\"), mark the S_switch tolerance assumption ASSUMED/UNKNOWN, and do not report F5 as covered in the original sense. Or restore a stop that meets F5 as decomposed. Keep F4 (restore) mapped explicitly to F2/leaf in the recipe so the function trace is complete.",
+   "required_test": "Check traceability: every function in the flow decomposition appears in the recipe functions or is listed as dropped/reinterpreted with a reason, and each chosen option's principle agrees with the behaviour text of the function it claims to cover."
+  },
+  {
+   "id": "R3-force-check-not-a-press-ease-measure",
+   "severity": "minor",
+   "claim": "The force check passes against an ASSUMED 0.3-3 N band, but it says nothing about the main request, \"もっと押しやすく\". The check is evaluated at the deepest pose (leaf at maximum deflection plus the largest OF), not at the operating point. Its lower bound is met by the switch force alone, there is no baseline button to compare against, and the pin preload at rest is not included. The contract does state that press ease is untested, but the verification plan wording \"press force ... inside the band\" can be read as an ease result.",
+   "evidence": [
+    "measurements leaf-spring-beam checks.force: beam_n 1.3236 (at deflection 0.623 mm = deepest pose), switch_operating_max_n 1.471, total_n 2.048, band [0.3, 3.0] ASSUMED",
+    "lineage.correction_guarantee: \"none: no baseline subject was supplied\"",
+    "FLOW_RESULT 1_intent.unknown: [\"target force\", \"travel\", ...]"
+   ],
+   "proposed_change": "Report the computed thumb force needed to reach OP (leaf force at the OP angle plus OF range) per complete profile, as a datum for the owner. Label the band check as band consistency only, not an ease-of-press result.",
+   "required_test": "Per-profile table of the computed force at OP and at maximum travel, with each quantity's basis (datasheet bound or ASSUMED), included in the build record."
+  },
+  {
+   "id": "R4-switch-placed-by-design",
+   "severity": "minor",
+   "claim": "In a real mouse the switch and PCB are protected parts. Here the switch body position is derived from the button: base_y = actuator tip - rest offset - OP. The adjustment screw then compensates along y only. The contract declares \"PCB position ... not measured\" but does not say that the switch location itself is a designer choice, which could be read as fitting a registered switch.",
+   "evidence": [
+    "side_button_leaf_recipe.py: base_y = tip_y - rest_nom - profile.operating_position.value",
+    "context.protection: environment_protected_ids [], persistent_assets []",
+    "switch_body STEP y 15.6525..22.3025, x centred on the plunger axis (2.0)"
+   ],
+   "proposed_change": "Add an unverified_requirements entry stating that the switch position (x, y, z) is placed to suit the button (ASSUMED), not taken from a PCB. Name the adjustment range the screw provides along y and the range it does not provide in x and z.",
+   "required_test": "Once a PCB or real switch placement is registered, place the switch as_registered and rerun the clearance, rotation and switch-fit checks without moving it."
+  },
+  {
+   "id": "R5-access-hole-in-thumb-face",
+   "severity": "minor",
+   "claim": "The Ø1.6 mm tap/hex-key access hole goes through the thumb surface of the button face. It sits inside the allowed side-button region, so the outer-form check cannot see it. It is a visible change to the skin that the owner preference \"外形はできるだけ変えないで\" touches, and it is mentioned only in the region reason text.",
+   "evidence": [
+    "recipe op actuator_hole: cylinder r 0.8, height 20 from y 23 along +y, \"open through the face for a 0.9 mm hex key\"",
+    "assembly.png and button/iso.png show the hole in the face"
+   ],
+   "proposed_change": "List the face hole as a deliberate outer-form change in the contract, or route adjustment access from inside the shell, so the owner sees it explicitly.",
+   "required_test": "Outer-form report listing every allowed-region change (window gap, access hole) with its size, presented to the owner."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "83682a39f2abe4cd310a61d66b4da8a4e73f72da52c799cd9d013a4c22d3b527",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/actuator_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain stepped cylinder: Ø2 x 4 mm thread body with a Ø1 x 1 mm dog point; no thread or hex socket modelled. STEP bbox y 22.8..27.8, so the dog-point tip sits exactly on the switch-pin top (y 22.8) at rest."
+  },
+  {
+   "attachment_sha256": "4def080e98067214e74d80f148bd875752ccd519e6db0cf08409fbd8705c4abc",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/assembly.png",
+   "status": "viewed",
+   "observation": "Stand-in ellipsoidal shell (not a real mouse) with one green side-button skin piece flush in the window, a thin running gap visible on its lower edge, and the Ø1.6 hex-key access hole visible in the thumb surface. Leaf, switch and actuator are hidden inside; the image cannot show rest-pose equilibrium or switch engagement."
+  },
+  {
+   "attachment_sha256": "ac68017959cb524da9cbc8b3d38614810b4ce0a71a7d2c85ba96c6df1bfdb631",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/build-record.json",
+   "status": "viewed",
+   "observation": "Holds the full recipe context: functions F1, F2, F3, F6 only (F4/F5 from the flow decomposition are absent), rotation checks with obstacles [shell] only, flexure check with switch_force_ratio 1 and the adjustment procedure text (screw in until the switch operates, out until release, then 3 x 1/16 turn)."
+  },
+  {
+   "attachment_sha256": "16830d3314cbb13941de01acf115b986686fe6c3c3757bf64565cbe18623cce3",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/button/iso.png",
+   "status": "viewed",
+   "observation": "Curved skin piece with the pad, spine and plunger block on its inner side and the through tap hole for the actuator screw. STEP bbox x -10..14.19, y 24..31.80, z 10..18. No outward rest stop or tongue against the shell is present on the part."
+  },
+  {
+   "attachment_sha256": "7d420ba7ee05cff21bfd17446c1fafa50932b6904fba141595dc6fe02ea5e9c1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/leaf_spring/iso.png",
+   "status": "viewed",
+   "observation": "Rectangular 10 x 1 x 5 mm leaf (STEP bbox x -19..-9, y 26..27, z 11..16, 50 mm3), touching shell root and button pad at distance 0. Beam stiffness 2.125 N/mm at the tip per measurements; effective stiffness at the plunger by the recipe moment ratio is about 0.40 N/mm."
+  },
+  {
+   "attachment_sha256": "f831b29f8abf6cdaab76cb383c7c2789cf3a5bf62645f58f3372e4a7c574c6ce",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/measurements.json",
+   "status": "viewed",
+   "observation": "All 36 checks pass, overall_verdict unknown. leaf-spring-beam: beam_n 1.32 N at the deepest pose x 0.436 + switch_operating_max 1.47 N = total 2.05 N inside the ASSUMED 0.3-3 N band; peak 15.9 MPa vs 23.5 MPa allowed. No check includes the switch pin return force at rest; rise-clear-of-shell covers only +0.3 deg."
+  },
+  {
+   "attachment_sha256": "dee2acdb811d1dd7f8a40f6d5a74bcc101d4e9457e2b797a5c3dfbe5157207e5",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell alone with the open side-button window (window plus 0.4 mm gap). The skin is the recipe-generated stand-in loft; the leaf root block is not visible from outside. No ledge or lip that would hold the button against outward motion is visible."
+  },
+  {
+   "attachment_sha256": "7b7ff223cd76a231584532d3550c5add6ea3acfa2b6bc33c58be318ab63c7a92",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/switch_body/iso.png",
+   "status": "viewed",
+   "observation": "Plain 12.7 x 6.65 x 5.8 mm box (zippy_df_pin nominal), STEP y 15.6525..22.3025. Its position is computed from the actuator tip (base_y = tip - rest - OP), not from a PCB or registered placement."
+  },
+  {
+   "attachment_sha256": "e4c7a64560fa88a5e94b3f031a7f4acdc7923efaddc91025cda54eeb35210709",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r14-20261007/workspace/studio/side-button-flow/4a646ca790f037dc-63e758a3/switch_pin/iso.png",
+   "status": "viewed",
+   "observation": "Box 1.2 (x, ASSUMED) x 0.4975 x 2.9 mm, y 22.3025..22.8, i.e. the pin is drawn pressed to the actuator tip, about 0.2 mm below the datasheet free position (7.35 max above datum vs tip at 7.1475). A pressed pin pushes back on the button; that force is not in any check."
+  }
+ ],
+ "remaining_uncertainties": [
+  "What \"押しやすく\" means to the owner (lower force, shorter travel, larger face, position) is unknown, and there is no baseline button to compare against. Only the owner can answer.",
+  "The real mouse shell is not provided; the outer-form check compares against the recipe's own stand-in loft, so it proves self-consistency only.",
+  "Number of side buttons: the request says \"サイドボタン\" and the region text says \"side buttons\", but one button is modelled. The owner should confirm which button or buttons are meant.",
+  "Real switch part number, its force-travel curve between FP and OP, and its bottoming rating are UNKNOWN. huano_mouse_generic and kailh_gm20 remain unverified.",
+  "Press force, travel feel and click feel need a physical test with the real switch; no physical test was done.",
+  "Leaf fatigue, creep under the constant pin preload, and printed leaf thickness and running gap accuracy are UNKNOWN and need print tests.",
+  "The pseudo-rigid-body pivot and the 0.05 mm pivot-play envelope are ASSUMED approximations, not measured.",
+  "PCB position is not measured; the switch placement is designer-chosen.",
+  "This review was not independently verified: same model family as the designer, no human reviewer."
+ ]
+}

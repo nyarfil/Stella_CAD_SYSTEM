@@ -1,0 +1,169 @@
+{
+ "schema_version": 1,
+ "subject_digest": "31cfb2eb28dd1a3b4994c06c61cba6d8be6d54a74c6cb40726896c396680acd6",
+ "role": "mechanism",
+ "reviewer_label": "Claude subagent (mechanism role, rev11)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "MECH11-1-gauge-target-not-at-stated-read-point",
+   "severity": "major",
+   "claim": "The revision-10 assembly major (the gauge value is computed at a point that is not where it is read) is not fixed in revision 11. It has moved. The calibration 1.4429 mm and 0.4694 mm/deg comes from a ray whose origin is exactly (13.895, 30.267, 13.726). At rest that ray meets the face at about (13.888, 30.222, 13.716), at the face front edge and at z 13.7. The design basis and parameter_basis tell the fitter to read with the rod 1.0 mm in from the face front edge at z 14. At that stated point the model reads less, so a fitter who turns the stop screw until the gauge shows 1.44 (accept 1.41-1.47) drives the stop deeper than designed. With the designer plane and normal, the rod at (12.9, z 14) reads 0.030 mm at rest and 1.415 mm at -3.0333 deg, not 0.047 and 1.443. With the foot plane tangent to the real adjacent shell skin at z 14 (x 14.5-15.0, as the procedure describes the foot), it reads 1.399-1.408 mm at the nominal stop. The procedure then accepts stop angles of -3.16 to -3.20 deg at the upper limit 1.473. Adding the recipe's own gauge-play (0.035 mm) and stop_play (0.120 deg) terms, the deepest in-use pose is about -3.36 to -3.40 deg. The housing-clear-past-stop and nearest-shell-gap-until-stop sweeps stop at -3.322 deg. So the verification-plan line \"down to -3.322 deg: the deepest gauge-accepted stop plus hinge play while gauging and in use\" does not hold for the procedure as written. The switch-selection push \"up to about 0.84 mm\" is about 0.87 mm at -3.396 deg, and the spring at that pose is about 2.94 mm, below the stated 2.96 mm solid-length limit. No measured failure follows: my rigid probe at -3.396 deg gives housing clearance of at least 0.104 mm (rotation about the play-shifted axis, 9 offsets) and shell clearance of at least 0.186 mm. But the stated target is off by about one full band, and the coverage claim is untrue.",
+   "evidence": [
+    "Reproduced the designer value only with the ray origin at (13.895, 30.267, 13.726) along -(0.1483, 0.966, 0.2116) on the r11 button STEP: 0.0470 mm at 0 deg, 1.4426 mm at -3.0333 deg, 1.5780 mm at -3.3219 deg.",
+    "Same plane and normal, rod at x 12.9, z 14 (1.0 mm in from the front edge, which is at about x 13.89-13.90 at z 14 on the button STEP): 0.0304 mm at rest and 1.4145 mm at -3.0333 deg. With the rod at x 12.636 or 13.236 instead: 1.409 or 1.423 mm.",
+    "Foot plane tangent to the shell skin at (14.5, 30.109, 14.0), n (0.1405, 0.9649, 0.2217): 0.013 mm at rest, 1.399 mm at the nominal stop. At (15.0, 30.035, 14.0): 0.022 and 1.408 mm. At (16.0, 29.879, 14.0): 0.050 and 1.435 mm.",
+    "Solved angles (bisection on the STEP): reading 1.443 at -3.096 / -3.132 / -3.112 deg and reading 1.473 at -3.162 / -3.199 / -3.178 deg, for the designer plane at the stated rod point / skin tangent at x 14.5 / skin tangent at x 15. Slope about 0.453 mm/deg.",
+    "deepest = angle(1.473) - 0.035/0.453 - 0.1201 gives -3.360 / -3.396 / -3.375 deg, against the -3.3219 deg end of housing-clear-past-stop and nearest-shell-gap-until-stop in measurements.json.",
+    "Rigid probe at -3.3959 deg, 9 axis offsets (0.035 mm): min distance to switch_housing 0.1038 mm, to shell 0.1858 mm. The recorded check at -3.3219 deg reports a sampled housing minimum of 0.0947 mm, so its own play model is about 0.03 mm more conservative than mine.",
+    "gauge_reading_v11_mm(angle_deg=0) = 0.019 mm, while the procedure says it reads about 0.05 mm at rest; the linear calibration and the stated rest value disagree.",
+    "stem_push_mm at -3.396 deg = 18*sin(3.396 deg) - 0.2 = 0.866 mm. Spring length = 3.690 - 12.6*sin(3.396 deg) = 2.944 mm.",
+    "Revision-10 assembly finding ASM10-1 (verification/side-button-flow-r10-20261007/reviews-r1/assembly.json) raised the same class of defect."
+   ],
+   "proposed_change": "Measure the reading exactly where the procedure puts the rod and foot: rod 1.0 mm in from the front edge at z 14, foot plane defined by the adjacent shell skin (or by a stated printed gauge saddle that spans the window above and below). Alternatively, change the procedure text to the point actually measured. Then restate gauge_stop_reading_mm, gauge_mm_per_deg and the rest reading from that measurement. Recompute deepest_accepted_angle_v11_deg from the re-measured slope, and extend housing-clear-past-stop and nearest-shell-gap-until-stop to the new deepest pose. Refresh the switch-push and spring solid-length lines to that pose.",
+   "required_test": "Re-run the gauge ray on the exported button and shell STEPs at the stated rod point with the stated foot reference. It must reproduce gauge_stop_reading_mm within 0.005 mm and the rest reading within 0.005 mm. Re-run housing-clear-past-stop (>= 0.05 mm) and nearest-shell-gap-until-stop (>= 0.15 mm) to the recomputed deepest pose at all 9 play offsets. On the first article, set the stop by the procedure, then measure the actual hinge angle (or front-edge travel) and compare it with the model."
+  },
+  {
+   "id": "MECH11-2-stop-path-compliance-unbounded",
+   "severity": "minor",
+   "claim": "The hard stop (F5) protects the switch only in the rigid model. The stated stop-path flex estimate of about 0.01 mm/N at the read point has no basis, and a hand calculation of the printed web alone already exceeds it. The first-article test (read at 5 N and 10 N, with and without the switch) can detect bottoming, but it has no acceptance limit and no stated maximum use force. At the deep end of the accepted band, the margin left past the rigid stop (0.0947 mm sampled, 0.064 mm bound at the stem/housing) is about what 5-10 N of extra thumb force uses up.",
+   "evidence": [
+    "Load path: the thumb at the read point (about x 12.9, lever 27.9 mm from the hinge) reacts on the stop screw at y 9.3 (radius 15.7 mm). The stop force is about 1.78 x the thumb force.",
+    "Web (stop_arm_box 5.0 x 7.6 mm section, I = 7.6*5^3/12 = 79 mm^4) cantilevered about 13.4 mm from the barrel root to the contact. Deflection F*L^3/(3*E*I) = 0.0029-0.0040 mm per N of stop force for E 3.5-2.5 GPa.",
+    "Referred to the read point: about 0.0029*1.78*(27.9/15.7) = 0.009 to 0.013 mm per N of thumb force, from web bending only. The lower tab (12.1 x 4 mm plate, about 20 mm from the skin, loaded 4.1 mm above its mid-plane), the self-tapped thread, the screw-tip edge indentation and the barrel/pin add to this. Revision-10 mechanism finding MECH10-2 reached a similar web-only figure.",
+    "Stem far edge lever 18 mm vs read lever 27.9 mm: each 0.1 mm of extra reading is about 0.065 mm at the stem. A 5 N rise above the setting force at about 0.015-0.025 mm/N gives about 0.05-0.08 mm at the stem.",
+    "measurements.json housing-clear-past-stop at -3.3219 deg: sampled minimum 0.0947 mm, continuous bound 0.064 mm."
+   ],
+   "proposed_change": "State a maximum use force at the front edge (for example 15 N). State an acceptance limit for the first-article flex: (reading at the maximum force - reading at 5 N) <= (housing margin at the deepest accepted pose) x 27.9/18. Either replace the 0.01 mm/N figure with a stated calculation, or remove it. If the limit cannot be met, stiffen the web (deeper in X) or move the stop contact farther from the hinge.",
+   "required_test": "First article: with the switch fitted, read the gauge at 5 N and at the stated maximum force at the front edge and at x 2, at both the shallow and the deep end of the accepted band. Pass if the difference meets the stated limit and the readings with and without the switch are equal at the maximum force. Repeat after about 1000 presses at the maximum force to check that the stop does not creep."
+  },
+  {
+   "id": "MECH11-3-spring-selection-lacks-preload-bound",
+   "severity": "minor",
+   "claim": "F4 (return) and F2 (hold the rest pose) rely on spring preload against the rest screw, but the spring selection line gives only an upper limit on OD (1.2 mm) and solid length (< 2.96 mm). It gives no minimum free length or minimum preload, and no maximum force at the deepest pose. A spring with free length <= 3.69 mm meets every stated criterion but does not hold the web on the rest screw. The button would then float in the 0.2 mm free play to the stem (and the 0.89 mm to the stop screw), so flushness, which the rest adjustment sets, is lost and the face rattles. With the spring screw now fixed flush, preload can only come from the spring choice. Its added thumb force also bears directly on \"easier to press\".",
+   "evidence": [
+    "unverified_requirements: \"Return spring selection: outside diameter at most 1.2 mm ...; solid length below 2.96 mm ... Its preload adds to thumb force.\" No free length is given.",
+    "Spring envelope from x -21.19 (spring screw flush) to the web face at x -17.5: installed 3.69 mm. Spring radius from the hinge is 25 - 12.4 = 12.6 mm, against 17 mm for the plunger: the spring force adds about 0.74 x its value to the thumb force at x 2.",
+    "Rest checks (rest-outward-blocked-within-play) prove only that the rest screw blocks outward motion. They assume the web is held against it.",
+    "The deepest pose in MECH11-1 (about -3.40 deg) shortens the spring to about 2.94 mm, below the stated 2.96 mm limit."
+   ],
+   "proposed_change": "Add to the spring selection: free length >= 3.69 mm + a stated minimum preload deflection (for example >= 0.3 mm). Give a preload force range at installed length that holds the button against handling (and the pin and spring-bore friction), and a maximum force at the deepest pose, also stated as added thumb force at x 2. Tie the solid-length limit to the corrected deepest pose.",
+   "required_test": "First article: with the switch removed, shake or invert the assembled shell and confirm by feeler gauge that the face stays on the rest screw (flush within the stated band). Measure the force at the face centre needed to lift the web off the rest screw, and compare it with the stated preload range."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Real switch: operating point, total travel (the placeholder housing now assumes 1.00 mm to bottoming), stem position relative to the hinge (no PCB datum) and operating force are unknown. Only the owner switch and PCB can settle the housing margin.",
+  "What \"もっと押しやすく\" means to the owner (lower force, shorter travel, where the thumb lands) is open. The 17/(x+15) factor is rigid-body only, and the hinge-side end is about 3.4 times heavier.",
+  "Owner acceptance of the 0.4 mm running gap and of the face standing about 0.1 mm proud after flush adjustment within hinge play.",
+  "Edge contact of the bought ISO 4026 flat point (smaller than the modeled Ø2 disk, with a chamfer) on the printed web at about 3 deg tilt: indentation, creep and stop drift under repeated presses are not modeled. A physical cycling test is needed.",
+  "Gauge repeatability on an FDM skin (0.2 mm layer cusps) with a flat foot on a doubly curved surface (my probe shows 0.04 mm spread for foot tangent points between x 14.5 and 16 at z 14) is a bench question, not a CAD one.",
+  "Jam-nut tightening shifts the screw tip by the thread backlash in a printed or self-tapped hole. The size of the shift can only be measured on a printed part.",
+  "Pin cocking about X and combinations of radial play with tilt are not swept. nearest-shell-gap-until-stop has 3 samples and is not continuously proven. All motion checks are rigid and sampled.",
+  "My play model (rotation about an axis shifted by 0.035 mm in 8 directions) gives housing distances about 0.03 mm larger than the recorded check at the same angle. I report the recorded values where they bear on margins.",
+  "Checked against the revision-10 findings. Fixed: the spring screw is now fixed flush (MECH10-3); a setting force is stated; the switch window is +0.00 mm (R10); the shell-gap sweep reaches the deepest pose (V10-2); the spring bore is no longer drilled (MFG10). Its 1.45 mm gauge pin leaves at least 0.125 mm radial clearance for a 1.2 mm OD spring. Not fixed: the gauge location (see MECH11-1).",
+  "This review was done by a separate Claude subagent context of the same model family as the designer. It is not an independent human or vendor review. My STEP probes were read-only and rigid. No physical test was run."
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "dbae29691a1bc803922bd760111af74f169c8a53a5fff3f230d96e6bb6036995",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/assembly.png",
+   "status": "viewed",
+   "observation": "Whole stand-in shell with the amber button face in the side window. The running gap is visible as a thin line around the face; the face sits flush with the curved skin at rest. Internal hinge, stops and switch are hidden, so this image shows nothing about the mechanism."
+  },
+  {
+   "attachment_sha256": "172163b29f79149e7dea9fb9ed2807603b510dec9748a93fcf3343b5f346d06d",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/build-record.json",
+   "status": "viewed",
+   "observation": "Build record for attempt 543ee54a. Its recipe matches side_button_recipe_v11(): rotation checks housing-clear-past-stop and nearest-shell-gap-until-stop end at -3.3219 deg; the gauge parameters are gauge_stop_reading_mm 1.4429 and gauge_mm_per_deg 0.4694, with a parameter_basis that names ray origin (13.895, 30.267, 13.726). The adjustment text reads the gauge 1.0 mm in from the face front edge at z 14."
+  },
+  {
+   "attachment_sha256": "c6c7daf38f77bc63a78477fc327505450e70f448c82952d0f1f4102b7aed74a7",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/button/iso.png",
+   "status": "viewed",
+   "observation": "One-piece button. The curved skin face has a rear stiffener, and the link runs to the vertical hinge barrel with its bore at the right. The full-height stop web extends from the barrel; it is the only part that touches the rest and stop screw tips. The plunger is not separately distinguishable at this angle."
+  },
+  {
+   "attachment_sha256": "7a27aec709ac4d6cb724dc8962e62653c8dedb013c5ec0f561af1d98b96edf29",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/hinge_pin/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 cylinder (dowel) with square ends and no chamfer or lead-in. It is the single hinge axis about Z."
+  },
+  {
+   "attachment_sha256": "ec944f0c5fbeec6908a80f091fbe01657f50a8f1395626d4c1e31c163e3984c6",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/measurements.json",
+   "status": "viewed",
+   "observation": "All checks pass; overall_verdict is unknown. housing-clear-past-stop has 33 samples to -3.3219 deg; its sampled minimum is 0.0947 mm and its continuous bound 0.064 mm. hard-stop-blocks-within-play blocks at -3.2034 deg at all 9 offsets. stop-screw-reached ends 0.0020 mm from the screw at -3.0333 deg. nearest-shell-gap-until-stop has only 3 samples, minimum 0.1746 mm, and is not_proven (bound -0.317 mm). stem-contact-by-free-play blocks at -1.0111 deg at all offsets."
+  },
+  {
+   "attachment_sha256": "5ea8ab38ef850bfa8b90f97851242fb569f79326219d3838925a9bfd2ab89f93",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/rest_nut/iso.png",
+   "status": "viewed",
+   "observation": "Square nut 4 x 4 x 1.6 mm with a plain 1.6 mm bore (minor-diameter envelope, no thread modeled). It locks the rest screw."
+  },
+  {
+   "attachment_sha256": "dad9e60ede08194c8bdf93e104ed3ef906d27da262e822ebcd7179c8fe5bbaac",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/rest_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 x 4 mm cylinder standing in for the M2 x 4 flat-point grub screw. No drive socket, chamfer or reduced ISO 4026 flat-point diameter is modeled, so the modeled contact is the full Ø2 disk."
+  },
+  {
+   "attachment_sha256": "aa216734152eaf9716179d5bf387c18ef20a3fe7445ac7a4dbe04370e1623484",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/return_spring/iso.png",
+   "status": "viewed",
+   "observation": "Solid Ø1.2 x 3.69 mm cylinder as the spring envelope. No coils, free length, rate or end form are modeled, so preload and solid height are not represented geometrically."
+  },
+  {
+   "attachment_sha256": "53c4315aa20068facd0ed3a3a584209938c8fc4378a1817c990a4f1cd8b22649",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell with the window opened. Through the window the inner tab or web-slot structure is partly visible. The outer skin away from the window is unchanged."
+  },
+  {
+   "attachment_sha256": "cae67ebfbebb02e1c098f2aff67635f7ec2f88e241bd7e04c24f41ef9f4c56d1",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/spring_screw/iso.png",
+   "status": "viewed",
+   "observation": "Short Ø2 x 1.5 mm cylinder (M2 grub screw cut to 1.5 mm) that closes the spring bore. Its depth (flush) fixes the spring installed length."
+  },
+  {
+   "attachment_sha256": "96d45587337c023e156725d2ddbed206300fa16012b17a241184437ea0fb10b8",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/stop_nut/iso.png",
+   "status": "viewed",
+   "observation": "Square nut 4 x 4 x 1.6 mm, identical to the rest nut. It locks the stop screw on the outer face of the inward block."
+  },
+  {
+   "attachment_sha256": "213745450be22951fec4340204e29cb3f5f7ece03ba4e3079bb1acb73d1182fd",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/stop_screw/iso.png",
+   "status": "viewed",
+   "observation": "Plain Ø2 x 8 mm cylinder (M2 x 8 grub screw). Its flat Ø2 end is the modeled hard-stop contact on the web; the real flat point is smaller and chamfered."
+  },
+  {
+   "attachment_sha256": "cad422b1831adb05ddc69397356ff494e83f2916b5bcf66ee9c8a252251524c6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/switch_housing/iso.png",
+   "status": "viewed",
+   "observation": "Plain 6 x 4 x 8 mm box: the placeholder switch body whose top face stands for the assumed 1.00 mm stem bottoming depth."
+  },
+  {
+   "attachment_sha256": "13868d50c010a4871a6d9847fed7d261176926a5db97b66c3d97f1760b05b125",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r11-20261007/workspace/studio/side-button-flow/31cfb2eb28dd1a3b-5035e6b3/switch_stem/iso.png",
+   "status": "viewed",
+   "observation": "Plain 2 x 1 x 4 mm box: the placeholder stem, 0.2 mm below the plunger tip at rest, with no travel or force model."
+  }
+ ]
+}
