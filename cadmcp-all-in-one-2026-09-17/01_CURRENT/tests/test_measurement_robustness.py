@@ -210,6 +210,39 @@ def test_side_button_parallel_revision17_contract():
     assert 'edge_press_offset_mm' not in recipe.design_parameters
 
 
+@kernel
+def test_side_button_parallel_revision18_builds_and_passes_every_check(tmp_path):
+    from cadmcp_brain.studio.recipe import execute_recipe
+    from side_button_leaf_recipe import side_button_parallel_recipe_v18
+    result=execute_recipe(Recipe.model_validate(side_button_parallel_recipe_v18()),{},tmp_path/'r18')
+    failed=[c['id'] for c in result['checks'] if c['verdict']!='pass']
+    assert result['geometry_checks_verdict']=='pass',failed
+    checks={c['id']:c for c in result['checks']}
+    assert checks['press-blocked-by-hard-stop']['verdict']=='pass' and checks['rest-outward-blocked-by-lip']['verdict']=='pass'
+    assert len(checks['press-to-stop-clear-of-shell']['placement_corners'])==8  # X, Z and rotation corners
+    assert checks['rest-button-shell']['required_mm']==.35  # the nominal criterion is kept beside the corner check
+    flex=checks['parallel-leaves-beam']['checks']['stress']
+    assert flex['pass'] and abs(flex['at_thickness_mm']-.65)<1e-6
+
+
+def test_side_button_parallel_revision18_contract():
+    from side_button_leaf_recipe import side_button_parallel_recipe_v18,stack_v18,carrier_tolerance_v18,P18
+    from cadmcp_brain.studio.switch_profiles import PROFILES
+    recipe=Recipe.model_validate(side_button_parallel_recipe_v18())
+    tol=carrier_tolerance_v18()
+    assert tol['pin_separation_mm']>15 and tol['rotation_deg']<.2 and tol['preload_range_mm'][0]>.1
+    zippy=stack_v18(PROFILES['zippy_df_pin'])
+    assert zippy['verdict']=='pass' and zippy['travel_past_op_at_stop_mm'][0]>0  # every allowed insert clicks before the stop
+    assert zippy['overtravel_within_guarantee'].startswith('UNKNOWN')  # beyond the guaranteed minimum is never reported as within rating
+    assert all(stack_v18(pr)['verdict']=='unverified' for k,pr in PROFILES.items() if k in ('huano_mouse_generic','kailh_gm20'))
+    late=dict(P18,stop_travel_mm=.35)
+    assert stack_v18(PROFILES['zippy_df_pin'],late)['verdict']=='fail'  # a stop before the worst-case click fails
+    flex=recipe.flexure_checks[0]
+    assert flex.thickness_tolerance_mm==.05 and abs(flex.deflection_mm-(tol['preload_range_mm'][1]+.6))<1e-9
+    assert {c.id for c in recipe.rotation_checks}>={'corner-press-tp-yp-stop','far-end-yaw-positive-stop','edge-press-twist-negative-mid'}
+    assert {o.part_id for o in recipe.outputs}>={'stop_jaw','stop_post','rest_lip','pcb_slab'}
+
+
 def test_side_button_parallel_revision16_contract():
     from side_button_leaf_recipe import side_button_parallel_recipe,twist_v16
     recipe=Recipe.model_validate(side_button_parallel_recipe())

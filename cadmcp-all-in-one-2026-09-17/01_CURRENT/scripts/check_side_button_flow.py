@@ -40,7 +40,8 @@ from side_button_recipe import (REQUEST,P,P2,P3,P4,P5,P6,angles_v2,angles_v3,ang
 from side_button_leaf_recipe import (PL,angles_leaf,pivot_xy,side_button_leaf_recipe,switch_fit_report_leaf,
                                     PC,angles_v15,pivot_v15,pivot_envelope_v15,side_button_carrier_recipe,insert_fit_v15,
                                     PP,deep_travel_v16,twist_v16,side_button_parallel_recipe,
-                                    P17,deep_travel_v17,twist_v17,stack_v17,side_button_parallel_recipe_v17)
+                                    P17,deep_travel_v17,twist_v17,stack_v17,side_button_parallel_recipe_v17,
+                                    P18,stack_v18,twist_v18,carrier_tolerance_v18,side_button_parallel_recipe_v18)
 from cadmcp_brain.studio.switch_profiles import PROFILES as SWITCH_PROFILES
 
 PROJECT_ID='side-button-flow'
@@ -71,7 +72,7 @@ def function_brief():
                 task('F5_limit_overtravel','もっと押しやすく','limit overtravel',
                      'Travel ends at a defined limit (a hard stop, or the switch pin bottoming when no stop is used) and stays inside the checked range.',['hard stop','travel limiter']),
                 task('F6_connect_shell','外形はできるだけ変えないで','connect to shell without changing outer form',
-                     'The button and hinge are carried by the shell while the outer skin stays unchanged.',
+                     'The button and its guide are carried by the shell while the outer skin stays unchanged.',
                      ['flush shell button','shell mounted hinge'])],
             'protected_constraints':['Outer shell skin is not reshaped; the button face is the removed skin piece.'],
             'unresolved':['Target press force, travel and click feel are not specified by the owner.',
@@ -101,8 +102,8 @@ def morphology_matrix():
                ['Fatigue and creep are UNKNOWN; stiffness and static stress are checked by beam theory only.'],
                ['ABS leaves inside the static stress allowance survive the press count (ASSUMED; fatigue UNKNOWN).']),
         option('G_leaf','Leaf-spring guide',['F2_guide_button','F6_connect_shell'],
-               'Leaves from a carrier block fixed to shell posts guide the face (single leaf: rotation about its pseudo-rigid-body pivot; parallel leaves: translation).',['shell','button'],
-               'Reaction from the face through the leaves into the block, pins and shell posts.','Carrier located by printed press-fit pins; no screws.',
+               'Leaves from a carrier block pinned to the shell guide the face (single leaf: rotation about its pseudo-rigid-body pivot; parallel leaves: translation).',['shell','button'],
+               'Reaction from the face through the leaves into the block, pins and shell tabs or posts.','Carrier located by printed press-fit pins; no screws.',
                ['Pseudo-rigid-body approximation for a single leaf.'],['Leaf kinematics at small deflection follow beam theory.']),
         option('S_switch','Switch overtravel',['F5_limit_overtravel'],
                'No hard stop: the switch takes the overtravel, as in production mice; clearances are checked to the pin fully pressed. This does NOT keep the switch unloaded; it bounds travel at the pin bottoming.',['switch'],
@@ -125,9 +126,9 @@ def morphology_matrix():
                'Spring between shell and button.','Spring inserted during assembly.',
                ['Extra purchased part.'],['A suitable spring is available.']),
         option('S_hardstop','Hard stop',['F5_limit_overtravel'],
-               'A shell stop meets a button tongue before the switch housing is reached.',['shell','button'],
-               'Overtravel force goes into the shell stop, not the switch.','Stop is printed with the shell.',
-               ['Stop wear.'],['The stop face is reached before the housing.']),
+               'A shell stop meets a button tab after the switch operates; the press force then goes into the shell.',['shell','button'],
+               'Overtravel force goes into the shell stop unless the switch pin bottoms first in a tolerance corner.','Stop is printed with the shell.',
+               ['Stop wear; overtravel past OP up to the stop may exceed the guaranteed minimum.'],['The stop face is reached after the worst-case click.']),
     ],'incompatibilities':[
         {'option_a':'C_flexure','option_b':'R_spring','reason':'A flexure already returns the button.'},
         {'option_a':'C_flexure','option_b':'G_pivot','reason':'A flexure button has no separate pivot.'},
@@ -143,7 +144,7 @@ CHOSEN={1:{'B_lever','G_pivot','R_switch','S_hardstop'},2:{'B_lever','G_pivot','
         7:{'B_lever','G_pivot','R_spring','S_hardstop'},8:{'B_lever','G_pivot','R_spring','S_hardstop'},
         9:{'B_lever','G_pivot','R_spring','S_hardstop'},10:{'B_lever','G_pivot','R_spring','S_hardstop'},
         11:{'B_lever','G_pivot','R_spring','S_hardstop'},12:{'B_lever','G_pivot','R_spring','S_hardstop'},
-        13:{'B_lever','G_pivot','R_spring','S_hardstop'},14:{'C_flexure','G_leaf','S_switch'},15:{'C_flexure','G_leaf','S_switch'},16:{'C_flexure','G_leaf','S_switch'},17:{'C_flexure','G_leaf','S_switch'}}
+        13:{'B_lever','G_pivot','R_spring','S_hardstop'},14:{'C_flexure','G_leaf','S_switch'},15:{'C_flexure','G_leaf','S_switch'},16:{'C_flexure','G_leaf','S_switch'},17:{'C_flexure','G_leaf','S_switch'},18:{'C_flexure','G_leaf','S_hardstop'}}
 REASONS={
     1:'Lever on a pin pivot keeps the outer skin unchanged and is fully covered by rigid rotation, '
       'clearance and wall checks; the switch spring avoids an extra part. Flexure options cannot be '
@@ -206,7 +207,12 @@ REASONS={
     17:'Revision 17 after the five-role review of revision 16 (no blocking findings): insert chosen by a click-referenced rule in '
        '0.1 mm steps from outside through the face (head in a counterbore), a declared 0.1 mm rest preload on the lug, vertical '
        'press-fit pins through two shell tabs pressed in from the open bottom (shear load), full-width leaf tips with outer '
-       'fillets, a printable standing orientation, a Ø1.0 insert tip checked against the switch body, and a far-end yaw check.'}
+       'fillets, a printable standing orientation, a Ø1.0 insert tip checked against the switch body, and a far-end yaw check.',
+    18:'Revision 18 after the five-role review of revision 17 (no blocking findings): the rest pose is set by a preloaded lip on the inner '
+       'skin and the travel ends on a printed jaw keyed into a shell post after the worst-case click, so rest and stop no longer depend on the carrier '
+       'placement; the carrier is located by two pins 15.7 mm apart (block and tongue) on an upper-tab Z datum with a back-stop lip; '
+       'the insert has a pull notch and a short press band; leaves 0.6 +/- 0.05 mm judged at the worst case; an ASSUMED PCB slab, '
+       'placement-tolerance corners, poses from the rest pose and corner presses at the stop are checked.'}
 
 
 def engineering_evaluation(candidates,revision=1):
@@ -268,6 +274,12 @@ def run_flow(run_root,design_revision=1):
         steps['8_recipe']={'revision':2,'angles_deg':angles_v2(),'parameters':P2,
                            'lineage':'Separate prototype, not a lineage-verified correction: hinge geometry changes the '
                                      'check angles, and revision 2 adds checks that revision 1 did not carry.'}
+    elif design_revision==18:
+        recipe=side_button_parallel_recipe_v18()
+        steps['8_recipe']={'revision':18,'variant':'parallel_leaf_carrier','edge_press_twist_and_yaw':twist_v18(),'carrier_tolerance':carrier_tolerance_v18(),
+                           'parameters':{k:(list(v) if isinstance(v,tuple) else v) for k,v in P18.items()},
+                           'switch_profile_fit':[stack_v18(pr) for pr in SWITCH_PROFILES.values()],
+                           'lineage':'Separate prototype: rest lip on the skin, shell hard stop and two-pin tongue location; not a correction of revision 17.'}
     elif design_revision==17:
         recipe=side_button_parallel_recipe_v17()
         steps['8_recipe']={'revision':17,'variant':'parallel_leaf_carrier','deep_travel_mm':deep_travel_v17(),'edge_press_twist_and_yaw':twist_v17(),
@@ -394,7 +406,7 @@ def main(argv=None):
     group=parser.add_mutually_exclusive_group()
     group.add_argument('--submit-reviews',type=Path,help='Directory of reviewer-written Review JSON files.')
     group.add_argument('--delivery',action='store_true',help='Write the hash-bound human handoff for the built subject.')
-    parser.add_argument('--revision',type=int,choices=(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17),default=17,help='Design revision to build (new runs only).')
+    parser.add_argument('--revision',type=int,choices=(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18),default=18,help='Design revision to build (new runs only).')
     args=parser.parse_args(argv)
     try:run_root=resolve_run_root(args.run_root,must_exist=bool(args.submit_reviews or args.delivery))
     except ValueError as exc:parser.error(str(exc))

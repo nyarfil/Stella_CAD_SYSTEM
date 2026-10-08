@@ -1043,3 +1043,377 @@ def side_button_parallel_recipe_v17(request=REQUEST, p=None):
             'PCB plane is ASSUMED; the real board and shell were not measured. OP1-supplied screws are not used by this carrier.',
             'Wall checks are sampled minima of the stated parts, not a proof of minimum wall or of strength.'],
     }
+
+
+# ---------------------------------------------------------------------------
+# Revision 18: repairs the revision-17 round-1 findings.
+# - Rest position and preload depended on the carrier placement (pins 4 mm
+#   apart, lug on the far end) -> the face carries a rest lip that bears on the
+#   inner skin around the window, so the rest pose is set by the shell itself;
+#   the carrier is located by one pin in the block and one in a tongue 15.7 mm
+#   ahead (between the leaves), so its angle tolerance shrinks about four times.
+#   The preload range follows from the declared carrier placement tolerance.
+# - No hard stop -> a printed stop jaw keyed into a shell post stops the face
+#   0.5 mm after rest (after the worst-case click). Thumb force and insert
+#   press-in force go into the shell; the leaves never pass the stop deflection.
+# - Overtravel beyond the guaranteed minimum is reported per profile as an
+#   UNKNOWN rating; pin flush is no longer the end of travel.
+# - Carrier Z float -> the block and tongue bear on the upper tabs (datum),
+#   pins pressed upward drag them onto it; a back-stop lip locates Y.
+# - Insert: pull notch under the head, short press band, slip shank;
+#   retention UNKNOWN with a first-article pull-out test.
+# - Leaves 0.6 mm (+/-0.05 judged at the worst case), pin walls >= 1.2 mm,
+#   through holes in the upper tab, lead-in on pins, an ASSUMED PCB slab in
+#   the checks, poses measured from the rest pose, yaw and corner presses at
+#   the stop pose, full support list.
+# ---------------------------------------------------------------------------
+P18 = {k: v for k, v in P17.items() if k not in ('lug_y_mm', 'preload_mm', 'pin_xy_mm', 'pin_tab_engagement_mm', 'design_rest_above_op_mm',
+                                                  'stop_reach_mm', 'tab_gap_mm', 'collar_thickness_mm')}
+P18.update({'leaf_thickness_mm': .6, 'leaf_thickness_tolerance_mm': .05, 'leaf_z_inset_mm': .2,
+            'block_z_min_mm': 9.5, 'block_z_max_mm': 17.5, 'lower_tab_gap_mm': .3,
+            'tongue_x_max_mm': -17.5, 'tongue_y_min_mm': 13., 'tongue_y_max_mm': 17.7,
+            'block_pin_x_mm': -35.5, 'tongue_pin_x_mm': -19.8, 'pin_y_mm': 15.35, 'pin_top_below_tab_mm': .3, 'pin_lead_in_mm': .5,
+            'pin_position_tolerance_mm': .05, 'carrier_translation_tolerance_mm': .05,
+            'preload_mm': .3, 'stop_travel_mm': .5, 'stop_travel_tolerance_mm': .1,
+            'lip_width_mm': 1.2, 'lip_thickness_mm': 1., 'stop_tab_y_mm': 26.5, 'stop_tab_reach_mm': 2.5,
+            'jaw_thickness_mm': 1.5, 'post_width_mm': 3., 'bracket_gap_mm': .3, 'key_length_mm': 2.5, 'key_interference_mm': .03, 'post_floor_mm': 1.5, 'slot_roof_mm': .5, 'back_stop_thickness_mm': 1.5,
+            'design_rest_above_op_mm': .2, 'collar_thickness_mm': .8, 'counterbore_depth_mm': 1.,
+            'press_band_length_mm': 1.5, 'shank_clearance_mm': .05, 'pull_notch_width_mm': 1., 'pull_notch_reach_mm': 2.4, 'pull_notch_depth_mm': .4,
+            'pcb_thickness_mm': 1.6, 'pcb_x_min_mm': -6., 'pcb_x_max_mm': 14., 'pcb_z_min_mm': 8., 'pcb_z_max_mm': 20.,
+            'mid_pose_mm': .2, 'pcb_clearance_mm': .3})
+
+
+def stack_v18(profile, p=P18):
+    """Click-referenced insert rule against the shell hard stop; reports overtravel against the datasheet guarantee."""
+    need = ('operating_position', 'movement_differential', 'body_height', 'plunger_width', 'body_length', 'body_width', 'overtravel')
+    missing = [k for k in need if not getattr(profile, k).known]
+    if missing:
+        return {'profile': profile.id, 'verdict': 'unverified', 'missing': missing,
+                'reason': 'The insert rule and the travel stack need these datasheet values; UNKNOWN gives no pass.'}
+    s = p['insert_step_mm']; md = profile.movement_differential.value
+    op, op_tol = profile.operating_position.value, profile.operating_position.tolerance or 0.
+    top, top_tol = profile.body_height.value, profile.body_height.tolerance or 0.
+    ot = profile.overtravel.value
+    t_lo, t_hi = p['stop_travel_mm'] - p['stop_travel_tolerance_mm'], p['stop_travel_mm'] + p['stop_travel_tolerance_mm']
+    rest_above_op = (s, md + 2 * s)  # insert rule: tip above the release point by [s, 2s); release up to md above OP
+    past_op = (t_lo - rest_above_op[1], t_hi - rest_above_op[0])
+    flush_from_rest_min = rest_above_op[0] + (op - op_tol) - (top + top_tol)
+    clicks_before_stop = past_op[0] > 0
+    return {'profile': profile.id, 'verdict': 'pass' if clicks_before_stop else 'fail',
+            'verdict_scope': 'pass = the switch operates before the hard stop for every insert the rule can choose; it says nothing about the overtravel rating.',
+            'rest_above_op_mm': rest_above_op, 'stop_travel_mm': (t_lo, t_hi), 'travel_past_op_at_stop_mm': past_op,
+            'guaranteed_overtravel_mm': ot,
+            'overtravel_within_guarantee': 'yes' if past_op[1] <= ot else 'UNKNOWN (beyond the guaranteed minimum; no rating published)',
+            'pin_may_bottom_before_stop': 'yes (tolerance corner: the switch takes the force there; bottoming rating UNKNOWN)' if flush_from_rest_min < t_hi else 'no',
+            'pin_flush_from_rest_min_mm': flush_from_rest_min}
+
+
+def carrier_tolerance_v18(p=P18):
+    """Declared carrier placement tolerance: two pins 15.7 mm apart along X with a relative hole error."""
+    sep = p['block_pin_x_mm'] - p['tongue_pin_x_mm']
+    rot = math.degrees(math.atan(p['pin_position_tolerance_mm'] / abs(sep)))
+    mid_x = (p['block_pin_x_mm'] + p['tongue_pin_x_mm']) / 2
+    lever = p['window_x_max_mm'] + p['window_gap_mm'] + p['lip_width_mm'] - mid_x
+    face_y = p['carrier_translation_tolerance_mm'] + math.radians(rot) * lever
+    return {'pin_separation_mm': abs(sep), 'rotation_deg': rot, 'rotation_origin_x_mm': mid_x, 'face_y_variation_mm': face_y,
+            'preload_range_mm': (p['preload_mm'] - face_y, p['preload_mm'] + face_y)}
+
+
+def twist_v18(p=P18):
+    q = dict(p); q['leaf_z_min_mm'] = p['block_z_min_mm']; q['leaf_z_max_mm'] = p['block_z_max_mm'] - p['leaf_z_inset_mm']
+    q['leaf_thickness_mm'] = p['leaf_thickness_mm'] - p['leaf_thickness_tolerance_mm']  # the thin leaf twists most
+    return twist_v17(q)
+
+
+def side_button_parallel_recipe_v18(request=REQUEST, p=None):
+    p = dict(P18 if p is None else p)
+    wl, wh, zl, zh, g = p['window_x_min_mm'], p['window_x_max_mm'], p['window_z_min_mm'], p['window_z_max_mm'], p['window_gap_mm']
+    xr, xf, t, r = p['leaf_root_x_mm'], p['leaf_free_x_mm'], p['leaf_thickness_mm'], p['fillet_radius_mm']
+    ya, yb = p['leaf_a_y_mm'], p['leaf_b_y_mm']; L = xf - xr
+    bz0, bz1 = p['block_z_min_mm'], p['block_z_max_mm']; lz0, lz1 = bz0, bz1 - p['leaf_z_inset_mm']  # leaves start on the bed; 0.2 mm under the upper tab
+    bx0 = xr - p['block_x_mm']; by0, by1 = ya, yb + t
+    profile = SWITCH_PROFILES[DESIGN_SWITCH]
+    px = (p['plunger_x_min_mm'] + p['plunger_x_max_mm']) / 2; pz = (p['plunger_z_min_mm'] + p['plunger_z_max_mm']) / 2
+    hole_r, ins_r = p['insert_hole_radius_mm'], p['insert_radius_mm']
+    pre, T, dT = p['preload_mm'], p['stop_travel_mm'], p['stop_travel_tolerance_mm']
+    tip_y = p['plunger_tip_y_mm'] - p['tip_length_mm']
+    op_y = tip_y - pre - p['design_rest_above_op_mm']; base_y = op_y - profile.operating_position.value
+    tol = carrier_tolerance_v18(p); tw = twist_v18(p)
+    pre_max = tol['preload_range_mm'][1]
+    rest, mid, stop, stop_max = pre, pre + p['mid_pose_mm'], pre + T, pre + T + dT  # translations (-Y) from the drawn free pose
+    def short(dy): return p['parasitic_shortening_factor'] * dy ** 2 / L
+    def pose(dy): return [-short(dy), -dy, 0.]
+    def cyl(node_id, function_id, reason, radius, origin, height, axis=(0., 0., 1.)):
+        return {'id': node_id, 'op': 'cylinder', 'function_id': function_id, 'reason': reason, 'radius_mm': radius,
+                'height_mm': height, 'origin_mm': list(origin), 'axis': list(axis)}
+    fillets = []
+    for name, x_face, sx in (('root', xr, 1.), ('tip', xf, -1.)):
+        fillets += _fillet(f'{name}_fillet_a', 'F2_guide_button', x_face, ya + t, sx, 1., r, lz0, lz1)
+        fillets += _fillet(f'{name}_fillet_b', 'F2_guide_button', x_face, yb, sx, -1., r, lz0, lz1)
+    fillets += _fillet('tip_fillet_c', 'F2_guide_button', xf, yb + t, -1., 1., r, p['pad_z_min_mm'], p['pad_z_max_mm'])
+    lt1 = bz0 - p['lower_tab_gap_mm']; lt0 = lt1 - p['tab_thickness_mm']; ut0 = bz1; ut1 = ut0 + p['upper_tab_thickness_mm']
+    tab_x0, tab_x1 = bx0 - 1.5, p['tongue_x_max_mm'] + 1.5
+    pins = [(p['block_pin_x_mm'], p['pin_y_mm']), (p['tongue_pin_x_mm'], p['pin_y_mm'])]
+    r_pin, inter, binter, head_h = p['pin_radius_mm'], p['pin_interference_mm'], p['pin_block_interference_mm'], p['pin_head_height_mm']
+    pin_top = ut1 - p['pin_top_below_tab_mm']; lead = p['pin_lead_in_mm']
+    pin_profile = [[0., -head_h], [p['pin_head_radius_mm'], -head_h], [p['pin_head_radius_mm'], 0.], [r_pin, 0.],
+                   [r_pin, pin_top - lt0 - lead], [r_pin - .3, pin_top - lt0], [0., pin_top - lt0]]
+    skin_y = _outer_y(px, pz); cb_bottom = skin_y - p['counterbore_depth_mm']; band0 = cb_bottom - p['press_band_length_mm']
+    # Rest lip: a band just inside the inner skin around the window, drawn pre mm into the skin (the declared preload).
+    lw, lt = p['lip_width_mm'], p['lip_thickness_mm']
+    lip_lo, lip_hi = [wl - g - lw, 20., bz0], [wh + g + lw, 40., zh + g + lw]  # no lip below the window: the carrier prints on z 9.5
+    # Hard stop: far-end tab on the button; a separate jaw keyed into a shell post under it (fitted after the carrier).
+    yl = p['stop_tab_y_mm']; tt = p['stop_tab_thickness_mm']; xg = wh + g
+    stab_x0, stab_x1 = wh - 2., xg + p['stop_tab_reach_mm']
+    jaw_top = yl - tt - pre - T; jaw_bot = jaw_top - p['jaw_thickness_mm']
+    sz0, sz1 = p['stop_z_min_mm'] - .5, p['stop_z_max_mm'] + .5
+    post_x0 = stab_x1 + p['bracket_gap_mm']; post_x1 = post_x0 + p['post_width_mm']; key_x1 = post_x0 + p['key_length_mm']
+    ops = [
+        {'id': 'outer', 'op': 'spline_loft', 'function_id': 'F6_connect_shell', 'reason': 'Base outer skin (stand-in for a scanned shell).',
+         'sections': [{'z_mm': z, 'points_mm': _ellipse(a_, b_)} for z, a_, b_ in SECTIONS]},
+        {'id': 'cavity', 'op': 'spline_loft', 'function_id': 'F6_connect_shell', 'reason': 'Inner cavity, open at the bottom.', 'sections': _inset_sections(p['shell_wall_mm'])},
+        {'id': 'cavity_lip', 'op': 'spline_loft', 'function_id': 'F2_guide_button', 'reason': 'Cavity inset by the lip thickness (inner face of the rest lip).',
+         'sections': _inset_sections(p['shell_wall_mm'] + lt)},
+        {'id': 'hollow', 'op': 'difference', 'function_id': 'F6_connect_shell', 'reason': 'Shell skin = outer minus cavity.', 'operands': ['outer', 'cavity']},
+        _box('window', 'F1_transmit_force', 'Button skin region (edges parallel to the press direction: the face translates).', [wl, 20., zl], [wh, 40., zh]),
+        _box('window_gap', 'F6_connect_shell', 'Window with the 0.4 mm running gap on all sides.', [wl - g, 20., zl - g], [wh + g, 40., zh + g]),
+        {'id': 'shell_open', 'op': 'difference', 'function_id': 'F6_connect_shell', 'reason': 'Open the window.', 'operands': ['hollow', 'window_gap']},
+        _box('low_tab_box', 'F6_connect_shell', 'Lower shell tab under the carrier block, leaves and tongue.', [tab_x0, by0 - 1., lt0], [tab_x1, 40., lt1]),
+        _box('up_tab_box', 'F6_connect_shell', 'Upper shell tab: Z datum face for the block and tongue.', [tab_x0, by0 - 1., ut0], [tab_x1, 40., ut1]),
+        _box('back_stop_box', 'F6_connect_shell', 'Back-stop lip on the lower tab: the block +Y face meets it (Y location for the pin holes).',
+             [tab_x0, by1, lt1 - .01], [xr - .5, by1 + p['back_stop_thickness_mm'], lt1 + 1.]),
+        {'id': 'tabs_raw', 'op': 'union', 'function_id': 'F6_connect_shell', 'reason': 'Tabs and back-stop lip.', 'operands': ['low_tab_box', 'up_tab_box', 'back_stop_box']},
+        {'id': 'tabs', 'op': 'intersection', 'function_id': 'F6_connect_shell', 'reason': 'Tabs grown from the side wall.', 'operands': ['tabs_raw', 'outer']},
+        *[cyl(f'tab_hole_{i}', 'F6_connect_shell', f'Press-fit through hole for pin {i} in both tabs.', r_pin - inter, (x, y, lt0 - .01), ut1 - lt0 + .02) for i, (x, y) in enumerate(pins, 1)],
+        {'id': 'shell_raw', 'op': 'union', 'function_id': 'F6_connect_shell', 'reason': 'Shell with the tabs.', 'operands': ['shell_open', 'tabs']},
+        {'id': 'shell', 'op': 'difference', 'function_id': 'F6_connect_shell', 'reason': 'Tabs with the pin through holes.', 'operands': ['shell_raw', 'tab_hole_1', 'tab_hole_2']},
+        _box('post_box', 'F5_limit_overtravel', 'Stop post from the inner skin beyond the tab end.', [post_x0, jaw_bot - p['post_floor_mm'], sz0], [post_x1, 40., sz1]),
+        {'id': 'post_in', 'op': 'intersection', 'function_id': 'F5_limit_overtravel', 'reason': 'Post grown from the inner skin (same print as the shell).', 'operands': ['post_box', 'cavity']},
+        _box('key_slot', 'F5_limit_overtravel', 'Keyway for the stop jaw: open to -X and to the bottom, closed on top (Z datum).',
+             [post_x0 - .01, jaw_bot, sz0 - .01], [key_x1, jaw_top, sz1 - p['slot_roof_mm']]),
+        {'id': 'stop_post', 'op': 'difference', 'function_id': 'F5_limit_overtravel', 'reason': 'Post with the keyway; the floor under the key takes the stop load.', 'operands': ['post_in', 'key_slot']},
+        _box('jaw_arm', 'F5_limit_overtravel', 'Stop jaw: its top meets the far-end tab after the stop travel.', [xg + .3, jaw_bot, sz0], [post_x0, jaw_top, sz1 - p['slot_roof_mm']]),
+        _box('jaw_key', 'F5_limit_overtravel', 'Key in the post keyway (declared light press in Y).',
+             [post_x0, jaw_bot - p['key_interference_mm'] / 2, sz0], [key_x1, jaw_top + p['key_interference_mm'] / 2, sz1 - p['slot_roof_mm']]),
+        {'id': 'stop_jaw', 'op': 'union', 'function_id': 'F5_limit_overtravel', 'reason': 'Separately printed stop jaw, pushed up into the post from the open bottom after the carrier.', 'operands': ['jaw_arm', 'jaw_key']},
+        _box('block_raw', 'F6_connect_shell', 'Carrier block, flush with the leaves outer faces.', [bx0, by0, bz0], [xr, by1, bz1]),
+        _box('tongue', 'F6_connect_shell', 'Tongue between the leaves carrying the second locating pin 15.7 mm ahead.', [xr - .01, p['tongue_y_min_mm'], bz0], [p['tongue_x_max_mm'], p['tongue_y_max_mm'], bz1]),
+        *fillets,
+        {'id': 'block_filleted', 'op': 'union', 'function_id': 'F6_connect_shell', 'reason': 'Block and tongue (the root fillets belong to the leaves).', 'operands': ['block_raw', 'tongue']},
+        *[cyl(f'block_hole_{i}', 'F6_connect_shell', f'Press-fit hole for pin {i}.', r_pin - binter, (x, y, bz0 - .01), bz1 - bz0 + .02) for i, (x, y) in enumerate(pins, 1)],
+        *[cyl(f'block_sink_{i}', 'F6_connect_shell', f'Lead-in countersink at the bottom entry of hole {i}.', r_pin + .1, (x, y, bz0 - .01), .31) for i, (x, y) in enumerate(pins, 1)],
+        {'id': 'carrier_block', 'op': 'difference', 'function_id': 'F6_connect_shell', 'reason': 'Block and tongue with the pin holes.',
+         'operands': ['block_filleted', 'block_hole_1', 'block_hole_2', 'block_sink_1', 'block_sink_2']},
+        _box('leaf_a', 'F2_guide_button', 'Lower leaf of the parallel guide (also returns the face).', [xr, ya, lz0], [xf, ya + t, lz1]),
+        _box('leaf_b', 'F2_guide_button', 'Upper leaf of the parallel guide.', [xr, yb, lz0], [xf, yb + t, lz1]),
+        {'id': 'leaf_a_part', 'op': 'union', 'function_id': 'F2_guide_button', 'reason': 'Leaf A with its root and tip fillets.', 'operands': ['leaf_a', 'root_fillet_a', 'tip_fillet_a']},
+        {'id': 'leaf_b_part', 'op': 'union', 'function_id': 'F2_guide_button', 'reason': 'Leaf B with its root and tip fillets (tip inner and outer).', 'operands': ['leaf_b', 'root_fillet_b', 'tip_fillet_b', 'tip_fillet_c']},
+        {'id': 'skin_piece', 'op': 'intersection', 'function_id': 'F1_transmit_force', 'reason': 'Button face is the removed skin piece.', 'operands': ['hollow', 'window']},
+        _box('lip_box', 'F2_guide_button', 'Rest-lip footprint: window plus gap plus lip width.', lip_lo, lip_hi),
+        {'id': 'lip_band', 'op': 'difference', 'function_id': 'F2_guide_button', 'reason': 'Band of lip thickness just inside the inner skin.', 'operands': ['cavity', 'cavity_lip']},
+        {'id': 'face_band', 'op': 'intersection', 'function_id': 'F2_guide_button', 'reason': 'Band under the face (thickens the face, joins it to the lip).', 'operands': ['lip_band', 'window']},
+        {'id': 'lip_footprint', 'op': 'intersection', 'function_id': 'F2_guide_button', 'reason': 'Band in the lip footprint.', 'operands': ['lip_band', 'lip_box']},
+        {'id': 'lip_ring', 'op': 'difference', 'function_id': 'F2_guide_button', 'reason': 'Ring outside the face.', 'operands': ['lip_footprint', 'window']},
+        {'id': 'rest_lip', 'op': 'transform', 'function_id': 'F2_guide_button', 'reason': f'Lip drawn {pre:.1f} mm into the skin: the declared preload (the leaves bend instead).',
+         'source': 'lip_ring', 'translation_mm': [0., pre, 0.]},
+        _box('pad_low', 'F2_guide_button', 'Full-width lower pad joining both leaf tips.', [xf, ya, lz0], [xf + p['pad_x_mm'], yb + t, lz1]),
+        _box('pad_box', 'F2_guide_button', 'Pad rising to the face (window height only).', [xf, ya, p['pad_z_min_mm']], [xf + p['pad_x_mm'], 40., p['pad_z_max_mm']]),
+        {'id': 'pad_in', 'op': 'intersection', 'function_id': 'F2_guide_button', 'reason': 'Pad inside the cavity.', 'operands': ['pad_box', 'cavity']},
+        _box('spine_box', 'F1_transmit_force', 'Spine stiffening the face.', [xf, p['spine_y_min_mm'], p['spine_z_min_mm']], [wh - 1.5, 40., p['spine_z_max_mm']]),
+        {'id': 'spine', 'op': 'intersection', 'function_id': 'F1_transmit_force', 'reason': 'Spine inside the cavity.', 'operands': ['spine_box', 'cavity']},
+        _box('plunger_box', 'F3_actuate_switch', 'Plunger carrying the actuator insert.', [p['plunger_x_min_mm'], p['plunger_tip_y_mm'], p['plunger_z_min_mm']], [p['plunger_x_max_mm'], 40., p['plunger_z_max_mm']]),
+        {'id': 'plunger', 'op': 'intersection', 'function_id': 'F3_actuate_switch', 'reason': 'Plunger inside the cavity.', 'operands': ['plunger_box', 'cavity']},
+        _box('tab_riser_box', 'F5_limit_overtravel', 'Riser carrying the stop tab from the face.', [stab_x0, yl - tt, p['stop_z_min_mm']], [wh - .5, 40., p['stop_z_max_mm']]),
+        {'id': 'tab_riser', 'op': 'intersection', 'function_id': 'F5_limit_overtravel', 'reason': 'Riser inside the cavity.', 'operands': ['tab_riser_box', 'cavity']},
+        _box('stop_tab', 'F5_limit_overtravel', f'Stop tab: meets the bracket jaw {T:.1f} mm after rest.', [stab_x0, yl - tt, p['stop_z_min_mm']], [stab_x1, yl, p['stop_z_max_mm']]),
+        {'id': 'button_solid', 'op': 'union', 'function_id': 'F1_transmit_force', 'reason': 'Face, face band, pads, spine, plunger and stop tab.',
+         'operands': ['skin_piece', 'face_band', 'pad_low', 'pad_in', 'spine', 'plunger', 'tab_riser', 'stop_tab']},
+        cyl('insert_hole', 'F3_actuate_switch', 'Through hole for the actuator insert, open to the face.', hole_r, (px, p['plunger_tip_y_mm'] - .01, pz), 20., (0., 1., 0.)),
+        cyl('insert_counterbore', 'F3_actuate_switch', 'Counterbore in the face for the insert head.', p['counterbore_radius_mm'], (px, cb_bottom, pz), 20., (0., 1., 0.)),
+        _box('pull_notch', 'F3_actuate_switch', 'Pull notch: a pick goes under the head edge to lever the insert out.',
+             [px, cb_bottom - p['pull_notch_depth_mm'], pz - p['pull_notch_width_mm'] / 2], [px + p['pull_notch_reach_mm'], 40., pz + p['pull_notch_width_mm'] / 2]),
+        {'id': 'button', 'op': 'difference', 'function_id': 'F3_actuate_switch', 'reason': 'Button with the insert hole, counterbore and pull notch.',
+         'operands': ['button_solid', 'insert_hole', 'insert_counterbore', 'pull_notch']},
+        cyl('insert_head', 'F3_actuate_switch', 'Insert head on the counterbore floor (length datum).', p['collar_radius_mm'], (px, cb_bottom, pz), p['collar_thickness_mm'], (0., 1., 0.)),
+        cyl('insert_band', 'F3_actuate_switch', 'Press band under the head (the only interference).', ins_r, (px, band0, pz), cb_bottom - band0, (0., 1., 0.)),
+        cyl('insert_shank', 'F3_actuate_switch', 'Slip shank (0.05 mm radial clearance).', hole_r - p['shank_clearance_mm'], (px, p['plunger_tip_y_mm'], pz), band0 - p['plunger_tip_y_mm'] + .01, (0., 1., 0.)),
+        cyl('insert_tip', 'F3_actuate_switch', 'Insert tip Ø1.0 on the switch pin.', p['tip_radius_mm'], (px, tip_y, pz), p['tip_length_mm'] + .01, (0., 1., 0.)),
+        {'id': 'actuator_insert', 'op': 'union', 'function_id': 'F3_actuate_switch', 'reason': 'Printed actuator insert (tip length from a 0.1 mm series).',
+         'operands': ['insert_head', 'insert_band', 'insert_shank', 'insert_tip']},
+        *[{'id': f'pin_{i}', 'op': 'revolve', 'function_id': 'F6_connect_shell', 'reason': f'Separately printed ABS pin {i} with head and lead-in, pressed up from the open bottom.',
+           'profile_rz_mm': pin_profile, 'angle_deg': 360., 'origin_mm': [x, y, lt0]} for i, (x, y) in enumerate(pins, 1)],
+        _box('pcb_slab', 'F3_actuate_switch', 'ASSUMED side-button PCB (1.6 mm) carrying the switch; outline = the stated keep-out.',
+             [p['pcb_x_min_mm'], base_y - p['pcb_thickness_mm'], p['pcb_z_min_mm']], [p['pcb_x_max_mm'], base_y, p['pcb_z_max_mm']]),
+        _box('switch_body', 'F3_actuate_switch', f'Switch body from profile {profile.id} on the ASSUMED PCB (OP {p["design_rest_above_op_mm"]:.1f} mm below the tip at rest).',
+             [px - profile.body_length.value / 2, base_y, pz - profile.body_width.value / 2], [px + profile.body_length.value / 2, base_y + profile.body_height.value, pz + profile.body_width.value / 2]),
+        _box('switch_pin', 'F3_actuate_switch', 'Switch pin under the tip at the free pose (pin x size UNKNOWN, 1.2 mm assumed).',
+             [px - .6, base_y + profile.body_height.value, pz - profile.plunger_width.value / 2], [px + .6, tip_y - .001, pz + profile.plunger_width.value / 2]),
+    ]
+    carrier = ['leaf_a', 'leaf_b', 'button', 'rest_lip', 'actuator_insert']
+    moving = {'moving_part': 'button', 'carried_parts': ['actuator_insert']}
+    tw_axis = {'axis_origin_mm': [0., (ya + yb + t) / 2, (lz0 + lz1) / 2], 'axis_direction': [1., 0., 0.]}
+    yaw_axis = {'axis_origin_mm': [xf, (ya + yb + t) / 2, 0.], 'axis_direction': [0., 0., 1.]}
+    corner = math.hypot(tw['twist_deg'], tw['yaw_deg'])
+    E = MATERIALS[DEFAULT_MATERIAL].flexural_modulus_gpa['horizontal'] * 1000.
+    fits = [stack_v18(pr, p) for pr in SWITCH_PROFILES.values()]
+    summary = '; '.join(f"{f['profile']}: {f['verdict']}" + (f" (past OP at the stop {f['travel_past_op_at_stop_mm'][0]:.2f}-{f['travel_past_op_at_stop_mm'][1]:.2f} mm vs guaranteed OT {f['guaranteed_overtravel_mm']:.2f}: {f['overtravel_within_guarantee']}; pin may bottom first: {f['pin_may_bottom_before_stop']})"
+                                                         if f['verdict'] != 'unverified' else f" (missing {', '.join(f['missing'])})") for f in fits)
+    ring_band = math.pi * (ins_r ** 2 - hole_r ** 2) * (cb_bottom - band0)
+    ring_tab = math.pi * (r_pin ** 2 - (r_pin - inter) ** 2) * (p['tab_thickness_mm'] + pin_top - ut0 - lead)
+    ring_block = math.pi * (r_pin ** 2 - (r_pin - binter) ** 2) * (bz1 - bz0 - .3)
+    lip_area = (wh - wl + 2 * g + 2 * lw) * (zh + g + lw - bz0) - (wh - wl + 2 * g) * (zh + g - bz0)
+    params = {k: float(v) for k, v in p.items() if not isinstance(v, tuple)}
+    tn = t - p['leaf_thickness_tolerance_mm']; tx = t + p['leaf_thickness_tolerance_mm']
+    k_pair = lambda th: 2 * 12 * E * ((lz1 - lz0) * th ** 3 / 12) / L ** 3
+    of_max = max(pr.operating_force.value for pr in SWITCH_PROFILES.values() if pr.operating_force.known) * .00980665
+    pre_lo = tol['preload_range_mm'][0]
+    click_hi = max(f['rest_above_op_mm'][1] for f in fits if f['verdict'] != 'unverified')
+    # Measured on the revision-18 export (flat down-facing faces above each print bed).
+    supports = ('Carrier print standing on z 9.5 (block, tongue, leaves and lower pad start on the bed; leaves are vertical 0.6 mm walls). Supported faces of the button: '
+                'face strip, face band and plunger underside at z 10 (about 83 mm2, 0.5 mm above the bed), pad step at z 10.5 (24 mm2), stop tab and riser at z 12 (10 mm2), '
+                'spine at z 12.6 (38 mm2); supports with an ASSUMED 0.2 mm Z gap, removed with a blade; the z 10 face edges form the running gap and are deburred before fit. '
+                'Bridged without support: pull-notch roof (1 mm wide, z 13.5), the 0.3 mm countersink rings at the pin-hole entries, the insert bore crown (horizontal bore, opened by drill). '
+                'The lip top band rests on the face (same print). Stop jaw printed flat on its -Y face, pins and inserts upright with the head down: no supports. '
+                'Shell print rim down: supports under the lower tab (z 6.2), upper tab (z 17.5), window lintel (z 18.4), roof (z 32.5) and stop post (z 11.5; keyway roof z 15, '
+                'support blocker in the keyway and in the pin through holes).')
+    return {
+        'title': 'Side button test subject, revision 18 (parallel-leaf ABS carrier, rest lip on the skin, shell hard stop, two pins 15.7 mm apart)',
+        'original_request': request,
+        'design_parameters': params,
+        'parameter_basis': {k: 'ASSUMED test-subject proposal; not measured from a real mouse, switch or PCB.' for k in params},
+        'functions': {'F1_transmit_force': 'Transmit thumb force from the skin piece into the button.',
+                      'F2_guide_button': 'Guide the face on two parallel leaves; hold it at rest with a lip on the inner skin (preloaded).',
+                      'F3_actuate_switch': 'Press the switch pin with a printed insert chosen against the fitted switch.',
+                      'F4_restore_button': 'Return the face with the elastic leaves (no separate spring).',
+                      'F5_limit_overtravel': f'A stop jaw keyed into a shell post stops the far-end tab {T:.1f} +/- {dT:.1f} mm after rest (after the worst-case click); thumb and insert press-in forces go into the shell.',
+                      'F6_connect_shell': 'Fix the carrier with two vertical press-fit pins (block and tongue) between two shell tabs; keep the outer skin outside the window.'},
+        'protected_constraints': ['Outer skin outside the side-button region is not changed (checked against the base skin).',
+                                  'Owner policy: ABS only; no screws except those supplied with the OP1.'],
+        'design_basis': {'kind': 'first_principles',
+                         'summary': 'Separately printed ABS carrier: the face translates on two parallel leaves, rests with a preloaded lip on the inner skin, stops on a jaw keyed into a shell post after the click, and is fixed by two vertical press-fit pins 15.7 mm apart.',
+                         'assumptions': [ASSUMED_V15['material'], ASSUMED_V15['screws'],
+                                         'ASSUMED stress concentration 1.5 at the R1-filleted leaf corners; outer leaf faces run flush into block and pad.',
+                                         f'Leaves {t:.1f} +/- {p["leaf_thickness_tolerance_mm"]:.2f} mm: one 0.6 mm wide extrusion line from a 0.4 mm nozzle (ASSUMED slicer setting, stated with the print); an intended exception to the 1.2 mm printed-wall minimum, judged by the flexure check at the thick limit.',
+                                         f'Carrier placement (ASSUMED): +/-{p["carrier_translation_tolerance_mm"]:.2f} mm and +/-{tol["rotation_deg"]:.2f} deg about Z ({p["pin_position_tolerance_mm"]:.2f} mm relative pin-hole error over {tol["pin_separation_mm"]:.1f} mm). It moves the free pose at the lip by up to {tol["face_y_variation_mm"]:.2f} mm, so the preload is {pre_lo:.2f}-{pre_max:.2f} mm; rest and stop are on the shell and do not move with it.',
+                                         f'Stop travel {T:.1f} +/- {dT:.1f} mm from rest (ASSUMED print error of the lip and jaw faces); the worst-case click is {click_hi:.2f} mm after rest.',
+                                         f'Edge press (ASSUMED 3 N at the face edge {tw["twist_offset_mm"]:.1f} mm from the leaf mid-plane) twists the guide by {tw["twist_deg"]:.2f} deg; a press at the far end yaws it by {tw["yaw_deg"]:.2f} deg; a corner press is checked as their combination ({corner:.2f} deg). Thin-limit leaves; Poisson ratio 0.35 ASSUMED.',
+                                         'Drawn pose = the leaves unbent (free pose). Every stroke pose is measured from the rest pose (preload in): rest, rest + 0.2 mm, the nominal stop and the stop at its + tolerance.',
+                                         'The pin bottoming position inside the switch is not known (ASSUMED at or above body flush); travel no longer depends on it because the shell stop ends it.',
+                                         supports,
+                                         'Assembly: carrier in from the cavity side (+Y) between the tabs to the back-stop lip; pins pressed up from the open bottom (they drag the block and tongue up onto the upper tabs, the Z datum) with the shell supported on its top; stop jaw pushed up into the post keyway from the open bottom until it meets the slot roof; PCB and switch fitted; inserts pushed in from outside with the face held on the hard stop (the stop takes the press-in force), levered out with a pick in the pull notch.',
+                                         f'Insert rule: fit the longest insert (0.1 mm steps) with which the switch still releases after a press to the stop, then the next shorter one: the tip rests {p["insert_step_mm"]:.1f}-{click_hi:.2f} mm above OP.',
+                                         'Insert bore: printed horizontal at 1.9 mm and opened with a 1.9 mm drill by hand (ASSUMED tool); only the 1.5 mm band under the head is an interference.',
+                                         'Reading of 「もっと押しやすく」 used here (an interpretation for the owner to confirm): the same press force anywhere on the face (translation), a short travel to the click and a firm end stop.',
+                                         f'PCB keep-out (ASSUMED board, modeled as pcb_slab and checked): board edge at x >= {p["pcb_x_min_mm"]:.1f} mm for z {p["pcb_z_min_mm"]:.0f}-{p["pcb_z_max_mm"]:.0f} (the pad x -9 to -6.5 crosses the board plane); no board at x < -16 (tabs, block, tongue, pins, leaves on both sides of the plane).']},
+        'verification_plan': [
+            'Pair overlap and bounds; declared press fits (pins in tabs, block and tongue; insert band; rest lip preload on the skin).',
+            f'Rest: outward motion blocked by the lip; inward motion blocked by the stop jaw by {stop_max + .3:.2f} mm from the free pose.',
+            f'Press from rest to the stop at its + tolerance ({stop_max:.2f} mm from the free pose): face, insert and pad clear of the shell and the PCB by at least {p["twist_min_gap_mm"]:.2f} / {p["pcb_clearance_mm"]:.2f} mm at the nominal and the carrier-placement corners; the lip leaves the skin; the insert clears the switch body to the nominal stop.',
+            f'Twist, yaw and corner press at rest + 0.2 mm and at the stop + tolerance: face clear of the shell by at least {p["twist_min_gap_mm"]:.2f} mm.',
+            'Carrier insertion between the tabs to the back-stop lip (before the stop jaw); pin and stop-jaw approach from the open bottom (approach only: the seated pose is the declared press fit).',
+            f'Leaves: guided-beam stiffness (two leaves), force with the largest registered switch force, root stress with stress concentration at the deepest deflection ({pre_max + T + dT:.2f} mm: highest preload plus the longest stop travel) and at the thick limit.',
+            'Outer form outside the side-button region matches the base skin; sampled printed walls of shell, button and carrier block.'],
+        'operations': ops,
+        'outputs': [{'part_id': 'shell', 'node': 'shell', 'manufacturing_process': 'FDM ABS, rim-down'},
+                    {'part_id': 'stop_post', 'node': 'stop_post', 'manufacturing_process': 'FDM ABS, same print as the shell'},
+                    {'part_id': 'stop_jaw', 'node': 'stop_jaw', 'manufacturing_process': 'FDM ABS stop jaw, separate print, flat on its side'},
+                    {'part_id': 'carrier_block', 'node': 'carrier_block', 'manufacturing_process': 'FDM ABS, one carrier print (block, tongue, leaves, button, lip)'},
+                    {'part_id': 'leaf_a', 'node': 'leaf_a_part', 'manufacturing_process': 'FDM ABS, same carrier print'},
+                    {'part_id': 'leaf_b', 'node': 'leaf_b_part', 'manufacturing_process': 'FDM ABS, same carrier print'},
+                    {'part_id': 'button', 'node': 'button', 'manufacturing_process': 'FDM ABS, same carrier print'},
+                    {'part_id': 'rest_lip', 'node': 'rest_lip', 'manufacturing_process': 'FDM ABS, same carrier print (joined to the face band)'},
+                    {'part_id': 'actuator_insert', 'node': 'actuator_insert', 'manufacturing_process': 'FDM ABS insert from a 0.1 mm length series, printed upright'},
+                    {'part_id': 'pin_1', 'node': 'pin_1', 'manufacturing_process': 'FDM ABS pin, printed upright'},
+                    {'part_id': 'pin_2', 'node': 'pin_2', 'manufacturing_process': 'FDM ABS pin, printed upright'},
+                    {'part_id': 'pcb_slab', 'node': 'pcb_slab', 'manufacturing_process': 'Placeholder for the ASSUMED side-button PCB'},
+                    {'part_id': 'switch_body', 'node': 'switch_body', 'manufacturing_process': f'Placeholder for a purchased switch (profile {profile.id})'},
+                    {'part_id': 'switch_pin', 'node': 'switch_pin', 'manufacturing_process': 'Placeholder for the switch pin'}],
+        'press_fits': [{'id': 'insert-band-in-plunger', 'part_a': 'actuator_insert', 'part_b': 'button', 'min_overlap_mm3': .7 * ring_band, 'max_overlap_mm3': 1.3 * ring_band,
+                        'basis': f'ASSUMED 0.05 mm radial interference over the {p["press_band_length_mm"]:.1f} mm band under the head; the shank is a slip fit.'},
+                       {'id': 'stop-jaw-key-in-post', 'part_a': 'stop_jaw', 'part_b': 'stop_post',
+                        'min_overlap_mm3': .7 * p['key_length_mm'] * (sz1 - p['slot_roof_mm'] - sz0) * p['key_interference_mm'],
+                        'max_overlap_mm3': 1.3 * p['key_length_mm'] * (sz1 - p['slot_roof_mm'] - sz0) * p['key_interference_mm'],
+                        'basis': f'ASSUMED {p["key_interference_mm"]:.2f} mm total interference across the key (Y): retention only; the stop load bears on the post floor.'},
+                       {'id': 'rest-lip-preload-on-skin', 'part_a': 'rest_lip', 'part_b': 'shell', 'min_overlap_mm3': .5 * lip_area * pre, 'max_overlap_mm3': 1.3 * lip_area * pre,
+                        'basis': f'Declared {pre:.1f} mm nominal preload: the lip is drawn that far into the skin around the window (the leaves bend instead).'},
+                       *[{'id': f'pin-{i}-in-tabs', 'part_a': f'pin_{i}', 'part_b': 'shell', 'min_overlap_mm3': .6 * ring_tab, 'max_overlap_mm3': 1.3 * ring_tab,
+                          'basis': f'ASSUMED {inter:.2f} mm radial interference in the lower tab and the upper-tab through hole.'} for i in (1, 2)],
+                       *[{'id': f'pin-{i}-in-carrier', 'part_a': f'pin_{i}', 'part_b': 'carrier_block', 'min_overlap_mm3': .7 * ring_block, 'max_overlap_mm3': 1.3 * ring_block,
+                          'basis': f'ASSUMED {binter:.2f} mm radial interference through the block or tongue (locates the carrier).'} for i in (1, 2)]],
+        'placement_tolerances': [{'id': 'carrier-placement', 'part': 'carrier_block', 'carried_parts': carrier,
+                                  'translation_mm': [p['carrier_translation_tolerance_mm'], 0., p['carrier_translation_tolerance_mm']], 'rotation_deg': tol['rotation_deg'],
+                                  'rotation_axis': [0., 0., 1.], 'rotation_origin_mm': [tol['rotation_origin_x_mm'], p['pin_y_mm'], (bz0 + bz1) / 2],
+                                  'basis': 'ASSUMED pin-hole position error 0.05 mm (relative, over the pin separation) and 0.05 mm in X and Z (Z on the upper-tab datum); Y is set by the rest lip and the stop on the shell.'}],
+        'clearance_checks': [
+            {'id': 'rest-button-shell', 'part_a': 'button', 'part_b': 'shell', 'min_mm': .35},
+            {'id': 'rest-button-shell-placement-corners', 'part_a': 'button', 'part_b': 'shell', 'min_mm': p['twist_min_gap_mm'], 'tolerance_ids': ['carrier-placement']},
+            {'id': 'tab-to-stop-post', 'part_a': 'button', 'part_b': 'stop_post', 'min_mm': p['bracket_gap_mm'] - .01},
+            {'id': 'pad-to-pcb', 'part_a': 'button', 'part_b': 'pcb_slab', 'min_mm': p['pcb_clearance_mm']},
+            {'id': 'leaf-a-to-shell', 'part_a': 'leaf_a', 'part_b': 'shell', 'min_mm': .15, 'tolerance_ids': ['carrier-placement']},
+            {'id': 'leaf-b-to-shell', 'part_a': 'leaf_b', 'part_b': 'shell', 'min_mm': .15, 'tolerance_ids': ['carrier-placement']},
+            {'id': 'leaves-to-pcb', 'part_a': 'leaf_a', 'part_b': 'pcb_slab', 'min_mm': p['pcb_clearance_mm']},
+            {'id': 'block-to-tabs', 'part_a': 'carrier_block', 'part_b': 'shell', 'min_mm': 0.}],
+        'motion_checks': [
+            {'id': 'rest-outward-blocked-by-lip', 'moving_part': 'rest_lip', 'obstacles': ['shell'], 'start_translation_mm': pose(rest), 'translation_end_mm': [0., .3, 0.],
+             'expect': 'blocked', 'samples': 3, 'max_samples': 3},
+            {'id': 'press-blocked-by-hard-stop', **moving, 'obstacles': ['stop_jaw'], 'start_translation_mm': pose(rest), 'translation_end_mm': [0., -(T + dT + .3), 0.],
+             'expect': 'blocked', 'samples': 5, 'max_samples': 5},
+            {'id': 'press-to-stop-clear-of-shell', **moving, 'obstacles': ['shell'], 'start_translation_mm': pose(rest), 'translation_end_mm': [pose(stop_max)[0] - pose(rest)[0], -(stop_max - rest), 0.],
+             'samples': 3, 'max_samples': 5, 'min_mm': p['twist_min_gap_mm'], 'tolerance_ids': ['carrier-placement']},
+            {'id': 'press-to-stop-clear-of-pcb', **moving, 'obstacles': ['pcb_slab'], 'start_translation_mm': pose(rest), 'translation_end_mm': [pose(stop_max)[0] - pose(rest)[0], -(stop_max - rest), 0.],
+             'samples': 3, 'max_samples': 5, 'min_mm': p['pcb_clearance_mm']},
+            {'id': 'press-lip-leaves-skin', 'moving_part': 'rest_lip', 'obstacles': ['shell'], 'start_translation_mm': pose(rest + .01), 'translation_end_mm': [0., -(stop_max - rest - .01), 0.],
+             'samples': 3, 'max_samples': 3, 'min_mm': 0.},
+            {'id': 'press-to-stop-clear-of-jaw-before-stop', **moving, 'obstacles': ['stop_jaw'], 'start_translation_mm': pose(rest), 'translation_end_mm': [0., -(T - dT - .01), 0.],
+             'samples': 3, 'max_samples': 3, 'min_mm': 0.},
+            {'id': 'press-insert-clear-of-switch-body', **moving, 'obstacles': ['switch_body'], 'start_translation_mm': pose(rest),
+             'translation_end_mm': [0., -T, 0.], 'samples': 3, 'max_samples': 5, 'min_mm': 0.},
+            # The carrier goes in rigidly until the lip meets the skin; the block then goes on alone to the back-stop lip and the leaves take the preload.
+            {'id': 'carrier-insertion', 'moving_part': 'carrier_block', 'carried_parts': carrier, 'obstacles': ['shell', 'stop_post'],
+             'start_translation_mm': [0., -12., -p['lower_tab_gap_mm'] / 2], 'translation_end_mm': [0., 12. - pre - .02, 0.], 'samples': 7, 'max_samples': 9, 'min_mm': .01},
+            {'id': 'carrier-block-final-leg', 'moving_part': 'carrier_block', 'obstacles': ['shell'],
+             'start_translation_mm': [0., -pre - .02, -p['lower_tab_gap_mm'] / 2], 'translation_end_mm': [0., pre + .02 - .1, 0.], 'samples': 3, 'max_samples': 5, 'min_mm': .1},
+            {'id': 'stop-jaw-approach-from-below', 'moving_part': 'stop_jaw', 'obstacles': ['shell', 'button', 'rest_lip', 'pcb_slab'],
+             'start_translation_mm': [0., 0., -(sz1 - sz0) - 12.], 'translation_end_mm': [0., 0., 12.], 'samples': 7, 'max_samples': 9, 'min_mm': .1},
+            *[{'id': f'pin-{i}-approach-from-below', 'moving_part': f'pin_{i}', 'obstacles': ['shell', 'carrier_block', 'leaf_a', 'leaf_b', 'button', 'pcb_slab'],
+               'start_translation_mm': [0., 0., -(pin_top - lt0) - 20.], 'translation_end_mm': [0., 0., 20. - .05], 'samples': 7, 'max_samples': 9, 'min_mm': .05} for i in (1, 2)]],
+        'rotation_checks': [
+            *[{'id': f'edge-press-twist-{sn}-{dn}', **moving, 'obstacles': ['shell', 'pcb_slab'], **tw_axis,
+               'start_translation_mm': pose(dy), 'end_deg': sign * tw['twist_deg'], 'samples': 2, 'max_samples': 3, 'min_mm': p['twist_min_gap_mm']}
+              for sn, sign in (('positive', 1.), ('negative', -1.)) for dn, dy in (('mid', mid), ('stop', stop_max))],
+            *[{'id': f'far-end-yaw-{sn}-{dn}', **moving, 'obstacles': ['shell', 'pcb_slab'], **yaw_axis,
+               'start_translation_mm': pose(dy), 'end_deg': sign * tw['yaw_deg'], 'samples': 2, 'max_samples': 3, 'min_mm': p['twist_min_gap_mm']}
+              for sn, sign in (('positive', 1.), ('negative', -1.)) for dn, dy in (('mid', mid), ('stop', stop_max))],
+            *[{'id': f'corner-press-{tn_}-{yn}-stop', **moving, 'obstacles': ['shell', 'pcb_slab'],
+               'axis_origin_mm': [xf, (ya + yb + t) / 2, (lz0 + lz1) / 2],
+               'axis_direction': [ts * tw['twist_deg'] / corner, 0., ys * tw['yaw_deg'] / corner],
+               'start_translation_mm': pose(stop_max), 'end_deg': corner, 'samples': 2, 'max_samples': 3, 'min_mm': p['twist_min_gap_mm']}
+              for tn_, ts in (('tp', 1.), ('tn', -1.)) for yn, ys in (('yp', 1.), ('yn', -1.))]],
+        'wall_checks': [{'id': 'shell-printed-wall', 'part': 'shell', 'min_mm': p['min_printed_wall_mm'], 'samples_per_face': 10},
+                        {'id': 'button-printed-wall', 'part': 'button', 'min_mm': p['min_printed_wall_mm'], 'samples_per_face': 10},
+                        {'id': 'carrier-block-printed-wall', 'part': 'carrier_block', 'min_mm': p['min_printed_wall_mm'], 'samples_per_face': 10}],
+        'flexure_checks': [{'id': 'parallel-leaves-beam', 'part': 'leaf_a', 'beam_node': 'leaf_a', 'length_axis': 'x', 'fixed_end': 'min', 'bend_axis': 'y',
+                            'end_condition': 'guided', 'parallel_count': 2,
+                            'material': DEFAULT_MATERIAL, 'orientation': 'horizontal', 'strength_basis': 'tensile_strength', 'deflection_mm': pre_max + T + dT,
+                            'min_force_n': p['force_band_min_n'], 'max_force_n': p['force_band_max_n'],
+                            'force_basis': 'ASSUMED band 0.3-3 N at the deepest deflection (highest preload plus the longest stop travel) plus the largest registered switch operating force.',
+                            'switch_profiles': list(SWITCH_PROFILES), 'beam_force_ratio': 1., 'switch_force_ratio': 1.,
+                            'ratio_basis': 'Translation: leaves, switch and press point share the same displacement (no lever).',
+                            'stress_allowance': p['stress_allowance'], 'allowance_basis': 'ASSUMED half of the datasheet tensile strength (yield not published); fatigue UNKNOWN.',
+                            'stress_concentration': p['stress_concentration'], 'stress_concentration_basis': 'ASSUMED 1.5 at R1-filleted corners joined over the full leaf width.',
+                            'thickness_tolerance_mm': p['leaf_thickness_tolerance_mm']}],
+        'base_shape_checks': [{'id': 'outer-form-matches-base', 'base_node': 'outer', 'parts': ['shell', 'button'], 'tolerance_mm': .05, 'samples_per_face': 12, 'regions': [
+            {'id': 'side-button-region', 'kind': 'allowed_change', 'reason': 'Changes around the side buttons are allowed (window, running gap, insert counterbore and pull notch, face below the skin at rest).',
+             'lo_mm': [wl - 1., 20., zl - 1.], 'hi_mm': [wh + 3., 40., zh + 1.]},
+            {'id': 'open-bottom', 'kind': 'not_in_base', 'reason': 'The base outer form is the skin; its bottom cap is the open rim.', 'lo_mm': [-70., -40., -.1], 'hi_mm': [70., 40., .1]}]}],
+        'unverified_requirements': [
+            '押しやすさ: 平行移動のため面のどこを押しても同じ力。この読み方はオーナー確認待ちの解釈。実機の押下感・クリック感は未試験。',
+            f'Press force: the leaves add {k_pair(tn) * (pre_lo + p["insert_step_mm"]):.2f}-{k_pair(tx) * (pre_max + click_hi):.2f} N to the fitted switch operating force at the click (registered maxima up to {of_max:.2f} N; minima not published) and up to {k_pair(tx) * (pre_max + T + dT):.2f} N at the stop (thin/thick leaf limits and the preload range).',
+            f'Switch profiles (insert rule and stop from datasheets): {summary}.',
+            'Leaves: beam theory only (guided small deflection, rigid root, typical datasheet values, ASSUMED stress concentration and Poisson ratio); creep and fatigue UNKNOWN; creep would lower the preload.',
+            'Overtravel past OP at the stop can exceed the guaranteed minimum for some inserts; no maker publishes a rating beyond it (UNKNOWN). In a tolerance corner the pin may bottom before the stop; bottoming rating UNKNOWN.',
+            f'Insert retention: the outward load is the switch pin force (up to {of_max:.2f} N at the stop; the thumb force goes into the stop). Band retention in printed ABS is UNKNOWN: first-article test = pull-out force >= 3 N with a gram gauge before the insert rule is used.',
+            'Rest lip preload, pin retention and the carrier placement tolerance are ASSUMED, not measured; first article: feeler-gauge the face-to-skin step at both ends and the stop travel.',
+            'PCB plane is ASSUMED; the real board and shell were not measured. OP1-supplied screws are not used by this carrier.',
+            'Wall checks are sampled minima of the stated parts, not a proof of minimum wall or of strength. Placement corners are rigid corners only.'],
+    }
