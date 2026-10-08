@@ -28,7 +28,15 @@ classcad / stella-fusion-community / stella_freecad_mouse_b は、案件で所�
 ## Build123d MCP（試験導入・任意）
 - 内容: サードパーティの `pzfreo/build123d-mcp`（Apache-2.0、`build123d-mcp==0.3.90`）。Claudeがbuild123dコードを書き、サーバーが実行してSTEPを出力する text-to-CAD 経路。
 - 場所: `integration/build123d-mcp/`（専用venv `.venv`、gitignore済み。手順・試験は同フォルダの README.md と `smoke_test.py`）。
-- 有効化: 既定では `.mcp.json` に未登録。案件で所有者がBuild123dを選んだ後にだけ、`mcp.snippet.json` をその案件のMCP設定へ写す。
+- 有効化: 所有者の指示により、`build123d` と `stella-fusion-steve` の2サーバーを3クライアント全てに登録済み（下記「全クライアント登録」）。
 - ネイティブRecipe工具とは別runtime。失敗時に他のCADへ自動切替しない。
 - 出力STEPは必ず `brain_import_step` で取り込み検査してから使う。
 - Windows注意: システムフォント破損（`mstmc.ttf`）でbuild123dがimport失敗するため、`winfix/sitecustomize.py` をPYTHONPATHで読み込む（snippet設定済み）。
+
+## 全クライアント登録（build123d / stella-fusion-steve）
+- 登録先: Claude Code `.mcp.json`、Codex `.codex/config.toml`、Cursor `.cursor/mcp.json`（本リポジトリと `V:\mouse`）。`V:\mouse` 側は本リポジトリ内の絶対パスを指す（`.codex/` は mouse 側でgit無視）。
+- 無効化: Codex は該当ブロックの `enabled = false`。Claude Code / Cursor は該当エントリを削除（または `claude mcp` / Cursor 設定画面でOFF）。
+- stella-fusion-steve は絶対パスのPython（`C:/Users/nikis/AppData/Local/Programs/Python/Python313/python.exe`）で起動し、`PYTHONUTF8=1` を維持。Fusionが起動していないと `stella_fusion_health` は ECONNREFUSED になる（正常）。
+- 書込許可文書は `STELLA_FUSION_SANDBOX` のみ。広げない。別名の文書が必要になったら所有者へ報告する。
+- フォント回避: build123d は `PYTHONPATH=integration/build123d-mcp/winfix`（`sitecustomize.py`）で破損フォント `C:\Windows\Fonts\mstmc.ttf` を読み飛ばす。`mcp.snippet.json` も有効なJSON（スラッシュ区切り）に修正済み。
+- 上流がフォント問題を直したら winfix は外せる。

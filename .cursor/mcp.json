@@ -1,3 +1,25 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "stella-fusion-steve": {
+      "type": "stdio",
+      "command": "C:/Users/nikis/AppData/Local/Programs/Python/Python313/python.exe",
+      "args": [
+        "E:/aiwork/Stella_CAD_SYSTEM/integration/steve-bridge/server/stella_steve_bridge_mcp.py",
+        "--allow-document",
+        "STELLA_FUSION_SANDBOX"
+      ],
+      "env": {
+        "PYTHONUTF8": "1"
+      }
+    },
+    "build123d": {
+      "type": "stdio",
+      "command": "E:/aiwork/Stella_CAD_SYSTEM/integration/build123d-mcp/.venv/Scripts/build123d-mcp.exe",
+      "args": [],
+      "env": {
+        "PYTHONPATH": "E:/aiwork/Stella_CAD_SYSTEM/integration/build123d-mcp/winfix",
+        "PYTHONUTF8": "1"
+      }
+    }
+  }
 }

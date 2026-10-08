@@ -80,3 +80,29 @@ CGAL_MCP_DISTANCE = "E:\\aiwork\\cgal-mcp\\build\\Release\\cgal-distance.exe"
 CGAL_MCP_DATA = "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace\\cgal-mcp"
 PYTHONUTF8 = "1"
 PYTHONIOENCODING = "utf-8"
+
+# StellaCAD STEVE Fusion bridge (document allow-list stays STELLA_FUSION_SANDBOX; set enabled = false to disable).
+[mcp_servers.stella-fusion-steve]
+command = "C:/Users/nikis/AppData/Local/Programs/Python/Python313/python.exe"
+args = [
+  "E:/aiwork/Stella_CAD_SYSTEM/integration/steve-bridge/server/stella_steve_bridge_mcp.py",
+  "--allow-document", "STELLA_FUSION_SANDBOX",
+]
+enabled = true
+startup_timeout_sec = 20
+tool_timeout_sec = 130
+
+[mcp_servers.stella-fusion-steve.env]
+PYTHONUTF8 = "1"
+
+# build123d-mcp 0.3.90 (pinned, separate venv). PYTHONPATH winfix skips corrupt system font mstmc.ttf. enabled = false to disable.
+[mcp_servers.build123d]
+command = "E:/aiwork/Stella_CAD_SYSTEM/integration/build123d-mcp/.venv/Scripts/build123d-mcp.exe"
+args = []
+enabled = true
+startup_timeout_sec = 60
+tool_timeout_sec = 300
+
+[mcp_servers.build123d.env]
+PYTHONPATH = "E:/aiwork/Stella_CAD_SYSTEM/integration/build123d-mcp/winfix"
+PYTHONUTF8 = "1"
