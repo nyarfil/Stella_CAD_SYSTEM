@@ -1,0 +1,3749 @@
+{
+  "schema_version": 1,
+  "status": "reference_normal_direction_chords_not_minimum_thickness",
+  "source_file": "triggers-solid.stl",
+  "source_sha256": "ba0385cc2e404c23aaefd58a81d399f633a67e0282d7dc303ce9b519b83c7304",
+  "measurement_script_sha256": "0cacc64ccf817a6042d6999952f453fe9322a3e53fdf60072b68c1e110406257",
+  "dependency_script_sha256": "f457fae7cb35c08f80964858550df21f50cadea1af6c6a5a00b34c7eb9083529",
+  "units": "unspecified STL coordinate units",
+  "rotation": [
+    [
+      1.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      -1.0
+    ],
+    [
+      0.0,
+      1.0,
+      0.0
+    ]
+  ],
+  "translation": [
+    0.0,
+    -50.353187967264546,
+    71.85085868835449
+  ],
+  "method": "Highest vertical intersection; derive facet normal from vertex cross product, orient upward geometrically, cast inward and retain first positive intersection beyond 1e-5. Coincident intersections grouped within 1e-5. Locally opposing parallel candidate requires raw top/exit winding normal dot <= -cos(10 degrees); this is not a manufacturing tolerance.",
+  "assumptions": [
+    "The supplied candidate mounting transform is used, not a physically verified assembly.",
+    "Closed non-self-intersecting material boundaries are required for crossing parity.",
+    "Geometric upward orientation does not establish globally consistent mesh winding or solid validity."
+  ],
+  "not_verified": [
+    "global or minimum wall thickness",
+    "solid validity and self-intersections",
+    "functional region identity",
+    "hinge or flexure location",
+    "force, return, travel or fatigue",
+    "physical fit and STL physical units"
+  ],
+  "degenerate_triangle_count": 0,
+  "samples": [
+    {
+      "x": -17.3,
+      "y": 0.0,
+      "top_triangle_indices": [
+        48989
+      ],
+      "top_min_barycentric": 0.1277166874633752,
+      "top_winding_normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "top_point": [
+        -17.3,
+        0.0,
+        28.468587875366193
+      ],
+      "inward_direction": [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      "normal_direction_chord": 1.7499999999999825,
+      "exit_point": [
+        -17.3,
+        0.0,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        48970
+      ],
+      "exit_min_barycentric": 0.12789471370344704,
+      "exit_winding_normals": [
+        [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 1.0,
+      "top_exit_signed_winding_normal_dots": [
+        -1.0
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -17.3,
+      "y": -2.0,
+      "top_triangle_indices": [
+        48984
+      ],
+      "top_min_barycentric": 0.16661038857259844,
+      "top_winding_normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "top_point": [
+        -17.3,
+        -2.0,
+        28.46858787536621
+      ],
+      "inward_direction": [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      "normal_direction_chord": 1.75,
+      "exit_point": [
+        -17.3,
+        -2.0,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        48970
+      ],
+      "exit_min_barycentric": 0.1930854440991408,
+      "exit_winding_normals": [
+        [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 1.0,
+      "top_exit_signed_winding_normal_dots": [
+        -1.0
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -17.3,
+      "y": -4.0,
+      "top_triangle_indices": [
+        49034
+      ],
+      "top_min_barycentric": 0.07815819567564283,
+      "top_winding_normal": [
+        0.0,
+        -0.0,
+        1.0
+      ],
+      "top_point": [
+        -17.3,
+        -4.0,
+        28.468587875366214
+      ],
+      "inward_direction": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "normal_direction_chord": 1.7500000000000036,
+      "exit_point": [
+        -17.3,
+        -4.0,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        48971
+      ],
+      "exit_min_barycentric": 0.032640934389624565,
+      "exit_winding_normals": [
+        [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 1.0,
+      "top_exit_signed_winding_normal_dots": [
+        -1.0
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -17.3,
+      "y": -6.0,
+      "top_triangle_indices": [
+        87757
+      ],
+      "top_min_barycentric": 0.06108039833916088,
+      "top_winding_normal": [
+        -0.31881315198572857,
+        -0.06694136894452858,
+        0.9454507005892783
+      ],
+      "top_point": [
+        -17.3,
+        -6.0,
+        34.258081182473845
+      ],
+      "inward_direction": [
+        0.31881315198572857,
+        0.06694136894452858,
+        -0.9454507005892783
+      ],
+      "normal_direction_chord": 1.7523921786637213,
+      "exit_point": [
+        -16.74131432600508,
+        -5.882692468632565,
+        32.601280769449055
+      ],
+      "exit_triangle_indices": [
+        63978
+      ],
+      "exit_min_barycentric": 0.017259714914143465,
+      "exit_winding_normals": [
+        [
+          0.3098864143539288,
+          0.06476620594584824,
+          -0.9485650999094607
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999529412690283,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999529412690283
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -17.3,
+      "y": -8.0,
+      "top_triangle_indices": [
+        93451
+      ],
+      "top_min_barycentric": 0.1479701397427399,
+      "top_winding_normal": [
+        -0.2967152418402367,
+        -0.10603405562914116,
+        0.9490610329723405
+      ],
+      "top_point": [
+        -17.3,
+        -8.0,
+        34.076189906908795
+      ],
+      "inward_direction": [
+        0.2967152418402367,
+        0.10603405562914116,
+        -0.9490610329723405
+      ],
+      "normal_direction_chord": 1.7571839690349558,
+      "exit_point": [
+        -16.778616733670006,
+        -7.8136786572767125,
+        32.408515074134044
+      ],
+      "exit_triangle_indices": [
+        63906
+      ],
+      "exit_min_barycentric": 0.14789907544197461,
+      "exit_winding_normals": [
+        [
+          0.2953104543449592,
+          0.11343748358439593,
+          -0.9486430692692661
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999715205664735,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999715205664735
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -17.3,
+      "y": -10.0,
+      "top_triangle_indices": [
+        92930
+      ],
+      "top_min_barycentric": 0.07894129087110288,
+      "top_winding_normal": [
+        -0.2820429154896146,
+        -0.15240911846588456,
+        0.9472186940884192
+      ],
+      "top_point": [
+        -17.3,
+        -10.0,
+        33.806054528658485
+      ],
+      "inward_direction": [
+        0.2820429154896146,
+        0.15240911846588456,
+        -0.9472186940884192
+      ],
+      "normal_direction_chord": 1.7608021453397313,
+      "exit_point": [
+        -16.803378229328015,
+        -9.731637697235934,
+        32.1381898200017
+      ],
+      "exit_triangle_indices": [
+        63850
+      ],
+      "exit_min_barycentric": 0.22169400885839746,
+      "exit_winding_normals": [
+        [
+          0.28059836371518276,
+          0.15475346649803084,
+          -0.9472676089084883
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999962074549078,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999962074549078
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -17.3,
+      "y": -12.0,
+      "top_triangle_indices": [
+        92827
+      ],
+      "top_min_barycentric": 0.10573713219065084,
+      "top_winding_normal": [
+        -0.26266604398479165,
+        -0.19723809428515152,
+        0.9445124051594777
+      ],
+      "top_point": [
+        -17.3,
+        -12.0,
+        33.44228416195703
+      ],
+      "inward_direction": [
+        0.26266604398479165,
+        0.19723809428515152,
+        -0.9445124051594777
+      ],
+      "normal_direction_chord": 1.7626570752523585,
+      "exit_point": [
+        -16.83700983914166,
+        -11.652336877598986,
+        31.777432688339058
+      ],
+      "exit_triangle_indices": [
+        63794
+      ],
+      "exit_min_barycentric": 0.096929642948571,
+      "exit_winding_normals": [
+        [
+          0.26563616890160086,
+          0.19592486089157385,
+          -0.9439549113468808
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999945714883407,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999945714883407
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -17.3,
+      "y": -16.0,
+      "top_triangle_indices": [
+        92306
+      ],
+      "top_min_barycentric": 0.06730507096711001,
+      "top_winding_normal": [
+        -0.23739208573643494,
+        -0.2597571970668846,
+        0.9360401680492461
+      ],
+      "top_point": [
+        -17.3,
+        -16.0,
+        32.46517125360782
+      ],
+      "inward_direction": [
+        0.23739208573643494,
+        0.2597571970668846,
+        -0.9360401680492461
+      ],
+      "normal_direction_chord": 1.7662929670801821,
+      "exit_point": [
+        -16.88069602852324,
+        -15.5411926896723,
+        30.811850087877886
+      ],
+      "exit_triangle_indices": [
+        63724
+      ],
+      "exit_min_barycentric": 0.0972122871104774,
+      "exit_winding_normals": [
+        [
+          0.2408681010191521,
+          0.26029563038892034,
+          -0.9350020014480515
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.99999327480871,
+      "top_exit_signed_winding_normal_dots": [
+        -0.99999327480871
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -17.3,
+      "y": -20.0,
+      "top_triangle_indices": [
+        91682
+      ],
+      "top_min_barycentric": 0.17173934738134314,
+      "top_winding_normal": [
+        -0.21218509201695723,
+        -0.31793863209766104,
+        0.9240630459798853
+      ],
+      "top_point": [
+        -17.3,
+        -20.0,
+        31.211197027479223
+      ],
+      "inward_direction": [
+        0.21218509201695723,
+        0.31793863209766104,
+        -0.9240630459798853
+      ],
+      "normal_direction_chord": 1.765482172221629,
+      "exit_point": [
+        -16.925391002832857,
+        -19.43868501317105,
+        29.57978019379292
+      ],
+      "exit_triangle_indices": [
+        63669
+      ],
+      "exit_min_barycentric": 0.16806566951742,
+      "exit_winding_normals": [
+        [
+          0.21296026558266404,
+          0.31261289418419896,
+          -0.9257003314640976
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999841774589318,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999841774589318
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -17.3,
+      "y": -26.0,
+      "top_triangle_indices": [
+        91001
+      ],
+      "top_min_barycentric": 0.06980858112955367,
+      "top_winding_normal": [
+        -0.1879719768424087,
+        -0.37774826310340237,
+        0.906627148084768
+      ],
+      "top_point": [
+        -17.3,
+        -26.0,
+        28.92800370572178
+      ],
+      "inward_direction": [
+        0.1879719768424087,
+        0.37774826310340237,
+        -0.906627148084768
+      ],
+      "normal_direction_chord": 1.7628004831154107,
+      "exit_point": [
+        -16.968642908410043,
+        -25.334105179305315,
+        27.329800931072402
+      ],
+      "exit_triangle_indices": [
+        63571
+      ],
+      "exit_min_barycentric": 0.033688437828376896,
+      "exit_winding_normals": [
+        [
+          0.18800062316087898,
+          0.37969384128929345,
+          -0.905808121280717
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999977715500027,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999977715500027
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -17.3,
+      "y": -34.0,
+      "top_triangle_indices": [
+        90729
+      ],
+      "top_min_barycentric": 0.09772945065113055,
+      "top_winding_normal": [
+        -0.1684382111726451,
+        -0.4296477325606281,
+        0.8871478991253209
+      ],
+      "top_point": [
+        -17.3,
+        -34.0,
+        25.32961779082846
+      ],
+      "inward_direction": [
+        0.1684382111726451,
+        0.4296477325606281,
+        -0.8871478991253209
+      ],
+      "normal_direction_chord": 7.3346933255353886,
+      "exit_point": [
+        -16.06455737674688,
+        -30.848665643656147,
+        18.82266001635123
+      ],
+      "exit_triangle_indices": [
+        49129
+      ],
+      "exit_min_barycentric": 0.16107920466771564,
+      "exit_winding_normals": [
+        [
+          0.0,
+          1.0,
+          0.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.4296477325606281,
+      "top_exit_signed_winding_normal_dots": [
+        -0.4296477325606281
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": -17.3,
+      "y": -42.0,
+      "top_triangle_indices": [
+        93745
+      ],
+      "top_min_barycentric": 0.15786049639875313,
+      "top_winding_normal": [
+        -0.18306372941092172,
+        -0.4617814520399459,
+        0.8678972067739611
+      ],
+      "top_point": [
+        -17.3,
+        -42.0,
+        21.254857102435935
+      ],
+      "inward_direction": [
+        0.18306372941092172,
+        0.4617814520399459,
+        -0.8678972067739611
+      ],
+      "normal_direction_chord": 1.7623441218727576,
+      "exit_point": [
+        -16.977378712544557,
+        -41.186182172407534,
+        19.725323561688057
+      ],
+      "exit_triangle_indices": [
+        63454
+      ],
+      "exit_min_barycentric": 0.22385714359178643,
+      "exit_winding_normals": [
+        [
+          0.18299190580067243,
+          0.4616620856832685,
+          -0.8679758528058326
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999999872039218,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999999872039218
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -17.3,
+      "y": -50.0,
+      "top_triangle_indices": [
+        89264
+      ],
+      "top_min_barycentric": 0.07591472566182123,
+      "top_winding_normal": [
+        -0.21612476902670574,
+        -0.48327383768133697,
+        0.8483728437579234
+      ],
+      "top_point": [
+        -17.3,
+        -50.0,
+        16.85354757632585
+      ],
+      "inward_direction": [
+        0.21612476902670574,
+        0.48327383768133697,
+        -0.8483728437579234
+      ],
+      "normal_direction_chord": 1.756918972771745,
+      "exit_point": [
+        -16.92028629281107,
+        -49.15092702553345,
+        15.363025231143236
+      ],
+      "exit_triangle_indices": [
+        60792
+      ],
+      "exit_min_barycentric": 0.12968270134677834,
+      "exit_winding_normals": [
+        [
+          0.21278371430179494,
+          0.48118193526602004,
+          -0.8504040428535014
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.999990167763922,
+      "top_exit_signed_winding_normal_dots": [
+        -0.999990167763922
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -17.3,
+      "y": -56.0,
+      "status": "no_top_hit"
+    },
+    {
+      "x": -15.0,
+      "y": 0.0,
+      "top_triangle_indices": [
+        48995
+      ],
+      "top_min_barycentric": 0.11230269970166026,
+      "top_winding_normal": [
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "top_point": [
+        -15.0,
+        0.0,
+        28.468587875366214
+      ],
+      "inward_direction": [
+        0.0,
+        -0.0,
+        -1.0
+      ],
+      "normal_direction_chord": 1.300003051757816,
+      "exit_point": [
+        -15.0,
+        0.0,
+        27.1685848236084
+      ],
+      "exit_triangle_indices": [
+        48804
+      ],
+      "exit_min_barycentric": 0.007909838693566984,
+      "exit_winding_normals": [
+        [
+          -0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 1.0,
+      "top_exit_signed_winding_normal_dots": [
+        -1.0
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -15.0,
+      "y": -2.0,
+      "top_triangle_indices": [
+        48983
+      ],
+      "top_min_barycentric": 0.1150444140543585,
+      "top_winding_normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "top_point": [
+        -15.0,
+        -2.0,
+        28.46858787536618
+      ],
+      "inward_direction": [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      "normal_direction_chord": 1.3000030517577805,
+      "exit_point": [
+        -15.0,
+        -2.0,
+        27.1685848236084
+      ],
+      "exit_triangle_indices": [
+        48801
+      ],
+      "exit_min_barycentric": 0.28951079892536014,
+      "exit_winding_normals": [
+        [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 1.0,
+      "top_exit_signed_winding_normal_dots": [
+        -1.0
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -15.0,
+      "y": -4.0,
+      "top_triangle_indices": [
+        49026
+      ],
+      "top_min_barycentric": 0.07806564766847818,
+      "top_winding_normal": [
+        0.0,
+        -0.0,
+        1.0
+      ],
+      "top_point": [
+        -15.0,
+        -4.0,
+        28.46858787536621
+      ],
+      "inward_direction": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "normal_direction_chord": 1.75,
+      "exit_point": [
+        -15.0,
+        -4.0,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        48974
+      ],
+      "exit_min_barycentric": 0.08712094741269881,
+      "exit_winding_normals": [
+        [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 1.0,
+      "top_exit_signed_winding_normal_dots": [
+        -1.0
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -15.0,
+      "y": -6.0,
+      "top_triangle_indices": [
+        87743
+      ],
+      "top_min_barycentric": 0.1651734134168506,
+      "top_winding_normal": [
+        -0.26445079443841363,
+        -0.08656753017521746,
+        0.9605060333179873
+      ],
+      "top_point": [
+        -15.0,
+        -6.0,
+        34.957446307720495
+      ],
+      "inward_direction": [
+        0.26445079443841363,
+        0.08656753017521746,
+        -0.9605060333179873
+      ],
+      "normal_direction_chord": 8.57762278066473,
+      "exit_point": [
+        -12.731640841260177,
+        -5.257456381103173,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        48964
+      ],
+      "exit_min_barycentric": 0.2673631816097727,
+      "exit_winding_normals": [
+        [
+          0.0,
+          -0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9605060333179873,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9605060333179873
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": -15.0,
+      "y": -8.0,
+      "top_triangle_indices": [
+        93463
+      ],
+      "top_min_barycentric": 0.019596309029862424,
+      "top_winding_normal": [
+        -0.2546472177376524,
+        -0.1207860052467451,
+        0.9594610650959244
+      ],
+      "top_point": [
+        -15.0,
+        -8.0,
+        34.737830118714555
+      ],
+      "inward_direction": [
+        0.2546472177376524,
+        0.1207860052467451,
+        -0.9594610650959244
+      ],
+      "normal_direction_chord": 8.358069477833997,
+      "exit_point": [
+        -12.87164086181158,
+        -6.990462176197683,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        48965
+      ],
+      "exit_min_barycentric": 0.1521448652517941,
+      "exit_winding_normals": [
+        [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9594610650959244,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9594610650959244
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": -15.0,
+      "y": -10.0,
+      "top_triangle_indices": [
+        92944
+      ],
+      "top_min_barycentric": 0.15836730550670639,
+      "top_winding_normal": [
+        -0.2381369456439175,
+        -0.1676190936325401,
+        0.9566580551948494
+      ],
+      "top_point": [
+        -15.0,
+        -10.0,
+        34.43432407268911
+      ],
+      "inward_direction": [
+        0.2381369456439175,
+        0.1676190936325401,
+        -0.9566580551948494
+      ],
+      "normal_direction_chord": 1.7643458561591003,
+      "exit_point": [
+        -14.579844066754768,
+        -9.704261946736283,
+        32.746448397244855
+      ],
+      "exit_triangle_indices": [
+        56298
+      ],
+      "exit_min_barycentric": 0.17797287242218632,
+      "exit_winding_normals": [
+        [
+          0.2368900586750889,
+          0.16726310924195026,
+          -0.9570298597157919
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999990901546993,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999990901546993
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -15.0,
+      "y": -12.0,
+      "top_triangle_indices": [
+        92840
+      ],
+      "top_min_barycentric": 0.3020605697490232,
+      "top_winding_normal": [
+        -0.23113802535420258,
+        -0.20702897730920383,
+        0.9506388461396185
+      ],
+      "top_point": [
+        -15.0,
+        -12.0,
+        34.04431430053719
+      ],
+      "inward_direction": [
+        0.23113802535420258,
+        0.20702897730920383,
+        -0.9506388461396185
+      ],
+      "normal_direction_chord": 1.7649292228325137,
+      "exit_point": [
+        -14.592057744544565,
+        -11.634608507973857,
+        32.36650402062559
+      ],
+      "exit_triangle_indices": [
+        60230
+      ],
+      "exit_min_barycentric": 0.0847726019462583,
+      "exit_winding_normals": [
+        [
+          0.23051671788877193,
+          0.2057242728078357,
+          -0.9510728501810339
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999988616818447,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999988616818447
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -15.0,
+      "y": -16.0,
+      "top_triangle_indices": [
+        92320
+      ],
+      "top_min_barycentric": 0.12553370753129273,
+      "top_winding_normal": [
+        -0.2260040963486173,
+        -0.2646160144984418,
+        0.9374969404241303
+      ],
+      "top_point": [
+        -15.0,
+        -16.0,
+        33.035029691901975
+      ],
+      "inward_direction": [
+        0.2260040963486173,
+        0.2646160144984418,
+        -0.9374969404241303
+      ],
+      "normal_direction_chord": 1.7671524098220734,
+      "exit_point": [
+        -14.600616316507882,
+        -15.532383172301566,
+        31.378329714430652
+      ],
+      "exit_triangle_indices": [
+        60145
+      ],
+      "exit_min_barycentric": 0.25228237151913524,
+      "exit_winding_normals": [
+        [
+          0.2259887177742908,
+          0.2654576447812304,
+          -0.9372626837050188
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999996182728781,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999996182728781
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -15.0,
+      "y": -20.0,
+      "top_triangle_indices": [
+        91695
+      ],
+      "top_min_barycentric": 0.21630411280158743,
+      "top_winding_normal": [
+        -0.22914848306056546,
+        -0.3185488380116309,
+        0.919792156148595
+      ],
+      "top_point": [
+        -15.0,
+        -20.0,
+        31.76631708230242
+      ],
+      "inward_direction": [
+        0.22914848306056546,
+        0.3185488380116309,
+        -0.919792156148595
+      ],
+      "normal_direction_chord": 1.7658565494490035,
+      "exit_point": [
+        -14.595356650391196,
+        -19.437488448077794,
+        30.142096079235603
+      ],
+      "exit_triangle_indices": [
+        60041
+      ],
+      "exit_min_barycentric": 0.23604567379706118,
+      "exit_winding_normals": [
+        [
+          0.2306859812700493,
+          0.31478411620315816,
+          -0.9207035018026547
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999913162090297,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999913162090297
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -15.0,
+      "y": -26.0,
+      "top_triangle_indices": [
+        91103
+      ],
+      "top_min_barycentric": 0.0839517603227975,
+      "top_winding_normal": [
+        -0.24399414130742397,
+        -0.36838527310266866,
+        0.8970836915075009
+      ],
+      "top_point": [
+        -15.0,
+        -26.0,
+        29.47889739925573
+      ],
+      "inward_direction": [
+        0.24399414130742397,
+        0.36838527310266866,
+        -0.8970836915075009
+      ],
+      "normal_direction_chord": 1.76441044509845,
+      "exit_point": [
+        -14.569494188534353,
+        -25.350017176317206,
+        27.89607356383242
+      ],
+      "exit_triangle_indices": [
+        59824
+      ],
+      "exit_min_barycentric": 0.014919019719759893,
+      "exit_winding_normals": [
+        [
+          0.2395662610849165,
+          0.3677802763698616,
+          -0.8985241648743244
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999889764460841,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999889764460841
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -15.0,
+      "y": -34.0,
+      "top_triangle_indices": [
+        90832
+      ],
+      "top_min_barycentric": 0.015681099306609634,
+      "top_winding_normal": [
+        -0.27708070715897776,
+        -0.4120682759439366,
+        0.868001162257789
+      ],
+      "top_point": [
+        -15.0,
+        -34.0,
+        25.905234580694216
+      ],
+      "inward_direction": [
+        0.27708070715897776,
+        0.4120682759439366,
+        -0.868001162257789
+      ],
+      "normal_direction_chord": 2.8909564287648193,
+      "exit_point": [
+        -14.19897174835205,
+        -32.80872856856984,
+        23.395881040489726
+      ],
+      "exit_triangle_indices": [
+        49143
+      ],
+      "exit_min_barycentric": 0.14862641933308152,
+      "exit_winding_normals": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.27708070715897776,
+      "top_exit_signed_winding_normal_dots": [
+        -0.27708070715897776
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": -15.0,
+      "y": -42.0,
+      "top_triangle_indices": [
+        93841
+      ],
+      "top_min_barycentric": 0.08753945017702586,
+      "top_winding_normal": [
+        -0.2926863260009052,
+        -0.44345685429383136,
+        0.8471603938758655
+      ],
+      "top_point": [
+        -15.0,
+        -42.0,
+        21.894442170911574
+      ],
+      "inward_direction": [
+        0.2926863260009052,
+        0.44345685429383136,
+        -0.8471603938758655
+      ],
+      "normal_direction_chord": 1.7655916072104278,
+      "exit_point": [
+        -14.483235479267547,
+        -41.21703629989887,
+        20.398702889523268
+      ],
+      "exit_triangle_indices": [
+        57101
+      ],
+      "exit_min_barycentric": 0.3006436498719206,
+      "exit_winding_normals": [
+        [
+          0.2882803500432714,
+          0.44383407105629036,
+          -0.8484726024737209
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999893615959854,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999893615959854
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -15.0,
+      "y": -50.0,
+      "top_triangle_indices": [
+        89413
+      ],
+      "top_min_barycentric": 0.18501769038476523,
+      "top_winding_normal": [
+        -0.30542629916516373,
+        -0.46306808282368966,
+        0.8320352915882019
+      ],
+      "top_point": [
+        -15.0,
+        -50.0,
+        17.578926237264415
+      ],
+      "inward_direction": [
+        0.30542629916516373,
+        0.46306808282368966,
+        -0.8320352915882019
+      ],
+      "normal_direction_chord": 1.7652815795206003,
+      "exit_point": [
+        -14.460836580182589,
+        -49.18255444332742,
+        16.11014966351271
+      ],
+      "exit_triangle_indices": [
+        60904
+      ],
+      "exit_min_barycentric": 0.16386857119296838,
+      "exit_winding_normals": [
+        [
+          0.3003797178619257,
+          0.4633884888197328,
+          -0.8336924693953726
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999858415594314,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999858415594314
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -15.0,
+      "y": -56.0,
+      "top_triangle_indices": [
+        50783
+      ],
+      "top_min_barycentric": 0.16810307573397065,
+      "top_winding_normal": [
+        -0.3765580787362118,
+        -0.497313172252663,
+        0.7815904439298667
+      ],
+      "top_point": [
+        -15.0,
+        -56.0,
+        14.366847431508091
+      ],
+      "inward_direction": [
+        0.3765580787362118,
+        0.497313172252663,
+        -0.7815904439298667
+      ],
+      "normal_direction_chord": 1.752058959532526,
+      "exit_point": [
+        -14.340248044365866,
+        -55.12867800086118,
+        12.997454891535764
+      ],
+      "exit_triangle_indices": [
+        69662
+      ],
+      "exit_min_barycentric": 0.09635511843663541,
+      "exit_winding_normals": [
+        [
+          0.3071769513462772,
+          0.3681770334160649,
+          -0.8775465757591177
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.984651268786422,
+      "top_exit_signed_winding_normal_dots": [
+        -0.984651268786422
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": -13.0,
+      "y": 0.0,
+      "top_triangle_indices": [
+        48995
+      ],
+      "top_min_barycentric": 0.18444525894695624,
+      "top_winding_normal": [
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "top_point": [
+        -13.0,
+        0.0,
+        28.468587875366214
+      ],
+      "inward_direction": [
+        0.0,
+        -0.0,
+        -1.0
+      ],
+      "normal_direction_chord": 1.300003051757816,
+      "exit_point": [
+        -13.0,
+        0.0,
+        27.1685848236084
+      ],
+      "exit_triangle_indices": [
+        48804
+      ],
+      "exit_min_barycentric": 0.1632827434197508,
+      "exit_winding_normals": [
+        [
+          -0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 1.0,
+      "top_exit_signed_winding_normal_dots": [
+        -1.0
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -13.0,
+      "y": -2.0,
+      "status": "no_top_hit"
+    },
+    {
+      "x": -13.0,
+      "y": -4.0,
+      "top_triangle_indices": [
+        55775
+      ],
+      "top_min_barycentric": 0.2055042202083608,
+      "top_winding_normal": [
+        -0.34587394219283096,
+        0.6341043101168546,
+        0.6915800315243479
+      ],
+      "top_point": [
+        -13.0,
+        -4.0,
+        35.27023458861824
+      ],
+      "inward_direction": [
+        0.34587394219283096,
+        -0.6341043101168546,
+        -0.6915800315243479
+      ],
+      "normal_direction_chord": 7.372967956210024,
+      "exit_point": [
+        -10.449882507324219,
+        -8.675230759386233,
+        30.171237177034502
+      ],
+      "exit_triangle_indices": [
+        48942
+      ],
+      "exit_min_barycentric": 0.052924999791906124,
+      "exit_winding_normals": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.34587394219283096,
+      "top_exit_signed_winding_normal_dots": [
+        -0.34587394219283096
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": -13.0,
+      "y": -6.0,
+      "top_triangle_indices": [
+        87732
+      ],
+      "top_min_barycentric": 0.05160319151213128,
+      "top_winding_normal": [
+        -0.21488526755830129,
+        -0.09746667275607834,
+        0.9717636386942335
+      ],
+      "top_point": [
+        -13.0,
+        -6.0,
+        35.45780873817463
+      ],
+      "inward_direction": [
+        0.21488526755830129,
+        0.09746667275607834,
+        -0.9717636386942335
+      ],
+      "normal_direction_chord": 8.993154831921244,
+      "exit_point": [
+        -11.067503517749373,
+        -5.123467120952387,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        48964
+      ],
+      "exit_min_barycentric": 0.06511358125485481,
+      "exit_winding_normals": [
+        [
+          0.0,
+          -0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9717636386942335,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9717636386942335
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": -13.0,
+      "y": -8.0,
+      "top_triangle_indices": [
+        93370
+      ],
+      "top_min_barycentric": 0.2606377230547344,
+      "top_winding_normal": [
+        -0.2061817349919678,
+        -0.1379515620345617,
+        0.9687406560519314
+      ],
+      "top_point": [
+        -13.0,
+        -8.0,
+        35.21403946191785
+      ],
+      "inward_direction": [
+        0.2061817349919678,
+        0.1379515620345617,
+        -0.9687406560519314
+      ],
+      "normal_direction_chord": 8.769582997759745,
+      "exit_point": [
+        -11.191872162365835,
+        -6.790222327067309,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        48966
+      ],
+      "exit_min_barycentric": 0.13949412369181932,
+      "exit_winding_normals": [
+        [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9687406560519314,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9687406560519314
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": -13.0,
+      "y": -10.0,
+      "top_triangle_indices": [
+        92955
+      ],
+      "top_min_barycentric": 0.05551984231568486,
+      "top_winding_normal": [
+        -0.2009498141047554,
+        -0.17267502278608263,
+        0.9642626762024391
+      ],
+      "top_point": [
+        -13.0,
+        -10.0,
+        34.89421071153377
+      ],
+      "inward_direction": [
+        0.2009498141047554,
+        0.17267502278608263,
+        -0.9642626762024391
+      ],
+      "normal_direction_chord": 1.765485734680038,
+      "exit_point": [
+        -12.645225969811449,
+        -9.69514471053562,
+        33.19181871221397
+      ],
+      "exit_triangle_indices": [
+        56451
+      ],
+      "exit_min_barycentric": 0.08246633457648922,
+      "exit_winding_normals": [
+        [
+          0.2012043212163586,
+          0.17208913913117635,
+          -0.9643143415489344
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999997946485824,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999997946485824
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -13.0,
+      "y": -12.0,
+      "top_triangle_indices": [
+        92851
+      ],
+      "top_min_barycentric": 0.12178262273029246,
+      "top_winding_normal": [
+        -0.19918394993262686,
+        -0.2083199239930737,
+        0.9575638690744116
+      ],
+      "top_point": [
+        -13.0,
+        -12.0,
+        34.49565643001996
+      ],
+      "inward_direction": [
+        0.19918394993262686,
+        0.2083199239930737,
+        -0.9575638690744116
+      ],
+      "normal_direction_chord": 1.7653421488375263,
+      "exit_point": [
+        -12.648372177811991,
+        -11.632244057732397,
+        32.805228571738965
+      ],
+      "exit_triangle_indices": [
+        61995
+      ],
+      "exit_min_barycentric": 0.03256611275611221,
+      "exit_winding_normals": [
+        [
+          0.19854929045521563,
+          0.2070434714540284,
+          -0.9579724318517706
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999989004763601,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999989004763601
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -13.0,
+      "y": -16.0,
+      "top_triangle_indices": [
+        92330
+      ],
+      "top_min_barycentric": 0.0378473606736357,
+      "top_winding_normal": [
+        -0.20470018011160934,
+        -0.2604997741362017,
+        0.9435240876295966
+      ],
+      "top_point": [
+        -13.0,
+        -16.0,
+        33.494201365963555
+      ],
+      "inward_direction": [
+        0.20470018011160934,
+        0.2604997741362017,
+        -0.9435240876295966
+      ],
+      "normal_direction_chord": 1.767142566825658,
+      "exit_point": [
+        -12.638265598287896,
+        -15.539659760475448,
+        31.82685978788795
+      ],
+      "exit_triangle_indices": [
+        60155
+      ],
+      "exit_min_barycentric": 0.0047935062128608985,
+      "exit_winding_normals": [
+        [
+          0.2054123732054146,
+          0.2623423806469232,
+          -0.94285854307559
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999978273163452,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999978273163452
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -13.0,
+      "y": -20.0,
+      "top_triangle_indices": [
+        91706
+      ],
+      "top_min_barycentric": 0.17708340427745775,
+      "top_winding_normal": [
+        -0.22425196189120566,
+        -0.30867858056484665,
+        0.9243530664677955
+      ],
+      "top_point": [
+        -13.0,
+        -20.0,
+        32.25948469900372
+      ],
+      "inward_direction": [
+        0.22425196189120566,
+        0.30867858056484665,
+        -0.9243530664677955
+      ],
+      "normal_direction_chord": 1.7659792026995276,
+      "exit_point": [
+        -12.603975699135564,
+        -19.45488004640367,
+        30.62709640767006
+      ],
+      "exit_triangle_indices": [
+        60052
+      ],
+      "exit_min_barycentric": 0.041349461683321306,
+      "exit_winding_normals": [
+        [
+          0.21703618005946335,
+          0.3059758629546905,
+          -0.9269703705266573
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999668887647698,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999668887647698
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -13.0,
+      "y": -26.0,
+      "top_triangle_indices": [
+        91115
+      ],
+      "top_min_barycentric": 0.20752418940666412,
+      "top_winding_normal": [
+        -0.26362431950387427,
+        -0.3542511752163273,
+        0.8972225604742504
+      ],
+      "top_point": [
+        -13.0,
+        -26.0,
+        30.056315979551606
+      ],
+      "inward_direction": [
+        0.26362431950387427,
+        0.3542511752163273,
+        -0.8972225604742504
+      ],
+      "normal_direction_chord": 1.766955161688593,
+      "exit_point": [
+        -12.534187647905986,
+        -25.37405405741726,
+        28.470963945138173
+      ],
+      "exit_triangle_indices": [
+        59835
+      ],
+      "exit_min_barycentric": 0.11065318750805242,
+      "exit_winding_normals": [
+        [
+          0.26227709901320245,
+          0.3565711261097756,
+          -0.8966982521216519
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999962639627764,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999962639627764
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -13.0,
+      "y": -34.0,
+      "top_triangle_indices": [
+        90843
+      ],
+      "top_min_barycentric": 0.19241131285323193,
+      "top_winding_normal": [
+        -0.31356975686913957,
+        -0.3987599716286767,
+        0.8617798399845088
+      ],
+      "top_point": [
+        -13.0,
+        -34.0,
+        26.596724167376422
+      ],
+      "inward_direction": [
+        0.31356975686913957,
+        0.3987599716286767,
+        -0.8617798399845088
+      ],
+      "normal_direction_chord": 1.7711531832919012,
+      "exit_point": [
+        -12.444619926937156,
+        -33.29373500688048,
+        25.070380060491075
+      ],
+      "exit_triangle_indices": [
+        57674
+      ],
+      "exit_min_barycentric": 0.14503976099719104,
+      "exit_winding_normals": [
+        [
+          0.30737476092374133,
+          0.4009712470765621,
+          -0.8629848291626796
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999776401436051,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999776401436051
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -13.0,
+      "y": -42.0,
+      "top_triangle_indices": [
+        93922
+      ],
+      "top_min_barycentric": 0.048260205584260786,
+      "top_winding_normal": [
+        -0.33469740207800863,
+        -0.4334207438959682,
+        0.8367341918452342
+      ],
+      "top_point": [
+        -13.0,
+        -42.0,
+        22.653299572658497
+      ],
+      "inward_direction": [
+        0.33469740207800863,
+        0.4334207438959682,
+        -0.8367341918452342
+      ],
+      "normal_direction_chord": 1.771555128606915,
+      "exit_point": [
+        -12.407065100817293,
+        -41.23217125830647,
+        21.17097882381431
+      ],
+      "exit_triangle_indices": [
+        57303
+      ],
+      "exit_min_barycentric": 0.05028415202500718,
+      "exit_winding_normals": [
+        [
+          0.3341150916076875,
+          0.4338179186735452,
+          -0.8367610883625862
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999997512216448,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999997512216448
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -13.0,
+      "y": -50.0,
+      "top_triangle_indices": [
+        89494
+      ],
+      "top_min_barycentric": 0.14610996411771676,
+      "top_winding_normal": [
+        -0.3368731873806301,
+        -0.4560889285462251,
+        0.8237107167456128
+      ],
+      "top_point": [
+        -13.0,
+        -50.0,
+        18.368637727141994
+      ],
+      "inward_direction": [
+        0.3368731873806301,
+        0.4560889285462251,
+        -0.8237107167456128
+      ],
+      "normal_direction_chord": 1.7716286998996253,
+      "exit_point": [
+        -12.403185793009811,
+        -49.19197976448104,
+        16.909328180940577
+      ],
+      "exit_triangle_indices": [
+        60883
+      ],
+      "exit_min_barycentric": 0.020675562282839295,
+      "exit_winding_normals": [
+        [
+          0.336393049407643,
+          0.45573442863744157,
+          -0.8241030559734212
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.999999744933636,
+      "top_exit_signed_winding_normal_dots": [
+        -0.999999744933636
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": -13.0,
+      "y": -56.0,
+      "top_triangle_indices": [
+        54821
+      ],
+      "top_min_barycentric": 0.20612286846217065,
+      "top_winding_normal": [
+        -0.32741464096008294,
+        -0.3219327962698368,
+        0.8883461755255458
+      ],
+      "top_point": [
+        -13.0,
+        -56.0,
+        15.178871242728327
+      ],
+      "inward_direction": [
+        0.32741464096008294,
+        0.3219327962698368,
+        -0.8883461755255458
+      ],
+      "normal_direction_chord": 1.8129133507262798,
+      "exit_point": [
+        -12.406425626180214,
+        -55.41636373560577,
+        13.568376601051433
+      ],
+      "exit_triangle_indices": [
+        68740
+      ],
+      "exit_min_barycentric": 0.0012191930591051686,
+      "exit_winding_normals": [
+        [
+          0.324225056529544,
+          0.33351653935259395,
+          -0.8852371607070524
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999229887371058,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999229887371058
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 13.0,
+      "y": 0.0,
+      "top_triangle_indices": [
+        396
+      ],
+      "top_min_barycentric": 0.1844452589469563,
+      "top_winding_normal": [
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "top_point": [
+        13.0,
+        0.0,
+        28.468587875366214
+      ],
+      "inward_direction": [
+        0.0,
+        -0.0,
+        -1.0
+      ],
+      "normal_direction_chord": 1.300003051757816,
+      "exit_point": [
+        13.0,
+        0.0,
+        27.1685848236084
+      ],
+      "exit_triangle_indices": [
+        289
+      ],
+      "exit_min_barycentric": 0.1632827434197508,
+      "exit_winding_normals": [
+        [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 1.0,
+      "top_exit_signed_winding_normal_dots": [
+        -1.0
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 13.0,
+      "y": -2.0,
+      "status": "no_top_hit"
+    },
+    {
+      "x": 13.0,
+      "y": -4.0,
+      "top_triangle_indices": [
+        846
+      ],
+      "top_min_barycentric": 0.10785092073117036,
+      "top_winding_normal": [
+        0.34071609898893956,
+        0.6359522314267674,
+        0.6924429934897706
+      ],
+      "top_point": [
+        13.0,
+        -4.0,
+        35.27125134248292
+      ],
+      "inward_direction": [
+        -0.34071609898893956,
+        -0.6359522314267674,
+        -0.6924429934897706
+      ],
+      "normal_direction_chord": 7.484581738999555,
+      "exit_point": [
+        10.449882507324219,
+        -8.759836458212803,
+        30.088605158111193
+      ],
+      "exit_triangle_indices": [
+        154
+      ],
+      "exit_min_barycentric": 0.17588362638311988,
+      "exit_winding_normals": [
+        [
+          -1.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.34071609898893956,
+      "top_exit_signed_winding_normal_dots": [
+        -0.34071609898893956
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": 13.0,
+      "y": -6.0,
+      "top_triangle_indices": [
+        9760
+      ],
+      "top_min_barycentric": 0.046917006798090646,
+      "top_winding_normal": [
+        0.21366935392695738,
+        -0.09757596722400372,
+        0.9720207496821952
+      ],
+      "top_point": [
+        13.0,
+        -6.0,
+        35.45831441179778
+      ],
+      "inward_direction": [
+        -0.21366935392695738,
+        0.09757596722400372,
+        -0.9720207496821952
+      ],
+      "normal_direction_chord": 8.991296265320514,
+      "exit_point": [
+        11.078835536023101,
+        -5.122665570313778,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        343
+      ],
+      "exit_min_barycentric": 0.06739686921947292,
+      "exit_winding_normals": [
+        [
+          0.0,
+          -0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9720207496821952,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9720207496821952
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": 13.0,
+      "y": -8.0,
+      "top_triangle_indices": [
+        12165
+      ],
+      "top_min_barycentric": 0.04344304472303666,
+      "top_winding_normal": [
+        0.2061384892606283,
+        -0.13850373987486672,
+        0.9686710676416536
+      ],
+      "top_point": [
+        13.0,
+        -8.0,
+        35.21448964018693
+      ],
+      "inward_direction": [
+        -0.2061384892606283,
+        0.13850373987486672,
+        -0.9686710676416536
+      ],
+      "normal_direction_chord": 8.770677734295313,
+      "exit_point": [
+        11.192025742060533,
+        -6.785228332562877,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        348
+      ],
+      "exit_min_barycentric": 0.15461316775962364,
+      "exit_winding_normals": [
+        [
+          -0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9686710676416536,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9686710676416536
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": 13.0,
+      "y": -10.0,
+      "top_triangle_indices": [
+        12396
+      ],
+      "top_min_barycentric": 0.04575907892627651,
+      "top_winding_normal": [
+        0.20095465288953315,
+        -0.17263178246085925,
+        0.9642694100542825
+      ],
+      "top_point": [
+        13.0,
+        -10.0,
+        34.89470717991741
+      ],
+      "inward_direction": [
+        -0.20095465288953315,
+        0.17263178246085925,
+        -0.9642694100542825
+      ],
+      "normal_direction_chord": 1.7579054772773828,
+      "exit_point": [
+        12.646740715001114,
+        -9.696529644059899,
+        33.199612702411955
+      ],
+      "exit_triangle_indices": [
+        19818
+      ],
+      "exit_min_barycentric": 0.29443810593239184,
+      "exit_winding_normals": [
+        [
+          -0.2011913782595331,
+          0.17212838222804228,
+          -0.9643100379782359
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999998444493385,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999998444493385
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 13.0,
+      "y": -12.0,
+      "top_triangle_indices": [
+        12571
+      ],
+      "top_min_barycentric": 0.1561487625215415,
+      "top_winding_normal": [
+        0.1981559437603325,
+        -0.20838039433161154,
+        0.9577639757323586
+      ],
+      "top_point": [
+        13.0,
+        -12.0,
+        34.496293301604965
+      ],
+      "inward_direction": [
+        -0.1981559437603325,
+        0.20838039433161154,
+        -0.9577639757323586
+      ],
+      "normal_direction_chord": 1.7588220815868203,
+      "exit_point": [
+        12.651478950516651,
+        -11.633495961079792,
+        32.81175687213851
+      ],
+      "exit_triangle_indices": [
+        23135
+      ],
+      "exit_min_barycentric": 0.1876576038960446,
+      "exit_winding_normals": [
+        [
+          -0.19923356196406541,
+          0.20700071029804054,
+          -0.9578395970741748
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999984647461936,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999984647461936
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 13.0,
+      "y": -16.0,
+      "top_triangle_indices": [
+        12860
+      ],
+      "top_min_barycentric": 0.03718511556415823,
+      "top_winding_normal": [
+        0.20456202932588244,
+        -0.26196528201440794,
+        0.9431482212129695
+      ],
+      "top_point": [
+        13.0,
+        -16.0,
+        33.49467379900497
+      ],
+      "inward_direction": [
+        -0.20456202932588244,
+        0.26196528201440794,
+        -0.9431482212129695
+      ],
+      "normal_direction_chord": 1.7615578291601879,
+      "exit_point": [
+        12.639652155692096,
+        -15.538533006499364,
+        31.83326366586876
+      ],
+      "exit_triangle_indices": [
+        27156
+      ],
+      "exit_min_barycentric": 0.07567533179506891,
+      "exit_winding_normals": [
+        [
+          -0.20553634606319462,
+          0.26091199463324466,
+          -0.9432283612696835
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999989674350798,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999989674350798
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 13.0,
+      "y": -20.0,
+      "top_triangle_indices": [
+        13209
+      ],
+      "top_min_barycentric": 0.250925597275772,
+      "top_winding_normal": [
+        0.21955931722006963,
+        -0.3089964534173876,
+        0.9253728426949501
+      ],
+      "top_point": [
+        13.0,
+        -20.0,
+        32.26033085946272
+      ],
+      "inward_direction": [
+        -0.21955931722006963,
+        0.3089964534173876,
+        -0.9253728426949501
+      ],
+      "normal_direction_chord": 1.7611024713550658,
+      "exit_point": [
+        12.613333543834704,
+        -19.45582558224669,
+        30.63065445926778
+      ],
+      "exit_triangle_indices": [
+        20568
+      ],
+      "exit_min_barycentric": 0.09406865687175003,
+      "exit_winding_normals": [
+        [
+          -0.22311902269796893,
+          0.30561986493776067,
+          -0.9256426955719621
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999879271632872,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999879271632872
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 13.0,
+      "y": -26.0,
+      "top_triangle_indices": [
+        13672
+      ],
+      "top_min_barycentric": 0.15745824598113856,
+      "top_winding_normal": [
+        0.2634650756477823,
+        -0.35689393722015006,
+        0.8962214411011421
+      ],
+      "top_point": [
+        13.0,
+        -26.0,
+        30.057027740304164
+      ],
+      "inward_direction": [
+        -0.2634650756477823,
+        0.35689393722015006,
+        -0.8962214411011421
+      ],
+      "normal_direction_chord": 1.7612381119049083,
+      "exit_point": [
+        12.535975267613216,
+        -25.371424795860072,
+        28.478568381530494
+      ],
+      "exit_triangle_indices": [
+        20683
+      ],
+      "exit_min_barycentric": 0.13389668768365012,
+      "exit_winding_normals": [
+        [
+          -0.262403568947625,
+          0.3540231999015241,
+          -0.8976702852022197
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999942664607717,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999942664607717
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 13.0,
+      "y": -34.0,
+      "top_triangle_indices": [
+        14368
+      ],
+      "top_min_barycentric": 0.16268243388656256,
+      "top_winding_normal": [
+        0.3134004929221536,
+        -0.4004938002946852,
+        0.8610370764152215
+      ],
+      "top_point": [
+        13.0,
+        -34.0,
+        26.597073084628093
+      ],
+      "inward_direction": [
+        -0.3134004929221536,
+        0.4004938002946852,
+        -0.8610370764152215
+      ],
+      "normal_direction_chord": 1.7637735219024808,
+      "exit_point": [
+        12.44723250883272,
+        -33.293619639354134,
+        25.078398687870603
+      ],
+      "exit_triangle_indices": [
+        25228
+      ],
+      "exit_min_barycentric": 0.028508692401240952,
+      "exit_winding_normals": [
+        [
+          -0.31163860351331646,
+          0.40038352161795704,
+          -0.8617275766836482
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999982033968519,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999982033968519
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 13.0,
+      "y": -42.0,
+      "top_triangle_indices": [
+        15181
+      ],
+      "top_min_barycentric": 0.18998231987055217,
+      "top_winding_normal": [
+        0.33386235510360723,
+        -0.4335617080061492,
+        0.83699472710135
+      ],
+      "top_point": [
+        13.0,
+        -42.0,
+        22.653340367161416
+      ],
+      "inward_direction": [
+        -0.33386235510360723,
+        0.4335617080061492,
+        -0.83699472710135
+      ],
+      "normal_direction_chord": 1.7634816641726692,
+      "exit_point": [
+        12.411239858417284,
+        -41.23542187764377,
+        21.17731551290898
+      ],
+      "exit_triangle_indices": [
+        25515
+      ],
+      "exit_min_barycentric": 0.15471142267506177,
+      "exit_winding_normals": [
+        [
+          -0.33323386018849266,
+          0.4339647468896895,
+          -0.8370363151505698
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999997204121172,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999997204121172
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 13.0,
+      "y": -50.0,
+      "top_triangle_indices": [
+        16456
+      ],
+      "top_min_barycentric": 0.15061870428418167,
+      "top_winding_normal": [
+        0.3368370853779143,
+        -0.4562546109350051,
+        0.8236337219387383
+      ],
+      "top_point": [
+        13.0,
+        -50.0,
+        18.368528491522923
+      ],
+      "inward_direction": [
+        -0.3368370853779143,
+        0.4562546109350051,
+        -0.8236337219387383
+      ],
+      "normal_direction_chord": 1.7637464965270078,
+      "exit_point": [
+        12.405904770764336,
+        -49.195282528439094,
+        16.915847400031975
+      ],
+      "exit_triangle_indices": [
+        26484
+      ],
+      "exit_min_barycentric": 0.12553117736331706,
+      "exit_winding_normals": [
+        [
+          -0.3363797529370398,
+          0.4555989878478946,
+          -0.8241833679988878
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999995294473074,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999995294473074
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 13.0,
+      "y": -56.0,
+      "top_triangle_indices": [
+        32731
+      ],
+      "top_min_barycentric": 0.20934644954145512,
+      "top_winding_normal": [
+        0.3274102693510927,
+        -0.3219467391143939,
+        0.8883427338010107
+      ],
+      "top_point": [
+        13.0,
+        -56.0,
+        15.178980600692043
+      ],
+      "inward_direction": [
+        -0.3274102693510927,
+        0.3219467391143939,
+        -0.8883427338010107
+      ],
+      "normal_direction_chord": 1.8029920129631953,
+      "exit_point": [
+        12.409681899397851,
+        -55.4195326007772,
+        13.57730574687493
+      ],
+      "exit_triangle_indices": [
+        47952
+      ],
+      "exit_min_barycentric": 0.06287826530007572,
+      "exit_winding_normals": [
+        [
+          -0.3233358511979236,
+          0.32983112529424385,
+          -0.8869415742410811
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999596361615839,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999596361615839
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 15.0,
+      "y": 0.0,
+      "top_triangle_indices": [
+        396
+      ],
+      "top_min_barycentric": 0.11230269970166029,
+      "top_winding_normal": [
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "top_point": [
+        15.0,
+        0.0,
+        28.468587875366214
+      ],
+      "inward_direction": [
+        0.0,
+        -0.0,
+        -1.0
+      ],
+      "normal_direction_chord": 1.300003051757816,
+      "exit_point": [
+        15.0,
+        0.0,
+        27.1685848236084
+      ],
+      "exit_triangle_indices": [
+        289
+      ],
+      "exit_min_barycentric": 0.007909838693566987,
+      "exit_winding_normals": [
+        [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 1.0,
+      "top_exit_signed_winding_normal_dots": [
+        -1.0
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 15.0,
+      "y": -2.0,
+      "top_triangle_indices": [
+        356
+      ],
+      "top_min_barycentric": 0.11504441405435742,
+      "top_winding_normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "top_point": [
+        15.0,
+        -2.0,
+        28.46858787536621
+      ],
+      "inward_direction": [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      "normal_direction_chord": 1.3000030517578125,
+      "exit_point": [
+        15.0,
+        -2.0,
+        27.1685848236084
+      ],
+      "exit_triangle_indices": [
+        253
+      ],
+      "exit_min_barycentric": 0.28951079892536025,
+      "exit_winding_normals": [
+        [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 1.0,
+      "top_exit_signed_winding_normal_dots": [
+        -1.0
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 15.0,
+      "y": -4.0,
+      "top_triangle_indices": [
+        366
+      ],
+      "top_min_barycentric": 0.07806564766847812,
+      "top_winding_normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "top_point": [
+        15.0,
+        -4.0,
+        28.468587875366207
+      ],
+      "inward_direction": [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      "normal_direction_chord": 1.7499999999999964,
+      "exit_point": [
+        15.0,
+        -4.0,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        342
+      ],
+      "exit_min_barycentric": 0.08712094741269881,
+      "exit_winding_normals": [
+        [
+          -0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 1.0,
+      "top_exit_signed_winding_normal_dots": [
+        -1.0
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 15.0,
+      "y": -6.0,
+      "top_triangle_indices": [
+        9748
+      ],
+      "top_min_barycentric": 0.017960552542479302,
+      "top_winding_normal": [
+        0.2645716168794543,
+        -0.08495632422186943,
+        0.9606166157820194
+      ],
+      "top_point": [
+        15.0,
+        -6.0,
+        34.957575302348545
+      ],
+      "inward_direction": [
+        -0.2645716168794543,
+        0.08495632422186943,
+        -0.9606166157820194
+      ],
+      "normal_direction_chord": 8.576769641107168,
+      "exit_point": [
+        12.730830188449659,
+        -5.271349177593812,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        343
+      ],
+      "exit_min_barycentric": 0.2602602663743352,
+      "exit_winding_normals": [
+        [
+          0.0,
+          -0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9606166157820194,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9606166157820194
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": 15.0,
+      "y": -8.0,
+      "top_triangle_indices": [
+        9587
+      ],
+      "top_min_barycentric": 0.01909478115687214,
+      "top_winding_normal": [
+        0.25476316951644046,
+        -0.11942059599153665,
+        0.9596011925331083
+      ],
+      "top_point": [
+        15.0,
+        -8.0,
+        34.738254966241335
+      ],
+      "inward_direction": [
+        -0.25476316951644046,
+        0.11942059599153665,
+        -0.9596011925331083
+      ],
+      "normal_direction_chord": 8.357291709595733,
+      "exit_point": [
+        12.87086987548992,
+        -7.001967243164949,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        348
+      ],
+      "exit_min_barycentric": 0.1398891005699429,
+      "exit_winding_normals": [
+        [
+          -0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9596011925331083,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9596011925331083
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": 15.0,
+      "y": -10.0,
+      "top_triangle_indices": [
+        12386
+      ],
+      "top_min_barycentric": 0.13059050108921355,
+      "top_winding_normal": [
+        0.23715167143038857,
+        -0.16770131002228422,
+        0.9568883714177859
+      ],
+      "top_point": [
+        15.0,
+        -10.0,
+        34.43469934060985
+      ],
+      "inward_direction": [
+        -0.23715167143038857,
+        0.16770131002228422,
+        -0.9568883714177859
+      ],
+      "normal_direction_chord": 1.7548303377532033,
+      "exit_point": [
+        14.583839052325075,
+        -9.70571265349194,
+        32.75552259660267
+      ],
+      "exit_triangle_indices": [
+        20045
+      ],
+      "exit_min_barycentric": 0.1969462098463591,
+      "exit_winding_normals": [
+        [
+          -0.23783704847335393,
+          0.16719796668131784,
+          -0.9568063431599502
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999996350875774,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999996350875774
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 15.0,
+      "y": -12.0,
+      "top_triangle_indices": [
+        12560
+      ],
+      "top_min_barycentric": 0.029247118713973508,
+      "top_winding_normal": [
+        0.23048311264323376,
+        -0.20707362526723092,
+        0.9507881196696627
+      ],
+      "top_point": [
+        15.0,
+        -12.0,
+        34.04465626147049
+      ],
+      "inward_direction": [
+        -0.23048311264323376,
+        0.20707362526723092,
+        -0.9507881196696627
+      ],
+      "normal_direction_chord": 1.7565488173314976,
+      "exit_point": [
+        14.595145161071645,
+        -11.6362650684363,
+        32.37455051433191
+      ],
+      "exit_triangle_indices": [
+        27238
+      ],
+      "exit_min_barycentric": 0.02686908062405042,
+      "exit_winding_normals": [
+        [
+          -0.23093619624750147,
+          0.20569452585280779,
+          -0.9509775156631854
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999989284646051,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999989284646051
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 15.0,
+      "y": -16.0,
+      "top_triangle_indices": [
+        12850
+      ],
+      "top_min_barycentric": 0.1250511466045968,
+      "top_winding_normal": [
+        0.22596936834978124,
+        -0.2650013414801351,
+        0.9373964655263693
+      ],
+      "top_point": [
+        15.0,
+        -16.0,
+        33.035454050217886
+      ],
+      "inward_direction": [
+        -0.22596936834978124,
+        0.2650013414801351,
+        -0.9373964655263693
+      ],
+      "normal_direction_chord": 1.7605170412960953,
+      "exit_point": [
+        14.602177076209296,
+        -15.533460622357897,
+        31.385151598207987
+      ],
+      "exit_triangle_indices": [
+        27222
+      ],
+      "exit_min_barycentric": 0.22769981428696137,
+      "exit_winding_normals": [
+        [
+          -0.22602958430664008,
+          0.2650618842222661,
+          -0.9373648300158852
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999999958539046,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999999958539046
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 15.0,
+      "y": -20.0,
+      "top_triangle_indices": [
+        13198
+      ],
+      "top_min_barycentric": 0.2110604932009884,
+      "top_winding_normal": [
+        0.23139058992066092,
+        -0.31841321075448725,
+        0.9192776632297703
+      ],
+      "top_point": [
+        15.0,
+        -20.0,
+        31.76684152933262
+      ],
+      "inward_direction": [
+        -0.23139058992066092,
+        0.31841321075448725,
+        -0.9192776632297703
+      ],
+      "normal_direction_chord": 1.7603118523597945,
+      "exit_point": [
+        14.592680402038136,
+        -19.43949345116094,
+        30.14862616313964
+      ],
+      "exit_triangle_indices": [
+        27311
+      ],
+      "exit_min_barycentric": 0.1600051207987575,
+      "exit_winding_normals": [
+        [
+          -0.23075376127234593,
+          0.3138071608986106,
+          -0.9210199603849086
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999876715773105,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999876715773105
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 15.0,
+      "y": -26.0,
+      "top_triangle_indices": [
+        13660
+      ],
+      "top_min_barycentric": 0.008591501789877998,
+      "top_winding_normal": [
+        0.2439438026985767,
+        -0.36948926342402855,
+        0.8966432430679031
+      ],
+      "top_point": [
+        15.0,
+        -26.0,
+        29.479230031668017
+      ],
+      "inward_direction": [
+        -0.2439438026985767,
+        0.36948926342402855,
+        -0.8966432430679031
+      ],
+      "normal_direction_chord": 1.759033305636533,
+      "exit_point": [
+        14.570894726349577,
+        -25.350056079562023,
+        27.902004703837623
+      ],
+      "exit_triangle_indices": [
+        27202
+      ],
+      "exit_min_barycentric": 0.03150111174092762,
+      "exit_winding_normals": [
+        [
+          -0.24944477021794106,
+          0.36564617835696606,
+          -0.8967051794563609
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.999977483108701,
+      "top_exit_signed_winding_normal_dots": [
+        -0.999977483108701
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 15.0,
+      "y": -34.0,
+      "top_triangle_indices": [
+        14358
+      ],
+      "top_min_barycentric": 0.010631845309758432,
+      "top_winding_normal": [
+        0.27906926275374067,
+        -0.4117941711733603,
+        0.8674940386963642
+      ],
+      "top_point": [
+        15.0,
+        -34.0,
+        25.90536777268969
+      ],
+      "inward_direction": [
+        -0.27906926275374067,
+        0.4117941711733603,
+        -0.8674940386963642
+      ],
+      "normal_direction_chord": 2.87035642601314,
+      "exit_point": [
+        14.19897174835205,
+        -32.81800395457779,
+        23.41535068418949
+      ],
+      "exit_triangle_indices": [
+        515
+      ],
+      "exit_min_barycentric": 0.14660201830778202,
+      "exit_winding_normals": [
+        [
+          -1.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.27906926275374067,
+      "top_exit_signed_winding_normal_dots": [
+        -0.27906926275374067
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": 15.0,
+      "y": -42.0,
+      "top_triangle_indices": [
+        15171
+      ],
+      "top_min_barycentric": 0.11725710640907448,
+      "top_winding_normal": [
+        0.29274573880586285,
+        -0.44292174927446093,
+        0.8474197640075791
+      ],
+      "top_point": [
+        15.0,
+        -42.0,
+        21.894666308063943
+      ],
+      "inward_direction": [
+        -0.29274573880586285,
+        0.44292174927446093,
+        -0.8474197640075791
+      ],
+      "normal_direction_chord": 1.7599308368928357,
+      "exit_point": [
+        14.484787746906587,
+        -41.22048835512136,
+        20.403266133594556
+      ],
+      "exit_triangle_indices": [
+        25526
+      ],
+      "exit_min_barycentric": 0.16861927202312527,
+      "exit_winding_normals": [
+        [
+          -0.2891611839028701,
+          0.4437029633237357,
+          -0.8482414102492439
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999929327841051,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999929327841051
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 15.0,
+      "y": -50.0,
+      "top_triangle_indices": [
+        16491
+      ],
+      "top_min_barycentric": 0.1043981132383196,
+      "top_winding_normal": [
+        0.30514903989339814,
+        -0.4635589343606618,
+        0.8318636774295082
+      ],
+      "top_point": [
+        15.0,
+        -50.0,
+        17.578978707770688
+      ],
+      "inward_direction": [
+        -0.30514903989339814,
+        0.4635589343606618,
+        -0.8318636774295082
+      ],
+      "normal_direction_chord": 1.7592926087497325,
+      "exit_point": [
+        14.463153549548467,
+        -49.184464193059384,
+        16.11548708858158
+      ],
+      "exit_triangle_indices": [
+        26639
+      ],
+      "exit_min_barycentric": 0.030689236475821904,
+      "exit_winding_normals": [
+        [
+          -0.3008548657644104,
+          0.46344979913477147,
+          -0.8334870325492885
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999894564381038,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999894564381038
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 15.0,
+      "y": -56.0,
+      "top_triangle_indices": [
+        32608
+      ],
+      "top_min_barycentric": 0.17271716614172822,
+      "top_winding_normal": [
+        0.3708759596303794,
+        -0.5000603467727343,
+        0.7825539420089698
+      ],
+      "top_point": [
+        15.0,
+        -56.0,
+        14.367236099459838
+      ],
+      "inward_direction": [
+        -0.3708759596303794,
+        0.5000603467727343,
+        -0.7825539420089698
+      ],
+      "normal_direction_chord": 1.7436379725555626,
+      "exit_point": [
+        14.353326593680487,
+        -55.12807579079776,
+        13.002745330599954
+      ],
+      "exit_triangle_indices": [
+        47094
+      ],
+      "exit_min_barycentric": 0.017450985742644844,
+      "exit_winding_normals": [
+        [
+          -0.3130245741675008,
+          0.38294413328771165,
+          -0.869119903550585
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9877216720206659,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9877216720206659
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 17.3,
+      "y": 0.0,
+      "top_triangle_indices": [
+        402
+      ],
+      "top_min_barycentric": 0.1277166874633752,
+      "top_winding_normal": [
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "top_point": [
+        17.3,
+        0.0,
+        28.46858787536621
+      ],
+      "inward_direction": [
+        0.0,
+        -0.0,
+        -1.0
+      ],
+      "normal_direction_chord": 1.75,
+      "exit_point": [
+        17.3,
+        0.0,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        340
+      ],
+      "exit_min_barycentric": 0.12789471370344702,
+      "exit_winding_normals": [
+        [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 1.0,
+      "top_exit_signed_winding_normal_dots": [
+        -1.0
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 17.3,
+      "y": -2.0,
+      "top_triangle_indices": [
+        407
+      ],
+      "top_min_barycentric": 0.1666103885725984,
+      "top_winding_normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "top_point": [
+        17.3,
+        -2.0,
+        28.46858787536621
+      ],
+      "inward_direction": [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      "normal_direction_chord": 1.75,
+      "exit_point": [
+        17.3,
+        -2.0,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        340
+      ],
+      "exit_min_barycentric": 0.19308544409914086,
+      "exit_winding_normals": [
+        [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 1.0,
+      "top_exit_signed_winding_normal_dots": [
+        -1.0
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 17.3,
+      "y": -4.0,
+      "top_triangle_indices": [
+        358
+      ],
+      "top_min_barycentric": 0.07815819567564283,
+      "top_winding_normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "top_point": [
+        17.3,
+        -4.0,
+        28.468587875366214
+      ],
+      "inward_direction": [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      "normal_direction_chord": 1.7500000000000036,
+      "exit_point": [
+        17.3,
+        -4.0,
+        26.71858787536621
+      ],
+      "exit_triangle_indices": [
+        341
+      ],
+      "exit_min_barycentric": 0.0326409343896246,
+      "exit_winding_normals": [
+        [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 1.0,
+      "top_exit_signed_winding_normal_dots": [
+        -1.0
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 17.3,
+      "y": -6.0,
+      "top_triangle_indices": [
+        9735
+      ],
+      "top_min_barycentric": 0.06634324086410659,
+      "top_winding_normal": [
+        0.3218329859813521,
+        -0.06658913795757665,
+        0.9444519129317245
+      ],
+      "top_point": [
+        17.3,
+        -6.0,
+        34.25834657273651
+      ],
+      "inward_direction": [
+        -0.3218329859813521,
+        0.06658913795757665,
+        -0.9444519129317245
+      ],
+      "normal_direction_chord": 1.7376153424114715,
+      "exit_point": [
+        16.740778065864706,
+        -5.884293692246961,
+        32.61725243865648
+      ],
+      "exit_triangle_indices": [
+        20230
+      ],
+      "exit_min_barycentric": 0.007433537706222511,
+      "exit_winding_normals": [
+        [
+          -0.309246671286594,
+          0.073591022467398,
+          -0.9481301902747133
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9998895142857519,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9998895142857519
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 17.3,
+      "y": -8.0,
+      "top_triangle_indices": [
+        9575
+      ],
+      "top_min_barycentric": 0.23859313111850364,
+      "top_winding_normal": [
+        0.2968405471137018,
+        -0.1036543182127731,
+        0.9492847159335724
+      ],
+      "top_point": [
+        17.3,
+        -8.0,
+        34.07627530978297
+      ],
+      "inward_direction": [
+        -0.2968405471137018,
+        0.1036543182127731,
+        -0.9492847159335724
+      ],
+      "normal_direction_chord": 1.7435744835522047,
+      "exit_point": [
+        16.782436396368873,
+        -7.8192709756542085,
+        32.421126701455094
+      ],
+      "exit_triangle_indices": [
+        27513
+      ],
+      "exit_min_barycentric": 0.19324365559778037,
+      "exit_winding_normals": [
+        [
+          -0.29540420866525674,
+          0.11138409692824525,
+          -0.9488571738962259
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999690023303388,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999690023303388
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 17.3,
+      "y": -10.0,
+      "top_triangle_indices": [
+        12373
+      ],
+      "top_min_barycentric": 0.07998946626797665,
+      "top_winding_normal": [
+        0.28188321796302757,
+        -0.1547739278699435,
+        0.9468827185467681
+      ],
+      "top_point": [
+        17.3,
+        -10.0,
+        33.806318614696266
+      ],
+      "inward_direction": [
+        -0.28188321796302757,
+        0.1547739278699435,
+        -0.9468827185467681
+      ],
+      "normal_direction_chord": 1.7489700709932285,
+      "exit_point": [
+        16.806994688267405,
+        -9.729305032385405,
+        32.15024907921726
+      ],
+      "exit_triangle_indices": [
+        27577
+      ],
+      "exit_min_barycentric": 0.10870050012725214,
+      "exit_winding_normals": [
+        [
+          -0.27766053258037754,
+          0.15507083814538652,
+          -0.9480810428460579
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999903223956609,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999903223956609
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 17.3,
+      "y": -12.0,
+      "top_triangle_indices": [
+        12547
+      ],
+      "top_min_barycentric": 0.11179149362435849,
+      "top_winding_normal": [
+        0.26708175901371295,
+        -0.19690474833894375,
+        0.9433429143655652
+      ],
+      "top_point": [
+        17.3,
+        -12.0,
+        33.442451341197874
+      ],
+      "inward_direction": [
+        -0.26708175901371295,
+        0.19690474833894375,
+        -0.9433429143655652
+      ],
+      "normal_direction_chord": 1.7525077519390666,
+      "exit_point": [
+        16.831937146926947,
+        -11.65492290214239,
+        31.78923557103543
+      ],
+      "exit_triangle_indices": [
+        21993
+      ],
+      "exit_min_barycentric": 0.05256654902243309,
+      "exit_winding_normals": [
+        [
+          -0.26039506551276675,
+          0.19636893593251414,
+          -0.9453219826373097
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999755421619325,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999755421619325
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 17.3,
+      "y": -16.0,
+      "top_triangle_indices": [
+        12837
+      ],
+      "top_min_barycentric": 0.07231008006357487,
+      "top_winding_normal": [
+        0.2414046096182558,
+        -0.2595275638661279,
+        0.9350771401594471
+      ],
+      "top_point": [
+        17.3,
+        -16.0,
+        32.46541904675392
+      ],
+      "inward_direction": [
+        -0.2414046096182558,
+        0.2595275638661279,
+        -0.9350771401594471
+      ],
+      "normal_direction_chord": 1.7586590318168718,
+      "exit_point": [
+        16.87545160297263,
+        -15.543579505801404,
+        30.82093718876702
+      ],
+      "exit_triangle_indices": [
+        27369
+      ],
+      "exit_min_barycentric": 0.047959635293406744,
+      "exit_winding_normals": [
+        [
+          -0.23832594318835298,
+          0.26045619145147886,
+          -0.9356085277176414
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.999994688545542,
+      "top_exit_signed_winding_normal_dots": [
+        -0.999994688545542
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 17.3,
+      "y": -20.0,
+      "top_triangle_indices": [
+        13185
+      ],
+      "top_min_barycentric": 0.23170041369258867,
+      "top_winding_normal": [
+        0.21550523510533176,
+        -0.317780407316212,
+        0.9233488541001923
+      ],
+      "top_point": [
+        17.3,
+        -20.0,
+        31.21115908928855
+      ],
+      "inward_direction": [
+        -0.21550523510533176,
+        0.317780407316212,
+        -0.9233488541001923
+      ],
+      "normal_direction_chord": 1.7596410784819754,
+      "exit_point": [
+        16.920788135680745,
+        -19.44082054134966,
+        29.58639651584459
+      ],
+      "exit_triangle_indices": [
+        27729
+      ],
+      "exit_min_barycentric": 0.18570206935779557,
+      "exit_winding_normals": [
+        [
+          -0.21286734544058566,
+          0.3141482457725015,
+          -0.9252018011888749
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999882077638618,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999882077638618
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 17.3,
+      "y": -26.0,
+      "top_triangle_indices": [
+        13707
+      ],
+      "top_min_barycentric": 0.07079643974689387,
+      "top_winding_normal": [
+        0.1879323143495423,
+        -0.37871947930711664,
+        0.906230103901085
+      ],
+      "top_point": [
+        17.3,
+        -26.0,
+        28.9283022200479
+      ],
+      "inward_direction": [
+        -0.1879323143495423,
+        0.37871947930711664,
+        -0.906230103901085
+      ],
+      "normal_direction_chord": 1.7600995252903782,
+      "exit_point": [
+        16.96922042272665,
+        -25.333416024253324,
+        27.333247044367752
+      ],
+      "exit_triangle_indices": [
+        27439
+      ],
+      "exit_min_barycentric": 0.05384745495998343,
+      "exit_winding_normals": [
+        [
+          -0.188036888828463,
+          0.3787353830581976,
+          -0.9062017645422418
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.999999994004065,
+      "top_exit_signed_winding_normal_dots": [
+        -0.999999994004065
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 17.3,
+      "y": -34.0,
+      "top_triangle_indices": [
+        14403
+      ],
+      "top_min_barycentric": 0.09889612436163997,
+      "top_winding_normal": [
+        0.16842042611814453,
+        -0.43001827549290556,
+        0.8869717260478432
+      ],
+      "top_point": [
+        17.3,
+        -34.0,
+        25.329934324998582
+      ],
+      "inward_direction": [
+        -0.16842042611814453,
+        0.43001827549290556,
+        -0.8869717260478432
+      ],
+      "normal_direction_chord": 7.3283730853802815,
+      "exit_point": [
+        16.065752282207512,
+        -30.848665643656147,
+        18.829874600336275
+      ],
+      "exit_triangle_indices": [
+        435
+      ],
+      "exit_min_barycentric": 0.1539882460163086,
+      "exit_winding_normals": [
+        [
+          0.0,
+          1.0,
+          0.0
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.43001827549290556,
+      "top_exit_signed_winding_normal_dots": [
+        -0.43001827549290556
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "nonparallel_feature_crossing"
+    },
+    {
+      "x": 17.3,
+      "y": -42.0,
+      "top_triangle_indices": [
+        15158
+      ],
+      "top_min_barycentric": 0.24220370945561578,
+      "top_winding_normal": [
+        0.1840974485308111,
+        -0.4616654151050922,
+        0.8677402687096458
+      ],
+      "top_point": [
+        17.3,
+        -42.0,
+        21.255249468138246
+      ],
+      "inward_direction": [
+        -0.1840974485308111,
+        0.4616654151050922,
+        -0.8677402687096458
+      ],
+      "normal_direction_chord": 1.7619644618903725,
+      "exit_point": [
+        16.97562683816402,
+        -41.18656194530096,
+        19.726321952520646
+      ],
+      "exit_triangle_indices": [
+        25539
+      ],
+      "exit_min_barycentric": 0.1047559352499798,
+      "exit_winding_normals": [
+        [
+          -0.18206910342048685,
+          0.46176931774063795,
+          -0.8681128606195198
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999978680978122,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999978680978122
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 17.3,
+      "y": -50.0,
+      "top_triangle_indices": [
+        16126
+      ],
+      "top_min_barycentric": 0.040450770656184284,
+      "top_winding_normal": [
+        0.21628693275323793,
+        -0.48183033796014485,
+        0.8491522172975873
+      ],
+      "top_point": [
+        17.3,
+        -50.0,
+        16.853883706403792
+      ],
+      "inward_direction": [
+        -0.21628693275323793,
+        0.48183033796014485,
+        -0.8491522172975873
+      ],
+      "normal_direction_chord": 1.7555136837485597,
+      "exit_point": [
+        16.920305329935687,
+        -49.15414024846577,
+        15.363185369352447
+      ],
+      "exit_triangle_indices": [
+        26803
+      ],
+      "exit_min_barycentric": 0.22254953600856917,
+      "exit_winding_normals": [
+        [
+          -0.21315533423014468,
+          0.48081812587808764,
+          -0.8505167448770887
+        ]
+      ],
+      "opposing_surface_abs_normal_dot": 0.9999936532909379,
+      "top_exit_signed_winding_normal_dots": [
+        -0.9999936532909379
+      ],
+      "edge_or_vertex_hit": false,
+      "status": "locally_parallel_surface_candidate"
+    },
+    {
+      "x": 17.3,
+      "y": -56.0,
+      "status": "no_top_hit"
+    }
+  ],
+  "pose_report_sha256": "c2efae074957718e659d10421cbee6b2dbb1eead8345f0cb8df24ec6d60f750a"
+}

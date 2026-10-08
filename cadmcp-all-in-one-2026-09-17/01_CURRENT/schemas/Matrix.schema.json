@@ -48,6 +48,69 @@
       "title": "CaseRef",
       "type": "object"
     },
+    "FirstPrinciplesBasis": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "first_principles",
+          "title": "Kind",
+          "type": "string"
+        },
+        "principles": {
+          "items": {
+            "maxLength": 2000,
+            "minLength": 8,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "title": "Principles",
+          "type": "array"
+        },
+        "assumptions": {
+          "items": {
+            "maxLength": 2000,
+            "minLength": 8,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "title": "Assumptions",
+          "type": "array"
+        },
+        "verification_plan": {
+          "items": {
+            "maxLength": 2000,
+            "minLength": 8,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "title": "Verification Plan",
+          "type": "array"
+        },
+        "unknowns": {
+          "items": {
+            "maxLength": 2000,
+            "minLength": 8,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "title": "Unknowns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "principles",
+        "assumptions",
+        "verification_plan",
+        "unknowns"
+      ],
+      "title": "FirstPrinciplesBasis",
+      "type": "object"
+    },
     "FunctionBrief": {
       "additionalProperties": false,
       "properties": {
@@ -212,9 +275,34 @@
             "$ref": "#/$defs/CaseRef"
           },
           "maxItems": 8,
-          "minItems": 1,
           "title": "References",
           "type": "array"
+        },
+        "design_basis": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "first_principles": "#/$defs/FirstPrinciplesBasis",
+                  "provided_cad": "#/$defs/ProvidedCadBasis"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/FirstPrinciplesBasis"
+                },
+                {
+                  "$ref": "#/$defs/ProvidedCadBasis"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Design Basis"
         },
         "proposed_parts": {
           "items": {
@@ -253,13 +341,70 @@
         "name",
         "covers",
         "mechanism_principle",
-        "references",
         "proposed_parts",
         "force_path",
         "assembly_method",
         "risks"
       ],
       "title": "Option",
+      "type": "object"
+    },
+    "ProvidedCadBasis": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "provided_cad",
+          "title": "Kind",
+          "type": "string"
+        },
+        "artifact_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "application": {
+          "maxLength": 2000,
+          "minLength": 12,
+          "title": "Application",
+          "type": "string"
+        },
+        "verification_plan": {
+          "items": {
+            "maxLength": 2000,
+            "minLength": 8,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "title": "Verification Plan",
+          "type": "array"
+        },
+        "unknowns": {
+          "items": {
+            "maxLength": 2000,
+            "minLength": 8,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "title": "Unknowns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "artifact_id",
+        "sha256",
+        "application",
+        "verification_plan",
+        "unknowns"
+      ],
+      "title": "ProvidedCadBasis",
       "type": "object"
     }
   },

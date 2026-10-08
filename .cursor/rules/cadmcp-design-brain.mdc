@@ -1,9 +1,12 @@
 ---
 description: Structure-first mechanical CAD with Req2CAD, measured interfaces, typed build and Cursor review roles.
-alwaysApply: true
+alwaysApply: false
 ---
 
-For mechanical CAD design, read `.cursor/skills/cadmcp-cursor/SKILL.md`.
+Development notice: cadMCP is disabled until completion. Do not invoke this
+product-use workflow while implementing, reviewing or testing the MCP itself.
+Only explicitly isolated integration tests may temporarily start the server.
+For owner-enabled mechanical CAD use after development, read `.cursor/skills/cadmcp-cursor/SKILL.md`.
 Use the installed cadmcp-design-brain MCP, not imagined APIs or the legacy 13
 cards as a substitute for the real Function–Structure knowledge base.
 First call brain_doctor, brain_fs_status and brain_studio_schema. A missing

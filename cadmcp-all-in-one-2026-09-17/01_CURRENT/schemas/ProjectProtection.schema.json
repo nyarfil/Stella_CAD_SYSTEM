@@ -1,0 +1,82 @@
+{
+  "$defs": {
+    "EditableReference": {
+      "additionalProperties": false,
+      "description": "A hash-pinned owner permission to modify one imported reference.",
+      "properties": {
+        "artifact_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "sha256"
+      ],
+      "title": "EditableReference",
+      "type": "object"
+    },
+    "ProtectedAsset": {
+      "additionalProperties": false,
+      "description": "Owner-frozen reference geometry in its imported coordinate frame.",
+      "properties": {
+        "artifact_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "placement": {
+          "const": "as_registered",
+          "default": "as_registered",
+          "title": "Placement",
+          "type": "string"
+        },
+        "required_output_id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$",
+          "title": "Required Output Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "sha256",
+        "required_output_id"
+      ],
+      "title": "ProtectedAsset",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Persistent owner authority; an empty policy preserves legacy projects.",
+  "properties": {
+    "assets": {
+      "items": {
+        "$ref": "#/$defs/ProtectedAsset"
+      },
+      "maxItems": 64,
+      "title": "Assets",
+      "type": "array"
+    },
+    "editable_references": {
+      "items": {
+        "$ref": "#/$defs/EditableReference"
+      },
+      "maxItems": 64,
+      "title": "Editable References",
+      "type": "array"
+    }
+  },
+  "title": "ProjectProtection",
+  "type": "object"
+}

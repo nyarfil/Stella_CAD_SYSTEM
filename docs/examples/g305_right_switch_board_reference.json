@@ -1,0 +1,416 @@
+{
+  "source": "V:\\DevCache\\Temp\\g305-switch-reference-133tom\\G305_SWR_PCB.step",
+  "source_sha256": "ff4f496d8a89e19b472c7d60f8e6cd67b30c0cf2189398b533cbd6016f81211c",
+  "source_url": "https://www.thingiverse.com/thing:5031791",
+  "coordinate_units": "mm after STEP unit-aware read; source unit declaration must be checked separately",
+  "shapes": [
+    {
+      "ref": "#o1.1.s1",
+      "bbox_minimum": [
+        2.099999999999977,
+        -5.90000000000001,
+        -2.60000000000001
+      ],
+      "bbox_maximum": [
+        14.899999999999993,
+        -0.09999999999999254,
+        7.949999999999999
+      ],
+      "extent": [
+        12.800000000000017,
+        5.800000000000018,
+        10.55000000000001
+      ],
+      "solid_count": 1,
+      "circular_edges": [
+        {
+          "center": [
+            5.249999999999983,
+            -0.10000000000000542,
+            2.099999999999995
+          ],
+          "radius": 0.5,
+          "length": 3.141592653589793,
+          "full_circle": true
+        },
+        {
+          "center": [
+            5.249999999999991,
+            -5.900000000000006,
+            2.0999999999999934
+          ],
+          "radius": 0.5,
+          "length": 3.141592653589793,
+          "full_circle": true
+        },
+        {
+          "center": [
+            11.749999999999984,
+            -0.09999999999999698,
+            2.100000000000003
+          ],
+          "radius": 0.699999999999999,
+          "length": 4.398229715025704,
+          "full_circle": true
+        },
+        {
+          "center": [
+            11.749999999999991,
+            -5.899999999999997,
+            2.1000000000000014
+          ],
+          "radius": 0.699999999999999,
+          "length": 4.398229715025704,
+          "full_circle": true
+        },
+        {
+          "center": [
+            14.649999999999993,
+            -5.649999999999992,
+            0.600000000000005
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            2.349999999999991,
+            -5.650000000000008,
+            0.599999999999989
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            2.3499999999999845,
+            -0.3500000000000085,
+            0.5999999999999908
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            14.649999999999986,
+            -0.34999999999999254,
+            0.6000000000000068
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            10.449999999999978,
+            -1.5499999999999994,
+            7.347727272727273
+          ],
+          "radius": 0.602272727272727,
+          "length": 1.7874184183778905,
+          "full_circle": false
+        },
+        {
+          "center": [
+            10.449999999999982,
+            -4.449999999999999,
+            7.347727272727273
+          ],
+          "radius": 0.602272727272727,
+          "length": 1.7874184183778916,
+          "full_circle": false
+        },
+        {
+          "center": [
+            14.649999999999984,
+            -5.649999999999993,
+            7.150000000000006
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            14.649999999999977,
+            -0.34999999999999387,
+            7.150000000000007
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            14.649999999999984,
+            -5.649999999999993,
+            7.150000000000006
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            14.649999999999977,
+            -0.34999999999999387,
+            7.150000000000007
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            14.649999999999984,
+            -5.649999999999993,
+            7.150000000000006
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            14.649999999999977,
+            -0.34999999999999387,
+            7.150000000000007
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            2.3499999999999837,
+            -5.650000000000009,
+            7.14999999999999
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            2.3499999999999837,
+            -5.650000000000009,
+            7.14999999999999
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            2.349999999999977,
+            -0.35000000000000986,
+            7.149999999999991
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            2.349999999999977,
+            -0.35000000000000986,
+            7.149999999999991
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            2.3499999999999837,
+            -5.650000000000009,
+            7.14999999999999
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872414,
+          "full_circle": false
+        },
+        {
+          "center": [
+            2.349999999999977,
+            -0.35000000000000986,
+            7.149999999999991
+          ],
+          "radius": 0.25,
+          "length": 0.39269908169872436,
+          "full_circle": false
+        }
+      ]
+    },
+    {
+      "ref": "#o1.2.s1",
+      "bbox_minimum": [
+        -5.0,
+        -8.5,
+        0.0
+      ],
+      "bbox_maximum": [
+        19.0,
+        0.430511096808295,
+        0.6
+      ],
+      "extent": [
+        24.0,
+        8.930511096808296,
+        0.6
+      ],
+      "solid_count": 1,
+      "circular_edges": [
+        {
+          "center": [
+            17.0,
+            -6.5,
+            0.0
+          ],
+          "radius": 1.0,
+          "length": 6.283185307179586,
+          "full_circle": true
+        },
+        {
+          "center": [
+            17.0,
+            -6.5,
+            0.6
+          ],
+          "radius": 1.0,
+          "length": 6.283185307179586,
+          "full_circle": true
+        },
+        {
+          "center": [
+            5.55111512312578e-16,
+            -3.0,
+            0.0
+          ],
+          "radius": 1.0,
+          "length": 6.283185307179586,
+          "full_circle": true
+        },
+        {
+          "center": [
+            5.55111512312578e-16,
+            -3.0,
+            0.6
+          ],
+          "radius": 1.0,
+          "length": 6.283185307179586,
+          "full_circle": true
+        },
+        {
+          "center": [
+            5.55111512312578e-16,
+            -6.5,
+            0.0
+          ],
+          "radius": 1.0,
+          "length": 6.283185307179586,
+          "full_circle": true
+        },
+        {
+          "center": [
+            5.55111512312578e-16,
+            -6.5,
+            0.6
+          ],
+          "radius": 1.0,
+          "length": 6.283185307179586,
+          "full_circle": true
+        },
+        {
+          "center": [
+            8.5,
+            -3.0,
+            0.0
+          ],
+          "radius": 0.600000000000001,
+          "length": 3.769911184307758,
+          "full_circle": true
+        },
+        {
+          "center": [
+            8.5,
+            -3.0,
+            0.6
+          ],
+          "radius": 0.600000000000001,
+          "length": 3.769911184307758,
+          "full_circle": true
+        },
+        {
+          "center": [
+            17.0,
+            -3.0,
+            0.0
+          ],
+          "radius": 1.0,
+          "length": 6.283185307179586,
+          "full_circle": true
+        },
+        {
+          "center": [
+            17.0,
+            -3.0,
+            0.6
+          ],
+          "radius": 1.0,
+          "length": 6.283185307179586,
+          "full_circle": true
+        },
+        {
+          "center": [
+            13.58,
+            -3.0,
+            0.0
+          ],
+          "radius": 0.600000000000001,
+          "length": 3.769911184307758,
+          "full_circle": true
+        },
+        {
+          "center": [
+            13.58,
+            -3.0,
+            0.6
+          ],
+          "radius": 0.600000000000001,
+          "length": 3.769911184307758,
+          "full_circle": true
+        },
+        {
+          "center": [
+            3.42,
+            -3.0,
+            0.0
+          ],
+          "radius": 0.599999999999999,
+          "length": 3.7699111843077455,
+          "full_circle": true
+        },
+        {
+          "center": [
+            3.42,
+            -3.0,
+            0.6
+          ],
+          "radius": 0.599999999999999,
+          "length": 3.7699111843077455,
+          "full_circle": true
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Third-party reference geometry, not measured owner hardware.",
+    "BRep selectors are bound to the recorded source hash.",
+    "Circular edges include fillets and cutout arcs; only full_circle boundaries are full rims.",
+    "No physical part labels are inferred from solid enumeration order."
+  ]
+}

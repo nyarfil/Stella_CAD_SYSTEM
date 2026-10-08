@@ -1,0 +1,122 @@
+{
+  "hardware_id": "Generic board Alpha; hypothetical switch",
+  "coordinate_basis": "One common u=0 reference and downward plunger axis; g excludes closure error already included in u.",
+  "state_context": {
+    "rest_closure": "After actuation and release, at returned rest; no return-force proof.",
+    "pre_stop_closure": "Immediately before lower-stop contact.",
+    "post_stop_closure": "After lower-stop contact at supplied 2 N design load; hypothetical relative support deflection included."
+  },
+  "quantities": {
+    "gap": {
+      "min": 0.15,
+      "max": 0.2,
+      "unit": "mm",
+      "source": {
+        "kind": "proposed",
+        "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+        "hardware_scope": "Generic board Alpha; hypothetical switch"
+      }
+    },
+    "rest_closure": {
+      "min": 0,
+      "max": 0,
+      "unit": "mm",
+      "source": {
+        "kind": "proposed",
+        "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+        "hardware_scope": "Generic board Alpha; hypothetical switch"
+      }
+    },
+    "pre_stop_closure": {
+      "min": 0.65,
+      "max": 0.7,
+      "unit": "mm",
+      "source": {
+        "kind": "proposed",
+        "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+        "hardware_scope": "Generic board Alpha; hypothetical switch"
+      }
+    },
+    "post_stop_closure": {
+      "min": 0.75,
+      "max": 0.8,
+      "unit": "mm",
+      "source": {
+        "kind": "proposed",
+        "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+        "hardware_scope": "Generic board Alpha; hypothetical switch"
+      }
+    },
+    "on_compression": {
+      "min": 0.35,
+      "max": 0.4,
+      "unit": "mm",
+      "source": {
+        "kind": "proposed",
+        "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+        "hardware_scope": "Generic board Alpha; hypothetical switch"
+      }
+    },
+    "off_compression": {
+      "min": 0.15,
+      "max": 0.2,
+      "unit": "mm",
+      "source": {
+        "kind": "proposed",
+        "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+        "hardware_scope": "Generic board Alpha; hypothetical switch"
+      }
+    },
+    "allowable_compression": {
+      "min": 0.7,
+      "max": 0.8,
+      "unit": "mm",
+      "source": {
+        "kind": "proposed",
+        "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+        "hardware_scope": "Generic board Alpha; hypothetical switch"
+      },
+      "definition": "maximum_permitted_compression_not_minimum_overtravel"
+    },
+    "on_margin": {
+      "min": 0.05,
+      "max": 0.05,
+      "unit": "mm",
+      "source": {
+        "kind": "proposed",
+        "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+        "hardware_scope": "Generic board Alpha; hypothetical switch"
+      }
+    },
+    "release_margin": {
+      "min": 0.02,
+      "max": 0.02,
+      "unit": "mm",
+      "source": {
+        "kind": "proposed",
+        "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+        "hardware_scope": "Generic board Alpha; hypothetical switch"
+      }
+    },
+    "safety_margin": {
+      "min": 0.05,
+      "max": 0.05,
+      "unit": "mm",
+      "source": {
+        "kind": "proposed",
+        "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+        "hardware_scope": "Generic board Alpha; hypothetical switch"
+      }
+    },
+    "design_load": {
+      "min": 2,
+      "max": 2,
+      "unit": "N",
+      "source": {
+        "kind": "proposed",
+        "evidence_ref": "synthetic arithmetic fixture, not a hardware specification",
+        "hardware_scope": "Generic board Alpha; hypothetical switch"
+      }
+    }
+  }
+}

@@ -1,0 +1,1456 @@
+{
+  "status": "measured_inferred_pose_not_accepted_physical_placement",
+  "method": {
+    "geometry_backend": "CadQuery/OCP STEP BRep import and exact boolean common-volume diagnostics",
+    "coordinate_frame": "Each STEP's own declared-mm coordinate system. X/Y matching is performed only between the imported PCB and imported bottom. +Z follows each file's native frame; no cross-file Z seating datum is accepted.",
+    "reader_unit_check": "Every input declares SI_UNIT(.MILLI.,.METRE.) and CadQuery/OCP imported the coordinate values reported as mm. No scale factor was applied.",
+    "pose_scope": "Rigid XY rotation + XY translation with fixed scale=1. The inferred transform is a correspondence hypothesis, not an approval to place or modify hardware.",
+    "holdout_method": "For every correspondence permutation (or supplied map), fit three extracted cylindrical axes and evaluate the fourth axis. This is an internal consistency diagnostic only: all four axes are reused to rank correspondences and to derive the final four-point pose, so it is not external independent validation.",
+    "scope_limit": "This bounded probe requires exactly four repeated near-Z PCB cylindrical faces and exactly four innermost repeated near-Z bottom cylindrical faces. It is evidence for this ZA13 case, not generic automatic acceptance for arbitrary PCBs."
+  },
+  "sources": {
+    "pcb": {
+      "path": "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace\\imports\\za13_r15\\ZA13_main_pcb.step",
+      "sha256": "94b04014843974db7771022a9514fa7748c03ee35103a9c6ac680d1d09fd449b",
+      "step_file_name": "R14_TEST_main_pcb_1.step",
+      "step_timestamp": "2026-09-15T15:06:57+09:00",
+      "schema": "AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 1 }",
+      "declared_length_unit": "mm",
+      "length_unit_tokens": [
+        "MILLI"
+      ]
+    },
+    "bottom": {
+      "path": "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace\\imports\\za13_r15\\ZA13_R15_bottom.step",
+      "sha256": "de1a27fb3a98330efd0ed0a6afcc781a95ce1fd47f0fe309e1ef6d9c6dc8d166",
+      "step_file_name": "ZA13_R15_bottom_lens_well.step",
+      "step_timestamp": "2026-09-17T19:49:25+09:00",
+      "schema": "AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 1 }",
+      "declared_length_unit": "mm",
+      "length_unit_tokens": [
+        "MILLI"
+      ]
+    },
+    "sensor": {
+      "path": "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace\\imports\\za13_r15\\ZA13_sensor.step",
+      "sha256": "bfbcff6b2f448f9724bab70c1e0dad33c7c4761034672851e0d87e0f0bbfe250",
+      "step_file_name": "R14_TEST_sensor_1.step",
+      "step_timestamp": "2026-09-15T15:06:57+09:00",
+      "schema": "AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 1 }",
+      "declared_length_unit": "mm",
+      "length_unit_tokens": [
+        "MILLI"
+      ]
+    }
+  },
+  "source_lineage": {
+    "local_filename_conflict": "The imported PCB path is ZA13_main_pcb.step while its STEP header identifies R14_TEST_main_pcb_1.step. Source lineage/revision remains unverified.",
+    "known_distinct_reference_not_inspected": {
+      "path": "V:/mouse/ZA13/R12-symmetric-rebuild/source/main_pcb_1.step",
+      "sha256": "a98d08bd0cc3ed267f0ee78d001f38f4345e722d36715644c15fefc4820b0f63",
+      "relationship": "Digest is known to differ from the imported PCB; its frame, revision, and geometry were not inspected here."
+    }
+  },
+  "bodies": {
+    "pcb": {
+      "top_level_shape_type": "Compound",
+      "valid": true,
+      "bbox": {
+        "minimum_mm": [
+          -14.0,
+          -33.6,
+          3.8999999999988777
+        ],
+        "maximum_mm": [
+          15.45,
+          39.3,
+          20.0
+        ],
+        "extent_mm": [
+          29.45,
+          72.9,
+          16.100000000001124
+        ]
+      },
+      "solid_count": 9,
+      "solids": [
+        {
+          "index": 0,
+          "valid": true,
+          "volume_mm3": 924.0172692125635,
+          "face_count": 44,
+          "edge_count": 126,
+          "bbox": {
+            "minimum_mm": [
+              -13.800000000000137,
+              -33.6,
+              6.6
+            ],
+            "maximum_mm": [
+              14.000000000001974,
+              39.3,
+              7.4
+            ],
+            "extent_mm": [
+              27.80000000000211,
+              72.9,
+              0.8000000000000007
+            ]
+          }
+        },
+        {
+          "index": 1,
+          "valid": true,
+          "volume_mm3": 113.08904862254819,
+          "face_count": 11,
+          "edge_count": 24,
+          "bbox": {
+            "minimum_mm": [
+              10.14999999999999,
+              6.05,
+              4.4
+            ],
+            "maximum_mm": [
+              13.750000000000012,
+              12.050000000000004,
+              12.4
+            ],
+            "extent_mm": [
+              3.6000000000000227,
+              6.000000000000004,
+              8.0
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "valid": true,
+          "volume_mm3": 234.58904862254806,
+          "face_count": 10,
+          "edge_count": 24,
+          "bbox": {
+            "minimum_mm": [
+              10.45,
+              -7.3,
+              4.4
+            ],
+            "maximum_mm": [
+              15.45,
+              1.7000000000000002,
+              12.4
+            ],
+            "extent_mm": [
+              5.0,
+              9.0,
+              8.0
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "valid": true,
+          "volume_mm3": 113.0890486225481,
+          "face_count": 11,
+          "edge_count": 24,
+          "bbox": {
+            "minimum_mm": [
+              -13.5,
+              6.05,
+              4.4
+            ],
+            "maximum_mm": [
+              -9.9,
+              12.05,
+              12.4
+            ],
+            "extent_mm": [
+              3.5999999999999996,
+              6.000000000000001,
+              8.0
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "valid": true,
+          "volume_mm3": 142.33904862254815,
+          "face_count": 11,
+          "edge_count": 24,
+          "bbox": {
+            "minimum_mm": [
+              -13.8,
+              -9.25,
+              4.4
+            ],
+            "maximum_mm": [
+              -10.199999999999996,
+              -1.75,
+              12.4
+            ],
+            "extent_mm": [
+              3.600000000000005,
+              7.5,
+              8.0
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "valid": true,
+          "volume_mm3": 4.410000000000002,
+          "face_count": 6,
+          "edge_count": 12,
+          "bbox": {
+            "minimum_mm": [
+              -14.0,
+              19.15,
+              5.6
+            ],
+            "maximum_mm": [
+              -11.9,
+              21.25,
+              6.6
+            ],
+            "extent_mm": [
+              2.0999999999999996,
+              2.1000000000000014,
+              1.0
+            ]
+          }
+        },
+        {
+          "index": 6,
+          "valid": true,
+          "volume_mm3": 13.148860484553039,
+          "face_count": 8,
+          "edge_count": 15,
+          "bbox": {
+            "minimum_mm": [
+              3.65,
+              -25.8,
+              4.9
+            ],
+            "maximum_mm": [
+              7.05,
+              -22.4,
+              6.6
+            ],
+            "extent_mm": [
+              3.4,
+              3.400000000000002,
+              1.6999999999999993
+            ]
+          }
+        },
+        {
+          "index": 7,
+          "valid": true,
+          "volume_mm3": 439.7708000003264,
+          "face_count": 16,
+          "edge_count": 36,
+          "bbox": {
+            "minimum_mm": [
+              5.263020957626626,
+              21.532759768911223,
+              4.2
+            ],
+            "maximum_mm": [
+              12.514206935275201,
+              35.02648999434177,
+              14.75
+            ],
+            "extent_mm": [
+              7.251185977648575,
+              13.49373022543055,
+              10.55
+            ]
+          }
+        },
+        {
+          "index": 8,
+          "valid": true,
+          "volume_mm3": 502.2709835066263,
+          "face_count": 37,
+          "edge_count": 98,
+          "bbox": {
+            "minimum_mm": [
+              -12.4,
+              24.299999999999418,
+              3.8999999999988777
+            ],
+            "maximum_mm": [
+              -8.0,
+              36.100000000000584,
+              20.0
+            ],
+            "extent_mm": [
+              4.4,
+              11.800000000001166,
+              16.100000000001124
+            ]
+          }
+        }
+      ]
+    },
+    "bottom": {
+      "top_level_shape_type": "Solid",
+      "valid": true,
+      "bbox": {
+        "minimum_mm": [
+          -30.716667593500745,
+          -52.5112822859793,
+          0.294077625742
+        ],
+        "maximum_mm": [
+          30.708816051483247,
+          65.13513719405579,
+          8.105625877426972
+        ],
+        "extent_mm": [
+          61.42548364498399,
+          117.64641948003509,
+          7.811548251684972
+        ]
+      },
+      "solid_count": 1,
+      "solids": [
+        {
+          "index": 0,
+          "valid": true,
+          "volume_mm3": 8342.135266357169,
+          "face_count": 6049,
+          "edge_count": 9753,
+          "bbox": {
+            "minimum_mm": [
+              -30.716667593500745,
+              -52.5112822859793,
+              0.294077625742
+            ],
+            "maximum_mm": [
+              30.708816051483247,
+              65.13513719405579,
+              8.105625877426972
+            ],
+            "extent_mm": [
+              61.42548364498399,
+              117.64641948003509,
+              7.811548251684972
+            ]
+          }
+        }
+      ]
+    },
+    "sensor": {
+      "top_level_shape_type": "Solid",
+      "valid": true,
+      "bbox": {
+        "minimum_mm": [
+          -5.45,
+          -8.440000000000001,
+          4.8
+        ],
+        "maximum_mm": [
+          5.45,
+          8.82,
+          9.81
+        ],
+        "extent_mm": [
+          10.9,
+          17.26,
+          5.010000000000001
+        ]
+      },
+      "solid_count": 1,
+      "solids": [
+        {
+          "index": 0,
+          "valid": true,
+          "volume_mm3": 386.03540000000004,
+          "face_count": 20,
+          "edge_count": 48,
+          "bbox": {
+            "minimum_mm": [
+              -5.45,
+              -8.440000000000001,
+              4.8
+            ],
+            "maximum_mm": [
+              5.45,
+              8.82,
+              9.81
+            ],
+            "extent_mm": [
+              10.9,
+              17.26,
+              5.010000000000001
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "interfaces": {
+    "pcb_plate": {
+      "solid_index": 0,
+      "selection_rule": "unique large, thin solid measured from BRep",
+      "bbox": {
+        "minimum_mm": [
+          -13.800000000000137,
+          -33.6,
+          6.6
+        ],
+        "maximum_mm": [
+          14.000000000001974,
+          39.3,
+          7.4
+        ],
+        "extent_mm": [
+          27.80000000000211,
+          72.9,
+          0.8000000000000007
+        ]
+      }
+    },
+    "pcb_mount_pattern_candidate": {
+      "selection_rule": "the unique group of four vertical cylindrical faces on the selected plate sharing a measured radius; functional mounting use is inferred from task context, not asserted by topology",
+      "features": [
+        {
+          "radius_mm": 1.4,
+          "axis_point_mm": [
+            2.052621638551e-15,
+            -31.8,
+            0.0
+          ],
+          "axis_direction": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "axis_tilt_from_z_degrees": 0.0,
+          "area_mm2": 7.037167544041143,
+          "bbox": {
+            "minimum_mm": [
+              -1.4,
+              -33.2,
+              6.6
+            ],
+            "maximum_mm": [
+              1.400000000000002,
+              -30.400000000000002,
+              7.4
+            ],
+            "extent_mm": [
+              2.8000000000000016,
+              2.8000000000000007,
+              0.8000000000000007
+            ]
+          },
+          "parent_solid_index": 0
+        },
+        {
+          "radius_mm": 1.4,
+          "axis_point_mm": [
+            0.0,
+            -14.4,
+            0.0
+          ],
+          "axis_direction": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "axis_tilt_from_z_degrees": 0.0,
+          "area_mm2": 7.037167544041143,
+          "bbox": {
+            "minimum_mm": [
+              -1.4,
+              -15.8,
+              6.6
+            ],
+            "maximum_mm": [
+              1.4,
+              -13.0,
+              7.4
+            ],
+            "extent_mm": [
+              2.8,
+              2.8000000000000007,
+              0.8000000000000007
+            ]
+          },
+          "parent_solid_index": 0
+        },
+        {
+          "radius_mm": 1.4,
+          "axis_point_mm": [
+            -12.8,
+            15.4,
+            0.0
+          ],
+          "axis_direction": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "axis_tilt_from_z_degrees": 0.0,
+          "area_mm2": 5.300734387826243,
+          "bbox": {
+            "minimum_mm": [
+              -13.800000000000137,
+              14.0,
+              6.6
+            ],
+            "maximum_mm": [
+              -11.4,
+              16.8,
+              7.4
+            ],
+            "extent_mm": [
+              2.400000000000137,
+              2.8000000000000007,
+              0.8000000000000007
+            ]
+          },
+          "parent_solid_index": 0
+        },
+        {
+          "radius_mm": 1.4,
+          "axis_point_mm": [
+            12.0,
+            15.4,
+            0.0
+          ],
+          "axis_direction": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "axis_tilt_from_z_degrees": 0.0,
+          "area_mm2": 7.037167544041143,
+          "bbox": {
+            "minimum_mm": [
+              10.6,
+              14.0,
+              6.6
+            ],
+            "maximum_mm": [
+              13.4,
+              16.8,
+              7.4
+            ],
+            "extent_mm": [
+              2.8000000000000007,
+              2.8000000000000007,
+              0.8000000000000007
+            ]
+          },
+          "parent_solid_index": 0
+        }
+      ]
+    },
+    "bottom_bore_pattern_candidate": {
+      "selection_rule": "the innermost-radius group among repeated groups of four near-Z cylindrical faces; bore/cavity function remains an inference",
+      "features": [
+        {
+          "radius_mm": 0.575,
+          "axis_point_mm": [
+            -12.000913888216,
+            -15.6791581015043,
+            5.8128554598807
+          ],
+          "axis_direction": [
+            0.0,
+            -0.006159426299715432,
+            0.9999810305539093
+          ],
+          "axis_tilt_from_z_degrees": 0.3529113627089018,
+          "area_mm2": 13.90940147376881,
+          "bbox": {
+            "minimum_mm": [
+              -12.575913888216,
+              -16.265511335595797,
+              3.8043518234977736
+            ],
+            "maximum_mm": [
+              -11.425913888216,
+              -15.091819359204802,
+              7.661362131374997
+            ],
+            "extent_mm": [
+              1.1500000000000004,
+              1.1736919763909945,
+              3.857010307877223
+            ]
+          },
+          "parent_solid_index": 0
+        },
+        {
+          "radius_mm": 0.575,
+          "axis_point_mm": [
+            12.799086111784,
+            -15.6791581015043,
+            5.8128554598807
+          ],
+          "axis_direction": [
+            0.0,
+            -0.006159426299715432,
+            0.9999810305539093
+          ],
+          "axis_tilt_from_z_degrees": 0.3529113627089018,
+          "area_mm2": 13.90940147376881,
+          "bbox": {
+            "minimum_mm": [
+              12.224086111784,
+              -16.265511335595797,
+              3.8043518234977736
+            ],
+            "maximum_mm": [
+              13.374086111783999,
+              -15.091819359204903,
+              7.661362131374997
+            ],
+            "extent_mm": [
+              1.1499999999999986,
+              1.1736919763908933,
+              3.857010307877223
+            ]
+          },
+          "parent_solid_index": 0
+        },
+        {
+          "radius_mm": 0.575,
+          "axis_point_mm": [
+            -0.000913888216009437,
+            14.1202766090022,
+            5.99640636361222
+          ],
+          "axis_direction": [
+            0.0,
+            -0.006159426299715432,
+            0.9999810305539093
+          ],
+          "axis_tilt_from_z_degrees": 0.3529113627089018,
+          "area_mm2": 13.909401473768812,
+          "bbox": {
+            "minimum_mm": [
+              -0.5759138882160094,
+              13.533923374910703,
+              3.9879027272292933
+            ],
+            "maximum_mm": [
+              0.5740861117839905,
+              14.707615351301598,
+              7.844913035106517
+            ],
+            "extent_mm": [
+              1.15,
+              1.173691976390895,
+              3.8570103078772235
+            ]
+          },
+          "parent_solid_index": 0
+        },
+        {
+          "radius_mm": 0.575,
+          "axis_point_mm": [
+            -0.000913888216009358,
+            31.5199465406402,
+            6.10358038122727
+          ],
+          "axis_direction": [
+            0.0,
+            -0.006159426299715432,
+            0.9999810305539093
+          ],
+          "axis_tilt_from_z_degrees": 0.3529113627089018,
+          "area_mm2": 13.90940147376877,
+          "bbox": {
+            "minimum_mm": [
+              -0.5759138882160093,
+              30.933593306548804,
+              4.095076744844343
+            ],
+            "maximum_mm": [
+              0.5740861117839906,
+              32.1072852829397,
+              7.952087052721566
+            ],
+            "extent_mm": [
+              1.15,
+              1.173691976390895,
+              3.857010307877223
+            ]
+          },
+          "parent_solid_index": 0
+        }
+      ]
+    },
+    "bottom_larger_vertical_cylinders": [
+      {
+        "radius_mm": 2.3,
+        "axis_point_mm": [
+          -12.000913888216,
+          -15.6712730201143,
+          4.53271483790001
+        ],
+        "axis_direction": [
+          0.0,
+          -0.006159426299715492,
+          0.9999810305539093
+        ],
+        "axis_tilt_from_z_degrees": 0.3529113627089018,
+        "area_mm2": 73.70652987401124,
+        "bbox": {
+          "minimum_mm": [
+            -14.300913888216,
+            -17.98893875672629,
+            2.2934254615565344
+          ],
+          "maximum_mm": [
+            -9.700913888216,
+            -13.35761091059711,
+            7.421991884103525
+          ],
+          "extent_mm": [
+            4.6,
+            4.631327846129182,
+            5.1285664225469905
+          ]
+        },
+        "parent_solid_index": 0
+      },
+      {
+        "radius_mm": 2.3,
+        "axis_point_mm": [
+          12.799086111784,
+          -15.6712730201143,
+          4.53271483790001
+        ],
+        "axis_direction": [
+          0.0,
+          -0.006159426299715492,
+          0.9999810305539093
+        ],
+        "axis_tilt_from_z_degrees": 0.3529113627089018,
+        "area_mm2": 73.70652987401124,
+        "bbox": {
+          "minimum_mm": [
+            10.499086111783999,
+            -17.98893875672629,
+            2.2934254615565344
+          ],
+          "maximum_mm": [
+            15.099086111784,
+            -13.35761091059711,
+            7.421991884103525
+          ],
+          "extent_mm": [
+            4.600000000000001,
+            4.631327846129182,
+            5.1285664225469905
+          ]
+        },
+        "parent_solid_index": 0
+      },
+      {
+        "radius_mm": 2.3,
+        "axis_point_mm": [
+          -0.000913888216009437,
+          14.1281616903922,
+          4.71626574163153
+        ],
+        "axis_direction": [
+          0.0,
+          -0.006159426299715492,
+          0.9999810305539093
+        ],
+        "axis_tilt_from_z_degrees": 0.3529113627089018,
+        "area_mm2": 73.7065298740114,
+        "bbox": {
+          "minimum_mm": [
+            -2.30091388821601,
+            11.81049595378021,
+            2.4769763652880545
+          ],
+          "maximum_mm": [
+            2.2990861117839905,
+            16.441823799909393,
+            7.605542787835055
+          ],
+          "extent_mm": [
+            4.6000000000000005,
+            4.631327846129183,
+            5.128566422547
+          ]
+        },
+        "parent_solid_index": 0
+      },
+      {
+        "radius_mm": 2.3,
+        "axis_point_mm": [
+          -0.000913888216009358,
+          31.5278316220302,
+          4.82343975924658
+        ],
+        "axis_direction": [
+          0.0,
+          -0.006159426299715492,
+          0.9999810305539093
+        ],
+        "axis_tilt_from_z_degrees": 0.3529113627089018,
+        "area_mm2": 73.70652987401124,
+        "bbox": {
+          "minimum_mm": [
+            -2.30091388821601,
+            29.210165885418206,
+            2.5841503829031045
+          ],
+          "maximum_mm": [
+            2.2990861117839905,
+            33.84149373154739,
+            7.712716805450095
+          ],
+          "extent_mm": [
+            4.6000000000000005,
+            4.631327846129182,
+            5.1285664225469905
+          ]
+        },
+        "parent_solid_index": 0
+      },
+      {
+        "radius_mm": 1.3,
+        "axis_point_mm": [
+          -0.000913888216009358,
+          31.5093831245362,
+          7.81854784862722
+        ],
+        "axis_direction": [
+          0.0,
+          -0.006159426299719052,
+          0.9999810305539092
+        ],
+        "axis_tilt_from_z_degrees": 0.3529113627099345,
+        "area_mm2": 2.042035224833303,
+        "bbox": {
+          "minimum_mm": [
+            -1.30091388821601,
+            30.20860705939722,
+            7.69054287077112
+          ],
+          "maximum_mm": [
+            1.2990861117839907,
+            32.81009759541228,
+            7.956552636788865
+          ],
+          "extent_mm": [
+            2.6000000000000005,
+            2.60149053601506,
+            0.26600976601774473
+          ]
+        },
+        "parent_solid_index": 0
+      },
+      {
+        "radius_mm": 1.3,
+        "axis_point_mm": [
+          -0.000913888216009437,
+          14.1097131928982,
+          7.71137383101217
+        ],
+        "axis_direction": [
+          0.0,
+          -0.006159426299710512,
+          0.9999810305539093
+        ],
+        "axis_tilt_from_z_degrees": 0.3529113627089018,
+        "area_mm2": 2.042035224833228,
+        "bbox": {
+          "minimum_mm": [
+            -1.30091388821601,
+            12.808937127759119,
+            7.583368853156079
+          ],
+          "maximum_mm": [
+            1.2990861117839907,
+            15.410427663774282,
+            7.8493786191738035
+          ],
+          "extent_mm": [
+            2.6000000000000005,
+            2.601490536015163,
+            0.2660097660177243
+          ]
+        },
+        "parent_solid_index": 0
+      },
+      {
+        "radius_mm": 1.3,
+        "axis_point_mm": [
+          12.799086111784,
+          -15.6897215176083,
+          7.52782292728065
+        ],
+        "axis_direction": [
+          0.0,
+          -0.006159426299710512,
+          0.9999810305539093
+        ],
+        "axis_tilt_from_z_degrees": 0.3529113627089018,
+        "area_mm2": 2.0420352248333153,
+        "bbox": {
+          "minimum_mm": [
+            11.499086111783999,
+            -16.99049758274738,
+            7.399817949424549
+          ],
+          "maximum_mm": [
+            14.099086111784,
+            -14.389007046732218,
+            7.665827715442283
+          ],
+          "extent_mm": [
+            2.6000000000000014,
+            2.601490536015163,
+            0.2660097660177341
+          ]
+        },
+        "parent_solid_index": 0
+      },
+      {
+        "radius_mm": 1.3,
+        "axis_point_mm": [
+          -12.000913888216,
+          -15.6897215176083,
+          7.52782292728065
+        ],
+        "axis_direction": [
+          0.0,
+          -0.006159426299710512,
+          0.9999810305539093
+        ],
+        "axis_tilt_from_z_degrees": 0.3529113627089018,
+        "area_mm2": 2.042035224833315,
+        "bbox": {
+          "minimum_mm": [
+            -13.300913888216,
+            -16.99049758274728,
+            7.399817949424549
+          ],
+          "maximum_mm": [
+            -10.700913888215998,
+            -14.389007046732218,
+            7.665827715442283
+          ],
+          "extent_mm": [
+            2.6000000000000014,
+            2.6014905360150635,
+            0.2660097660177341
+          ]
+        },
+        "parent_solid_index": 0
+      },
+      {
+        "radius_mm": 2.207106781187,
+        "axis_point_mm": [
+          -0.0009138882160112,
+          -0.233223736595,
+          -1.597147009411
+        ],
+        "axis_direction": [
+          0.0,
+          0.006159426299715442,
+          -0.9999810305539093
+        ],
+        "axis_tilt_from_z_degrees": 0.3529113627089018,
+        "area_mm2": 8.318309678872044,
+        "bbox": {
+          "minimum_mm": [
+            -2.208020678716,
+            -2.461228668154898,
+            0.5892167462536766
+          ],
+          "maximum_mm": [
+            2.206192892971,
+            -0.24677447445399972,
+            1.8024586887291183
+          ],
+          "extent_mm": [
+            4.414213571687,
+            2.214454193700898,
+            1.2132419424754417
+          ]
+        },
+        "parent_solid_index": 0
+      }
+    ],
+    "sensor_cavity_geometry_candidates": [
+      {
+        "radius_mm": 2.3,
+        "axis_point_mm": [
+          -12.000913888216,
+          -15.6712730201143,
+          4.53271483790001
+        ],
+        "axis_direction": [
+          0.0,
+          -0.006159426299715492,
+          0.9999810305539093
+        ],
+        "axis_tilt_from_z_degrees": 0.3529113627089018,
+        "area_mm2": 73.70652987401124,
+        "bbox": {
+          "minimum_mm": [
+            -14.300913888216,
+            -17.98893875672629,
+            2.2934254615565344
+          ],
+          "maximum_mm": [
+            -9.700913888216,
+            -13.35761091059711,
+            7.421991884103525
+          ],
+          "extent_mm": [
+            4.6,
+            4.631327846129182,
+            5.1285664225469905
+          ]
+        },
+        "parent_solid_index": 0
+      },
+      {
+        "radius_mm": 2.3,
+        "axis_point_mm": [
+          12.799086111784,
+          -15.6712730201143,
+          4.53271483790001
+        ],
+        "axis_direction": [
+          0.0,
+          -0.006159426299715492,
+          0.9999810305539093
+        ],
+        "axis_tilt_from_z_degrees": 0.3529113627089018,
+        "area_mm2": 73.70652987401124,
+        "bbox": {
+          "minimum_mm": [
+            10.499086111783999,
+            -17.98893875672629,
+            2.2934254615565344
+          ],
+          "maximum_mm": [
+            15.099086111784,
+            -13.35761091059711,
+            7.421991884103525
+          ],
+          "extent_mm": [
+            4.600000000000001,
+            4.631327846129182,
+            5.1285664225469905
+          ]
+        },
+        "parent_solid_index": 0
+      },
+      {
+        "radius_mm": 2.3,
+        "axis_point_mm": [
+          -0.000913888216009437,
+          14.1281616903922,
+          4.71626574163153
+        ],
+        "axis_direction": [
+          0.0,
+          -0.006159426299715492,
+          0.9999810305539093
+        ],
+        "axis_tilt_from_z_degrees": 0.3529113627089018,
+        "area_mm2": 73.7065298740114,
+        "bbox": {
+          "minimum_mm": [
+            -2.30091388821601,
+            11.81049595378021,
+            2.4769763652880545
+          ],
+          "maximum_mm": [
+            2.2990861117839905,
+            16.441823799909393,
+            7.605542787835055
+          ],
+          "extent_mm": [
+            4.6000000000000005,
+            4.631327846129183,
+            5.128566422547
+          ]
+        },
+        "parent_solid_index": 0
+      },
+      {
+        "radius_mm": 2.3,
+        "axis_point_mm": [
+          -0.000913888216009358,
+          31.5278316220302,
+          4.82343975924658
+        ],
+        "axis_direction": [
+          0.0,
+          -0.006159426299715492,
+          0.9999810305539093
+        ],
+        "axis_tilt_from_z_degrees": 0.3529113627089018,
+        "area_mm2": 73.70652987401124,
+        "bbox": {
+          "minimum_mm": [
+            -2.30091388821601,
+            29.210165885418206,
+            2.5841503829031045
+          ],
+          "maximum_mm": [
+            2.2990861117839905,
+            33.84149373154739,
+            7.712716805450095
+          ],
+          "extent_mm": [
+            4.6000000000000005,
+            4.631327846129182,
+            5.1285664225469905
+          ]
+        },
+        "parent_solid_index": 0
+      },
+      {
+        "radius_mm": 2.207106781187,
+        "axis_point_mm": [
+          -0.0009138882160112,
+          -0.233223736595,
+          -1.597147009411
+        ],
+        "axis_direction": [
+          0.0,
+          0.006159426299715442,
+          -0.9999810305539093
+        ],
+        "axis_tilt_from_z_degrees": 0.3529113627089018,
+        "area_mm2": 8.318309678872044,
+        "bbox": {
+          "minimum_mm": [
+            -2.208020678716,
+            -2.461228668154898,
+            0.5892167462536766
+          ],
+          "maximum_mm": [
+            2.206192892971,
+            -0.24677447445399972,
+            1.8024586887291183
+          ],
+          "extent_mm": [
+            4.414213571687,
+            2.214454193700898,
+            1.2132419424754417
+          ]
+        },
+        "parent_solid_index": 0
+      }
+    ]
+  },
+  "pose_evidence": {
+    "identity_pose": {
+      "rotation_z_degrees": 0.0,
+      "translation_xyz_mm": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "nearest_axis_diagnostics": [
+        {
+          "source_index": 0,
+          "nearest_bottom_bore_index": 0,
+          "nearest_axis_error_mm": 20.097350016076003
+        },
+        {
+          "source_index": 1,
+          "nearest_bottom_bore_index": 0,
+          "nearest_axis_error_mm": 12.068893056159697
+        },
+        {
+          "source_index": 2,
+          "nearest_bottom_bore_index": 2,
+          "nearest_axis_error_mm": 12.862903919968023
+        },
+        {
+          "source_index": 3,
+          "nearest_bottom_bore_index": 2,
+          "nearest_axis_error_mm": 12.068952983164811
+        }
+      ]
+    },
+    "best_inferred_in_plane_rigid_pose": {
+      "rotation_z_degrees": -179.9999913779598,
+      "translation_xyz_mm": [
+        -0.000913308856489714,
+        -0.27952329343810467,
+        0.0
+      ],
+      "all_four_refit_after_holdout": {
+        "purpose": "Numerical pose used only for the raw-coordinate boolean after leave-one-out validation. This four-point refit is not independent evidence.",
+        "matched_point_residuals_mm": [
+          {
+            "source_index": 0,
+            "target_index": 3,
+            "axis_error_mm": 0.0005301826049417586
+          },
+          {
+            "source_index": 1,
+            "target_index": 2,
+            "axis_error_mm": 0.00020010385750923122
+          },
+          {
+            "source_index": 2,
+            "target_index": 1,
+            "axis_error_mm": 0.0003632773011684811
+          },
+          {
+            "source_index": 3,
+            "target_index": 0,
+            "axis_error_mm": 0.000367009161882629
+          }
+        ],
+        "rms_mm": 0.0003833409940323852,
+        "maximum_mm": 0.0005301826049417586
+      },
+      "best_correspondence": {
+        "target_index_for_source_index": [
+          3,
+          2,
+          1,
+          0
+        ],
+        "holdout_trials": [
+          {
+            "held_out_source_index": 0,
+            "held_out_target_index": 3,
+            "rotation_z_degrees": -179.99999039952974,
+            "translation_xy_mm": [
+              -0.0009148042096597808,
+              -0.2793465760181606
+            ],
+            "training_rms_mm": 0.000266464224635117,
+            "holdout_error_mm": 0.0007069109212219421
+          },
+          {
+            "held_out_source_index": 1,
+            "held_out_target_index": 2,
+            "rotation_z_degrees": -179.99999236955134,
+            "translation_xy_mm": [
+              -0.0009138438238491808,
+              -0.2794565896365178
+            ],
+            "training_rms_mm": 0.00042206318462584085,
+            "holdout_error_mm": 0.000266807937943715
+          },
+          {
+            "held_out_source_index": 2,
+            "held_out_target_index": 1,
+            "rotation_z_degrees": 179.99972905793067,
+            "translation_xy_mm": [
+              -0.0009624375943011465,
+              -0.2796638991639444
+            ],
+            "training_rms_mm": 0.00035703674997939144,
+            "holdout_error_mm": 0.0005791867286565559
+          },
+          {
+            "held_out_source_index": 3,
+            "held_out_target_index": 0,
+            "rotation_z_degrees": -179.99971405623984,
+            "translation_xy_mm": [
+              -0.0008626507192790456,
+              -0.2796662773091647
+            ],
+            "training_rms_mm": 0.00035541153231819633,
+            "holdout_error_mm": 0.000582326543621831
+          }
+        ],
+        "maximum_holdout_error_mm": 0.0007069109212219421,
+        "rms_holdout_error_mm": 0.0005580033593875272
+      },
+      "next_best_correspondence": {
+        "target_index_for_source_index": [
+          2,
+          3,
+          1,
+          0
+        ],
+        "holdout_trials": [
+          {
+            "held_out_source_index": 0,
+            "held_out_target_index": 2,
+            "rotation_z_degrees": 179.78653000215886,
+            "translation_xy_mm": [
+              0.019455372424131784,
+              5.5214990360366345
+            ],
+            "training_rms_mm": 8.201665310608968,
+            "holdout_error_mm": 23.201417184345186
+          },
+          {
+            "held_out_source_index": 1,
+            "held_out_target_index": 3,
+            "rotation_z_degrees": -179.78651208161023,
+            "translation_xy_mm": [
+              0.0003299824144097907,
+              -6.080337833000092
+            ],
+            "training_rms_mm": 8.202353836883354,
+            "holdout_error_mm": 23.200443535763544
+          },
+          {
+            "held_out_source_index": 2,
+            "held_out_target_index": 1,
+            "rotation_z_degrees": 179.99964111685722,
+            "translation_xy_mm": [
+              -0.0009781955371801487,
+              -0.2796700385224522
+            ],
+            "training_rms_mm": 14.206905762040053,
+            "holdout_error_mm": 0.0006135495795869926
+          },
+          {
+            "held_out_source_index": 3,
+            "held_out_target_index": 0,
+            "rotation_z_degrees": -179.99962254363618,
+            "translation_xy_mm": [
+              -0.0008462527984196555,
+              -0.27967309191819467
+            ],
+            "training_rms_mm": 14.20690576198773,
+            "holdout_error_mm": 0.000617640407780529
+          }
+        ],
+        "maximum_holdout_error_mm": 23.201417184345186,
+        "rms_holdout_error_mm": 16.405535196817745
+      }
+    },
+    "raw_coordinate_intersections": [
+      {
+        "pose": "identity_raw_coordinate",
+        "rotation_z_degrees": 0.0,
+        "translation_xyz_mm": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "overlap_volume_mm3": 12.46450529786625,
+        "overlap_solid_count": 1,
+        "overlap_bbox": {
+          "minimum_mm": [
+            -2.30091388821601,
+            11.811587482890214,
+            6.6
+          ],
+          "maximum_mm": [
+            2.2990861117839905,
+            16.416602378511797,
+            7.400000000000002
+          ],
+          "extent_mm": [
+            4.6000000000000005,
+            4.605014895621583,
+            0.8000000000000025
+          ]
+        },
+        "overlap_by_pcb_solid": [
+          {
+            "pcb_solid_index": 0,
+            "volume_mm3": 12.46450529786625,
+            "solid_count": 1,
+            "bbox": {
+              "minimum_mm": [
+                -2.30091388821601,
+                11.811587482890214,
+                6.6
+              ],
+              "maximum_mm": [
+                2.2990861117839905,
+                16.416602378511797,
+                7.400000000000002
+              ],
+              "extent_mm": [
+                4.6000000000000005,
+                4.605014895621583,
+                0.8000000000000025
+              ]
+            }
+          }
+        ],
+        "interpretation": "Exact BRep common volume in imported source coordinates only. It is not a physical clearance conclusion because no accepted Z seating datum, fasteners, spacers, or component function has been established."
+      },
+      {
+        "pose": "inferred_in_plane_raw_coordinate",
+        "rotation_z_degrees": -179.9999913779598,
+        "translation_xyz_mm": [
+          -0.000913308856489714,
+          -0.27952329343810467,
+          0.0
+        ],
+        "overlap_volume_mm3": 29.672099350000607,
+        "overlap_solid_count": 4,
+        "overlap_bbox": {
+          "minimum_mm": [
+            -14.000911163573427,
+            -17.98893875672629,
+            6.599999990849981
+          ],
+          "maximum_mm": [
+            13.799089321684116,
+            33.32047692134699,
+            7.400000013041098
+          ],
+          "extent_mm": [
+            27.80000048525754,
+            51.30941567807328,
+            0.8000000221911172
+          ]
+        },
+        "overlap_by_pcb_solid": [
+          {
+            "pcb_solid_index": 0,
+            "volume_mm3": 29.672099350000607,
+            "solid_count": 4,
+            "bbox": {
+              "minimum_mm": [
+                -14.000911163573427,
+                -17.98893875672629,
+                6.599999990849981
+              ],
+              "maximum_mm": [
+                13.799089321684116,
+                33.32047692134699,
+                7.400000013041098
+              ],
+              "extent_mm": [
+                27.80000048525754,
+                51.30941567807328,
+                0.8000000221911172
+              ]
+            }
+          }
+        ],
+        "interpretation": "Exact BRep common volume in imported source coordinates only. It is not a physical clearance conclusion because no accepted Z seating datum, fasteners, spacers, or component function has been established."
+      }
+    ]
+  },
+  "topology_and_uncertainty": {
+    "pcb_topology": "One imported Compound contains nine solids: one thin plate selected as the PCB plus eight unlabeled component solids. Geometry alone does not establish which components are primary switches, a wheel encoder, an axle, or their travel/actuation envelopes.",
+    "bottom_topology": "One valid solid. Larger concentric cylindrical faces coexist with the r=0.575 axis faces; their mechanical role cannot be classified solely as a functional mounting interface from BRep topology.",
+    "sensor_note": "The sensor STEP is a valid solid and its BRep bbox is reported. Its lowest Z bbox is not an optical datum and does not certify lens clearance, sensor focus height, or functional placement.",
+    "registered_pack_datum_scope": "A registered pack describes the imported PCB assembly keep-out from z=3.9 upward, consistent with the compound minimum z=3.9. The selected board plate is separately measured at z=6.6..7.4 mm. The compound minimum must not be substituted for a board support datum. This is a distinction of geometry roles, not a numerical contradiction; the pack was not changed.",
+    "unknown": [
+      "Accepted physical placement, Z seating datum, spacer stack, screw specification, and radial/axial clearance requirements.",
+      "Whether the inferred four-axis correspondence represents the intended hardware interface.",
+      "An independent physical placement datum not used to select the correspondence, such as a support seating face, connector constraint, or measured optical/lens datum.",
+      "Source revision/lineage beyond the headers and SHA-256 identities reported here.",
+      "Switch/wheel/axle functional identity, travel, contact force, and keep-out volumes.",
+      "Optical datum, lens stack, focus height, and sensor functional clearance."
+    ]
+  }
+}

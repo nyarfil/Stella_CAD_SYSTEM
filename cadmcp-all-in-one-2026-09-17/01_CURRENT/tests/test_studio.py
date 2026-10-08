@@ -62,10 +62,12 @@ def matrix(measured):
                                option('SplitAssembly','Rebuild as separable guide halves; separation and fastening remain design work.')],
             'incompatibilities':[]}
 
-def review(subject,role,conclusion='no_blocker_found'):
+def review(subject,role,conclusion='no_blocker_found',attachments=()):
     return {'subject_digest':subject,'role':role,'reviewer_label':'SCRIPTED TEST RESPONSE',
         'execution_description':'Controlled fixture, not an independent LLM or human review.',
-        'findings':[],'remaining_uncertainties':['Physical performance remains unverified.'],'conclusion':conclusion}
+        'findings':[],'remaining_uncertainties':['Physical performance remains unverified.'],'conclusion':conclusion,
+        'evidence_inspections':[{'attachment_path':a['path'],'attachment_sha256':a['sha256'],'kind':a['kind'],'status':'viewed',
+                                 'observation':'SCRIPTED TEST evidence receipt, not actual model visual inspection.'} for a in attachments]}
 
 @pytest.mark.parametrize('uid',['0032/00329619','0032/00325917','0032/00321991','0032/00325799'])
 def test_public_source_git_identity_and_valid_brep(actual,uid):
@@ -190,6 +192,14 @@ def test_actual_recipe_export_and_gap(local):
     assert len(motion['samples'])==41 and motion['continuous_swept_motion']=='distance_bound_satisfied_under_stated_assumptions'
     assert motion['continuous_distance_lower_bound_mm']>=.14
 
+def test_delivery_keeps_geometry_review_and_physical_states_separate(local):
+    t,m=local;built=t.brain_studio_build('public-test',0,demo_recipe(m),180)
+    delivery=t.brain_studio_delivery('public-test',0,built['subject_digest'])
+    manifest=json.loads(Path(delivery['delivery_json']).read_text('utf-8'))
+    assert manifest['states']=={'geometry':'pass','review':'not_accepted','physical_performance':'unknown','overall':'unknown'}
+    assert manifest['bom']['status']=='not_created' and manifest['physical_performance_certified'] is False
+    assert set(manifest['parts'])=={'guide','shaft'} and Path(manifest['assembly_step']['path']).is_file()
+
 def test_actual_motion_collision_detected(local):
     t,m=local;r=demo_recipe(m);r['motion_checks'][0]['translation_end_mm']=[1.,0.,0.]
     built=t.brain_studio_build('public-test',0,r,180)
@@ -199,7 +209,12 @@ def test_actual_motion_collision_detected(local):
 
 def test_review_revision_hash_and_no_majority_override(local):
     t,m=local;built=t.brain_studio_build('public-test',0,demo_recipe(m),180);subject=built['subject_digest']
-    for role in ROLES:t.brain_studio_submit_review('public-test',0,subject,review(subject,role))
+    attachments=t.brain_studio_review_packet('public-test',0,subject,'verification')['subject']['payload']['evidence_attachments']
+    first=[t.brain_studio_submit_review('public-test',0,subject,review(subject,role,attachments=attachments)) for role in ROLES]
+    assert not t.brain_studio_review_status('public-test',0,subject)['discussion_ready_for_owner']
+    for role in ROLES:
+        second=review(subject,role,attachments=attachments);second['discussion_round']=2;second['challenged_review_ids']=[x['review_id'] for x in first]
+        t.brain_studio_submit_review('public-test',0,subject,second)
     assert t.brain_studio_review_status('public-test',0,subject)['discussion_ready_for_owner']
     new=review(subject,'assembly','revise');new['findings']=[{'id':'Blocked','severity':'blocking','claim':'The actual retention method is not yet validated.','evidence':['unverified_requirements in the build result'],'proposed_change':'Design and inspect the axial retention method.','required_test':'Measure both assembly and removal paths with the chosen retainers.'}]
     receipt=t.brain_studio_submit_review('public-test',0,subject,new)
@@ -275,10 +290,10 @@ class ScriptedOrchestrationFixture:
     def generate(self,task,schema,context,*,role):
         self.calls.append(role);self.contexts.append(context)
         if 'subject_digest' in schema.get('properties',{}):
-            value=review(context['subject_digest'],role);value['discussion_round']=context.get('discussion_round',1);return value
+            value=review(context['subject_digest'],role,attachments=context['subject']['payload'].get('evidence_attachments',[]));value['discussion_round']=context.get('discussion_round',1);value['challenged_review_ids']=context.get('required_challenged_review_ids',[]);return value
         if role=='requirements':return brief()
         if role=='mechanism':
-            data=matrix(self.measured);data['brief']=context['brief']
+            data=matrix(self.measured);data.pop('brief')
             rod=self.measured['0032/00321991']
             for option in data['options']:
                 option['references'].append({'uid':rod['uid'],'evidence_digest':rod['evidence_digest'],
@@ -295,18 +310,20 @@ class ScriptedOrchestrationFixture:
 
 def test_full_orchestration_with_real_cad_and_scripted_provider(local,tmp_path):
     t,m=local;provider=ScriptedOrchestrationFixture(m)
-    run=Autopilot(t,provider,tmp_path/'calls',search_mode='lexical',max_repairs=0,debate_rounds=1)
+    run=Autopilot(t,provider,tmp_path/'calls',search_mode='lexical',max_repairs=0,debate_rounds=2)
     result=run.run('public-test')
     assert result['phase']=='prototype_ready_for_owner_review'
     assert result['physical_performance_certified'] is False and result['overall_verdict']=='unknown'
-    assert len(provider.calls)==9 and set(provider.calls[-5:])==set(ROLES)
+    assert len(provider.calls)==14 and set(provider.calls[-5:])==set(ROLES)
     assert result['model_provider']=='ScriptedOrchestrationFixture'
 
 def test_orchestrator_repairs_geometry_not_checks(local,tmp_path):
     t,m=local;provider=ScriptedOrchestrationFixture(m,break_first=True)
-    result=Autopilot(t,provider,tmp_path/'calls',search_mode='lexical',max_repairs=1,debate_rounds=1).run('public-test')
+    result=Autopilot(t,provider,tmp_path/'calls',search_mode='lexical',max_repairs=1,debate_rounds=2).run('public-test')
     assert result['phase']=='prototype_ready_for_owner_review' and result['attempt']==1
-    assert 'repair' in provider.calls and len(provider.calls)==15
+    # Four orchestration calls, 5 roles x 2 rounds on both the failed and
+    # repaired subjects, plus one repair call.
+    assert 'repair' in provider.calls and len(provider.calls)==25
 
 def test_orchestrator_refuses_weakened_repair_condition(local,tmp_path):
     t,m=local;provider=ScriptedOrchestrationFixture(m,break_first=True,weaken_repair=True)

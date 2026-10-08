@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 from pydantic import ValidationError
 from .errors import BrainError
-from .models import Artifact, Brief, Concepts, Plan, Project, Source, SCHEMAS
+from .models import Artifact, Brief, Concepts, Plan, Project, ProjectProtection, Source, SCHEMAS
 from .store import Store
 from .patterns import Catalog
 from .gates import require, validate_brief, concept_integrity, evaluate_concept, validate_plan, pending, topological_order
@@ -33,6 +33,31 @@ class Brain:
     def get(self,project_id: str):
         p=self.store.get(project_id)
         return {"summary":self.summary(p),"project":p.model_dump(mode="json")}
+
+    def get_project_protection(self,project_id: str):
+        p=self.store.get(project_id)
+        from .studio.protection import effective_policy
+        persisted,protected,persisted_editable,editable=effective_policy(p,self.store.root)
+        return {'project_id':p.id,'revision':p.revision,'protection':p.protection.model_dump(mode='json'),
+                'effective_protected_ids':sorted(protected),'effective_editable_reference_ids':sorted(editable),
+                'persistent_asset_count':len(persisted),'persistent_editable_reference_count':len(persisted_editable)}
+
+    def set_project_protection(self,project_id: str,expected_revision: int,protection: dict[str,Any],reason: str):
+        if not isinstance(reason,str) or len(reason.strip())<8:
+            raise BrainError('STUDIO_OWNER_POLICY','Protection changes require a concrete owner reason (at least 8 characters).')
+        policy=ProjectProtection.model_validate(protection)
+        before=self.store.get(project_id)
+        if before.revision!=expected_revision:
+            raise BrainError('REVISION_CONFLICT','Reload before changing a newer design.',{'expected':expected_revision,'actual':before.revision})
+        from .studio.protection import effective_policy, validate_policy
+        validate_policy(before,self.store.root,policy)
+        effective_policy(before,self.store.root,policy)
+        detail={'reason':reason,'before':before.protection.model_dump(mode='json'),'after':policy.model_dump(mode='json')}
+        with self.store.edit(project_id,expected_revision,'project_protection_changed',detail) as state:
+            validate_policy(state,self.store.root,policy)
+            state.protection=policy
+            state.verification=None
+        return self.get_project_protection(project_id)
 
     def add_source(self,project_id: str,expected_revision: int,text: str):
         require(bool(text.strip()),"EMPTY_REQUEST","Source text cannot be empty.")
@@ -210,6 +235,8 @@ class Brain:
         require(purpose in ("reference","output"),"BAD_PURPOSE","purpose is reference or output")
         p=self.store.get(project_id)
         require(p.revision==expected_revision,"REVISION_CONFLICT","Reload before importing.",actual=p.revision)
+        if artifact_id in {item.artifact_id for item in p.protection.assets}:
+            raise BrainError('STUDIO_PROTECTED','A persistent owner-protected CAD asset cannot be replaced or re-imported.',{'artifact_id':artifact_id})
         src=safe_path(self.store.root,relative_path)
         require(src.is_file() and src.suffix.lower() in (".step",".stp"),"BAD_ARTIFACT","Import a regular STEP file, not a mesh or script.")
         size=src.stat().st_size
@@ -234,10 +261,14 @@ class Brain:
         if previous is not None:
             require((previous.contract_digest=="reference")== (purpose=="reference"),"ARTIFACT_ROLE_CHANGE","Do not reuse a reference artifact ID for a generated output, or the reverse.")
         measured=geometry.run_measurements({artifact_id:str(target)}) if purpose=="reference" else None
-        with self.store.edit(project_id,expected_revision,"artifact_imported") as state:
+        revoked=[item.model_dump(mode='json') for item in p.protection.editable_references if item.artifact_id==artifact_id]
+        detail={'revoked_editable_reference':revoked,'reason':'Imported reference bytes changed; hash-bound edit permission is revoked.'} if revoked else None
+        with self.store.edit(project_id,expected_revision,"artifact_imported",detail) as state:
             if purpose=="output":
                 require(self.contract_digest(state)==contract_digest,"STALE_CONTRACT","Design changed during import.")
             state.artifacts[artifact_id]=Artifact(id=artifact_id,filename=rel,sha256=h,bytes=len(raw),contract_digest=current if purpose=="output" else "reference")
+            if revoked:
+                state.protection.editable_references=[item for item in state.protection.editable_references if item.artifact_id!=artifact_id]
             state.verification=None
             if purpose=="reference":
                 for k in list(state.measurements):

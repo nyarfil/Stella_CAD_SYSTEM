@@ -1,0 +1,82 @@
+# BEGIN cadMCP managed configuration
+[mcp_servers.cadmcp-design-brain]
+enabled = true
+
+"command" = "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-all-in-one-2026-09-17\\01_CURRENT\\.venv\\Scripts\\python.exe"
+"args" = ["-m", "cadmcp_brain", "--workspace", "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace", "serve"]
+"cwd" = "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-all-in-one-2026-09-17\\01_CURRENT"
+"startup_timeout_sec" = 60
+"tool_timeout_sec" = 600
+
+[mcp_servers.cadmcp-design-brain.env]
+"CADMCP_REQ2CAD_ROOT" = "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace\\knowledge\\req2cad"
+"CADMCP_REQUIRE_CAD_REFERENCES" = "1"
+"PYTHONUTF8" = "1"
+"PYTHONIOENCODING" = "utf-8"
+"PYTHONPATH" = "E:\\aiwork\\Stella_CAD_SYSTEM\\integration\\mouse-library"
+# END cadMCP managed configuration
+
+# Owner-enabled preview. Product CAD instructions do not govern MCP development.
+[[skills.config]]
+path = "E:/aiwork/Stella_CAD_SYSTEM/.agents/skills/cadmcp-design-brain/SKILL.md"
+enabled = true
+
+# Stella's project-local ClassCAD integration. Package versions are lockfile-pinned.
+[mcp_servers.classcad]
+command = 'C:\Program Files\nodejs\node.exe'
+args = ['E:\aiwork\Stella_CAD_SYSTEM\integration\classcad\node_modules\@classcad\mcp\dist\server.js']
+startup_timeout_sec = 60
+tool_timeout_sec = 180
+
+[mcp_servers.classcad.env]
+CLASSCAD_ENGINE = 'wasm'
+CLASSCAD_VIEWER_OPEN = '0'
+
+# Pinned community tools; writes are limited to the dedicated sandbox document.
+[mcp_servers.stella-fusion-community]
+command = 'E:\aiwork\Stella_CAD_SYSTEM\integration\fusion-community\.venv\Scripts\python.exe'
+args = ['E:\aiwork\Stella_CAD_SYSTEM\integration\fusion-community\stella_fusion_mcp.py', '--mode', 'socket', '--host', '127.0.0.1', '--profile', 'modeling', '--allow-document', 'STELLA_FUSION_COMMUNITY_SANDBOX']
+cwd = 'E:\aiwork\Stella_CAD_SYSTEM\integration\fusion-community'
+startup_timeout_sec = 60
+tool_timeout_sec = 180
+
+[mcp_servers.stella-fusion-community.env]
+PYTHONUTF8 = '1'
+PYTHONIOENCODING = 'utf-8'
+
+# Portable mouse knowledge library; separate from CAD execution and hardware packs.
+[mcp_servers.mouse-library]
+command = 'E:\aiwork\Stella_CAD_SYSTEM\cadmcp-all-in-one-2026-09-17\01_CURRENT\.venv\Scripts\python.exe'
+args = ['-m', 'mouse_library']
+cwd = 'E:\aiwork\Stella_CAD_SYSTEM\integration\mouse-library'
+startup_timeout_sec = 30
+tool_timeout_sec = 60
+
+[mcp_servers.mouse-library.env]
+PYTHONUTF8 = '1'
+PYTHONIOENCODING = 'utf-8'
+
+# Formal upstream FreeCAD backend; invoke only after user selection.
+[mcp_servers.stella_freecad_mouse_b]
+command = "E:\\aiwork\\FreeCAD_OP1_LHD\\runtime\\mcp-venv\\Scripts\\python.exe"
+args = ["E:\\aiwork\\FreeCAD_OP1_LHD\\tools\\launch_mcp.py"]
+cwd = "E:\\aiwork\\FreeCAD_OP1_LHD"
+enabled = false
+startup_timeout_sec = 60
+tool_timeout_sec = 1300
+
+
+[mcp_servers.cgal-mcp]
+command = "E:\\aiwork\\cgal-mcp\\.venv\\Scripts\\python.exe"
+args = ["E:\\aiwork\\Stella_CAD_SYSTEM\\integration\\cgal\\stella_cgal_mcp.py"]
+cwd = "E:\\aiwork\\cgal-mcp"
+enabled = true
+startup_timeout_sec = 30
+tool_timeout_sec = 300
+
+[mcp_servers.cgal-mcp.env]
+CGAL_MCP_WORKER = "E:\\aiwork\\cgal-mcp\\build\\Release\\cgal-worker.exe"
+CGAL_MCP_DISTANCE = "E:\\aiwork\\cgal-mcp\\build\\Release\\cgal-distance.exe"
+CGAL_MCP_DATA = "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace\\cgal-mcp"
+PYTHONUTF8 = "1"
+PYTHONIOENCODING = "utf-8"

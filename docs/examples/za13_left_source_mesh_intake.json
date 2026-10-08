@@ -1,0 +1,179 @@
+{
+  "source_root": "V:\\mouse\\ZA13",
+  "units": "unspecified STL coordinate units; no scale established",
+  "files": {
+    "side.stl": {
+      "sha256": "dcee1a3eefdb3b546e6bba306ae431eb31e5c91e0db252254d5d68d06b6764f7",
+      "triangles": 11994,
+      "minimum": [
+        23.75,
+        -18.227825164794922,
+        6.0
+      ],
+      "maximum": [
+        29.464414596557617,
+        20.704814910888672,
+        27.354259490966797
+      ],
+      "extent": [
+        5.714414596557617,
+        38.932640075683594,
+        21.354259490966797
+      ],
+      "connected_component_count": 1,
+      "components": [
+        {
+          "triangles": 11994,
+          "minimum": [
+            23.75,
+            -18.227825164794922,
+            6.0
+          ],
+          "maximum": [
+            29.464414596557617,
+            20.704814910888672,
+            27.354259490966797
+          ],
+          "extent": [
+            5.714414596557617,
+            38.932640075683594,
+            21.354259490966797
+          ]
+        }
+      ],
+      "boundary_edges_after_weld": 0,
+      "nonmanifold_edges_after_weld": 0
+    },
+    "top.stl": {
+      "sha256": "73fc97a0562a6171fb348db3abef615cf9ccb6a3ac47377079fbf21d985e138b",
+      "triangles": 55882,
+      "minimum": [
+        -22.754806518554688,
+        -55.1647834777832,
+        5.0
+      ],
+      "maximum": [
+        22.757055282592773,
+        64.108154296875,
+        39.89527893066406
+      ],
+      "extent": [
+        45.51186180114746,
+        119.2729377746582,
+        34.89527893066406
+      ],
+      "connected_component_count": 1,
+      "components": [
+        {
+          "triangles": 55882,
+          "minimum": [
+            -22.754806518554688,
+            -55.1647834777832,
+            5.0
+          ],
+          "maximum": [
+            22.757055282592773,
+            64.108154296875,
+            39.89527893066406
+          ],
+          "extent": [
+            45.51186180114746,
+            119.2729377746582,
+            34.89527893066406
+          ]
+        }
+      ],
+      "boundary_edges_after_weld": 0,
+      "nonmanifold_edges_after_weld": 0
+    },
+    "bot.stl": {
+      "sha256": "7aefc4eabfb8433e6f657b90838d5a98f6265e0944668aace13f2ee08e761e7e",
+      "triangles": 52540,
+      "minimum": [
+        -30.93739891052246,
+        -53.87489700317383,
+        0.0
+      ],
+      "maximum": [
+        30.939390182495117,
+        65.24644470214844,
+        31.380733489990234
+      ],
+      "extent": [
+        61.87678909301758,
+        119.12134170532227,
+        31.380733489990234
+      ],
+      "connected_component_count": 1,
+      "components": [
+        {
+          "triangles": 52540,
+          "minimum": [
+            -30.93739891052246,
+            -53.87489700317383,
+            0.0
+          ],
+          "maximum": [
+            30.939390182495117,
+            65.24644470214844,
+            31.380733489990234
+          ],
+          "extent": [
+            61.87678909301758,
+            119.12134170532227,
+            31.380733489990234
+          ]
+        }
+      ],
+      "boundary_edges_after_weld": 0,
+      "nonmanifold_edges_after_weld": 0
+    },
+    "button.stl": {
+      "sha256": "4fe7eb7ac392abed6c8711069929b7046e88c9992792b8c02e7fae5cb4ea384a",
+      "triangles": 9780,
+      "minimum": [
+        -19.0,
+        -0.5,
+        2.220446049250313e-15
+      ],
+      "maximum": [
+        -13.5,
+        5.0,
+        3.5
+      ],
+      "extent": [
+        5.5,
+        5.5,
+        3.499999999999998
+      ],
+      "connected_component_count": 1,
+      "components": [
+        {
+          "triangles": 9780,
+          "minimum": [
+            -19.0,
+            -0.5,
+            2.220446049250313e-15
+          ],
+          "maximum": [
+            -13.5,
+            5.0,
+            3.5
+          ],
+          "extent": [
+            5.5,
+            5.5,
+            3.499999999999998
+          ]
+        }
+      ],
+      "boundary_edges_after_weld": 0,
+      "nonmanifold_edges_after_weld": 0
+    }
+  },
+  "limits": [
+    "Rounded vertex connectivity only, not self-intersection or BRep proof.",
+    "File names do not establish component function or handedness.",
+    "No source has been moved or mirrored."
+  ]
+}

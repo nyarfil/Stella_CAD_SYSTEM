@@ -1,0 +1,315 @@
+{
+  "status": "reference_pattern_mismatch_not_fit_verified",
+  "unit_assumption": "For comparison only: one STEP mm equals one STL coordinate unit; physical STL scale remains unverified.",
+  "bottom_file": "Updated Side Buttons and Bottom/bottom-solid.stl",
+  "bottom_sha256": "4644f8b1710aafb17add0c848c76124595503fafd73f088d9b00db99ee79453e",
+  "boundary_report_sha256": "8014ad4033744ded4335f1a44fd8a3aa4f59ff9f5ec5b5da730769820ede120c",
+  "script_sha256": "fc6b5e18439f88651aef5d4d1410b1a53fbe7e6f8558dd5ac74a28fdfc483492",
+  "method": "Enumerate all six pairs of four PCB full-circle rims; compare with each same-side pair of bottom radius-0.6 rims. Pair distance is rigid-motion invariant; best equal-weight residual per point is half the distance difference.",
+  "sides": [
+    {
+      "side": "left",
+      "source_sha256": "c9b40690e40803fec7afe4209c8cbb1644f39f96bb19bd8617d3d2934b1dac10",
+      "side_convention": "Comparison only: bottom X<0 called left, X>0 called right; physical handedness unverified.",
+      "best_pair_count": 2,
+      "residual_units": "comparison coordinate units under 1 STEP mm = 1 STL coordinate unit assumption",
+      "residual_scope": "Theoretical lower bound for free equal-weight two-point rigid alignment only; not an installed assembly residual.",
+      "source_report_sha256": "9d055f0230336cdf1277c3752d79bb314d4721534caf69807c078965c2817634",
+      "source_board_ref": "#o1.2.s1",
+      "target_rims": [
+        {
+          "axis": "Z",
+          "center": [
+            -17.6609455555542,
+            -39.40585403669637,
+            5.159756660461426
+          ],
+          "radius": 0.6000001326598625,
+          "max_radial_fit_error": 4.577092085233936e-06,
+          "boundary_vertices": 36,
+          "largest_angular_gap_radians": 0.17454480439009767,
+          "classification": "circular planar boundary; bore versus outer perimeter not classified"
+        },
+        {
+          "axis": "Z",
+          "center": [
+            -17.66094555555402,
+            -22.905854003192143,
+            5.159756660461426
+          ],
+          "radius": 0.6000002291310941,
+          "max_radial_fit_error": 4.673563722468188e-06,
+          "boundary_vertices": 36,
+          "largest_angular_gap_radians": 0.17454479880644724,
+          "classification": "circular planar boundary; bore versus outer perimeter not classified"
+        }
+      ],
+      "pair_candidates": [
+        {
+          "source_centers_mm": [
+            [
+              2.0,
+              -7.5,
+              0.6
+            ],
+            [
+              19.0,
+              -7.5,
+              0.6
+            ]
+          ],
+          "source_distance_mm": 17.0,
+          "target_distance_stl_units": 16.500000033504225,
+          "distance_mismatch_under_unit_scale": 0.49999996649577483,
+          "minimum_equal_weight_two_point_rms_under_unit_scale": 0.24999998324788741
+        },
+        {
+          "source_centers_mm": [
+            [
+              19.0,
+              -3.0,
+              0.6
+            ],
+            [
+              2.0,
+              -3.0,
+              0.6
+            ]
+          ],
+          "source_distance_mm": 17.0,
+          "target_distance_stl_units": 16.500000033504225,
+          "distance_mismatch_under_unit_scale": 0.49999996649577483,
+          "minimum_equal_weight_two_point_rms_under_unit_scale": 0.24999998324788741
+        },
+        {
+          "source_centers_mm": [
+            [
+              2.0,
+              -7.5,
+              0.6
+            ],
+            [
+              19.0,
+              -3.0,
+              0.6
+            ]
+          ],
+          "source_distance_mm": 17.585505395068974,
+          "target_distance_stl_units": 16.500000033504225,
+          "distance_mismatch_under_unit_scale": 1.0855053615647492,
+          "minimum_equal_weight_two_point_rms_under_unit_scale": 0.5427526807823746
+        },
+        {
+          "source_centers_mm": [
+            [
+              19.0,
+              -7.5,
+              0.6
+            ],
+            [
+              2.0,
+              -3.0,
+              0.6
+            ]
+          ],
+          "source_distance_mm": 17.585505395068974,
+          "target_distance_stl_units": 16.500000033504225,
+          "distance_mismatch_under_unit_scale": 1.0855053615647492,
+          "minimum_equal_weight_two_point_rms_under_unit_scale": 0.5427526807823746
+        },
+        {
+          "source_centers_mm": [
+            [
+              2.0,
+              -7.5,
+              0.6
+            ],
+            [
+              2.0,
+              -3.0,
+              0.6
+            ]
+          ],
+          "source_distance_mm": 4.5,
+          "target_distance_stl_units": 16.500000033504225,
+          "distance_mismatch_under_unit_scale": 12.000000033504225,
+          "minimum_equal_weight_two_point_rms_under_unit_scale": 6.000000016752113
+        },
+        {
+          "source_centers_mm": [
+            [
+              19.0,
+              -7.5,
+              0.6
+            ],
+            [
+              19.0,
+              -3.0,
+              0.6
+            ]
+          ],
+          "source_distance_mm": 4.5,
+          "target_distance_stl_units": 16.500000033504225,
+          "distance_mismatch_under_unit_scale": 12.000000033504225,
+          "minimum_equal_weight_two_point_rms_under_unit_scale": 6.000000016752113
+        }
+      ]
+    },
+    {
+      "side": "right",
+      "source_sha256": "ff4f496d8a89e19b472c7d60f8e6cd67b30c0cf2189398b533cbd6016f81211c",
+      "side_convention": "Comparison only: bottom X<0 called left, X>0 called right; physical handedness unverified.",
+      "best_pair_count": 2,
+      "residual_units": "comparison coordinate units under 1 STEP mm = 1 STL coordinate unit assumption",
+      "residual_scope": "Theoretical lower bound for free equal-weight two-point rigid alignment only; not an installed assembly residual.",
+      "source_report_sha256": "d308c4c38eb4d4c16b834116db7105daabea854df0dac83ecb09493c42d10d1a",
+      "source_board_ref": "#o1.2.s1",
+      "target_rims": [
+        {
+          "axis": "Z",
+          "center": [
+            17.6269841331655,
+            -39.34260808906755,
+            5.159756660461426
+          ],
+          "radius": 0.6000006383515493,
+          "max_radial_fit_error": 6.610978122711941e-06,
+          "boundary_vertices": 36,
+          "largest_angular_gap_radians": 0.1745439530826678,
+          "classification": "circular planar boundary; bore versus outer perimeter not classified"
+        },
+        {
+          "axis": "Z",
+          "center": [
+            17.62698413316868,
+            -22.842611814475074,
+            5.159756660461426
+          ],
+          "radius": 0.5999995691849468,
+          "max_radial_fit_error": 6.496729170413218e-06,
+          "boundary_vertices": 36,
+          "largest_angular_gap_radians": 0.1745451569600034,
+          "classification": "circular planar boundary; bore versus outer perimeter not classified"
+        }
+      ],
+      "pair_candidates": [
+        {
+          "source_centers_mm": [
+            [
+              17.0,
+              -6.5,
+              0.6
+            ],
+            [
+              5.55111512312578e-16,
+              -6.5,
+              0.6
+            ]
+          ],
+          "source_distance_mm": 17.0,
+          "target_distance_stl_units": 16.499996274592473,
+          "distance_mismatch_under_unit_scale": 0.5000037254075274,
+          "minimum_equal_weight_two_point_rms_under_unit_scale": 0.2500018627037637
+        },
+        {
+          "source_centers_mm": [
+            [
+              5.55111512312578e-16,
+              -3.0,
+              0.6
+            ],
+            [
+              17.0,
+              -3.0,
+              0.6
+            ]
+          ],
+          "source_distance_mm": 17.0,
+          "target_distance_stl_units": 16.499996274592473,
+          "distance_mismatch_under_unit_scale": 0.5000037254075274,
+          "minimum_equal_weight_two_point_rms_under_unit_scale": 0.2500018627037637
+        },
+        {
+          "source_centers_mm": [
+            [
+              17.0,
+              -6.5,
+              0.6
+            ],
+            [
+              5.55111512312578e-16,
+              -3.0,
+              0.6
+            ]
+          ],
+          "source_distance_mm": 17.356554957709783,
+          "target_distance_stl_units": 16.499996274592473,
+          "distance_mismatch_under_unit_scale": 0.85655868311731,
+          "minimum_equal_weight_two_point_rms_under_unit_scale": 0.428279341558655
+        },
+        {
+          "source_centers_mm": [
+            [
+              5.55111512312578e-16,
+              -6.5,
+              0.6
+            ],
+            [
+              17.0,
+              -3.0,
+              0.6
+            ]
+          ],
+          "source_distance_mm": 17.356554957709783,
+          "target_distance_stl_units": 16.499996274592473,
+          "distance_mismatch_under_unit_scale": 0.85655868311731,
+          "minimum_equal_weight_two_point_rms_under_unit_scale": 0.428279341558655
+        },
+        {
+          "source_centers_mm": [
+            [
+              17.0,
+              -6.5,
+              0.6
+            ],
+            [
+              17.0,
+              -3.0,
+              0.6
+            ]
+          ],
+          "source_distance_mm": 3.5,
+          "target_distance_stl_units": 16.499996274592473,
+          "distance_mismatch_under_unit_scale": 12.999996274592473,
+          "minimum_equal_weight_two_point_rms_under_unit_scale": 6.499998137296236
+        },
+        {
+          "source_centers_mm": [
+            [
+              5.55111512312578e-16,
+              -3.0,
+              0.6
+            ],
+            [
+              5.55111512312578e-16,
+              -6.5,
+              0.6
+            ]
+          ],
+          "source_distance_mm": 3.5,
+          "target_distance_stl_units": 16.499996274592473,
+          "distance_mismatch_under_unit_scale": 12.999996274592473,
+          "minimum_equal_weight_two_point_rms_under_unit_scale": 6.499998137296236
+        }
+      ]
+    }
+  ],
+  "not_verified": [
+    "Which two PCB holes are used by the ZS-F1 author.",
+    "Circular rims as functional bores and support lands.",
+    "Physical STL scale, screw dimensions and radial clearance.",
+    "PCB orientation, switch contact alignment, Z seating and all-body clearance.",
+    "Reference hardware revision and actual user hardware."
+  ],
+  "prohibited_inference": "Do not scale the PCB, deform holes or approve a ready hardware pack to erase mismatch."
+}

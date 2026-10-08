@@ -1,0 +1,1168 @@
+{
+  "schema_version": "1.0",
+  "library_version": "0.1.4",
+  "scope": "光学式コンピューターマウスの構造設計。特定CAD、LLM、OSに依存しない設計知識。初期収録実例はZS-F1/G305。実物適合や性能を認定するサービスではない。",
+  "sources": [
+    {
+      "id": "engineering",
+      "title": "StellaCADで整理した一般設計原理",
+      "kind": "engineering_reasoning",
+      "authority": "設計上の考え方。機種固有の測定値・メーカー仕様ではない。",
+      "license": "この原理解説は本プロジェクトの記述。第三者形状を含まない。"
+    },
+    {
+      "id": "zs_f1_guide",
+      "title": "ZoroSeerus ZS-F1組立ガイド",
+      "kind": "author_assembly_guide",
+      "url": "https://www.instructables.com/ZS-F1-Wireless-3D-Printed-Finalmouse-Ultralight-2-/",
+      "authority": "作者の組立説明。2021年ガイドと更新STLの完全な版対応は未確認。",
+      "license": "掲載画像CC BY-NC-ND 4.0。画像は収録しない。",
+      "observed_on": "2026-10-03",
+      "photographic_observations": {
+        "published_on": "2021-02-12",
+        "observed_on": "2026-10-03",
+        "step3_image2": "https://content.instructables.com/FCS/HZ7I/KL2AVT3L/FCSHZ7IKL2AVT3L.png",
+        "step3_image3": "https://content.instructables.com/F04/1KJ8/KL2AVT4E/F041KJ8KL2AVT4E.png",
+        "scope": "Photographed author hardware only; no switch operating specifications certified."
+      }
+    },
+    {
+      "id": "zs_f1_model",
+      "title": "ZS-F1公開モデルとユーザー提供STL",
+      "kind": "source_mesh",
+      "url": "https://www.printables.com/model/796395-zs-f1-3d-printed-finalmouse-ultralight-2-x-starlig",
+      "authority": "単位を持たないSTL。ファイル・形状の解析結果を実例として使用。原形状は収録しない。",
+      "license": "CC BY-NC-SA 4.0。将来形状を利用する際は別途条件を確認。",
+      "observed_on": "2026-10-03"
+    },
+    {
+      "id": "g305_reference",
+      "title": "g305-re G305_PCB.step",
+      "kind": "third_party_reference_cad",
+      "url": "https://github.com/you-wouldnt-reverse-engineer-a-rat/g305-re/tree/main/cad",
+      "sha256": "efd955a61c99290ab946f075e769cd0279802535fc72e52697031d0c41635028",
+      "authority": "第三者参考STEP。mm宣言あり。手元個体・メーカー正本ではない。",
+      "license": "形状再配布条件を未確認。STEPは収録しない。",
+      "observed_on": "2026-10-03"
+    },
+    {
+      "id": "g305_wheel_guide",
+      "title": "G305ホイール交換ガイド",
+      "kind": "repair_photographs",
+      "url": "https://www.ifixit.com/Guide/Logitech+G305+Scroll+Wheel+Replacement/148616",
+      "authority": "Step 5/7の写真と保持・分解説明を確認。実動作中の変位測定ではない。",
+      "license": "写真を収録しない。出典リンクのみ。",
+      "observed_on": "2026-10-03"
+    },
+    {
+      "id": "local_measurements",
+      "title": "ZS-F1/G305インターフェース解析",
+      "kind": "derived_geometry_measurements",
+      "authority": "ハッシュに結び付いた座標解析。選択した穴中心の一致は実物適合を証明しない。",
+      "artifact": "同梱data/measurements.json。元レポートのハッシュとパス正規化を明示。原形状・プレビューは同梱しない。",
+      "artifact_uri": "mouse-library://measurements",
+      "observed_on": "2026-10-03",
+      "input_sha256": {
+        "top-solid.stl": "da1c9f4f28617c1dc19278b5d23d13bdd95b81d66fa425a2fa447403d298144a",
+        "triggers-solid.stl": "ba0385cc2e404c23aaefd58a81d399f633a67e0282d7dc303ce9b519b83c7304",
+        "bottom-solid.stl": "4644f8b1710aafb17add0c848c76124595503fafd73f088d9b00db99ee79453e",
+        "G305_PCB.step": "efd955a61c99290ab946f075e769cd0279802535fc72e52697031d0c41635028"
+      },
+      "measurement_records": [
+        {
+          "id": "click_pose",
+          "method": "対応する左右固定円境界中心の剛体照合。下側固定面の直接支持を仮定。",
+          "units": "STL coordinate units; physical unit unspecified",
+          "rotation": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              -1
+            ],
+            [
+              0,
+              1,
+              0
+            ]
+          ],
+          "translation": [
+            0,
+            -50.353187967264546,
+            71.85085868835449
+          ],
+          "rule": "assembled = rotation @ saved + translation",
+          "maximum_center_residual": 1.7045837807927458e-07,
+          "status": "mounting_pose_candidate_not_fit_verified"
+        },
+        {
+          "id": "board_pose",
+          "method": "基板の閉円2個と開放半円2個を底ケースの4軸候補へ全24対応でXY剛体照合。拡縮なし。",
+          "unit_assumption": "One STEP mm treated as one STL coordinate unit for comparison only",
+          "rms_xy_residual": 0.1451175991,
+          "maximum_xy_residual": 0.2304594793,
+          "status": "reference_board_pose_candidate_not_fit_verified"
+        },
+        {
+          "id": "click_vertical_chords",
+          "method": "候補姿勢の6本のX線・14箇所のY位置で鉛直線と三角形を交差。閉じた自己交差のない境界を仮定し、偶数交点を区間にする。",
+          "units": "unspecified STL coordinate units",
+          "sample_count": 84,
+          "odd_crossing_count": 0,
+          "status": "reference_vertical_chords_not_flexure_verification",
+          "not_verified": [
+            "normal wall thickness",
+            "pivot or flexure line",
+            "force and travel",
+            "return and fatigue"
+          ]
+        },
+        {
+          "id": "zs_f1_g305_click_normal_chords",
+          "units": "unspecified STL coordinate units",
+          "status": "reference_normal_chords_not_flexure_verification",
+          "original_report_sha256": "c8fe9b7cb8b48d57f0eb4f9c1e6aa98285402d126ef713f6390e4a642d0527e4",
+          "method": "84 source-bound local normal-ray material intervals; not force, flexure, global minimum thickness or fit verification.",
+          "artifact_uri": "mouse-library://measurements"
+        },
+        {
+          "id": "zs_f1_g305_primary_click_mount_pattern",
+          "method": "Enumerate all six pairs; distance comparison and theoretical equal-weight two-point RMS lower bound only.",
+          "status": "reference_pattern_mismatch_not_fit_verified",
+          "unit_assumption": "One STEP mm equals one STL coordinate unit for comparison only.",
+          "original_report_sha256": "03e0f619606f959a6cf434cf985509c808eccf4ffd5e13fbcd591c747e87a5b0"
+        },
+        {
+          "id": "zs_f1_g305_updated_primary_click_mount_pattern",
+          "method": "Enumerate all six pairs; distance comparison and theoretical equal-weight two-point RMS lower bound only.",
+          "status": "reference_pattern_mismatch_not_fit_verified",
+          "unit_assumption": "One STEP mm equals one STL coordinate unit for comparison only.",
+          "original_report_sha256": "f964dd536636068d795114ce69590b29d0e8ba6b2f0fe59987b6d18b6734ac1b"
+        }
+      ]
+    },
+    {
+      "id": "g305_primary_click_reference",
+      "title": "133TOM G305 Main Buttons PCB (STEP)",
+      "kind": "third_party_reference_cad",
+      "url": "https://www.thingiverse.com/thing:5031791",
+      "authority": "作者のノギス測定による2021年の参考CAD。左右各スイッチと小基板。ユーザー個体、型番、組立姿勢、作動特性は未確認。",
+      "license": "作者ページのCC BY 4.0リンクとZIPの作者・Attribution記載を確認。原形状は図書館に同梱しない。",
+      "observed_on": "2026-10-03",
+      "input_sha256": {
+        "G305_SWL_PCB.step": "c9b40690e40803fec7afe4209c8cbb1644f39f96bb19bd8617d3d2934b1dac10",
+        "G305_SWR_PCB.step": "ff4f496d8a89e19b472c7d60f8e6cd67b30c0cf2189398b533cbd6016f81211c"
+      }
+    }
+  ],
+  "entries": [
+    {
+      "id": "mouse_architecture",
+      "title": "全体構成と一体型・分割型",
+      "subsystem": "architecture",
+      "tags": [
+        "全体",
+        "一体型",
+        "分割型",
+        "integrated",
+        "separate",
+        "beginner",
+        "parts"
+      ],
+      "summary": "手の接触、入力、検出・信号処理、支持、電源、組立に分けてマウスを理解する。クリック面と上ケースの一体化、上下ケースの分割は別の判断。",
+      "principles": [
+        "ボタン面は機械部品、電気スイッチは信号を作る部品。外観上つながっていても同じ機能ではない。",
+        "一体型クリックは上ケースと連続した部分を曲げる構成がある。分割型は別のクリック板を保持するが、軸ヒンジとは限らず樹脂アームの曲げもある。",
+        "ファイル数、メッシュ接続成分数、実際の機能部品数を区別する。"
+      ],
+      "interfaces": [
+        "上ケース↔底ケースの合わせ縁・固定",
+        "クリック板↔上ケースの保持と可動部",
+        "電気スイッチ↔支持部",
+        "センサー↔机面の光学高さ"
+      ],
+      "workflow": [
+        "選定ハードウェアと操作要求を列挙する。",
+        "部品一覧を作り、固定・可動・柔軟・保護対象を分類する。",
+        "ケース分割とボタン分割を別々に決定する。",
+        "指から支持構造へ流れる力と、信号経路を描く。"
+      ],
+      "verification": [
+        "各入力に対応するスイッチがある。",
+        "可動部の保持、復帰、停止を説明できる。",
+        "全搭載部品を入れる経路と分解経路がある。"
+      ],
+      "common_failures": [
+        "外形だけ作り、入力機構や基板固定を後回しにする。",
+        "分割ボタンを根拠なく回転ヒンジとして扱う。"
+      ],
+      "evidence": [
+        {
+          "source_id": "engineering",
+          "status": "principle",
+          "claim": "機能・構造の分解方法。"
+        },
+        {
+          "source_id": "zs_f1_model",
+          "status": "observed",
+          "claim": "ZS-F1は上下ケース、主クリック板、前後サイドボタンの別STLを持つ。"
+        }
+      ],
+      "unknowns": [
+        "機種・製法で保持と復帰の仕組みは異なる。"
+      ]
+    },
+    {
+      "id": "primary_click_mechanism",
+      "title": "左右クリックの力・変位・復帰",
+      "subsystem": "primary_clicks",
+      "tags": [
+        "主クリック",
+        "ボタン",
+        "click",
+        "trigger",
+        "flexure",
+        "microswitch",
+        "一体型",
+        "分割型"
+      ],
+      "summary": "指接触面、保持、可動部、スイッチ接触、スイッチ支持、復帰、停止を一組として設計する。",
+      "principles": [
+        "力の経路は指→クリック板→接触部→スイッチ→支持構造。支持部がたわむと有効押下量を失う。",
+        "指先とスイッチ接触部の変位は一般に異なる。根元の固定穴までの距離を、そのまま有効レバー長にしない。",
+        "接触前の遊びと、電気的ONまでのスイッチ移動を区別する。予圧方式では無操作時のOFFと復帰を別に確認する。",
+        "一体型では根元の曲げ剛性とケースの変形、分割型では保持・横ガタ・周囲との隙間を検討する。",
+        "斜めの板を鉛直方向に通る距離は、板面に垂直な肉厚と異なる。段差・リブ・接触ボスを通る長い材料区間を、薄板や曲げ部の肉厚として強度式へ入れない。",
+        "正の隙間がある場合、スイッチとの接触が切れるとスイッチの復帰力は失われる。クリック板や独立ばねの戻る力を全行程で確認する。",
+        "スイッチのOT最小保証を許容最大押込みに読み替えない。PT、MD、FP、OP、指面の動きを別に扱う。",
+        "左右クリック小基板の外形・穴配置は単純な鏡像と決め付けず、それぞれを測る。",
+        "取付穴対の距離は剛体移動・回転で変わらない。使用穴候補と縮尺を明示して先に比較し、保護基板を縮めて残差を消さない。",
+        "静止CADの接触部突出高さを押下ストロークへ転用しない。写真の型番は撮影個体の観察で、手元個体・別作者STEPの仕様ではない。"
+      ],
+      "interfaces": [
+        "指面と押し位置",
+        "固定面・保持穴",
+        "曲げ部または支点",
+        "調整接触部とスイッチ作動部",
+        "スイッチ取付面",
+        "上限・下限ストッパー"
+      ],
+      "workflow": [
+        "実スイッチの作動量、許容最大押下量、復帰力と取付を確認する。",
+        "無操作OFF、ON到達、最大押下、復帰の4状態を作る。",
+        "接触部の高さと固定位置を別パラメーターにする。",
+        "左右片側操作時の相互干渉、配線、ケースとの動作隙間を調べる。",
+        "曲げ舌、独立フレクシャ、ピン軸レバーを復帰・停止・反力・組立・製造で比較する。",
+        "接触子のプランジャ方向移動と休止時の符号付き隙間から押込みを計算する。支持部と停止部の荷重時のたわみも含める。"
+      ],
+      "verification": [
+        "無操作でONにならない。",
+        "必要な位置から押してONまで届く。",
+        "許容押下を超える前に停止する。",
+        "指を離すとOFFへ戻る。",
+        "片側操作で他方のスイッチを押さない。",
+        "停止前にONになる最小押込みと、停止時に許容値を超えない最大押込みを公差の両端で確認する。",
+        "OFF後も上側停止位置まで戻る力、反対側の誤作動、調整の緩み、プランジャへの横荷重を確認する。"
+      ],
+      "common_failures": [
+        "画像の重なりをスイッチ接触の証明にする。",
+        "スイッチのばねだけで必ず戻ると仮定する。",
+        "樹脂曲げ部の層方向と疲労を無視する。"
+      ],
+      "evidence": [
+        {
+          "source_id": "engineering",
+          "status": "principle",
+          "claim": "4状態と力の経路による設計。"
+        },
+        {
+          "source_id": "zs_f1_guide",
+          "status": "observed",
+          "claim": "Step 6は裏側の調整ねじと小片、ねじのみの調整を説明する。"
+        },
+        {
+          "source_id": "local_measurements",
+          "status": "measured_reference",
+          "claim": "84点の鉛直材料区間を測定。候補姿勢X=13,Y=0は1.30000、X=13,Y=-6は約8.73973STL座標単位。後者をクリック板の肉厚と分類しない。曲げ支点・荷重・復帰は未確定。"
+        },
+        {
+          "source_id": "g305_primary_click_reference",
+          "status": "measured_reference",
+          "claim": "取得した左右STEPは各2ソリッド。左基板外接25×11.5×0.6mm、右24×8.93051×0.6mm。MicroSwitchソリッド外接12.8×5.8×10.55mmは端子を含み押下量ではない。左右外形が異なる。"
+        },
+        {
+          "source_id": "zs_f1_guide",
+          "status": "observed",
+          "claim": "Step 3画像2/3を実表示。主クリック小基板の2本の固定ねじと下側の印刷支持部が見える。画像3の刻印はD2FC-F-7N(10M)と読めるが、撮影個体に限定し、ユーザー個体と133TOM STEPには対応付けない。"
+        },
+        {
+          "source_id": "local_measurements",
+          "status": "measured_reference",
+          "claim": "左右各4穴の全6対を比較。参考PCB最短差の穴対は17mm、底の同側候補間隔約16.5STL単位。1mm=1STL単位の比較仮定では自由二点剛体整列の理論RMS下限約0.25比較座標単位。各側2組同率、組立適合未確認。"
+        },
+        {
+          "source_id": "g305_primary_click_reference",
+          "status": "measured_reference",
+          "claim": "曲面接触候補の最高Z=7.95、主平坦上面Z=7.4mm。差0.55mmはCAD突出高さで、ストロークではない。"
+        },
+        {
+          "source_id": "zs_f1_model",
+          "status": "measured_reference",
+          "claim": "提供Solid/bottom-solid.stlと更新フォルダーbottom-solid.stlのSHA-256が一致し、底ファイル内容は同一。他ファイルまで同一とは認定しない。"
+        }
+      ],
+      "unknowns": [
+        "ZS-F1の実接触点、曲げ支点、押力、復帰と疲労は未測定。",
+        "133TOM参考スイッチの正確な型番・自由位置・ON/OFF・許容最大押込み、ZS-F1への組立姿勢。数値工具は独立区間の圧縮条件のみを評価し、実物の力・運動は未検証。",
+        "取付写真の穴を参考STEPのどの2穴へ対応付けるか、物理左右、基板版、STL物理単位、穴の遊びとねじ規格は未確定。"
+      ],
+      "concept_portfolio": [
+        {
+          "id": "integrated_flexure",
+          "principle": "上ケース一体の曲げ舌",
+          "return": "舌の弾性",
+          "risks": [
+            "握り荷重との連成",
+            "層方向",
+            "クリープ・疲労"
+          ]
+        },
+        {
+          "id": "separate_flexure_carrier",
+          "principle": "独立した対称梁キャリア",
+          "return": "梁の弾性",
+          "risks": [
+            "寄生ねじれ",
+            "梁のばらつき",
+            "疲労"
+          ]
+        },
+        {
+          "id": "pin_lever_spring",
+          "principle": "ピン軸レバーと独立復帰ばね",
+          "return": "板ばねまたはねじりばね",
+          "risks": [
+            "軸受ガタと摩擦",
+            "横滑り",
+            "ばね組立"
+          ],
+          "selection_status": "原理実証の候補。製品案として採用済みではない。"
+        }
+      ],
+      "state_contract": {
+        "status": "symbolic_requirements_not_verified",
+        "compression": "delta=max(0,u(q,F)-g)",
+        "coordinate_basis": "gは共通u=0での符号付き基準隙間。uは同じプランジャ軸・正方向・基準面に対する相対閉鎖。u_restは押下解放後の状態。gに含めた寸法誤差をuへ二重計上しない。",
+        "states": [
+          "idle/off",
+          "actuation/on",
+          "maximum_depression",
+          "release/off"
+        ],
+        "constraints": [
+          "delta_rest,max <= delta_off,min - m_release",
+          "max(0,u_pre_stop,min-g_max) >= delta_on,max + m_on",
+          "max(0,u_post_stop,max(F_design)-g_min) <= delta_allow,min - m_safe",
+          "Q_return,min(q) > Q_friction,max(q)+Q_adverse,max(q), for 0<q<=q_stop",
+          "delta_other,max < delta_on,other,min - m_crosstalk"
+        ],
+        "unresolved": [
+          "thresholds",
+          "permitted compression",
+          "forces",
+          "tolerances",
+          "lateral contact",
+          "physical return and fatigue"
+        ],
+        "force_balance": "F_finger*du_f/dq = F_switch*d(delta)/dq + Q_return + Q_loss (+ Q_stop); quasi-static only",
+        "motion_basis": "Motion Jacobians come from actual kinematics, not source hole-center distances. Q denotes generalized force. Include upper-stop reaction at q=0. Switch return force acts only during contact with delta>0.",
+        "stop_states": {
+          "u_pre_stop,min": "Minimum closure immediately before lower-stop contact.",
+          "u_post_stop,max(F_design)": "Maximum closure after stop contact at design maximum load, including PCB, frame and stop deflection."
+        }
+      },
+      "numerical_evaluator": {
+        "standalone_tool": "mouse_library_click_window",
+        "stella_tool": "brain_mouse_knowledge_click_window",
+        "schema_tool": "brain_mouse_knowledge_schema(name=click_window)",
+        "scope": "Independent interval compression checks only; does not calculate kinematics, return force, FEA, scan conversion or physical acceptance."
+      }
+    },
+    {
+      "id": "side_button_mechanism",
+      "title": "サイドボタンのアームと支持",
+      "subsystem": "side_buttons",
+      "tags": [
+        "サイドボタン",
+        "親指",
+        "thumb",
+        "side",
+        "arm"
+      ],
+      "summary": "親指の内向きの力を正しいスイッチへ伝え、ボタンと小基板の両方を支える。",
+      "principles": [
+        "指面、保持アーム、スイッチ接触面を別に識別する。",
+        "支持壁・小基板まで反力の経路に含める。",
+        "前後の操作で互いを押さず、握っただけでONにならない配置を検討する。"
+      ],
+      "interfaces": [
+        "ボタンアームとケースの保持",
+        "ボタン内面とスイッチ",
+        "小基板と支持壁",
+        "親指の到達範囲"
+      ],
+      "workflow": [
+        "現物とCADでアームの取付面を照合する。",
+        "無操作・押下・復帰でケースと隣のボタンとの隙間を確認する。",
+        "サポート材を除去できる経路とねじ工具の空間を設ける。"
+      ],
+      "verification": [
+        "正しいスイッチだけを押す。",
+        "保持したまま必要な変位を許す。",
+        "支持壁のたわみと配線挟み込みを確認する。"
+      ],
+      "common_failures": [
+        "細いアームを硬い固定棒と誤認する。",
+        "残った印刷サポートで取付位置が変わる。"
+      ],
+      "evidence": [
+        {
+          "source_id": "zs_f1_guide",
+          "status": "observed",
+          "claim": "Step 5は別々の取付穴と支持材残りによる位置変化を説明する。"
+        },
+        {
+          "source_id": "engineering",
+          "status": "principle",
+          "claim": "反力と動作状態を含む設計。"
+        }
+      ],
+      "unknowns": [
+        "更新版STLとの姿勢対応、復帰力の分担、押力とストローク。"
+      ]
+    },
+    {
+      "id": "wheel_rotation_and_click",
+      "title": "ホイールの回転と中央クリック",
+      "subsystem": "scroll_input",
+      "tags": [
+        "ホイール",
+        "スクロール",
+        "wheel",
+        "encoder",
+        "エンコーダ",
+        "中央クリック",
+        "軸"
+      ],
+      "summary": "回転角と押下変位を別に扱う。エンコーダとの接続、反対側の軸支持、保持ばね、中央クリック接触を組として理解する。",
+      "principles": [
+        "エンコーダは回転を、中央クリック用スイッチは押下を検出する。",
+        "両軸端を上下に完全固定すると中央クリックを妨げる可能性がある。全体の垂直移動も実接続が許すと確認するまで仮定しない。",
+        "保持ばねの存在は、そのばねが復帰力や回転の段階感を作る証明ではない。"
+      ],
+      "interfaces": [
+        "ホイール軸端↔エンコーダの回転伝達",
+        "反対側軸端↔支持・押下経路",
+        "ばね↔固定部",
+        "ホイール↔中央クリック接触部",
+        "外周↔外装開口"
+      ],
+      "workflow": [
+        "軸形状、エンコーダ接続、軸方向抜け止めを測る。",
+        "無操作、回転、中央クリック押下、復帰を別状態にする。",
+        "押下でどちらの軸端が動くか現物で確認する。",
+        "軸を抜く方向とばねを取り付ける順序を記録する。"
+      ],
+      "verification": [
+        "回転中に外装へ擦らない。",
+        "回転伝達が外れない。",
+        "押下中も接続を保つ。",
+        "中央クリックがON/OFFでき、過押下と抜けを防ぐ。"
+      ],
+      "common_failures": [
+        "回転だけを許す軸受けを作り中央クリックを拘束する。",
+        "純正写真の右方向をCADの絶対X方向と同一視する。"
+      ],
+      "evidence": [
+        {
+          "source_id": "g305_wheel_guide",
+          "status": "observed",
+          "claim": "Step 5は片側の保持ばね、Step 7は軸を横へ抜く手順を示す。"
+        },
+        {
+          "source_id": "g305_reference",
+          "status": "observed",
+          "claim": "EncoderとWheel switchの別ソリッドがあるが、ホイール本体はない。"
+        },
+        {
+          "source_id": "engineering",
+          "status": "principle",
+          "claim": "回転と押下を別の可動条件として管理する。"
+        }
+      ],
+      "unknowns": [
+        "ホイール外径、軸端、公差、押下軌跡、スイッチ接触、ばねの定量特性。"
+      ]
+    },
+    {
+      "id": "pcb_support_and_location",
+      "title": "基板の支持・位置決め・保持・挿入",
+      "subsystem": "electronic_mounting",
+      "tags": [
+        "基板",
+        "PCB",
+        "board",
+        "boss",
+        "ボス",
+        "固定",
+        "穴",
+        "溝"
+      ],
+      "summary": "基板固定を高さ支持、XY位置決め、抜けの保持、組立経路の4役に分ける。",
+      "principles": [
+        "内側のねじ下穴、外側のボス径、基板穴、ねじ軸を区別する。",
+        "円弧の中心が取れても、閉じた丸穴とは限らない。開放溝は挿入方向に関係する。",
+        " protected hardwareの拡縮で穴のずれを消さない。締結で基板を強く曲げない。",
+        "基板スキャンの観測表面と遮蔽部を区別し、支持面・部品側・固定穴・光学基準を出典付きで特定する。"
+      ],
+      "interfaces": [
+        "基板下面↔支持面",
+        "固定穴／開放溝↔ねじと座面",
+        "コネクタ↔配線",
+        "基板挿入体積↔内部の支持壁"
+      ],
+      "workflow": [
+        "実基板の版、単位、部品高さ、穴と溝を確認する。",
+        "固定対応と姿勢を剛体変換で照合し、残差を保持する。",
+        "挿入途中の基板・コネクタ・工具とケースの干渉を確認する。"
+      ],
+      "verification": [
+        "支持高さと接触面が成立する。",
+        "ねじ頭と工具が届く。",
+        "最大搭載部品高さと配線の空間がある。",
+        "締結・操作力で基板がずれない。"
+      ],
+      "common_failures": [
+        "全ての円をねじ穴と分類する。",
+        "固定完了状態だけ見て、基板を入れられない。",
+        "非ゼロ残差を無視して適合済みとする。"
+      ],
+      "evidence": [
+        {
+          "source_id": "local_measurements",
+          "status": "measured_reference",
+          "claim": "G305参考基板では半径1.45mm候補に閉円2箇所と半円開放溝2箇所。ZS-F1底ケースとの剛体照合の最大XY残差約0.23046STL座標単位。"
+        },
+        {
+          "source_id": "engineering",
+          "status": "principle",
+          "claim": "4役の分離と保護部品の保存。"
+        }
+      ],
+      "unknowns": [
+        "STL単位、実基板版、ねじ規格、許容ずれ、締結後の位置。"
+      ]
+    },
+    {
+      "id": "optical_datum_chain",
+      "title": "センサー・レンズ・机面の高さ連鎖",
+      "subsystem": "motion_sensing",
+      "tags": [
+        "センサー",
+        "sensor",
+        "lens",
+        "レンズ",
+        "机面",
+        "高さ",
+        "optical",
+        "feet"
+      ],
+      "summary": "光学窓のXY位置と、机面を基準にした光学高さの両方を管理する。",
+      "principles": [
+        "光学センサーは机面を読み取る。上ケース後方の穴を根拠なくセンサー開口としない。",
+        "机面→フィートと接着層→底板→支持面→PCB→レンズ／センサーの高さ連鎖を作る。",
+        "アセンブリの最下端と光学焦点面・作動距離を同一視しない。"
+      ],
+      "interfaces": [
+        "レンズ・照明↔底部窓",
+        "PCB↔高さ支持",
+        "底板↔フィートと接着層",
+        "光学面↔机面"
+      ],
+      "workflow": [
+        "採用するセンサーとレンズの仕様、現物高さを取得する。",
+        "机面を共通基準にして全高さを記録する。",
+        "光路、埃対策、開口縁の干渉と組立ばらつきを確認する。"
+      ],
+      "verification": [
+        "光路を遮らない。",
+        "作動高さが仕様範囲にある。",
+        "使用面で追従と持ち上げ時の動作を現物確認する。"
+      ],
+      "common_failures": [
+        "窓中心の一致だけで光学適合とする。",
+        "フィート厚を後から変更し高さ条件を更新しない。"
+      ],
+      "evidence": [
+        {
+          "source_id": "engineering",
+          "status": "principle",
+          "claim": "光学高さを共通基準面で管理する。"
+        },
+        {
+          "source_id": "local_measurements",
+          "status": "measured_reference",
+          "claim": "参考基板姿勢候補の最下端は底原点面より約0.36420座標単位上。作動高さではない。"
+        }
+      ],
+      "unknowns": [
+        "採用センサーの作動距離、焦点面、フィートと接着層の厚さ。"
+      ]
+    },
+    {
+      "id": "shell_loads_and_grip",
+      "title": "握り形状・外装・力の経路",
+      "subsystem": "grip_enclosure",
+      "tags": [
+        "シェル",
+        "外装",
+        "shell",
+        "grip",
+        "握り",
+        "剛性",
+        "軽量"
+      ],
+      "summary": "手の接触形状と電子部品の搭載条件を関連付け、握る力で入力や光学位置が変わらない構造を考える。",
+      "principles": [
+        "把持外形、支持構造、入力の可動部を分けて要求化する。",
+        "穴を増やす軽量化は支持点やクリック根元の剛性も変える。",
+        "参考商品の名前だけでは、その形状を実測したことにならない。",
+        "外装スキャンは外形の参考で、内面・肉厚・組立経路は別に設計する。一律オフセットを製造成立の根拠にしない。"
+      ],
+      "interfaces": [
+        "手のひらと側面の接触",
+        "上下ケース合わせ縁",
+        "内部ボス・リブ",
+        "クリック周辺の可動空間"
+      ],
+      "workflow": [
+        "握り方と希望する外形を指定する。",
+        "保護ハードウェアと可動空間を固定する。",
+        "外装候補を作り、支持点と力の経路を比較する。",
+        "軽量化で削る領域と保持する領域を理由付きで決める。"
+      ],
+      "verification": [
+        "握りで誤クリックを起こさない。",
+        "支持と固定部が荷重を受けられる。",
+        "穴・薄壁・角部の製造と耐久を確認する。"
+      ],
+      "common_failures": [
+        "軽さを穴の数だけで決める。",
+        "参考商品外形とSTLの適合を未測定のまま保証する。"
+      ],
+      "evidence": [
+        {
+          "source_id": "engineering",
+          "status": "principle",
+          "claim": "接触外形と支持・入力の機能分離。"
+        },
+        {
+          "source_id": "zs_f1_model",
+          "status": "author_reported",
+          "claim": "穴あり約58g、穴なし約63gは作者報告の総重量で、実測値やCAD算出ではない。"
+        }
+      ],
+      "unknowns": [
+        "使用者の握り条件、荷重、材料剛性、実重量と変形。"
+      ]
+    },
+    {
+      "id": "power_wiring_and_service",
+      "title": "電源・配線・保守アクセス",
+      "subsystem": "power_and_charge",
+      "tags": [
+        "電池",
+        "battery",
+        "power",
+        "USB",
+        "配線",
+        "充電",
+        "wireless",
+        "wired"
+      ],
+      "summary": "採用電源の保持・極性・接点・取り出しと、可動部から逃がす配線を設計する。",
+      "principles": [
+        "純正G305のAA電池とZS-F1作者の充電式AAA改造を混同しない。",
+        "電池内蔵充電回路とマウス基板の充電機能を混同しない。",
+        "電池、端子、コネクタは実部品寸法と仕様に合わせ、ケースで押し潰さない。",
+        "有線式ではケーブルの出口、保持、曲げと引張力の経路を考える。"
+      ],
+      "interfaces": [
+        "電池↔ホルダー・端子",
+        "コネクタ↔PCB",
+        "線↔ケース合わせ面・可動部",
+        "充電端子またはUSB出口↔外装"
+      ],
+      "workflow": [
+        "実電源方式と電子部品仕様を確認する。",
+        "極性、接点保持、絶縁と配線経路を記録する。",
+        "閉じる途中と開く途中の配線長を確認する。",
+        "交換または充電経路を作る。"
+      ],
+      "verification": [
+        "配線がボタンやホイールに触れない。",
+        "ケースを閉じても挟まない。",
+        "電池を外せ、コネクタを抜くアクセスがある。",
+        "選定部品の電源・充電仕様に従う。"
+      ],
+      "common_failures": [
+        "磁気USB先端があるだけでマウス基板が充電対応とする。",
+        "電池形式を変更して端子と保持を再検討しない。"
+      ],
+      "evidence": [
+        {
+          "source_id": "zs_f1_guide",
+          "status": "observed",
+          "claim": "Step 4は上ケースの電池保持と端子取り付けを説明する。"
+        },
+        {
+          "source_id": "engineering",
+          "status": "principle",
+          "claim": "電源・配線・保守の設計条件。"
+        }
+      ],
+      "unknowns": [
+        "採用電池、端子、充電回路、配線、コネクタと電気仕様。"
+      ]
+    },
+    {
+      "id": "assembly_fasteners_and_feet",
+      "title": "組立順序・ねじ・フィート",
+      "subsystem": "assembly",
+      "tags": [
+        "組立",
+        "assembly",
+        "screw",
+        "ねじ",
+        "爪",
+        "フィート",
+        "分解"
+      ],
+      "summary": "完成位置に置けることと、その位置へ組み付けられることは異なる。固定と工具・分解経路を設計する。",
+      "principles": [
+        "ねじ、爪、合わせ縁はそれぞれの位置決め・保持役割を定義する。",
+        "ねじ頭の座面、ねじ下穴、締結長、工具の進入空間を別に管理する。",
+        "フィートは滑りだけでなく机からの高さを決める。ねじを隠す場合は分解と再接着も考える。"
+      ],
+      "interfaces": [
+        "ケース合わせ縁・爪・ねじ",
+        "工具↔ねじ頭",
+        "フィート↔底面・机面",
+        "分解時の配線とコネクタ"
+      ],
+      "workflow": [
+        "部品ごとの挿入方向と順序を作る。",
+        "ねじと工具を実寸で割り当てる。",
+        "閉じる過程と分解経路をCADで確認する。",
+        "フィート厚と接着層を光学高さへ反映する。"
+      ],
+      "verification": [
+        "すべての部品を指定順で取り付けられる。",
+        "ねじを締めて可動部を拘束しない。",
+        "フィート装着後の光学高さと安定接触を確認する。"
+      ],
+      "common_failures": [
+        "完成状態の干渉だけ確認し挿入途中を見ない。",
+        "工具が届かないねじを採用する。"
+      ],
+      "evidence": [
+        {
+          "source_id": "zs_f1_guide",
+          "status": "observed",
+          "claim": "Step 7は前方から上ケースを合わせ、動作確認後に4本のねじとフィートを取り付ける。"
+        },
+        {
+          "source_id": "engineering",
+          "status": "principle",
+          "claim": "組立途中を含むアクセス設計。"
+        }
+      ],
+      "unknowns": [
+        "ZS-F1の全ねじ規格、個別位置、締結条件。"
+      ]
+    },
+    {
+      "id": "fdm_manufacturing",
+      "title": "印刷方向・薄壁・公差・耐久",
+      "subsystem": "manufacturing",
+      "tags": [
+        "FDM",
+        "3Dプリント",
+        "壁厚",
+        "公差",
+        "サポート",
+        "PLA",
+        "fatigue"
+      ],
+      "summary": "プリンター・材料・造形方向を指定して、薄い機構と嵌合を作れる条件を整理する。",
+      "principles": [
+        "層方向で曲げと引張に対する強さが変わる。柔軟アーム、ねじボス、爪の荷重方向を考える。",
+        "壁厚や嵌合の数値をプリンター・材料の根拠なしに万能値として設定しない。",
+        "支持材除去のアクセスと、その除去で小さい機構を壊さないことを考える。",
+        "作者の印刷設定は参照条件で、別のプリンターでの合格条件ではない。"
+      ],
+      "interfaces": [
+        "造形方向↔曲げ部の荷重",
+        "壁厚↔ノズルと積層",
+        "嵌合↔寸法ばらつき",
+        "サポート↔除去経路"
+      ],
+      "workflow": [
+        "材料、ノズル、層高、造形方向を指定する。",
+        "曲げ部と爪の断面・層方向を評価する。",
+        "実プロセスの寸法ばらつきから嵌合を決める。",
+        "試作でクリック、保持と繰返し耐久を確認する。"
+      ],
+      "verification": [
+        "薄い部分が実スライスで形成される。",
+        "サポートを除去できる。",
+        "取付と復帰が成立し、繰返しで破損しない。"
+      ],
+      "common_failures": [
+        "薄壁設定を強度の保証にする。",
+        "座標一致だけで印刷嵌合を保証する。"
+      ],
+      "evidence": [
+        {
+          "source_id": "engineering",
+          "status": "principle",
+          "claim": "積層と公差を含む製造条件。"
+        },
+        {
+          "source_id": "zs_f1_guide",
+          "status": "author_reported",
+          "claim": "作者はPLA、0.2mmプロファイル、上ケース45度などを説明する。"
+        }
+      ],
+      "unknowns": [
+        "使用プロセスの材料・収縮・公差・疲労実績。"
+      ]
+    },
+    {
+      "id": "zs_f1_g305_case",
+      "title": "ZS-F1/G305の測定済み実例と適用範囲",
+      "subsystem": "reference_case",
+      "tags": [
+        "ZS-F1",
+        "G305",
+        "Logitech",
+        "測定",
+        "reference",
+        "STEP",
+        "STL"
+      ],
+      "summary": "実例の部品分解と取り付け候補を使い、未知寸法と非ゼロ残差を消さずに設計へ渡す。",
+      "principles": [
+        "STLは単位を保存しない。参考STEPのmmとSTL座標を比較する際の同一尺度仮定を残す。",
+        "穴中心の数値一致は可動、嵌合、強度、現物の版一致を証明しない。",
+        "参考G305を別機種のreadyパックや任意の箱で代用しない。"
+      ],
+      "interfaces": [
+        "上ケースと主クリック取付穴",
+        "底ケースと基板固定候補",
+        "参考基板と実部品の対応"
+      ],
+      "workflow": [
+        "原本のハッシュと出典を確認する。",
+        "STLの保存姿勢を組立姿勢と区別する。",
+        "測定特徴を根拠付きで選び剛体照合する。",
+        "未知と残差を設計入力に残す。"
+      ],
+      "verification": [
+        "使用特徴、単位、変換、仮定を記録する。",
+        "実物部品で寸法と版を確認する。",
+        "動作・組立・製造を別に検証する。"
+      ],
+      "common_failures": [
+        "測定レポートをreadyハードウェアとする。",
+        "参照形状の利用条件を無視して転載する。"
+      ],
+      "evidence": [
+        {
+          "source_id": "local_measurements",
+          "status": "measured_reference",
+          "claim": "主クリック取付中心はX軸+90度回転と平行移動[0,-50.35318797,71.85085869]で一致候補。最大数値残差約1.7e-7座標単位。面の直接支持を仮定。"
+        },
+        {
+          "source_id": "g305_reference",
+          "status": "measured_reference",
+          "claim": "参考STEPは11ソリッド。Mainboard薄板候補は45.55×91.04766×0.8mm。全搭載部品ではない。"
+        }
+      ],
+      "unknowns": [
+        "実G305との版対応、STL単位、全搭載部品、接触・干渉・可動・光学・疲労・実物動作。"
+      ]
+    },
+    {
+      "id": "cad_tool_handoff",
+      "title": "任意のCAD MCPへの受け渡し",
+      "subsystem": "cad_workflow",
+      "tags": [
+        "CAD",
+        "MCP",
+        "StellaCAD",
+        "FunctionBrief",
+        "Recipe",
+        "tool",
+        "ハーネス",
+        "スキャン",
+        "scan",
+        "任意基板",
+        "registration",
+        "汎用"
+      ],
+      "summary": "知識取得→機能要求→保護ハードウェア→基準と接続→構造候補→型付きCAD操作→測定と修正の順で道具を使う。",
+      "principles": [
+        "知識ライブラリーは形状生成器ではない。利用側はCADツールの実能力と操作スキーマを確認する。",
+        "概念案とハードウェアに適合した製品を区別する。未知寸法を埋めた自動レシピは生成しない。",
+        "静止画像は動作、弾性、光学性能の合格証拠ではない。",
+        "G305/ZS-F1は測定事例。任意の基板・外装/手スキャンを入力の役割と座標校正から扱い、機種固有寸法を既定値へ転用しない。"
+      ],
+      "interfaces": [
+        "要求↔FunctionBrief",
+        "部品↔保護形状と基準",
+        "知識↔design_basis・reference_uses",
+        "検査値↔実測証拠"
+      ],
+      "workflow": [
+        "status、plan、関連getを読む。",
+        "ハードウェア不足とツール不足を列挙する。",
+        "測定済みの接続条件から複数案を比較する。",
+        "CADツールの型付き操作へ具体化し、固体STEPを出力する。",
+        "寸法、隙間、可動、組立、製造、現物動作を別々に確認する。"
+      ],
+      "verification": [
+        "未確認はunknownとして残す。",
+        "CADの形状妥当性と機構の成立を区別する。",
+        "StellaCADでは実際のRecipeスキーマと検査ゲートに従う。"
+      ],
+      "common_failures": [
+        "ツール名の想像で操作する。",
+        "知識カードの取得を製品完成と報告する。"
+      ],
+      "evidence": [
+        {
+          "source_id": "engineering",
+          "status": "principle",
+          "claim": "道具に依存しない要求・測定・構築・検査の流れ。"
+        }
+      ],
+      "unknowns": [
+        "利用環境のCADツール、入力形状、製造・実物検証能力。"
+      ],
+      "generic_input_contract": {
+        "goal": "任意の採用基板・スキャンから原理とインターフェースを測定し、新規マウスを構築する。G305は事例で既定形状ではない。",
+        "asset_roles": [
+          "pcb_cad",
+          "pcb_scan",
+          "outer_shell_scan",
+          "inner_shell_scan",
+          "hand_scan",
+          "component_cad"
+        ],
+        "registration_evidence_required": [
+          "input SHA and hardware revision",
+          "units and independent scale calibration",
+          "datum surfaces/axes with measured functions",
+          "proper rigid transform and correspondences",
+          "independent check features and residuals",
+          "observed versus occluded geometry"
+        ],
+        "protected_hardware_rule": "Use the selected hardware identity and pose; never substitute another ready pack or scale PCB to erase mismatch.",
+        "scan_rule": "Outer scan does not establish inner geometry, wall thickness, electrical specs or moving interfaces. Tool capability and valid conversion are required before editable shell use.",
+        "completion_evidence_required": [
+          "different hardware layout and mount style",
+          "actual scan registration",
+          "generated enclosure and moving subsystem CAD",
+          "interference and assembly access measurements",
+          "process-aware manufacturing review",
+          "physical operation and durability evidence"
+        ],
+        "intake_readiness_rule": "A stored ready pack is not pair acceptance. Verify selected source hashes/revisions, shared pose, independent check features, functional interfaces and scope. Zero interference alone does not prove correct placement.",
+        "functional_interface_rule": "Separate component geometry presence from named functional data. Empty switches metadata does not establish absent switch geometry. Geometry blocks do not establish switch axis/travel/return force or wheel axis. Sensor bbox separation is not a manufacturer optical datum."
+      }
+    }
+  ],
+  "workflow": {
+    "stages": [
+      {
+        "id": "scope",
+        "action": "握り・入力・電源・製造と選定ハードウェアを確定する。",
+        "outputs": [
+          "機能要求",
+          "保護部品一覧",
+          "未知事項"
+        ]
+      },
+      {
+        "id": "inspect",
+        "action": "実形状を表示・測定し、部品と接続条件を確認する。",
+        "outputs": [
+          "出典・ハッシュ・単位",
+          "基準面",
+          "測定インターフェース"
+        ]
+      },
+      {
+        "id": "mechanism",
+        "action": "固定、可動、反力、復帰、停止と組立を定義して候補を比較する。",
+        "outputs": [
+          "構造候補",
+          "動作状態",
+          "選定理由"
+        ]
+      },
+      {
+        "id": "cad_recipe",
+        "action": "実際のCADツール能力とスキーマで寸法根拠付き操作へ変換する。",
+        "outputs": [
+          "部品別レシピ",
+          "design_basis",
+          "reference_uses",
+          "検査値"
+        ]
+      },
+      {
+        "id": "build_measure",
+        "action": "CADを構築し固体STEPを出力する。寸法・隙間・可動・組立を測る。",
+        "outputs": [
+          "STEP",
+          "測定結果",
+          "不合格・未知と修正"
+        ]
+      },
+      {
+        "id": "manufacture_validate",
+        "action": "プロセス条件を確認し試作でクリック・光学・保持・耐久を確認する。",
+        "outputs": [
+          "製造条件",
+          "現物動作記録",
+          "残る課題"
+        ]
+      }
+    ],
+    "required_hardware": [
+      "PCB形状・版・穴と溝・最大部品高さ",
+      "左右と中央・サイドスイッチの取付・作動・最大押下・復帰仕様",
+      "ホイール外径・両軸端・エンコーダ接続・支持と保持",
+      "センサー・レンズ・照明・机面作動高さ",
+      "電池またはUSB・端子・コネクタ・配線",
+      "ねじ規格・工具・フィートと接着層"
+    ],
+    "states": {
+      "primary_clicks": [
+        "idle_off",
+        "actuation_on",
+        "maximum_depression",
+        "release_off"
+      ],
+      "side_buttons": [
+        "idle_off",
+        "actuation_on",
+        "maximum_depression",
+        "release_off"
+      ],
+      "scroll_input": [
+        "idle",
+        "rotation",
+        "middle_click_depression",
+        "release"
+      ]
+    },
+    "gates": [
+      "source_and_units_known",
+      "protected_hardware_inspected",
+      "interfaces_measured",
+      "mechanism_states_defined",
+      "assembly_path_accessible",
+      "cad_validity_and_dimensions",
+      "motion_clearance_and_stops",
+      "manufacturing_conditions",
+      "physical_input_and_tracking",
+      "durability_evidence"
+    ],
+    "measurement_record_template": {
+      "component_id": "採用部品のIDと版",
+      "interface_id": "支持面・穴・接触・光学面など対象のID",
+      "source": {
+        "artifact": "対象形状または現物測定記録",
+        "sha256": null,
+        "hash_instruction": "形状ファイルの場合は実ハッシュを記録。未知の値を生成しない。",
+        "authority": "manufacturer / owner_measured / third_party_reference"
+      },
+      "datum": {
+        "origin": "基準点",
+        "axes": "各軸の方向",
+        "reference_surface": "机面・PCB下面など",
+        "transform": "保存座標から採用座標への変換"
+      },
+      "quantity": {
+        "name": "対象寸法・角度・力など",
+        "value": null,
+        "unit": null,
+        "method": null,
+        "uncertainty": null,
+        "status": "unknown"
+      },
+      "classification": "穴／開放溝／外周、固定／可動、実物／参考などを根拠付きで区別",
+      "applicability": "どの個体・製法・状態に適用できるか",
+      "warning": "nullを標準寸法で自動補完しない。数値一致と現物適合を区別する。"
+    },
+    "cad_capability_checklist": [
+      "形状の読み込みと部品選択",
+      "面・辺・軸・外接寸法の測定",
+      "保護部品の剛体配置と変更防止",
+      "固体作成・結合・差し引き・薄壁・フィレット",
+      "静的隙間と動作途中の干渉",
+      "組立と工具アクセスの表示・確認",
+      "固体STEPと印刷メッシュの出力",
+      "弾性・疲労・光学などCAD外で必要な検証の識別"
+    ],
+    "completion_rule": "各ゲートの根拠を個別に記録する。missingまたはunknownを合格へ変換しない。初期知識の取得、参考モデル表示、FunctionBrief作成だけでは製品完成ではない。",
+    "generic_input_contract": {
+      "goal": "任意の採用基板・スキャンから原理とインターフェースを測定し、新規マウスを構築する。G305は事例で既定形状ではない。",
+      "asset_roles": [
+        "pcb_cad",
+        "pcb_scan",
+        "outer_shell_scan",
+        "inner_shell_scan",
+        "hand_scan",
+        "component_cad"
+      ],
+      "registration_evidence_required": [
+        "input SHA and hardware revision",
+        "units and independent scale calibration",
+        "datum surfaces/axes with measured functions",
+        "proper rigid transform and correspondences",
+        "independent check features and residuals",
+        "observed versus occluded geometry"
+      ],
+      "protected_hardware_rule": "Use the selected hardware identity and pose; never substitute another ready pack or scale PCB to erase mismatch.",
+      "scan_rule": "Outer scan does not establish inner geometry, wall thickness, electrical specs or moving interfaces. Tool capability and valid conversion are required before editable shell use.",
+      "completion_evidence_required": [
+        "different hardware layout and mount style",
+        "actual scan registration",
+        "generated enclosure and moving subsystem CAD",
+        "interference and assembly access measurements",
+        "process-aware manufacturing review",
+        "physical operation and durability evidence"
+      ],
+      "intake_readiness_rule": "A stored ready pack is not pair acceptance. Verify selected source hashes/revisions, shared pose, independent check features, functional interfaces and scope. Zero interference alone does not prove correct placement.",
+      "functional_interface_rule": "Separate component geometry presence from named functional data. Empty switches metadata does not establish absent switch geometry. Geometry blocks do not establish switch axis/travel/return force or wheel axis. Sensor bbox separation is not a manufacturer optical datum."
+    }
+  }
+}

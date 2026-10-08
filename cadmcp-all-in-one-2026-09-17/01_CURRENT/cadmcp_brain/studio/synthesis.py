@@ -5,9 +5,9 @@ not silently treated as separate hard requirements. Source interfaces provide
 only geometric preconditions, never a mechanism's complete functional proof.
 """
 from __future__ import annotations
-from typing import Literal
+from typing import Annotated, Literal, Union
 from pydantic import Field, model_validator
-from .recipe import Strict, Name
+from .recipe import Strict, Name, Statement
 from .interfaces import screen_interfaces
 from ..errors import BrainError
 from ..req2cad.common import digest
@@ -48,12 +48,40 @@ class CaseRef(Strict):
     adopted_principle: str = Field(min_length=10,max_length=2000)
     adaptations: list[str] = Field(min_length=1,max_length=50)
 
+class FirstPrinciplesBasis(Strict):
+    kind: Literal['first_principles']
+    principles: list[Statement] = Field(min_length=1,max_length=50)
+    assumptions: list[Statement] = Field(min_length=1,max_length=50)
+    verification_plan: list[Statement] = Field(min_length=1,max_length=50)
+    unknowns: list[Statement] = Field(min_length=1,max_length=50)
+    @model_validator(mode='after')
+    def meaningful(self):
+        if any(len(x.strip())<8 for rows in (self.principles,self.assumptions,self.verification_plan,self.unknowns) for x in rows):
+            raise ValueError('Design-basis statements must be meaningful.')
+        return self
+
+class ProvidedCadBasis(Strict):
+    kind: Literal['provided_cad']
+    artifact_id: Name
+    sha256: str = Field(pattern=r'^[0-9a-f]{64}$')
+    application: str = Field(min_length=12,max_length=2000)
+    verification_plan: list[Statement] = Field(min_length=1,max_length=50)
+    unknowns: list[Statement] = Field(min_length=1,max_length=50)
+    @model_validator(mode='after')
+    def meaningful(self):
+        if any(len(x.strip())<8 for rows in (self.verification_plan,self.unknowns) for x in rows):
+            raise ValueError('Verification and unknown statements must be meaningful.')
+        return self
+
+OptionDesignBasis = Annotated[Union[FirstPrinciplesBasis,ProvidedCadBasis],Field(discriminator='kind')]
+
 class Option(Strict):
     id: Name
     name: str = Field(min_length=2,max_length=200)
     covers: list[Name] = Field(min_length=1,max_length=12)
     mechanism_principle: str = Field(min_length=10,max_length=2000)
-    references: list[CaseRef] = Field(min_length=1,max_length=8)
+    references: list[CaseRef] = Field(default_factory=list,max_length=8)
+    design_basis: OptionDesignBasis | None = None
     proposed_parts: list[Name] = Field(min_length=1,max_length=16)
     force_path: str = Field(min_length=8,max_length=2000)
     assembly_method: str = Field(min_length=8,max_length=2000)
@@ -62,6 +90,8 @@ class Option(Strict):
     def unique(self):
         if len(self.covers)!=len(set(self.covers)) or len(self.proposed_parts)!=len(set(self.proposed_parts)):raise ValueError('Duplicate coverage or part name.')
         if len({r.uid for r in self.references})!=len(self.references):raise ValueError('Duplicate reference UID.')
+        if not self.references and self.design_basis is None:
+            raise ValueError('An option without Req2CAD references needs a first-principles or provided-CAD basis.')
         return self
 
 class Incompatible(Strict):
@@ -146,6 +176,10 @@ def synthesize(matrix, service):
         for fid in option.covers:
             # Required surfaces may be spread across the component references.
             for feature in function_map[fid].required_features:
+                if not refs:
+                    unknown.append({'function':fid,'feature':feature,
+                                    'reason':'No Req2CAD face evidence; verify against generated or provided CAD.'})
+                    continue
                 values=[screen_interfaces(e['geometry'],[feature])['verdict'] for e in refs]
                 if 'pass' in values:continue
                 (unknown if 'unknown' in values else failures).append({'function':fid,'feature':feature})
@@ -178,10 +212,11 @@ def synthesize(matrix, service):
     for sol in sorted(solutions,key=key)[:m.max_candidates]:
         opts=[accepted[s]['option'] for s in sorted(sol)]
         coverage={fid:[o.id for o in opts if fid in o.covers] for fid in function_map}
+        basis_unknowns=[u for o in opts if o.design_basis for u in o.design_basis.unknowns]
         candidate={'options':[o.model_dump() for o in opts], 'function_coverage':coverage,
                    'part_names':sorted(set().union(*(set(o.proposed_parts) for o in opts))),
                    'protected_constraints':m.brief.protected_constraints,
-                   'unresolved':m.brief.unresolved,
+                   'unresolved':list(dict.fromkeys([*m.brief.unresolved,*basis_unknowns])),
                    'status':'concept_candidate_not_assembly_validated',
                    'source_digests':{r.uid:r.evidence_digest for o in opts for r in o.references}}
         candidate['candidate_digest']=digest(candidate);candidates.append(candidate)

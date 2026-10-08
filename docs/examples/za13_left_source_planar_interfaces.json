@@ -1,0 +1,559 @@
+{
+  "units": "unspecified STL coordinate units",
+  "source_root": "V:\\mouse\\ZA13",
+  "source_sha256": {
+    "side.stl": "dcee1a3eefdb3b546e6bba306ae431eb31e5c91e0db252254d5d68d06b6764f7",
+    "top.stl": "73fc97a0562a6171fb348db3abef615cf9ccb6a3ac47377079fbf21d985e138b",
+    "bot.stl": "7aefc4eabfb8433e6f657b90838d5a98f6265e0944668aace13f2ee08e761e7e",
+    "button.stl": "4fe7eb7ac392abed6c8711069929b7046e88c9992792b8c02e7fae5cb4ea384a"
+  },
+  "script_sha256": "67723359fe780d8bd9cdcf7a4e38401a746b3b9ede18e6625795caa0f6678eca",
+  "method": "axis-aligned planar face boundary loops and least-squares circle fits",
+  "limitations": [
+    "Circular boundaries may be bore rims or outer boss perimeters.",
+    "Axis alignment is checked in each file's saved coordinate frame.",
+    "A rim is not proof of a full cylinder or a functional screw interface."
+  ],
+  "files": {
+    "side.stl": [],
+    "top.stl": [
+      {
+        "axis": "Z",
+        "center": [
+          -18.25000011422697,
+          39.99999990395753,
+          5.0
+        ],
+        "radius": 2.299999798123552,
+        "max_radial_fit_error": 5.460612593655156e-06,
+        "boundary_vertices": 41,
+        "largest_angular_gap_radians": 0.15325150136485752,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -18.250000000000004,
+          40.0,
+          5.0
+        ],
+        "radius": 0.8750004640125748,
+        "max_radial_fit_error": 2.3937861386436055e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453894731665942,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          19.74999893289712,
+          39.999999903957246,
+          5.0
+        ],
+        "radius": 2.299999316035662,
+        "max_radial_fit_error": 5.207566992737611e-06,
+        "boundary_vertices": 41,
+        "largest_angular_gap_radians": 0.15325130054454617,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          19.750000000000004,
+          40.0,
+          5.0
+        ],
+        "radius": 0.8750004640125748,
+        "max_radial_fit_error": 2.3937861386436055e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453894731665948,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -1.2500002689886762,
+          -2.776388553202693e-07,
+          22.0
+        ],
+        "radius": 1.4999997079046012,
+        "max_radial_fit_error": 5.4289541651098006e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453787288306555,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -1.2500000000000002,
+          -1.0793834961633466e-16,
+          22.0
+        ],
+        "radius": 0.8750004640125754,
+        "max_radial_fit_error": 2.3937861319822673e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453894731665476,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          12.249999661289584,
+          -11.400000078379916,
+          22.0
+        ],
+        "radius": 1.499999930279572,
+        "max_radial_fit_error": 6.089646899631873e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453906104695494,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          12.25,
+          -11.4,
+          22.0
+        ],
+        "radius": 0.8750004640125753,
+        "max_radial_fit_error": 2.393786133647602e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453894731665476,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          19.54999983626451,
+          29.19999794077408,
+          22.0
+        ],
+        "radius": 1.5000001374341194,
+        "max_radial_fit_error": 5.637421357285177e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453806453223297,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          19.550000000000008,
+          29.200000000000003,
+          22.0
+        ],
+        "radius": 0.8750004640125759,
+        "max_radial_fit_error": 2.3937861379774716e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453894731665617,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -1.2500000000000002,
+          4.440892098500626e-16,
+          23.0
+        ],
+        "radius": 1.500000493066586,
+        "max_radial_fit_error": 2.491401250637182e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453722852278541,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          19.550000000000004,
+          29.200000000000003,
+          23.0
+        ],
+        "radius": 1.5000004930665858,
+        "max_radial_fit_error": 2.4914012546339848e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453722852278664,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -1.2500000000000002,
+          -1.0793834961633466e-16,
+          24.5
+        ],
+        "radius": 0.8750004640125754,
+        "max_radial_fit_error": 2.3937861319822673e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453894731665476,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          12.25,
+          -11.4,
+          24.5
+        ],
+        "radius": 0.8750004640125753,
+        "max_radial_fit_error": 2.393786133647602e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453894731665476,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          19.550000000000008,
+          29.200000000000003,
+          24.5
+        ],
+        "radius": 0.8750004640125759,
+        "max_radial_fit_error": 2.3937861379774716e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453894731665617,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      }
+    ],
+    "bot.stl": [
+      {
+        "axis": "Z",
+        "center": [
+          -18.24999920326109,
+          39.999999242581815,
+          2.99703668786757e-16
+        ],
+        "radius": 2.500000038678091,
+        "max_radial_fit_error": 5.052804309180203e-06,
+        "boundary_vertices": 43,
+        "largest_angular_gap_radians": 0.14612357749756844,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -16.250001162192554,
+          2.25,
+          2.99703668786757e-16
+        ],
+        "radius": 3.000000304456618,
+        "max_radial_fit_error": 5.19662644204999e-06,
+        "boundary_vertices": 47,
+        "largest_angular_gap_radians": 0.13368832799000963,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          19.750000796738913,
+          39.999999242581815,
+          2.99703668786757e-16
+        ],
+        "radius": 2.5000000386780914,
+        "max_radial_fit_error": 5.052804308736114e-06,
+        "boundary_vertices": 43,
+        "largest_angular_gap_radians": 0.14612357749756733,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -18.25,
+          39.99999777627626,
+          1.0
+        ],
+        "radius": 3.500000596493037,
+        "max_radial_fit_error": 4.556605363692512e-06,
+        "boundary_vertices": 50,
+        "largest_angular_gap_radians": 0.12566576778538385,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -16.25000034058192,
+          2.250000000000001,
+          1.0
+        ],
+        "radius": 2.75000053703264,
+        "max_radial_fit_error": 5.422733087900866e-06,
+        "boundary_vertices": 45,
+        "largest_angular_gap_radians": 0.1396296838833837,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -15.100000000000001,
+          12.100000000000001,
+          1.0
+        ],
+        "radius": 0.8750004640125755,
+        "max_radial_fit_error": 2.393786132981468e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.1745389473166552,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          7.999999999999999,
+          -17.5,
+          1.0
+        ],
+        "radius": 0.8750004640125755,
+        "max_radial_fit_error": 2.3937861354239587e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453894731665498,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          14.700000000000001,
+          12.0,
+          1.0
+        ],
+        "radius": 0.8750004640125754,
+        "max_radial_fit_error": 2.3937861328704457e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453894731665512,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          19.750000000000004,
+          39.99999777627626,
+          1.0
+        ],
+        "radius": 3.5000005964930367,
+        "max_radial_fit_error": 4.556605363248423e-06,
+        "boundary_vertices": 50,
+        "largest_angular_gap_radians": 0.12566576778538402,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -18.24999995523054,
+          39.999999242581765,
+          5.0
+        ],
+        "radius": 2.5000002139134456,
+        "max_radial_fit_error": 8.30055835665533e-06,
+        "boundary_vertices": 43,
+        "largest_angular_gap_radians": 0.14612352790734962,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -18.250000000000004,
+          40.0,
+          5.0
+        ],
+        "radius": 0.8750004640125748,
+        "max_radial_fit_error": 2.3937861386436055e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453894731665942,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          19.750000044769465,
+          39.999999242581765,
+          5.0
+        ],
+        "radius": 2.500000213913445,
+        "max_radial_fit_error": 8.30055835621124e-06,
+        "boundary_vertices": 43,
+        "largest_angular_gap_radians": 0.14612352790734962,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          19.750000000000004,
+          40.0,
+          5.0
+        ],
+        "radius": 0.8750004640125748,
+        "max_radial_fit_error": 2.3937861386436055e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453894731665948,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -15.100000000000001,
+          12.100000000000001,
+          5.99999994627187
+        ],
+        "radius": 1.4000002138095078,
+        "max_radial_fit_error": 3.626756654107055e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453482580002433,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          8.000000000000002,
+          -17.49999916666673,
+          5.99999994627187
+        ],
+        "radius": 1.399999732684416,
+        "max_radial_fit_error": 4.524547425388548e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453492916323254,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -18.25,
+          39.99999777627626,
+          7.0
+        ],
+        "radius": 3.500000596493037,
+        "max_radial_fit_error": 4.556605363692512e-06,
+        "boundary_vertices": 50,
+        "largest_angular_gap_radians": 0.12566576778538385,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -18.24999995523054,
+          39.999999242581765,
+          7.0
+        ],
+        "radius": 2.5000002139134456,
+        "max_radial_fit_error": 8.30055835665533e-06,
+        "boundary_vertices": 43,
+        "largest_angular_gap_radians": 0.14612352790734962,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -15.100000000000001,
+          12.100000000000001,
+          7.0
+        ],
+        "radius": 1.4000002138095078,
+        "max_radial_fit_error": 3.626756654107055e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453482580002433,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -15.100000000000001,
+          12.100000000000001,
+          7.0
+        ],
+        "radius": 0.8750004640125755,
+        "max_radial_fit_error": 2.393786132981468e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.1745389473166552,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          8.000000000000002,
+          -17.49999916666673,
+          7.0
+        ],
+        "radius": 1.399999732684416,
+        "max_radial_fit_error": 4.524547425388548e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453492916323254,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          7.999999999999999,
+          -17.5,
+          7.0
+        ],
+        "radius": 0.8750004640125755,
+        "max_radial_fit_error": 2.3937861354239587e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453894731665498,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          14.700000000000001,
+          12.0,
+          7.0
+        ],
+        "radius": 0.8750004640125754,
+        "max_radial_fit_error": 2.3937861328704457e-06,
+        "boundary_vertices": 36,
+        "largest_angular_gap_radians": 0.17453894731665512,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          19.750000000000004,
+          39.99999777627626,
+          7.0
+        ],
+        "radius": 3.5000005964930367,
+        "max_radial_fit_error": 4.556605363248423e-06,
+        "boundary_vertices": 50,
+        "largest_angular_gap_radians": 0.12566576778538402,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          19.750000044769465,
+          39.999999242581765,
+          7.0
+        ],
+        "radius": 2.500000213913445,
+        "max_radial_fit_error": 8.30055835621124e-06,
+        "boundary_vertices": 43,
+        "largest_angular_gap_radians": 0.14612352790734962,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      }
+    ],
+    "button.stl": [
+      {
+        "axis": "Z",
+        "center": [
+          -16.25000002357133,
+          2.250000000000001,
+          2.220446049250313e-15
+        ],
+        "radius": 2.0499995052856534,
+        "max_radial_fit_error": 5.6212107266695455e-06,
+        "boundary_vertices": 154,
+        "largest_angular_gap_radians": 0.04080328458951943,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      },
+      {
+        "axis": "Z",
+        "center": [
+          -16.250000203654988,
+          2.2500000242445126,
+          1.0
+        ],
+        "radius": 2.5499996407995527,
+        "max_radial_fit_error": 6.2414608628103e-06,
+        "boundary_vertices": 172,
+        "largest_angular_gap_radians": 0.03653321530151965,
+        "classification": "circular planar boundary; bore versus outer perimeter not classified"
+      }
+    ]
+  }
+}

@@ -293,11 +293,15 @@ class CursorProvider:
                     if not p.is_file() or p.is_symlink() or file_hash(p) != expected:
                         raise BrainError('CURSOR_INPUT_CHANGED', 'Cursor changed an immutable input or permission file; output rejected.')
                 value, metadata = parse_cursor_result((folder / 'stdout.log').read_text('utf-8'), schema)
+                from .provider import restore_evidence_paths
+                raw_value=copy.deepcopy(value)
+                value=restore_evidence_paths(value,attachments,sandbox)
                 with self.lock:
                     if metadata['session_id'] in self.sessions:
                         raise BrainError('CURSOR_SESSION_REUSED', 'Cursor returned a previously used session; a distinct role context could not be confirmed.')
                     self.sessions.add(metadata['session_id'])
                 atomic_json(folder / 'response.json', value)
+                atomic_json(folder / 'raw-response.json', raw_value)
                 receipt.update(metadata)
                 receipt['response_received'] = True
                 receipt['response_sha256'] = file_hash(folder / 'response.json')

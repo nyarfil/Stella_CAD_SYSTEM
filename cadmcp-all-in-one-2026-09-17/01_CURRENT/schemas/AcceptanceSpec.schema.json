@@ -1,0 +1,211 @@
+{
+  "$defs": {
+    "ExpectedPrism": {
+      "additionalProperties": false,
+      "properties": {
+        "points_mm": {
+          "items": {
+            "items": {
+              "maximum": 1000000,
+              "minimum": -1000000,
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "maxItems": 64,
+          "minItems": 3,
+          "title": "Points Mm",
+          "type": "array"
+        },
+        "z_min_mm": {
+          "maximum": 1000000,
+          "minimum": -1000000,
+          "title": "Z Min Mm",
+          "type": "number"
+        },
+        "z_max_mm": {
+          "maximum": 1000000,
+          "minimum": -1000000,
+          "title": "Z Max Mm",
+          "type": "number"
+        },
+        "max_symmetric_difference_mm3": {
+          "maximum": 1000000000000.0,
+          "minimum": 0,
+          "title": "Max Symmetric Difference Mm3",
+          "type": "number"
+        }
+      },
+      "required": [
+        "points_mm",
+        "z_min_mm",
+        "z_max_mm",
+        "max_symmetric_difference_mm3"
+      ],
+      "title": "ExpectedPrism",
+      "type": "object"
+    },
+    "Region": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lower_mm": {
+          "items": {
+            "maximum": 1000000,
+            "minimum": -1000000,
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Lower Mm",
+          "type": "array"
+        },
+        "upper_mm": {
+          "items": {
+            "maximum": 1000000,
+            "minimum": -1000000,
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Upper Mm",
+          "type": "array"
+        },
+        "min_fill": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Min Fill",
+          "type": "number"
+        },
+        "max_fill": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Max Fill",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "lower_mm",
+        "upper_mm",
+        "min_fill",
+        "max_fill"
+      ],
+      "title": "Region",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "case_id": {
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+      "title": "Case Id",
+      "type": "string"
+    },
+    "original_request": {
+      "maxLength": 20000,
+      "minLength": 3,
+      "title": "Original Request",
+      "type": "string"
+    },
+    "expected_solids": {
+      "maximum": 128,
+      "minimum": 1,
+      "title": "Expected Solids",
+      "type": "integer"
+    },
+    "lower_mm": {
+      "items": {
+        "maximum": 1000000,
+        "minimum": -1000000,
+        "type": "number"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "title": "Lower Mm",
+      "type": "array"
+    },
+    "upper_mm": {
+      "items": {
+        "maximum": 1000000,
+        "minimum": -1000000,
+        "type": "number"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "title": "Upper Mm",
+      "type": "array"
+    },
+    "coordinate_tolerance_mm": {
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Coordinate Tolerance Mm",
+      "type": "number"
+    },
+    "volume_mm3": {
+      "exclusiveMinimum": 0,
+      "maximum": 1e+18,
+      "title": "Volume Mm3",
+      "type": "number"
+    },
+    "volume_tolerance_mm3": {
+      "maximum": 1000000000000.0,
+      "minimum": 0,
+      "title": "Volume Tolerance Mm3",
+      "type": "number"
+    },
+    "regions": {
+      "items": {
+        "$ref": "#/$defs/Region"
+      },
+      "maxItems": 64,
+      "title": "Regions",
+      "type": "array"
+    },
+    "expected_prism": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ExpectedPrism"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "unverified_requirements": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Unverified Requirements",
+      "type": "array"
+    }
+  },
+  "required": [
+    "case_id",
+    "original_request",
+    "expected_solids",
+    "lower_mm",
+    "upper_mm",
+    "coordinate_tolerance_mm",
+    "volume_mm3",
+    "volume_tolerance_mm3",
+    "unverified_requirements"
+  ],
+  "title": "AcceptanceSpec",
+  "type": "object"
+}

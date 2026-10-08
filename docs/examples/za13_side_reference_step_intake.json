@@ -1,0 +1,39 @@
+{
+  "source_name": "side-reference.step",
+  "source_sha256": "842195d307659e586c428dd64f6488fff2e9fdb455fcdfafc9759a66e4a12005",
+  "source_bytes": 5532579,
+  "header": "ISO-10303-21;\r\nHEADER;\r\nFILE_DESCRIPTION(('Unchanged binary STL reference triangles'),'2;1');\r\nFILE_NAME('reference.step','',(''),(''),'Stella reference serializer','','');\r\nFILE_SCHEMA(('CONFIG_CONTROL_DESIGN'));\r\n",
+  "unit_declarations": [
+    "#9=(LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.));",
+    "#10=(NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.));",
+    "#11=(NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT());"
+  ],
+  "coordinate_basis": "CadQuery STEP reader normalized millimetres; declarations listed separately, not scanner calibration",
+  "reader_target_unit": "MM",
+  "solid_count": 1,
+  "solids": [
+    {
+      "solid_index": 0,
+      "valid": true,
+      "volume_mm3": 1014.5041286908674,
+      "bbox_min_mm": [
+        23.75,
+        -18.227825164794922,
+        6.0
+      ],
+      "bbox_max_mm": [
+        29.464414596557617,
+        20.704814910888672,
+        27.354259490966797
+      ],
+      "functional_identity": "unresolved; not inferred from index"
+    }
+  ],
+  "role": "candidate hardware CAD; not registered ready pack",
+  "limits": [
+    "No physical hardware version confirmed.",
+    "No scan origin declared for this CAD.",
+    "No functional identity, switch specification, optical datum or accepted placement inferred.",
+    "Shape validity alone does not certify manufactured part or completed mouse."
+  ]
+}

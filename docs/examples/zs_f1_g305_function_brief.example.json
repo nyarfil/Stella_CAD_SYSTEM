@@ -1,0 +1,123 @@
+{
+  "original_request": "ZS-F1の公開説明と提供STLから再構成した参照用FunctionBrief。G305の既製電子部品を保持し、小型の軽量ワイヤレスマウスとして成立させる機能群を記録する。これは新規CAD生成への承認済み指示ではなく、出典と未確定事項を整理するStellaCAD教材である。",
+  "functions": [
+    {
+      "id": "electronic_mounting",
+      "source_excerpt": "A fully printable mouse mod for Logitech G305 internals",
+      "function": "Retain and align the selected mouse electronics",
+      "behavior": "The printed structure must hold the selected G305 electronics in stable positions while leaving required controls, sensor optics, battery access, and assembly paths available. The exact PCB geometry is absent from the provided files.",
+      "queries": [
+        "mount and retain mouse PCB",
+        "align electronics in a wireless mouse shell",
+        "locate optical sensor and switch board",
+        "provide internal component support"
+      ]
+    },
+    {
+      "id": "grip_enclosure",
+      "source_excerpt": "Finalmouse Ultralight 2 / X / Starlight Small Mouse G305",
+      "function": "Provide a small hand-contact enclosure",
+      "behavior": "Form a printable outer shell intended for the named small mouse profile. The supplied STL measures about 114 by 59 by 35 coordinate units, but its unit system and fit against the commercial reference shell are not established.",
+      "queries": [
+        "small ergonomic mouse housing",
+        "hand-contact shell for a computer mouse",
+        "enclose electronics in a low-mass shell"
+      ]
+    },
+    {
+      "id": "primary_clicks",
+      "source_excerpt": "Provided triggers-solid.stl contains two connected mesh components. Author guide Step 6 shows adjustable screw/end-piece contacts on the separate primary buttons.",
+      "function": "Transmit left and right primary click input",
+      "behavior": "Provide two independently movable finger surfaces and corresponding switch contacts. Treat rear retention and adjustable contact height as separate interfaces. Check idle/off, electrical actuation, maximum depression and release, including reaction through the switch supports, return, stops and motion clearances. Actual assembly pose, flexure, contact position, travel, force and fatigue remain unmeasured.",
+      "queries": [
+        "mouse primary click lever",
+        "independent left and right mouse buttons",
+        "transfer finger force to microswitch",
+        "compliant click trigger"
+      ]
+    },
+    {
+      "id": "side_buttons",
+      "source_excerpt": "Provided front-button.stl and back-button.stl; author guide Step 5 shows their arms aligned with separate top-shell screw holes and notes that support residue can change their position.",
+      "function": "Provide front and rear side-button input",
+      "behavior": "Expose two thumb controls, retain their arms at the intended top-shell mounting interfaces and transfer each inward press to the correct side switch. Provide support-removal access and check clearance in idle and pressed states. Screw mounting is supported by assembly photos; flexural return, exact transforms, contact location, travel, force and ergonomic reach are not verified.",
+      "queries": [
+        "mouse thumb side buttons",
+        "side button lever actuating switch",
+        "retain and guide a small side control"
+      ]
+    },
+    {
+      "id": "motion_sensing",
+      "source_excerpt": "G305 electronics are retained; Logitech identifies the G305 as using a HERO optical sensor. The rear top-shell circular opening has no verified function.",
+      "function": "Maintain optical tracking through the sensor aperture",
+      "behavior": "Keep a clear optical path and a controlled sensor-to-desk distance while preventing shell features from obstructing the lens. The aperture's precise function and required working height must be verified against the actual G305 sensor assembly.",
+      "queries": [
+        "mouse optical sensor aperture",
+        "maintain sensor lens clearance to desk",
+        "locate optical sensor under a shell opening"
+      ]
+    },
+    {
+      "id": "scroll_input",
+      "source_excerpt": "G305 wheel repair guide Step 5 identifies a metal retaining spring; Step 7 photos show axle engagement and lateral removal. Additional G305 reference STEP contains separately named Encoder and Wheel switch solids, but no wheel body.",
+      "function": "Provide scroll-wheel and wheel-click input",
+      "behavior": "Treat rotation and middle-click depression as separate motions. Record encoder engagement, opposite axle support, axial retention, spring anchors, switch contact, return, stops and assembly paths. Do not assume both axle ends are immovable or that the entire wheel translates vertically. Check idle, rotation, depression and release. The actual depression trajectory, spring force/function beyond retention, axle interfaces and clearances remain unmeasured; no wheel body is included in the supplied STL or additional reference STEP.",
+      "queries": [
+        "mouse scroll wheel support",
+        "wheel axle and encoder alignment",
+        "scroll wheel clearance in housing",
+        "mouse wheel click actuation"
+      ]
+    },
+    {
+      "id": "power_and_charge",
+      "source_excerpt": "Rechargeable AAA via magnetic microUSB tip",
+      "function": "Power the mouse and permit charging access",
+      "behavior": "Accommodate the stated rechargeable AAA cell and magnetic micro-USB charging tip while preserving retention, polarity, contact access, and safe clearance. Battery and charging-hardware geometry are not supplied.",
+      "queries": [
+        "AAA cell holder in wireless mouse",
+        "magnetic charging connector access",
+        "retain rechargeable battery in enclosure",
+        "battery replacement service opening"
+      ]
+    },
+    {
+      "id": "mass_variants",
+      "source_excerpt": "58g with holes / 63g without holes. Weight will vary based on battery and print material.",
+      "function": "Offer perforated and unperforated shell variants",
+      "behavior": "Allow the designer to compare a perforated lightweight shell with a solid shell while retaining necessary load paths and input stiffness. The stated weights are author-reported totals, not mesh-derived or independently measured values.",
+      "queries": [
+        "perforated lightweight mouse shell",
+        "reduce enclosure mass with shell cutouts",
+        "compare solid and vented enclosure variants",
+        "preserve stiffness around mouse buttons"
+      ]
+    },
+    {
+      "id": "assembly_without_soldering",
+      "source_excerpt": "No soldering required",
+      "function": "Permit assembly using the intended existing interfaces",
+      "behavior": "Enable installation and service of the chosen electronics without soldering, using accessible mechanical and electrical interfaces. The actual connector, fastener, and assembly sequence must be taken from the detailed guide or measured hardware.",
+      "queries": [
+        "mouse electronics no-solder assembly",
+        "serviceable enclosure for existing PCB",
+        "accessible assembly path for mouse hardware",
+        "mechanical retention for electronics module"
+      ]
+    }
+  ],
+  "protected_constraints": [
+    "For this reference case, the G305 electronics are the chosen existing hardware interface; do not redesign or reposition them without a separately approved requirement and measured CAD.",
+    "The commercial mouse profile is a named design reference, not a measured surface source in the provided dataset."
+  ],
+  "unresolved": [
+    "The STL files contain no unit metadata; reported extents are coordinate units, not confirmed millimetres.",
+    "No G305 PCB, switch, sensor, wheel, battery, or charging-tip CAD is included.",
+    "The exact sensor datum, lens-to-desk height, board mounting locations, and wheel axis are unmeasured.",
+    "Primary-click and side-button pivots/flexures, clearances, travel, actuation forces, and fatigue life are unverified.",
+    "The linked author guide's seven steps and click/side-button photos have been read. Individual fastener dimensions, assembled CAD transforms and quantitative tolerance values still require confirmation; author PLA/0.2mm/45-degree-top printing settings are not validated for the user's printer.",
+    "Hole-variant mass and stiffness have not been independently measured.",
+    "The published source is CC BY-NC-SA 4.0; this reference brief does not include or authorize reuse of the mesh geometry."
+  ]
+}

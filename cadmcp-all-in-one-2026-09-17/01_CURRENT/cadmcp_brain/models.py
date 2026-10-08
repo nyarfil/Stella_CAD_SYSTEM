@@ -236,6 +236,38 @@ class Artifact(Model):
     contract_digest: str
 
 
+class ProtectedAsset(Model):
+    """Owner-frozen reference geometry in its imported coordinate frame."""
+    artifact_id: Identifier
+    sha256: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+    placement: Literal["as_registered"] = "as_registered"
+    required_output_id: Identifier
+
+
+class EditableReference(Model):
+    """A hash-pinned owner permission to modify one imported reference."""
+    artifact_id: Identifier
+    sha256: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+
+
+class ProjectProtection(Model):
+    """Persistent owner authority; an empty policy preserves legacy projects."""
+    assets: list[ProtectedAsset] = Field(default_factory=list, max_length=64)
+    editable_references: list[EditableReference] = Field(default_factory=list, max_length=64)
+
+    @model_validator(mode="after")
+    def unambiguous(self):
+        asset_ids=[item.artifact_id for item in self.assets]
+        outputs=[item.required_output_id for item in self.assets]
+        if len(asset_ids)!=len(set(asset_ids)): raise ValueError("Protected artifact IDs must be unique.")
+        if len(outputs)!=len(set(outputs)): raise ValueError("Protected required output IDs must be unique.")
+        editable_ids=[item.artifact_id for item in self.editable_references]
+        if len(editable_ids)!=len(set(editable_ids)): raise ValueError("Editable reference IDs must be unique.")
+        if set(asset_ids)&set(editable_ids):
+            raise ValueError("An artifact cannot be protected and editable.")
+        return self
+
+
 class Project(Model):
     schema_version: Literal["1.0"] = "1.0"
     id: Identifier
@@ -247,7 +279,8 @@ class Project(Model):
     plan: Plan | None = None
     measurements: dict[str, Any] = Field(default_factory=dict)
     artifacts: dict[Identifier, Artifact] = Field(default_factory=dict)
+    protection: ProjectProtection = Field(default_factory=ProjectProtection)
     verification: dict[str, Any] | None = None
 
 
-SCHEMAS = {c.__name__: c for c in (Brief, Concepts, Concept, Plan)}
+SCHEMAS = {c.__name__: c for c in (Brief, Concepts, Concept, Plan, ProjectProtection)}

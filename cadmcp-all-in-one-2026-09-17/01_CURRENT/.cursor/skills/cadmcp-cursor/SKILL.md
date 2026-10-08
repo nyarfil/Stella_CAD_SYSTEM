@@ -5,6 +5,9 @@ description: Use when a customer asks you to make, edit, or assemble solid 3D CA
 
 # Cursor structure-first CAD
 
+This product-use skill does not apply to implementing or auditing cadMCP itself.
+During development the server stays disabled except for isolated tests.
+
 This skill uses the owner's installed `cadmcp-design-brain` MCP server. Cursor is
 the reasoning host. The customer is the requester; cadMCP is not a mouse-only
 factory. It does not require Codex CLI or a separate generation API.
@@ -26,8 +29,11 @@ JSON schemas from the MCP; never invent tool arguments or path IDs.
 4. Propose structurally different feasible implementations with force/reaction
    paths, locating/retaining/return/stop behavior, assembly, cited STEP
    (UID or registered project STEP), adaptations and failure risks.
-5. Get Matrix and Recipe schemas. A Recipe needs real STEP: a Req2CAD `reference`
-   and/or a registered `project_step`. Primitive boxes alone are not a catalog.
+5. Get Matrix/Recipe schemas and `brain_studio_capabilities`. Reference CAD is
+   inspiration, optional adaptation or direct reuse; record `reference_uses`
+   without importing its shape when only the principle is useful. An original
+   design uses explicit `design_basis`, `verification_plan` and unknowns.
+   A primitive-based design is not a claim of catalog retrieval.
    Use `brain_studio_synthesize` when combining references, then
    `brain_studio_build`. Only supported operations; do not silently shrink a
    fillet or replace a loft with a box.
@@ -77,7 +83,8 @@ calls as a substitute. For strictly controlled external runs the owner may use
 
 Before repair freeze original_request, functions, dimension_checks,
 clearance_checks, motion_checks, unverified_requirements and protected output
-parts. Make a new prototype attempt, remeasure and repeat the relevant reviews.
+parts. Pass `baseline_subject_digest` when building a correction. Make a new
+prototype attempt, remeasure and repeat the relevant reviews.
 Use `brain_studio_review_status`; never announce completion based on votes alone.
 
 ## Boundaries

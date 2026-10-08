@@ -56,6 +56,11 @@ if sys.platform == "darwin":
     if _brew_lib not in _fallback:
         os.environ["DYLD_FALLBACK_LIBRARY_PATH"] = f"{_brew_lib}:{_fallback}".rstrip(":")
 
+# On Windows, cairosvg and CadQuery can load conflicting native DLL versions.
+# Load CasADi first so its extension resolves before Cairo changes the DLL set.
+if sys.platform == "win32":
+    import casadi  # noqa: F401, E402
+
 import cairosvg  # noqa: E402
 import cadquery as cq  # noqa: E402
 

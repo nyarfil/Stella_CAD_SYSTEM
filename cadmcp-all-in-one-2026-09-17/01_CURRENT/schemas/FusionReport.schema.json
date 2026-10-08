@@ -1,0 +1,112 @@
+{
+  "$defs": {
+    "FusionReportOccurrence": {
+      "additionalProperties": false,
+      "properties": {
+        "occurrence": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "title": "Occurrence",
+          "type": "string"
+        },
+        "translation_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Translation Mm",
+          "type": "array"
+        },
+        "rotation_axis": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Rotation Axis",
+          "type": "array"
+        },
+        "rotation_deg": {
+          "default": 0.0,
+          "maximum": 360,
+          "minimum": -360,
+          "title": "Rotation Deg",
+          "type": "number"
+        },
+        "rotation_origin_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Rotation Origin Mm",
+          "type": "array"
+        },
+        "bbox_mm": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 6,
+              "minItems": 6,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bbox Mm"
+        }
+      },
+      "required": [
+        "occurrence",
+        "translation_mm"
+      ],
+      "title": "FusionReportOccurrence",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "adapter_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Adapter Version",
+      "type": "string"
+    },
+    "handoff_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Handoff Digest",
+      "type": "string"
+    },
+    "saved": {
+      "const": false,
+      "default": false,
+      "title": "Saved",
+      "type": "boolean"
+    },
+    "units": {
+      "const": "mm",
+      "default": "mm",
+      "title": "Units",
+      "type": "string"
+    },
+    "occurrences": {
+      "items": {
+        "$ref": "#/$defs/FusionReportOccurrence"
+      },
+      "maxItems": 16,
+      "minItems": 1,
+      "title": "Occurrences",
+      "type": "array"
+    }
+  },
+  "required": [
+    "handoff_digest",
+    "occurrences"
+  ],
+  "title": "FusionReport",
+  "type": "object"
+}

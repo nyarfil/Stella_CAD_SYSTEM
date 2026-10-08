@@ -22,8 +22,13 @@ Stella CAD System は、複数の AI-CAD 系プロジェクトの良い部分を
 | 取り込んだコミット | `c7503b4` |
 | そのコミットの題名 | `OSS Public readiness` |
 | 取り込み日 | 2026-09-16 |
+| 最終上流確認 | 2026-10-03（`main` / `HEAD` は `c7503b4febd3bfa3368c1df38adb187eeb375fd7`） |
 | 置き場所 | `ai-cad-labs/` |
 | Python | 3.13（AgentCAD の 3.12 と別 venv） |
+
+2026-10-03 の再確認では、本家 `main` / `HEAD` は上記と同じコミットで、新しい上流revisionはありませんでした。Windows取り込み時に欠けていたフロントエンド2ファイルと`projects/.gitkeep`を復元し、`tools`、`.claude`、`.opencode`の5本のJunctionを現配置の`.shared`へ修復しました。実行環境は既存`.venv`を`.venv-backup-20261003`へ保持したうえで、`uv.lock`からPython 3.13環境を再作成しています。
+
+Windowsでは、rendererがCairoを先に読み込むとCasADiのネイティブDLL解決に失敗するため、Stella側の互換パッチとしてCasADiを先に読み込ませています。確認結果は`aicad-health.ps1`が`ok: true`、CadQuery 2.8.0 / CasADi 3.7.2のimport成功、renderer 12件、その他のPython試験145件、API文書試験4件の計161件成功、フロントエンド本番build成功です。上流試験163件のうち残る2件は、Windowsでも子プロセス停止自体は検出できる一方でPOSIXの`SIGSEGV`文字列を要求するものと、Windowsパスに`/`を要求するものです。要件は緩和していません。`npm ci`の監査結果には上流lock由来のmoderate 7件 / high 15件が残っています。
 
 ### text-to-cad（cadgen）
 
