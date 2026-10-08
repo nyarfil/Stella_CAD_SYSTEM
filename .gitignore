@@ -39,3 +39,6 @@ integration/fusion-community/.venv/
 # Per-project owner CAD selection and FreeCAD local evidence
 .stella/cad-backend.json
 integration/freecad/verification/
+
+# build123d-mcp trial venv
+integration/build123d-mcp/.venv/

@@ -69,3 +69,5 @@ Build123dをネイティブRecipe workerとして追加したわけではあり�
 本体のルーティング、隔離stdio呼出し、MCP通信、公開schema一致、状態保護、Fusion引渡し、マウス入力、既存planningを含む対象試験は91件成功・Windows symlink制約で1件skip。案件選択・自動方針・設定保護・改変decision・方針競合・FreeCAD停止を含むCLI試験は25件成功・同制約で1件skip。合計116件成功、2件skip。schema --checkは差分0。
 
 ソース上のMCP工具は58件です。稼働中のMCPプロセスへ追加工具が既に読み込まれたとは扱いません。新しい案件チャットで `brain_cad_route` の存在を確認してください。全試験一括回帰や各外部CADでの実マウス曲面生成は、この検証には含みません。
+
+Build123d MCP（試験導入）の導入場所・有効化手順は `docs/CLAUDE_CODE_JA.md` の「Build123d MCP」節を参照。

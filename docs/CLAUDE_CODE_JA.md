@@ -24,3 +24,11 @@ classcad / stella-fusion-community / stella_freecad_mouse_b は、案件で所�
 - 個人の旧登録（local scope の同名サーバー）は project scope より優先される。重複は無害だが、整理するなら `claude mcp remove <name> -s local`。
 - `.mcp.json` の絶対パスはこのPC前提。別PCでは venv パスを直す。
 - 事前許可は読取専用に限定。これは物理性能・レビュー受入の認定ではない。
+
+## Build123d MCP（試験導入・任意）
+- 内容: サードパーティの `pzfreo/build123d-mcp`（Apache-2.0、`build123d-mcp==0.3.90`）。Claudeがbuild123dコードを書き、サーバーが実行してSTEPを出力する text-to-CAD 経路。
+- 場所: `integration/build123d-mcp/`（専用venv `.venv`、gitignore済み。手順・試験は同フォルダの README.md と `smoke_test.py`）。
+- 有効化: 既定では `.mcp.json` に未登録。案件で所有者がBuild123dを選んだ後にだけ、`mcp.snippet.json` をその案件のMCP設定へ写す。
+- ネイティブRecipe工具とは別runtime。失敗時に他のCADへ自動切替しない。
+- 出力STEPは必ず `brain_import_step` で取り込み検査してから使う。
+- Windows注意: システムフォント破損（`mstmc.ttf`）でbuild123dがimport失敗するため、`winfix/sitecustomize.py` をPYTHONPATHで読み込む（snippet設定済み）。

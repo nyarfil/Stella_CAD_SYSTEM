@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "build123d": {
+      "type": "stdio",
+      "command": "E:\aiwork\Stella_CAD_SYSTEM\integration\build123d-mcp\.venv\Scripts\build123d-mcp.exe",
+      "args": [],
+      "env": {
+        "PYTHONPATH": "E:\aiwork\Stella_CAD_SYSTEM\integration\build123d-mcp\winfix"
+      }
+    }
+  }
+}
