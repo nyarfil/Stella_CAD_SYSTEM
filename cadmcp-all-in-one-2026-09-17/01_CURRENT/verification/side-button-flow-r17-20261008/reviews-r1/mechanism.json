@@ -1,0 +1,186 @@
+{
+ "schema_version": 1,
+ "subject_digest": "d7a29f948428cd85964a67de478ce8c04cfcabad5d72f132cc2d545c986dcd19",
+ "role": "mechanism",
+ "reviewer_label": "Claude subagent (mechanism role, rev17 parallel)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "M1-no-hard-stop-leaves-unprotected",
+   "severity": "major",
+   "claim": "Inward travel has no stop of its own (F5: travel ends at switch-pin bottoming). The switch is the only limit, and the stated assembly order fits the carrier and pins before the switch/PCB, and inserts are pulled and refitted with the switch in place. With the switch or insert absent, nothing stops the face. With my own read-only probe I translated button+insert in -Y against the shell STEP: the shell gap is 0.344 mm at 1.5 mm, then grows (0.517 at 2.0, 4.04 at 6.0 mm). No shell feature meets the moving face. The leaves already reach 16.15 MPa peak against a 16.7 MPa allowance at 1.62 mm, so a press of only about 1.7 mm (stress scales linearly) exceeds the declared allowance. The datasheet tensile strength of 33.4 MPa is reached at about 3.4 mm. Handling the prototype in the stated assembly order can therefore overstress the only return spring. The leaves are also the only lateral guide.",
+   "evidence": [
+    "recipe functions.F5_limit_overtravel: \"Travel ends at the switch pin bottoming (no hard stop)\"",
+    "design_basis assumption Assembly: carrier and pins first, then \"switch/PCB fitted; inserts tried from outside\"",
+    "measurements parallel-leaves-beam: peak_mpa 16.15, allowed_mpa 16.7, deflection 1.62 mm",
+    "Own probe (CadQuery on exported button, actuator_insert, shell STEP): shell distance 0.391/0.364/0.344/0.396/0.517/1.363/4.036 mm at 0.6/1.2/1.5/1.8/2.0/3.0/6.0 mm inward travel; button-only distance to switch_pin 0 at 1.2 mm and to switch_body 0 at 1.8 mm, so without the insert the plunger itself lands on the switch",
+    "shell/iso.png and button/iso.png: no stop rib or stop face on the inward stroke"
+   ],
+   "proposed_change": "Add a rigid inward travel stop between the button (spine or plunger) and the shell or carrier. Place it after the worst-case pin-flush pose (1.52 mm plus margin) and before the leaf allowance (about 1.7 mm with the current leaves). Alternatively, reduce leaf stress (thinner or longer leaves) so the stop gap is printable. Add a motion check that expects contact (blocking) with the stop at its declared travel, and add leaf stress at that stop travel to the flexure check.",
+   "required_test": "A motion check with expect blocking that shows the face meets the new stop at the declared travel with no switch fitted. Then a flexure check with deflection = stop travel + preload whose peak stress is within the allowance. Physical test: press the assembled carrier without a switch to the stop 20 times and measure the change in rest position."
+  },
+  {
+   "id": "M2-overtravel-not-checked",
+   "severity": "major",
+   "claim": "stack_v17 lists overtravel among the required datasheet values, but it never uses that value. The pass verdicts therefore say nothing about whether the press to pin flush stays within the guaranteed overtravel. The stated mechanism (switch pin bottoming as the end stop, the switch \"takes the overtravel\") drives the pin beyond OP by OP minus body height. For the drawn Zippy that is 7.0 - 6.65 = 0.35 mm nominal and 0.8 mm at the tolerance limits, against OT 0.2 mm min. For Omron D2F it is 0.5 mm nominal and 1.2 mm worst, against OT 0.25 mm min. The datasheets do not guarantee travel or force rating beyond OT, and the whole thumb force goes through the Ø1.0 printed tip into the pin and the owner PCB. This is labelled UNKNOWN in unverified_requirements, but the profile verdict \"pass\" reads as if overtravel had been checked.",
+   "evidence": [
+    "scripts/side_button_leaf_recipe.py stack_v17: need includes overtravel; the returned travel_to_pin_flush_max_mm uses only OP, MD, step and body_height",
+    "cadmcp_brain/studio/switch_profiles.py: zippy OP 7.0+/-0.2, body_height 6.65+/-0.25, overtravel 0.2 min; omron OP 5.5+/-0.3, body 5.0+/-0.4, overtravel 0.25 min",
+    "unverified_requirements: \"zippy_df_pin: pass (to pin flush 1.12 mm); omron_d2f_pin: pass (to pin flush 1.52 mm)\"",
+    "measurements press-insert-clear-of-switch-body: distance 0.0 at the 0.6 mm end pose (tip lands on the body top)"
+   ],
+   "proposed_change": "Either use overtravel in stack_v17 and report pin-flush travel beyond OP+OT as exceeding the datasheet guarantee, or limit the travel to OP + OT min with a hard stop (see M1). In that case, state the stop position relative to the insert rule. Change the profile verdict wording so that \"pass\" means only that the clearance is checked to pin flush, not that the switch overtravel is within rating.",
+   "required_test": "Add a check (or a stack field) that compares worst-case travel beyond OP with overtravel min for every registered profile and reports it. Physical test: on the real switch, measure the force at pin bottoming and the click after 1000 presses at 5 N."
+  },
+  {
+   "id": "M3-insert-reaction-on-friction-only",
+   "severity": "major",
+   "claim": "The switch reaction on the actuator insert points outward (+Y), toward the face. The insert head sits on the counterbore floor, which only resists inward motion. The outward switch reaction is therefore carried only by the ASSUMED 0.05 mm printed ABS interference along the shank. That reaction is the pin spring force at the click (up to 150 gf, 1.47 N) and the full thumb force once the pin bottoms (no hard stop, M1). There is also a standing load at rest. The insert rule puts the tip 0.1-0.32 mm above OP, while Zippy pretravel is up to 0.62 mm (FP up to 7.35 above datum against OP 7.0), so the pin can be partly depressed at rest and push the insert outward continuously. Creep or slip of the insert lengthens the travel to the click, voids the insert-rule calibration and raises the head above the counterbore. The press-fit check only proves an overlap volume, not retention.",
+   "evidence": [
+    "recipe ops insert_head (origin y 29.74, height +0.6) on insert_counterbore floor at y 29.74; insert_tip at y 22.8 bears on switch_pin top at y 22.799",
+    "press_fits insert-in-plunger basis \"ASSUMED 0.05 mm radial interference\"; measurement scope \"retention force ... not verified\"",
+    "switch_profiles zippy_df_pin pretravel 0.62 max, free_position 7.35 max, operating_position 7.0; design_basis insert rule rest 0.1-0.2 mm above release",
+    "actuator_insert/iso.png: plain head, shank, tip; no outward retention feature"
+   ],
+   "proposed_change": "Give the insert an outward-load path that does not rely on friction. Options are a printed snap/latch shoulder that bears against an inward-facing face of the plunger, or a quarter-turn bayonet in the plunger bore, while keeping it removable from outside. Alternatively, state the outward force (pin preload at rest plus bottoming force) as a declared load and require a retention test before relying on the insert rule. Declare whether the pin is depressed at rest.",
+   "required_test": "Physical: measure the push-out force of printed inserts from the printed plunger (n>=5) and compare it with 5 N (or the stop-limited force). Then measure the rest-tip height before and after 24 h at rest and after 1000 presses; the drift must stay below one insert step (0.1 mm)."
+  },
+  {
+   "id": "M4-preload-below-print-tolerance",
+   "severity": "minor",
+   "claim": "The rest preload (fixes the revision-16 \"no rest preload\" finding) is a 0.1 mm interference of the stop tab into a single lug at the far (+X) end. With the leaf pair stiffness of 0.53 N/mm (2 x 0.266) that is about 0.05 N. A 0.1 mm interference is within ordinary FDM positional error of a lug grown from the curved inner skin and a tab on a separately printed carrier, so the as-printed result can be anything from a gap (rattle) to several times the preload. The press-fit check confirms only the nominal overlap volume (0.66 mm3).",
+   "evidence": [
+    "design_parameters preload_mm 0.1; press_fits rest-preload-on-lug basis \"Declared 0.1 mm preload\"",
+    "measurements parallel-leaves-beam stiffness_n_per_mm 0.2659 per leaf, parallel_count 2",
+    "rest_stop/iso.png: one lug clipped by the inner skin; measurements press-leaves-the-lug starts at 0.11 mm, so the release of the preload itself is not swept"
+   ],
+   "proposed_change": "Raise the designed preload above the expected print error (for example 0.3-0.5 mm of leaf pre-bend, with the face rest position recomputed), or make the lug adjustable or selectable like the insert series. State the preload force and its tolerance band.",
+   "required_test": "Measure the rest position and the force needed to lift the face off the lug on printed parts (n>=3). Confirm the face does not rattle and that the rest gap to the skin is within the stated 0.1 mm +/- tolerance."
+  },
+  {
+   "id": "M5-yaw-plan-overstated",
+   "severity": "minor",
+   "claim": "The verification plan says twist and yaw are checked \"0.3 mm into the stroke and at the deepest pose\", but the far-end-yaw checks start only at 0.3 mm. The deepest pose is checked for edge twist only. My own end-pose probe at 1.52 mm with +/-0.29 deg yaw about (-9, 15.3) gave 0.276 / 0.400 mm to the shell and 0.69-0.82 mm to the lug, so the clearance likely holds. The contract text, however, claims a check that was not run.",
+   "evidence": [
+    "recipe rotation_checks far-end-yaw-positive/negative/on-lug: start_translation_mm [-0.00225, -0.3, 0]",
+    "verification_plan item 4 wording",
+    "Own probe (end poses only, not a swept certificate): deep yaw shell distance 0.276 mm (+) / 0.400 mm (-)"
+   ],
+   "proposed_change": "Add far-end-yaw checks at the deep pose, or correct the plan text to say yaw is checked at 0.3 mm only.",
+   "required_test": "A sampled_rotation_clearance at start translation (-0.0578, -1.52, 0) for +/-0.29 deg against the shell, with min 0.15 mm."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "9fce0cf81e5a181551e7856e59322b40fb5592de6316470421aa78a0fad9d92c",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/actuator_insert/iso.png",
+   "status": "viewed",
+   "observation": "Insert shows a short small-diameter tip, a longer Ø2 shank and a thin flat head at the far end; no latch, barb or outward-facing shoulder that could resist a push from the tip side, so outward retention is only the shank press fit."
+  },
+  {
+   "attachment_sha256": "ebce857110c0877e381e7f1a5f7713fce5b95991124637342fcb7803005b525f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/assembly.png",
+   "status": "viewed",
+   "observation": "Assembled shell with the translating face (orange) flush in the side window and the insert head visible in a counterbore at the face centre; internal carrier, leaves, lug and switch are hidden, so no travel stop is visible."
+  },
+  {
+   "attachment_sha256": "f4d3b70e02ece7e7042909eb59a98354642eca6fc3f91a658b2131d7a99f8a26",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/build-record.json",
+   "status": "viewed",
+   "observation": "Build record kind recipe_build, attempt 8a379bfa..., subject_digest d7a29f94...dcd19 matching the packet, recipe_context_digest b7619206...; carries the same measurements and file hashes as the packet."
+  },
+  {
+   "attachment_sha256": "36dc9b70a19101fec7e187ed66c2d3e04df5cfcccc1a470fc4dc65949bca8889",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/button/iso.png",
+   "status": "viewed",
+   "observation": "Button: curved skin piece with the insert counterbore, a pad rising at the leaf end, the spine/plunger behind the face and the rest-stop tab protruding past the far window edge; no feature that meets a shell surface on the inward stroke."
+  },
+  {
+   "attachment_sha256": "a4f00474c4efd14f40d630e2eaa21ca41e43cf5007cbcabd4f1a0ebb3f0de9ab",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/carrier_block/iso.png",
+   "status": "viewed",
+   "observation": "Block with two vertical through holes for the press-fit pins and the R1 root fillet notches on the leaf side; leaves are separate output parts joined at its face."
+  },
+  {
+   "attachment_sha256": "786a6e970317bfe0a593bed4220d2d2d7d7122e1c663433c5ce62aebab6615dc",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/leaf_a/iso.png",
+   "status": "viewed",
+   "observation": "Leaf A: thin flat 24 x 8 mm plate (0.6 mm thick) with the R1 tip fillet at one end; flat outer face."
+  },
+  {
+   "attachment_sha256": "f4bb3f1536a74520d3c3dd13d9c9155ac4a0bf6068d18c289f04491d88b504ac",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/leaf_b/iso.png",
+   "status": "viewed",
+   "observation": "Leaf B: same 0.6 mm plate with inner and outer tip fillets at the pad end."
+  },
+  {
+   "attachment_sha256": "1d389e5edad13a2f82bc55be1b36dccbf3f3ae030b86bd2071f021730b62e42d",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/measurements.json",
+   "status": "viewed",
+   "observation": "geometry_checks_verdict pass, overall_verdict unknown. Flexure: per-leaf 0.266 N/mm, beam 0.86 N + switch 1.47 N = 2.33 N in the 0.3-3 N band, peak stress 16.15 MPa vs allowed 16.7 MPa (3% margin) at 1.62 mm. press-insert-clear-of-switch-body runs only to 0.6 mm and ends at 0.000 mm (tip on body). press-leaves-the-lug starts at 0.11 mm. Yaw checks are at 0.3 mm stroke only."
+  },
+  {
+   "attachment_sha256": "9099d793a07329e82831d1c0fce6325f0a8fb895d03b4ed13befc050dd2be434",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/pin_1/iso.png",
+   "status": "viewed",
+   "observation": "Pin 1: plain cylindrical shank with a flat head at the bottom; no retention feature besides interference."
+  },
+  {
+   "attachment_sha256": "1adde00bafd6d9c541379bf0b2895a4521eb4a99e1246908161d3d6dd848dcb6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/pin_2/iso.png",
+   "status": "viewed",
+   "observation": "Pin 2 is identical to pin 1: a plain shank with a bottom head."
+  },
+  {
+   "attachment_sha256": "050356801d2aeda691f8a770b330147a3a9e385f31a5a33dc7bb7c243bf4d58b",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/rest_stop/iso.png",
+   "status": "viewed",
+   "observation": "Rest-stop lug is a small block clipped by the curved inner skin; one lug at the far (+X) end only."
+  },
+  {
+   "attachment_sha256": "52aa764c72264f04e38ce40e8654c955c7062c5828b3988846f471c590337c4f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell with the open side window and the running gap; no internal rib or stop is visible near the window that would limit inward travel of the face."
+  },
+  {
+   "attachment_sha256": "7b7ff223cd76a231584532d3550c5add6ea3acfa2b6bc33c58be318ab63c7a92",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/switch_body/iso.png",
+   "status": "viewed",
+   "observation": "Switch body placeholder is a plain 12.7 x 6.65 x 5.8 box (Zippy DF profile) with no mounting or PCB representation."
+  },
+  {
+   "attachment_sha256": "0bd38f60814b8f72ba6c292c88ff9ed2a7bb948c300c9eda780c3b16278db22e",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/switch_pin/iso.png",
+   "status": "viewed",
+   "observation": "Switch pin placeholder is a plain block (1.2 x 0.6 x 2.9 mm) standing on the body top, drawn with its top 0.001 mm under the insert tip at rest."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Revision-16 items checked: insert rule now release-referenced in 0.1 mm steps (fixed in the stack); insert removable from outside through the face (fixed in geometry; tweezer grip not verified); pins vertical and pressable from the open bottom (insertion sweeps pass, though continuous_swept_motion is not_proven); rest preload added (see M4); full-width lower pad joins both leaf tips (fixed); Ø1.0 tip lands only on the 1.2 mm-wide pin (fixed; pin x width itself ASSUMED); yaw added at 0.3 mm (see M5).",
+  "Owner policy: all printed parts are declared ABS (PolyLite ABS) and no screws are used; joints are press-fit ABS pins, a press-fit insert and a preload. No violation found.",
+  "Real switch model (owner says Zippy DF3; OP1 side switches listed as Kailh GM 2.0 whose dimensions/OP/OT are UNKNOWN), its bottoming force rating and PCB support are owner/physical questions.",
+  "Whether the switch pin is depressed at rest depends on the real FP of the fitted switch; only a physical fit can tell.",
+  "Leaf creep under the standing preload and switch-pin load, and fatigue of 0.6 mm printed ABS leaves, are UNKNOWN; beam theory with typical datasheet values only.",
+  "Edge-twist (0.50 deg) and yaw (0.29 deg) magnitudes come from closed-form stiffness with ASSUMED 3 N and Poisson 0.35; the platform (pad, spine, face) is treated as rigid; compressive leaf stability under the yaw moment was not checked (my estimate: about 8.6 N axial vs about 21 N clamped-clamped buckling, so probably not limiting).",
+  "Whether \"easier to press\" is met by equal force anywhere on the face plus short click travel is the owner's interpretation to confirm; press feel and click feel need a physical test.",
+  "My probes were read-only on exported STEP end poses (not swept certificates) and did not include deformation or print tolerance."
+ ]
+}

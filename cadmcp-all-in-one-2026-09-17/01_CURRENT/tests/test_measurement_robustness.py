@@ -186,16 +186,28 @@ def test_side_button_flow_brief_and_matrix_are_valid():
 
 
 @kernel
-def test_side_button_parallel_revision16_builds_and_passes_every_check(tmp_path):
+def test_side_button_parallel_revision17_builds_and_passes_every_check(tmp_path):
     from cadmcp_brain.studio.recipe import execute_recipe
-    from side_button_leaf_recipe import side_button_parallel_recipe
-    result=execute_recipe(Recipe.model_validate(side_button_parallel_recipe()),{},tmp_path/'r16')
+    from side_button_leaf_recipe import side_button_parallel_recipe_v17
+    result=execute_recipe(Recipe.model_validate(side_button_parallel_recipe_v17()),{},tmp_path/'r17')
     failed=[c['id'] for c in result['checks'] if c['verdict']!='pass']
     assert result['geometry_checks_verdict']=='pass',failed
     checks={c['id']:c for c in result['checks']}
-    assert checks['rest-outward-blocked-by-lug']['kind']=='sampled_translation_blocking'
-    beam=checks['parallel-leaves-beam']
-    assert beam['checks']['force']['end_condition']=='guided' and beam['checks']['force']['parallel_count']==2
+    assert checks['press-insert-clear-of-switch-body']['verdict']=='pass' and checks['far-end-yaw-positive']['verdict']=='pass'
+    assert next(c for c in checks.values() if c.get('press_fit_id')=='rest-preload-on-lug')['verdict']=='pass'
+
+
+def test_side_button_parallel_revision17_contract():
+    from side_button_leaf_recipe import side_button_parallel_recipe_v17,stack_v17
+    from cadmcp_brain.studio.switch_profiles import PROFILES
+    recipe=Recipe.model_validate(side_button_parallel_recipe_v17())
+    pins=[o for o in recipe.operations if o.id.startswith('pin_') and o.id.endswith('_shank')]
+    assert all(o.axis==[0.,0.,1.] for o in pins)  # vertical, pressed from the open bottom
+    assert all(c.min_mm>=.15 for c in recipe.rotation_checks if 'lug' not in c.id)
+    rule=stack_v17(PROFILES['zippy_df_pin'])
+    assert rule['rest_above_op_mm'][0]==.1 and abs(rule['rest_above_op_mm'][1]-(.12+.2))<1e-9  # one to two steps above release
+    assert all(stack_v17(pr)['verdict']=='unverified' for k,pr in PROFILES.items() if k in ('huano_mouse_generic','kailh_gm20'))
+    assert 'edge_press_offset_mm' not in recipe.design_parameters
 
 
 def test_side_button_parallel_revision16_contract():

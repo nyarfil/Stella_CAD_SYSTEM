@@ -1,0 +1,209 @@
+{
+ "schema_version": 1,
+ "subject_digest": "2977ef89492e90ae71cfc7c406d751e41de4e622452f5937e98a504461370f1c",
+ "role": "manufacturing",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (manufacturing role, rev16 parallel)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "M1-carrier-print-orientation-incomplete",
+   "severity": "major",
+   "claim": "The stated carrier print orientation (\"flat on the outer face of leaf A ... no support under the leaves\") is incomplete. In that orientation (+Y up) the carrier has large unsupported down-facing surfaces that the contract does not mention: leaf B is a 21 mm bridge 7.3 mm above leaf A, and the plunger tip, the rest-stop tab and the spine start in mid-air. The skin underside is almost horizontal. The insert bore opens downward, so support would form inside a 1.9 mm blind hole where it cannot be removed. Leaf A is printed as the first layers on the bed and leaf B as a bridge, so the two leaves are made by different processes. The guide check assumes they are identical (parallel_count=2 on leaf_a only).",
+   "evidence": [
+    "Read-only CadQuery probe of the fused carrier (block+leaves+button STEP), faces with normal y < -0.707 above the bed plane y=12: leaf B underside 203 mm2 at y=20 (x -30..-9); plunger tip 22.2 mm2 at y=24; stop tab 14.7 mm2 at y=25; spine undersides 16.8+21.2 mm2 at y=26; skin underside BSPLINE 111 mm2 at y 27.5-30.4 (normal y -0.97); insert-bore ceiling 2.84 mm2 at y=28.",
+    "Insert bore probe on the axis (x=2, z=13): air at y=24.5, 26, 27.9; material at y=28.05, so a blind bore 4 mm deep opens toward the bed.",
+    "design_basis.assumptions: \"Printing: carrier flat on the outer face of leaf A with block and pad flush (no support under the leaves); shell rim-down with supports under the window lintel, the roof, the posts and the lug.\" No support is declared for the carrier.",
+    "flexure check parallel-leaves-beam: beam_node leaf_a, parallel_count 2; leaf_b is not analysed separately."
+   ],
+   "proposed_change": "State the complete carrier print setup: orientation, the supported regions (plunger, tab/riser, spine, skin underside), a support blocker or other treatment for the insert bore, and whether leaf B is bridged or supported. Otherwise choose an orientation where both leaves print the same way, for example on the z=8.5 side so both leaves are vertical walls built by the same perimeters. If needed, extend the pad and plunger to the bed plane. Record the chosen orientation in the outputs' manufacturing_process.",
+   "required_test": "Slice the carrier in the declared orientation and report the support map. Print one carrier, measure leaf A and leaf B thickness at the root, middle and tip, and confirm the insert bore is clear to full depth with a 1.9 mm gauge pin."
+  },
+  {
+   "id": "M2-leaf-b-tip-sharp-corner",
+   "severity": "major",
+   "claim": "The revision-15 sharp-corner finding is only partly fixed, and the contract misstates it. The design basis says the outer faces \"run flush into block and pad\". That holds at both roots and at the leaf A tip, but leaf B's outer face (y=20.7) meets the pad, which continues up to the skin, at a square re-entrant corner. In a guided beam the end moment at the tip equals the root moment, so the peak stress sits at that corner. Both tips are also attached only over the pad width (z 10.5-17.5, 7 mm of the 10 mm leaf). The flexure check assumes a full-width rigid clamp and SCF 1.5 \"at R1-filleted corners\". A simple width-ratio estimate (10/7 x 9.69 MPa x 1.5 = 20.8 MPa) already exceeds the 16.7 MPa allowance. That is an estimate, not a measurement, but it shows the reported 14.5 MPa pass is not conservative for the geometry as built.",
+   "evidence": [
+    "STEP probe of the fused carrier: point (-9.05, 20.75, 14) is air, (-8.95, 20.75, 14) and (-9.05, 20.65, 14) are material, so a 90 deg concave corner sits at x=-9, y=20.7; straight edges there over z 8.5-10.5, 10.5-17.5 and 17.5-18.5.",
+    "recipe: tip fillets only on the inner faces (_fillet(..., ya + t, ...) and (..., yb, ..., -1, ...)); pad_box y from leaf_a_y_mm=12 to 40, z 10.5-17.5; leaves z 8.5-18.5.",
+    "measurements parallel-leaves-beam: nominal 9.69 MPa, peak 14.54 MPa, allowed 16.7 MPa, stress_concentration_basis \"ASSUMED 1.5 at R1-filleted corners (r/t about 1.4)\", beam width 10 mm.",
+    "leaf_a/iso.png and leaf_b/iso.png show the tip fillet spanning only part of the leaf width."
+   ],
+   "proposed_change": "Add an R1 fillet, or a flush step, on the outer face of leaf B where it meets the pad, and extend the pad to the full leaf width (z 8.5-18.5, still inside the skin) or narrow the leaf ends to the pad width. Correct the design-basis sentence. Run the flexure check on both leaves, or state why one stands for both.",
+   "required_test": "Rebuild and re-run the flexure check with the corrected tip geometry. Then do a physical cycling test: press the printed carrier to the deep travel for a stated number of cycles and inspect the leaf B tip and both roots for whitening or cracks."
+  },
+  {
+   "id": "M3-force-band-margin-below-process-variation",
+   "severity": "major",
+   "claim": "The force-band pass (2.91 N against a 3.0 N limit) has a 3 % margin, smaller than the variation the stated process and the CAD itself introduce. Leaf force scales with t^3/L^3. A leaf only 0.014 mm thicker than 0.7 mm, or an effective free length 0.44 mm shorter than 22 mm, puts the total above 3.0 N. The beam model uses the bare 22 mm box, but the CAD adds R1 fillets at both ends of every leaf, which shorten the effective free length. With no layer height stated, a 0.7 mm leaf is also not a whole number of layers at common layer heights. The pass is therefore a nominal-geometry result, not evidence about the printed part.",
+   "evidence": [
+    "measurements parallel-leaves-beam force: beam_n 1.439, switch_operating_max_n 1.471, total_n 2.910, band 0.3-3.0 N; beam_mm length 22.0, thickness 0.7.",
+    "Sensitivity (my arithmetic from the same formula k=12EI/L^3, two leaves): total=3.0 N needs beam 1.529 N, ratio 1.0626, so t=0.7143 mm or L=21.56 mm.",
+    "recipe: root fillets (block side) and tip fillets (leaf side) of radius 1 mm on the inner faces of both leaves; flexure beam_node is the unfilleted leaf_a box.",
+    "design_parameters: leaf_thickness_mm 0.7; no layer height or line width is declared anywhere in the recipe or design_basis."
+   ],
+   "proposed_change": "Either give the leaves margin, for example a stiffness target in the middle of the assumed band, or report the force check with a stated thickness and length tolerance rather than a single nominal pass. State the layer height and choose a leaf thickness the stated process can produce. Do not change the band.",
+   "required_test": "Force-displacement test of a printed carrier on a fixture: force at the 1.05 mm deep travel without the switch, compared with the 1.44 N prediction. Measure printed leaf thickness."
+  },
+  {
+   "id": "M4-insert-series-seating-datum",
+   "severity": "major",
+   "claim": "The revision-15 rest-gap fix (inserts in 0.05 mm length steps, the longest that does not operate the switch is fitted) has no defined seating datum. The insert is a plain cylinder pressed into a blind bore, so its protrusion is set by press depth or by the bore floor. In the stated orientation that floor is an overhanging ceiling, or carries support debris (see M1). Fitting the longest non-operating insert means pressing and pulling press-fit inserts from a 1.9 mm blind printed bore after the switch/PCB is installed, and each cycle changes the fit. The insert print orientation and layer height are not stated, so it is unverified that a 0.05 mm length series can be printed at all, and the series range (number of inserts) is undefined.",
+   "evidence": [
+    "actuator_insert STEP bbox x 1-3, y 22.8-28.0: plain 2 x 5.2 mm cylinder; actuator_insert/iso.png shows no shoulder.",
+    "recipe: insert_hole r 0.95, depth 4.01 mm, blind (button probe: material at y=28.05); press_fits insert-in-plunger basis \"ASSUMED 0.05 mm radial interference\".",
+    "design_basis: \"inserts printed in 0.05 mm length steps; the longest that does not operate the switch at rest is fitted\"; assembly order puts the carrier in before the switch/PCB.",
+    "outputs actuator_insert manufacturing_process \"FDM ABS insert from a 0.05 mm length series\" with no orientation, range or count."
+   ],
+   "proposed_change": "Give the insert a shoulder or head that seats on the plunger tip face, so protrusion is set by the measured insert, not by bore depth. Or make the bore a through bore with a defined stop. State the insert print orientation, the measured-length sorting rule and the series range and count. Describe how inserts are swapped without destroying the press fit, for example a slip fit plus a retention feature, or swapping before the PCB is fixed.",
+   "required_test": "Print the declared insert series and measure each length with a stated instrument. Press, remove and re-press one insert 5 times and measure protrusion each time. Then do the click-referenced selection on the real switch and record the chosen step."
+  },
+  {
+   "id": "M5-pin-fit-and-double-datum",
+   "severity": "major",
+   "claim": "The carrier location fix relies on 0.03 mm (block) and 0.05 mm (post) radial interference in four holes that are all horizontal in their stated print orientations. The two hole sets are in separately printed parts, and nothing sets their coaxiality before the pin is pressed. The face rest position is defined twice: by the tab on the lug, with zero designed leaf preload (insertion end pose 0.02 mm from the lug), and by the printed pin-hole positions. Any hole-position error then shows up as a recessed face (tab off the lug) or as preload, and the press fit cannot absorb misalignment. The checks prove only rigid overlap volume, as their scope says. Using \"locates the carrier, no play\" as a fixed result is treating an ASSUMED fit as verified.",
+   "evidence": [
+    "recipe: block holes and post holes are cylinders with axis [1,0,0]; carrier printed +Y up and shell rim-down (+Z up), so all four holes are horizontal.",
+    "measurements overlap-carrier_block-pin_1/2 and overlap-shell-pin_1/2: kind declared_press_fit_interference, scope \"retention force, hoop stress and printed hole accuracy are not verified\".",
+    "press_fits basis: \"ASSUMED 0.03 mm radial interference through the block (locates the carrier, no play)\".",
+    "carrier-insertion samples: shell distance 0.0 along the whole path; rest_stop distance 0.02 mm at the end pose, so no preload is designed."
+   ],
+   "proposed_change": "Make one datum govern. For example, hold the tab on the lug, then match-drill or ream the block and post holes together and press the pins. Or design a small stated leaf preload so the lug is the rest datum. Replace the single nominal pin with a coupon-calibrated pin or hole size, or a short diameter series, as was done for the insert. Add a lead-in chamfer and state the pin print orientation.",
+   "required_test": "Print a hole/pin coupon in the same orientations and pick the fit by measured push-in force and retention. After assembly, measure face flushness against the shell at the four window corners and the pull-out/shear holding of the carrier under a stated load."
+  },
+  {
+   "id": "m6-pin-orientation-anisotropy",
+   "severity": "minor",
+   "claim": "The pin print orientation is not stated. A round pin is normally printed upright, which puts the block/post interface shear plane (x=-35) along a layer boundary. The datasheet gives vertical tensile 29.7 MPa with 3.1 % elongation and no interlayer shear value (UNKNOWN). Static shear from a 3 N press is small (about 0.5 MPa over two 2 mm pins), so this is a durability and press-in risk rather than a static failure.",
+   "evidence": [
+    "outputs pin_1/pin_2 manufacturing_process \"FDM ABS pin (separate print)\", no orientation.",
+    "materials.py polymaker_polylite_abs: tensile_strength vertical 29.7 MPa, elongation_at_break vertical 3.1 %, interlayer_adhesion None."
+   ],
+   "proposed_change": "State the pin print orientation and the strength basis used for it (vertical values, or UNKNOWN), and add a chamfer that does not cut into the engagement length.",
+   "required_test": "Press 5 printed pins into coupon holes and check for split or sheared pins at the head and interface."
+  },
+  {
+   "id": "m7-stale-flow-text",
+   "severity": "minor",
+   "claim": "Revision-15 stale text is still in the flow record. The F6 behaviour says \"The button and hinge are carried by the shell\" (there is no hinge). F5 says \"Motion stops before the switch housing is loaded\" while the recipe says the switch takes the overtravel and there is no hard stop. The recipe still carries edge_press_offset_mm 4.0, but the twist uses a computed 4.5 mm offset.",
+   "evidence": [
+    "FLOW_RESULT steps.3_function_decomposition[5].behavior and [4].behavior.",
+    "recipe functions F5_limit_overtravel: \"The switch takes the overtravel (no hard stop)\".",
+    "FLOW_RESULT steps.8_recipe parameters edge_press_offset_mm 4.0 vs edge_press_twist.edge_offset_mm 4.5."
+   ],
+   "proposed_change": "Update the F5/F6 decomposition text to the parallel-leaf, no-hard-stop design and drop or use the unused edge_press_offset_mm parameter.",
+   "required_test": "Re-run the flow and grep the record for hinge and hard-stop wording and unused parameters."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "39ed2ec00653c296b0446dc60ebe7680229148f98451163be8f7a28865476f57",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/actuator_insert/iso.png",
+   "status": "viewed",
+   "observation": "Plain cylinder with flat ends, no shoulder or chamfer (STEP bbox 2 x 5.2 mm). Its protrusion therefore depends only on how deep it is pressed into the blind plunger bore."
+  },
+  {
+   "attachment_sha256": "88e13124f8e94c2e9491dc35b4efbd980eef4338fed09afa3195046d2956b89a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/assembly.png",
+   "status": "viewed",
+   "observation": "Closed assembly: shell with the side face (orange) flush in its window and a uniform running gap; internal carrier, pins and switch are hidden, so print and fit features cannot be judged from this view."
+  },
+  {
+   "attachment_sha256": "e4a3eecc8eaeec54dd82eb69895b4581600cfc48ee6c0c7bf1560c4402fb7590",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/build-record.json",
+   "status": "viewed",
+   "observation": "Build record for attempt 47f7a1c6...; carries the recipe context, file hashes and the same measurements; manufacturing_process strings are all FDM ABS or purchased-switch placeholders; no screw or PETG part in the v16 outputs."
+  },
+  {
+   "attachment_sha256": "35a07f8314913bc853e641c997b81e1bdf104324fa396ce9712e6a0b4eaa2b1a",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/button/iso.png",
+   "status": "viewed",
+   "observation": "Button = curved skin piece + tall pad + spine + plunger + rest-stop tab/riser. The tab and plunger hang below the skin; in the stated leaf-A-down print they start in mid-air (y=24-26) and need support."
+  },
+  {
+   "attachment_sha256": "56933e1ce33931024824a2ae9d160d64f511489043693c28abbfa595972e3f52",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/carrier_block/iso.png",
+   "status": "viewed",
+   "observation": "Block with two diagonal through holes along X and the two R1 concave root fillets on the leaf side; holes are horizontal in the stated carrier print orientation."
+  },
+  {
+   "attachment_sha256": "66d83ef4660635db8e9d8844fcbbb440761f161e45e58ca95e38df1b734d4184",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/leaf_a/iso.png",
+   "status": "viewed",
+   "observation": "0.7 mm plate 22 x 10 mm with an R1 tip fillet only over the pad width (z 10.5-17.5); the leaf ends at z 8.5-10.5 and 17.5-18.5 are not attached to the pad."
+  },
+  {
+   "attachment_sha256": "05becee7365666a1a7f934058bb12d756fffbadac0184ea9cddaef0dbc0a9a16",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/leaf_b/iso.png",
+   "status": "viewed",
+   "observation": "Same 0.7 mm plate with the tip fillet on its inner (-Y) face only; the outer face meets the pad at a square re-entrant corner (confirmed in STEP at x=-9, y=20.7)."
+  },
+  {
+   "attachment_sha256": "541b8d7109ae7cb9110a05e6ff21ce7dc597d94e3877864f4dada7bcdb915163",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/measurements.json",
+   "status": "viewed",
+   "observation": "96 checks, geometry verdict pass, overall unknown. Flexure: total 2.91 N vs 3.0 N band max, peak 14.5 vs 16.7 MPa allowed, leaf_a box only, L=22 mm. Press fits pass only as rigid overlap volume. press-leaves-the-lug and carrier-insertion are continuous not_proven."
+  },
+  {
+   "attachment_sha256": "e35e3f8877242124ddf1db11d9ad5520b1d02d658921e7ee189d000170ab98b3",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/pin_1/iso.png",
+   "status": "viewed",
+   "observation": "Headed pin, shank r1.0 x 7 mm, head r1.6 x 0.8 mm, no lead-in chamfer; print orientation is not stated anywhere."
+  },
+  {
+   "attachment_sha256": "3f0a045cf2840709b77b8fcb52a4b11e2085aca4892f61856df255bfebe90d8b",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/pin_2/iso.png",
+   "status": "viewed",
+   "observation": "Identical to pin 1 (same shank/head, no chamfer); second pin of the diagonal pair at y=17.7, z=16.5."
+  },
+  {
+   "attachment_sha256": "f1a58def55e3a273607ac93e078c071356930b553152b56f4c9e703f4ffc4bcb",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/rest_stop/iso.png",
+   "status": "viewed",
+   "observation": "Small lug block (STEP bbox 2.7 x 2.7 x 4 mm) whose curved top follows the inner skin; flat -Y face at y=26.5 is the rest datum; it is vertical in the rim-down shell print."
+  },
+  {
+   "attachment_sha256": "3b4677f2c06d4d02b6eb4f39795f2d26ad0b86f835147de5ac3dbf55a0d12db4",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell with rectangular side window opened; posts and lug are inside and not visible. Window edges look square to the skin (STEP normals tilt at most 0.14 in X), no knife edge seen."
+  },
+  {
+   "attachment_sha256": "7b7ff223cd76a231584532d3550c5add6ea3acfa2b6bc33c58be318ab63c7a92",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/switch_body/iso.png",
+   "status": "viewed",
+   "observation": "Plain box placeholder for the Zippy DF body on the ASSUMED PCB plane; purchased part, not printed."
+  },
+  {
+   "attachment_sha256": "fd8db53b8591eaf6d4aa5d5b471e6979c55a1bc6d95246fd6c452a7485c253d3",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r16-20261008/workspace/studio/side-button-flow/2977ef89492e90ae-ab50d5be/switch_pin/iso.png",
+   "status": "viewed",
+   "observation": "Rectangular placeholder for the switch pin at its maximum free position (1.2 mm x size ASSUMED); 0.05 mm below the insert per the rest-gap check."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Owner policy is followed in the revision-16 outputs: every printed part is FDM ABS (PolyLite ABS datasheet), the switch is a purchased placeholder, and no screw is used. The PETG/M2 text survives only in the revision-14 code (PL/ASSUMED), not in recipe.json or measurements.",
+  "Revision-15 items: the twist criterion is back to 0.15 mm (rotation checks min 0.27 mm); pins now run along X so a press loads them in shear; carrier location, print orientation, sharp corners, rest gap and stale text are only partly fixed (M1, M2, M4, M5, m7).",
+  "No print, slice or physical test was run; every manufacturing statement here comes from CAD geometry and the declared process strings. Actual printer, nozzle, layer height and ABS lot are unknown.",
+  "ABS creep at a held leaf preload, fatigue of 0.7 mm printed leaves and the warping of a thin carrier on the bed are UNKNOWN (no datasheet values) and need physical tests.",
+  "Real switch part number, real shell and PCB plane, and what the owner means by \"easier\" are owner questions, not CAD defects.",
+  "Continuous swept clearance for press-leaves-the-lug and carrier-insertion is not proven (sampled only); left to the verification role.",
+  "Tool access for pressing the pins along -X from between the leaves (the pad closes the +X end) was not judged here; left to the assembly role."
+ ]
+}

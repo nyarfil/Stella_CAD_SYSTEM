@@ -39,7 +39,8 @@ from side_button_recipe import (REQUEST,P,P2,P3,P4,P5,P6,angles_v2,angles_v3,ang
                                 switch_fit_report_v13,setting_windows_v13)
 from side_button_leaf_recipe import (PL,angles_leaf,pivot_xy,side_button_leaf_recipe,switch_fit_report_leaf,
                                     PC,angles_v15,pivot_v15,pivot_envelope_v15,side_button_carrier_recipe,insert_fit_v15,
-                                    PP,deep_travel_v16,twist_v16,side_button_parallel_recipe)
+                                    PP,deep_travel_v16,twist_v16,side_button_parallel_recipe,
+                                    P17,deep_travel_v17,twist_v17,stack_v17,side_button_parallel_recipe_v17)
 from cadmcp_brain.studio.switch_profiles import PROFILES as SWITCH_PROFILES
 
 PROJECT_ID='side-button-flow'
@@ -142,7 +143,7 @@ CHOSEN={1:{'B_lever','G_pivot','R_switch','S_hardstop'},2:{'B_lever','G_pivot','
         7:{'B_lever','G_pivot','R_spring','S_hardstop'},8:{'B_lever','G_pivot','R_spring','S_hardstop'},
         9:{'B_lever','G_pivot','R_spring','S_hardstop'},10:{'B_lever','G_pivot','R_spring','S_hardstop'},
         11:{'B_lever','G_pivot','R_spring','S_hardstop'},12:{'B_lever','G_pivot','R_spring','S_hardstop'},
-        13:{'B_lever','G_pivot','R_spring','S_hardstop'},14:{'C_flexure','G_leaf','S_switch'},15:{'C_flexure','G_leaf','S_switch'},16:{'C_flexure','G_leaf','S_switch'}}
+        13:{'B_lever','G_pivot','R_spring','S_hardstop'},14:{'C_flexure','G_leaf','S_switch'},15:{'C_flexure','G_leaf','S_switch'},16:{'C_flexure','G_leaf','S_switch'},17:{'C_flexure','G_leaf','S_switch'}}
 REASONS={
     1:'Lever on a pin pivot keeps the outer skin unchanged and is fully covered by rigid rotation, '
       'clearance and wall checks; the switch spring avoids an extra part. Flexure options cannot be '
@@ -201,7 +202,11 @@ REASONS={
        'two parallel leaves 8 mm apart so the face translates and an edge press is held inside the original 0.15 mm gap, '
        'two diagonal pins press-fitted in both block and posts along X (no play; presses load them in shear), modeled R1 '
        'leaf fillets, a flat-printable carrier, inserts in 0.05 mm length steps chosen at assembly, and a uniform press force '
-       'across the face.'}
+       'across the face.',
+    17:'Revision 17 after the five-role review of revision 16 (no blocking findings): insert chosen by a click-referenced rule in '
+       '0.1 mm steps from outside through the face (head in a counterbore), a declared 0.1 mm rest preload on the lug, vertical '
+       'press-fit pins through two shell tabs pressed in from the open bottom (shear load), full-width leaf tips with outer '
+       'fillets, a printable standing orientation, a Ø1.0 insert tip checked against the switch body, and a far-end yaw check.'}
 
 
 def engineering_evaluation(candidates,revision=1):
@@ -263,6 +268,13 @@ def run_flow(run_root,design_revision=1):
         steps['8_recipe']={'revision':2,'angles_deg':angles_v2(),'parameters':P2,
                            'lineage':'Separate prototype, not a lineage-verified correction: hinge geometry changes the '
                                      'check angles, and revision 2 adds checks that revision 1 did not carry.'}
+    elif design_revision==17:
+        recipe=side_button_parallel_recipe_v17()
+        steps['8_recipe']={'revision':17,'variant':'parallel_leaf_carrier','deep_travel_mm':deep_travel_v17(),'edge_press_twist_and_yaw':twist_v17(),
+                           'parameters':{k:(list(map(list,v)) if isinstance(v,tuple) and v and isinstance(v[0],tuple) else list(v) if isinstance(v,tuple) else v) for k,v in P17.items()},
+                           'switch_profile_fit':[stack_v17(pr) for pr in SWITCH_PROFILES.values()],
+                           'owner_policy':['ABS only (owner).','No screws except those supplied with the OP1 (owner).'],
+                           'lineage':'Separate prototype: vertical pins, preloaded lug and outside insert; not a correction of revision 16.'}
     elif design_revision==16:
         recipe=side_button_parallel_recipe()
         steps['8_recipe']={'revision':16,'variant':'parallel_leaf_carrier','deep_travel_mm':deep_travel_v16(),'edge_press_twist':twist_v16(),
@@ -382,7 +394,7 @@ def main(argv=None):
     group=parser.add_mutually_exclusive_group()
     group.add_argument('--submit-reviews',type=Path,help='Directory of reviewer-written Review JSON files.')
     group.add_argument('--delivery',action='store_true',help='Write the hash-bound human handoff for the built subject.')
-    parser.add_argument('--revision',type=int,choices=(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16),default=16,help='Design revision to build (new runs only).')
+    parser.add_argument('--revision',type=int,choices=(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17),default=17,help='Design revision to build (new runs only).')
     args=parser.parse_args(argv)
     try:run_root=resolve_run_root(args.run_root,must_exist=bool(args.submit_reviews or args.delivery))
     except ValueError as exc:parser.error(str(exc))

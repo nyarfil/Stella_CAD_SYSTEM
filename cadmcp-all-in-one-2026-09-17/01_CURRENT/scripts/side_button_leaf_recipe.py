@@ -785,9 +785,10 @@ P17 = {k: v for k, v in PP.items() if k not in ('edge_press_offset_mm', 'post_x_
                                                   'stop_lug_y_mm', 'design_insert_protrusion_mm', 'insert_step_mm', 'rest_gap_mm')}
 P17.update({'tab_gap_mm': .2, 'tab_thickness_mm': 3., 'pin_tab_engagement_mm': 2.5, 'pin_xy_mm': ((-34., 14.), (-32., 18.7)),
             'lug_y_mm': 26.5, 'preload_mm': .1, 'insert_step_mm': .1, 'tip_radius_mm': .5, 'tip_length_mm': 1.2,
-            'design_rest_above_op_mm': .25, 'collar_radius_mm': 1.4, 'collar_thickness_mm': .6})
+            'design_rest_above_op_mm': .25, 'collar_radius_mm': 1.3, 'collar_thickness_mm': .6, 'counterbore_radius_mm': 1.45,
+            'counterbore_depth_mm': .8, 'pin_end_clearance_mm': .3, 'plunger_z_min_mm': 10., 'plunger_z_max_mm': 16.})
 P17.update({'leaf_root_x_mm': -33., 'leaf_thickness_mm': .6, 'leaf_z_min_mm': 9.5, 'leaf_z_max_mm': 17.5,
-            'leaf_a_y_mm': 11., 'leaf_b_y_mm': 19., 'pin_xy_mm': ((-36., 12.8), (-34.8, 16.)),
+            'leaf_a_y_mm': 11., 'leaf_b_y_mm': 19., 'pin_xy_mm': ((-36.2, 13.), (-35.8, 16.6)), 'block_x_mm': 5.,
             'upper_tab_thickness_mm': 3.5, 'pin_tab_engagement_mm': 2.2})
 
 
@@ -828,6 +829,15 @@ def twist_v17(p=P17):
             'yaw_deg': math.degrees(p['edge_press_force_n'] * yaw_lever / k_yaw), 'yaw_lever_mm': yaw_lever}
 
 
+def _outer_y(x, z):
+    """Outer skin Y at (x, z) on the +Y side, from the section ellipses (linear between sections; ASSUMED close to the spline)."""
+    for (z0, a0, b0), (z1, a1, b1) in zip(SECTIONS, SECTIONS[1:]):
+        if z0 <= z <= z1:
+            f = (z - z0) / (z1 - z0); a = a0 + f * (a1 - a0); b = b0 + f * (b1 - b0)
+            return b * math.sqrt(max(0., 1 - (x / a) ** 2))
+    raise ValueError('z outside the shell sections')
+
+
 def side_button_parallel_recipe_v17(request=REQUEST, p=None):
     p = dict(P17 if p is None else p)
     wl, wh, zl, zh, g = p['window_x_min_mm'], p['window_x_max_mm'], p['window_z_min_mm'], p['window_z_max_mm'], p['window_gap_mm']
@@ -856,7 +866,9 @@ def side_button_parallel_recipe_v17(request=REQUEST, p=None):
     # Leaf B outer face meets the rising pad at the tip: outer fillet over the pad height.
     fillets += _fillet('tip_fillet_c', 'F2_guide_button', xf, yb + t, -1., 1., r, p['pad_z_min_mm'], p['pad_z_max_mm'])
     lt0, lt1 = lz0 - tg - tt, lz0 - tg; ut0, ut1 = lz1 + tg, lz1 + tg + p['upper_tab_thickness_mm']
-    pin_bottom = lt0; pin_top = ut0 + teng; head_h = p['pin_head_height_mm']
+    pin_bottom = lt0; pin_top = ut0 + teng - p['pin_end_clearance_mm']; head_h = p['pin_head_height_mm']
+    # Insert from outside: through hole in the plunger, counterbore in the face for its head.
+    skin_y = _outer_y(px, pz); cb_bottom = skin_y - p['counterbore_depth_mm']
     ops = [
         {'id': 'outer', 'op': 'spline_loft', 'function_id': 'F6_connect_shell', 'reason': 'Base outer skin (stand-in for a scanned shell).',
          'sections': [{'z_mm': z, 'points_mm': _ellipse(a_, b_)} for z, a_, b_ in SECTIONS]},
@@ -899,12 +911,13 @@ def side_button_parallel_recipe_v17(request=REQUEST, p=None):
         _box('stop_tab', 'F2_guide_button', 'Rest-stop tab; the lug presses it 0.1 mm in at rest (preload).', [tab_x0, yl - p['stop_tab_thickness_mm'], p['stop_z_min_mm']], [tab_x1, yl, p['stop_z_max_mm']]),
         {'id': 'button_solid', 'op': 'union', 'function_id': 'F1_transmit_force', 'reason': 'Face, pads, spine, plunger and rest-stop tab.',
          'operands': ['skin_piece', 'pad_low', 'pad_in', 'spine', 'plunger', 'tab_riser', 'stop_tab']},
-        cyl('insert_hole', 'F3_actuate_switch', 'Press-fit hole for the printed actuator insert.', hole_r, (px, p['plunger_tip_y_mm'] - .01, pz), eng + .01, (0., 1., 0.)),
-        {'id': 'button', 'op': 'difference', 'function_id': 'F3_actuate_switch', 'reason': 'Button with the blind insert hole.', 'operands': ['button_solid', 'insert_hole']},
-        cyl('insert_shank', 'F3_actuate_switch', 'Insert shank (press fit in the plunger).', ins_r, (px, p['plunger_tip_y_mm'], pz), eng, (0., 1., 0.)),
-        cyl('insert_collar', 'F3_actuate_switch', 'Insert collar: seats on the plunger face (length datum).', p['collar_radius_mm'], (px, p['plunger_tip_y_mm'] - p['collar_thickness_mm'], pz), p['collar_thickness_mm'], (0., 1., 0.)),
-        cyl('insert_tip', 'F3_actuate_switch', 'Insert tip Ø1.0: lands on the switch pin only.', p['tip_radius_mm'], (px, tip_y, pz), p['tip_length_mm'] - p['collar_thickness_mm'] + .01, (0., 1., 0.)),
-        {'id': 'actuator_insert', 'op': 'union', 'function_id': 'F3_actuate_switch', 'reason': 'Printed actuator insert with a seating collar (tip length from a 0.1 mm series).', 'operands': ['insert_shank', 'insert_collar', 'insert_tip']},
+        cyl('insert_hole', 'F3_actuate_switch', 'Through hole for the actuator insert (press fit), open to the face.', hole_r, (px, p['plunger_tip_y_mm'] - .01, pz), 20., (0., 1., 0.)),
+        cyl('insert_counterbore', 'F3_actuate_switch', 'Counterbore in the face for the insert head (side-button region).', p['counterbore_radius_mm'], (px, cb_bottom, pz), 20., (0., 1., 0.)),
+        {'id': 'button', 'op': 'difference', 'function_id': 'F3_actuate_switch', 'reason': 'Button with the insert through hole and head counterbore.', 'operands': ['button_solid', 'insert_hole', 'insert_counterbore']},
+        cyl('insert_head', 'F3_actuate_switch', 'Insert head: seats in the counterbore (length datum), removable from outside.', p['collar_radius_mm'], (px, cb_bottom, pz), p['collar_thickness_mm'], (0., 1., 0.)),
+        cyl('insert_shank', 'F3_actuate_switch', 'Insert shank (press fit through the plunger).', ins_r, (px, p['plunger_tip_y_mm'], pz), cb_bottom - p['plunger_tip_y_mm'], (0., 1., 0.)),
+        cyl('insert_tip', 'F3_actuate_switch', 'Insert tip Ø1.0: lands on the switch pin only.', p['tip_radius_mm'], (px, tip_y, pz), p['tip_length_mm'] + .01, (0., 1., 0.)),
+        {'id': 'actuator_insert', 'op': 'union', 'function_id': 'F3_actuate_switch', 'reason': 'Printed actuator insert, pushed in from the face (tip length from a 0.1 mm series).', 'operands': ['insert_head', 'insert_shank', 'insert_tip']},
         *[cyl(f'pin_{i}_shank', 'F6_connect_shell', f'Pin {i} shank (vertical).', r_pin, (x, y, pin_bottom), pin_top - pin_bottom) for i, (x, y) in enumerate(pins, 1)],
         *[cyl(f'pin_{i}_head', 'F6_connect_shell', f'Pin {i} head under the lower tab.', p['pin_head_radius_mm'], (x, y, pin_bottom - head_h), head_h) for i, (x, y) in enumerate(pins, 1)],
         *[{'id': f'pin_{i}', 'op': 'union', 'function_id': 'F6_connect_shell', 'reason': f'Separately printed ABS pin {i}, pressed in from the open bottom.', 'operands': [f'pin_{i}_shank', f'pin_{i}_head']} for i in (1, 2)],
@@ -919,7 +932,7 @@ def side_button_parallel_recipe_v17(request=REQUEST, p=None):
     E = MATERIALS[DEFAULT_MATERIAL].flexural_modulus_gpa['horizontal'] * 1000.
     fits = [stack_v17(pr, p) for pr in SWITCH_PROFILES.values()]
     summary = '; '.join(f"{f['profile']}: {f['verdict']}" + (f" (to pin flush {f['travel_to_pin_flush_max_mm']:.2f} mm)" if f['verdict'] == 'pass' else f" (missing {', '.join(f['missing'])})") for f in fits)
-    ring_ins = math.pi * (ins_r ** 2 - hole_r ** 2) * eng
+    ring_ins = math.pi * (ins_r ** 2 - hole_r ** 2) * (cb_bottom - p['plunger_tip_y_mm'])
     ring_tab = math.pi * (r_pin ** 2 - (r_pin - inter) ** 2)
     ring_block = math.pi * (r_pin ** 2 - (r_pin - binter) ** 2) * (lz1 - lz0)
     lug_overlap = (tab_x1 - (xg + .3)) * (p['stop_z_max_mm'] - p['stop_z_min_mm']) * pre
@@ -947,7 +960,7 @@ def side_button_parallel_recipe_v17(request=REQUEST, p=None):
                                          f'Edge press (ASSUMED 3 N at the face edge {tw["twist_offset_mm"]:.1f} mm from the leaf mid-plane) twists the guide by {tw["twist_deg"]:.2f} deg; a press at the far end yaws it by {tw["yaw_deg"]:.2f} deg (leaf axial stiffness). Poisson ratio 0.35 ASSUMED.',
                                          f'Rest preload: the lug sits {pre:.1f} mm into the tab path, so the face rests {pre:.1f} mm below the skin with the leaves pre-bent.',
                                          'Printing: carrier standing on its lowest face (mouse Z up): block, leaves and lower pad start on the bed, the leaves are thin vertical walls with bending stress in the layer plane; the face lower edge (z 10, a 1.5 mm strip) needs a small removable support; the insert bore is horizontal. Inserts and pins upright (0.1 mm layers). Shell rim-down with supports under the window lintel, roof, tabs and lug.',
-                                         'Assembly: carrier in from the cavity side (+Y) between the tabs until the tab meets the lug; pins pressed up from the open bottom through the lower tab and block into the upper tab; then the insert; then the switch/PCB.',
+                                         'Assembly: carrier in from the cavity side (+Y) between the tabs until the tab meets the lug; pins pressed up from the open bottom through the lower tab and block into the upper tab (shell supported on its top); switch/PCB fitted; inserts tried from outside through the face (head in a counterbore, pulled out with tweezers).',
                                          f'Insert rule: fit the longest insert (0.1 mm steps) with which the switch still releases after a full press and release, then use the next shorter one: the tip rests {p["insert_step_mm"]:.1f}-{2 * p["insert_step_mm"]:.1f} mm above the release point.',
                                          'Reading of 「もっと押しやすく」 used here (an interpretation for the owner to confirm): the same press force anywhere on the face (translation), with a short travel to the click.',
                                          'PCB keep-out (ASSUMED plane): the board must stay clear of the carrier block, tabs and leaves (x below -9 mm on the switch side of the plane).']},
@@ -972,7 +985,7 @@ def side_button_parallel_recipe_v17(request=REQUEST, p=None):
                     {'part_id': 'switch_body', 'node': 'switch_body', 'manufacturing_process': f'Placeholder for a purchased switch (profile {profile.id})'},
                     {'part_id': 'switch_pin', 'node': 'switch_pin', 'manufacturing_process': 'Placeholder for the switch pin'}],
         'press_fits': [{'id': 'insert-in-plunger', 'part_a': 'actuator_insert', 'part_b': 'button', 'min_overlap_mm3': .7 * ring_ins, 'max_overlap_mm3': 1.3 * ring_ins,
-                        'basis': 'ASSUMED 0.05 mm radial interference over the insert engagement.'},
+                        'basis': 'ASSUMED 0.05 mm radial interference along the plunger through hole.'},
                        {'id': 'rest-preload-on-lug', 'part_a': 'button', 'part_b': 'rest_stop', 'min_overlap_mm3': .7 * lug_overlap, 'max_overlap_mm3': 1.3 * lug_overlap,
                         'basis': f'Declared {pre:.1f} mm preload: the lug sits that far into the tab path (the leaves bend instead).'},
                        *[{'id': f'pin-{i}-in-tabs', 'part_a': f'pin_{i}', 'part_b': 'shell', 'min_overlap_mm3': .7 * ring_tab * (tt + teng), 'max_overlap_mm3': 1.3 * ring_tab * (tt + teng),
@@ -1017,7 +1030,7 @@ def side_button_parallel_recipe_v17(request=REQUEST, p=None):
                             'stress_allowance': p['stress_allowance'], 'allowance_basis': 'ASSUMED half of the datasheet tensile strength (yield not published); fatigue UNKNOWN.',
                             'stress_concentration': p['stress_concentration'], 'stress_concentration_basis': 'ASSUMED 1.5 at R1-filleted corners joined over the full leaf width.'}],
         'base_shape_checks': [{'id': 'outer-form-matches-base', 'base_node': 'outer', 'parts': ['shell', 'button'], 'tolerance_mm': .05, 'samples_per_face': 12, 'regions': [
-            {'id': 'side-button-region', 'kind': 'allowed_change', 'reason': 'Changes around the side buttons are allowed (window, running gap, face 0.1 mm below the skin at rest).',
+            {'id': 'side-button-region', 'kind': 'allowed_change', 'reason': 'Changes around the side buttons are allowed (window, running gap, insert head counterbore, face 0.1 mm below the skin at rest).',
              'lo_mm': [wl - 1., 20., zl - 1.], 'hi_mm': [wh + 3., 40., zh + 1.]},
             {'id': 'open-bottom', 'kind': 'not_in_base', 'reason': 'The base outer form is the skin; its bottom cap is the open rim.', 'lo_mm': [-70., -40., -.1], 'hi_mm': [70., 40., .1]}]}],
         'unverified_requirements': [

@@ -1,0 +1,185 @@
+{
+ "schema_version": 1,
+ "subject_digest": "d7a29f948428cd85964a67de478ce8c04cfcabad5d72f132cc2d545c986dcd19",
+ "role": "assembly",
+ "discussion_round": 1,
+ "challenged_review_ids": [],
+ "reviewer_label": "Claude subagent (assembly role, rev17 parallel)",
+ "execution_description": "Separate Claude subagent context in a cloud Claude Code session; same model family as the designer; not an independent human or vendor.",
+ "conclusion": "revise",
+ "findings": [
+  {
+   "id": "A1-carrier-z-float",
+   "severity": "major",
+   "claim": "The carrier block is not located in Z. It sits between the tabs with 0.2 mm gaps top and bottom, and only the friction of the declared 0.03 mm pin-in-block press fit holds it. Pressing the pins upward will drag the block up, so it can end anywhere in the +/-0.2 mm range. The clearance claims (rest gap >=0.35 mm, twist and yaw >=0.15 mm) were checked only at the nominal Z. Inside the free range they fail.",
+   "evidence": [
+    "Recipe: block z 9.5-17.5, lower tab top 9.3, upper tab bottom 17.7; measurements block-to-tabs 0.20 mm; no Z datum feature on block.",
+    "Own probe (CadQuery on exported STEP, button rigidly shifted dz): dz +/-0.2 -> button-shell rest distance 0.20 mm (< required 0.35).",
+    "Own probe: dz +0.2 with +0.4994 deg edge twist at dy -0.3 and -1.52 -> 0.072 mm to shell; dz -0.2 with -0.4994 deg at dy -0.3 -> 0.056 mm (< twist_min_gap 0.15).",
+    "Assembly assumption: pins pressed up from the open bottom (force direction +Z on the block through friction)."
+   ],
+   "proposed_change": "Give the block a Z datum. Options: let it bear on one tab (zero gap, with the other side relieved), add a shoulder or step on the pin that clamps the block against the lower tab, or put the pin heads on the block itself. Then re-run the rest, twist and yaw clearances with the Z float that remains (or declare it and run the checks at both extremes).",
+   "required_test": "Rotation and clearance checks at the block Z extremes (+/-remaining float) must meet 0.35 mm (rest) and 0.15 mm (twist/yaw). Physical: after pin pressing, measure the face-to-window gap at top and bottom edges with feeler gauges."
+  },
+  {
+   "id": "A2-pin-baseline-datum-chain",
+   "severity": "major",
+   "claim": "The carrier angle about Z, and with it the face and stop-tab position in Y, is set only by two pins 3.62 mm apart. The face and lug are about 37-52 mm from the pins in X, so any hole position error is multiplied by about 10-14. The design depends on a 0.1 mm preload, a 0.25 mm rest-above-OP and a 0.1 mm insert step, but the contract has no tolerance stack for this datum chain (shell tab holes -> pins -> block holes -> leaves -> face/stop tab vs. shell lug). It only says gap accuracy is \"not qualified\".",
+   "evidence": [
+    "Pins at (-36.2,13.0) and (-35.8,16.6): baseline 3.62 mm, nearly parallel to the press direction Y.",
+    "Own probe: rotating the button about Z through the pin midpoint by 0.05 mm/3.62 mm (0.79 deg) moves the face ymax by +0.51/-0.49 mm. At -0.79 deg the stop tab is 0.497 mm off the lug (preload lost, face sinks about 0.4 mm below the intended rest).",
+    "Own probe: a 0.1 mm relative pin-hole error (1.58 deg) gives 0.0 mm button-to-shell distance in the rigid model.",
+    "Declared preload_mm 0.1, insert_step_mm 0.1, design_rest_above_op_mm 0.25; no tolerance budget in verification_plan or unverified_requirements."
+   ],
+   "proposed_change": "Spread the locating features along X, or add a second locating interface near the face so the angle error is not multiplied 10 times. One way is a slot or boss between the pad or button and the shell that fixes Y near the switch, with the block pins fixing only X and Z. Otherwise write a worst-case stack (FDM hole position, pin fit) in the contract, raise the preload above that stack, and state that the insert rule absorbs the switch-side error but not the preload or flushness.",
+   "required_test": "Stack calculation in the contract, plus rotation/clearance checks at the stack extremes. Physical: on printed parts, measure face flushness and confirm the stop tab touches the lug (for example with a feeler or by light)."
+  },
+  {
+   "id": "A3-insert-swap-access",
+   "severity": "major",
+   "claim": "The insert rule needs the insert pressed in and pulled out repeatedly with the switch fitted. The CAD gives no practical way to pull it out: the plain 0.6 mm head sits 0.2 mm below the skin with only a 0.15 mm radial gap, and it is held by a 0.05 mm radial interference over about 5.7 mm. Also, while it is pressed in from outside, the only backing for the flexure-mounted button is the switch pin, because the tip lands on the pin before the head seats (tip rests within pretravel). The press-in force therefore goes through the switch and the PCB. The revision-16 finding \"insert not swappable with the switch fitted\" is only half fixed: insertion is possible, removal is not shown.",
+   "evidence": [
+    "Recipe: collar_radius 1.3, counterbore_radius 1.45 (0.15 mm radial gap), counterbore_depth 0.8 with collar_thickness 0.6 (head 0.2 below skin); insert_radius 1.0 in insert_hole_radius 0.95.",
+    "actuator_insert STEP y 22.8-30.34; shank engaged from y 24.0 to 29.74 (~5.7 mm) in interference; declared insert-in-plunger overlap 1.76 mm3.",
+    "Design basis: inserts \"pulled out with tweezers\"; insert rule: \"fit the longest insert ... then use the next shorter one\".",
+    "switch_pin drawn 0.001 mm below the tip at rest; leaf stiffness 0.27 N/mm for the pair (flexure check), so the button gives no reaction while the insert is pressed."
+   ],
+   "proposed_change": "Make insert swapping work from outside with the switch fitted. Options: a slip or light-detent fit (retained by the head, for example a snap or a small crush rib) instead of a 0.05 mm interference along the full shank; a pull feature (a through-hole or slot in the head for a pin or hook); or a wider counterbore relief for tweezers. State how the button is backed while the insert is seated so the switch does not take the press-fit force.",
+   "required_test": "CAD: tool-access envelope (for example a 0.5 mm tweezer tip or a hook) checked against the counterbore and head. Physical: 10 insert swap cycles on one printed button with the switch fitted. Record the retention after each cycle and confirm the switch still operates and releases."
+  },
+  {
+   "id": "A4-pcb-keepout-wrong",
+   "severity": "major",
+   "claim": "The stated PCB keep-out (board must stay clear of block, tabs and leaves, \"x below -9 mm\") misses the button lower pad. The pad spans x -9 to -6.5 and y 11 to 19.6, which crosses the ASSUMED board plane (switch base y 15.55). A board built to the stated keep-out, reaching x=-9, collides with the moving button at rest and over the whole stroke. There is no PCB solid, so no check could catch this.",
+   "evidence": [
+    "Recipe pad_low box [xf, ya, lz0]-[xf+2.5, yb+t, lz1] = x -9..-6.5, y 11..19.6, z 9.5..17.5; switch_body STEP y 15.55-22.2.",
+    "Own probe: 1.6 mm slab under the switch base (y 13.95-15.55, z 7.5-19.5) with edge x=-9 or -6.5 -> 0.0 mm distance to the button at dy 0 and dy -1.52; edge x=-6.0 -> 0.5 mm.",
+    "design_basis assumption: \"PCB keep-out (ASSUMED plane): ... (x below -9 mm on the switch side of the plane)\"."
+   ],
+   "proposed_change": "Correct the keep-out to cover the swept volume (board edge at x >= about -6.3 with the declared gap, between the pad and the switch body at x -4.35). Better, add an ASSUMED PCB slab part and include it in the static and press-motion clearance checks, so the statement is measured rather than asserted.",
+   "required_test": "Static and press-sweep clearance (to 1.52 mm) between the button and an ASSUMED PCB slab at the stated keep-out. It must pass at the minimum gap the designer declares."
+  },
+  {
+   "id": "A5-pin-insertion-scope",
+   "severity": "minor",
+   "claim": "\"Pin insertion from the open bottom is clear\" is overstated. The sweep ends with the pin top 0.05 mm below the lower tab, so it proves only the empty approach. Passing three coaxial interference holes in series (lower tab, block, blind upper tab) relies on blind alignment of the block holes, which nothing in X locates before the pins go in. The pins and holes have no lead-in, and the block must also be held 0.1 mm against the leaf preload while pressing. The sweep is also continuous not_proven.",
+   "evidence": [
+    "Pin sweep: start z -33.3, end delta 19.95 -> final offset -13.35; pin top 19.6-13.35 = 6.25 vs lower tab underside 6.3; continuous lower bound -1.20 mm, not_proven.",
+    "Carrier-insertion end pose 0.02 mm short of the lug (11.88 = 12 - 0.1 - 0.02), so the block must be pushed 0.1 mm further against the leaves to bring its holes onto the tab holes.",
+    "pin_1/pin_2 iso: plain cylinders, flat ends; carrier_block iso: holes without countersink."
+   ],
+   "proposed_change": "Add a lead-in chamfer or cone on the pin tips and countersinks on the block hole entries. Give the block an X/Y pre-locator, such as a light snap or guide rib between the tabs, so its holes line up before pressing. Rename or extend the pin sweep so its scope reads \"approach only\", or sweep it through to the seated pose with the declared press fits excluded.",
+   "required_test": "Pin sweep through to the seated pose with the obstacles less the declared press-fit pairs, and a lateral-misalignment case (block offset 0.1 mm in X and Y) showing the lead-in captures it."
+  }
+ ],
+ "evidence_inspections": [
+  {
+   "attachment_sha256": "9fce0cf81e5a181551e7856e59322b40fb5592de6316470421aa78a0fad9d92c",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/actuator_insert/iso.png",
+   "status": "viewed",
+   "observation": "Plain head disc (r 1.3, 0.6 thick) on a r1.0 shank with a r0.5 tip; there is no slot, hole or flat on the head to grip or pull. STEP bbox y 22.8-30.34: head sits 0.2 mm below the skin in a r1.45 counterbore, leaving a 0.15 mm radial gap around it."
+  },
+  {
+   "attachment_sha256": "ebce857110c0877e381e7f1a5f7713fce5b95991124637342fcb7803005b525f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/assembly.png",
+   "status": "viewed",
+   "observation": "The closed shell with the face sitting flush in the window and the insert head visible in its counterbore. The view shows no internal parts, so the carrier, pins, tabs and switch cannot be judged from this image."
+  },
+  {
+   "attachment_sha256": "f4d3b70e02ece7e7042909eb59a98354642eca6fc3f91a658b2131d7a99f8a26",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/build-record.json",
+   "status": "viewed",
+   "observation": "recipe_build attempt 8a379bfa..., subject_digest d7a29f94... matches the packet. It holds the same context and measurements as the packet, with file_hashes for all 11 parts."
+  },
+  {
+   "attachment_sha256": "36dc9b70a19101fec7e187ed66c2d3e04df5cfcccc1a470fc4dc65949bca8889",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/button/iso.png",
+   "status": "viewed",
+   "observation": "Shows the curved face with the counterbored insert hole, the spine, the rest-stop tab riser and the lower pad block at the leaf end. In the STEP, button min y is 11.0 at x -10..-6.5, so the pad crosses the switch base plane y 15.55."
+  },
+  {
+   "attachment_sha256": "a4f00474c4efd14f40d630e2eaa21ca41e43cf5007cbcabd4f1a0ebb3f0de9ab",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/carrier_block/iso.png",
+   "status": "viewed",
+   "observation": "Block with two vertical pin holes and R1 root fillets. The holes have no countersink or lead-in. The wall from pin_1 hole to the x=-38 face is about 0.83 mm (r0.97 hole at x -36.2). Nothing on the block locates it in X or Z apart from the pins."
+  },
+  {
+   "attachment_sha256": "786a6e970317bfe0a593bed4220d2d2d7d7122e1c663433c5ce62aebab6615dc",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/leaf_a/iso.png",
+   "status": "viewed",
+   "observation": "Shows a 0.6 x 8 x 24 mm plain leaf with a tip fillet. Pair checks give 0.54 mm to the shell."
+  },
+  {
+   "attachment_sha256": "f4bb3f1536a74520d3c3dd13d9c9155ac4a0bf6068d18c289f04491d88b504ac",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/leaf_b/iso.png",
+   "status": "viewed",
+   "observation": "Shows the upper leaf with inner and outer tip fillets (the outer one over the pad height). It is 0.54 mm from the shell."
+  },
+  {
+   "attachment_sha256": "1d389e5edad13a2f82bc55be1b36dccbf3f3ae030b86bd2071f021730b62e42d",
+   "kind": "json",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/measurements.json",
+   "status": "viewed",
+   "observation": "Geometry verdict pass, overall unknown. The press fits are rigid-overlap only. Carrier-insertion and pin-insertion sweeps are sampled pass but continuous_swept_motion is not_proven (lower bounds -0.79 and -1.20 mm). Pin sweep pose = start + end*t, so it ends at z offset -13.35: the pin top stops 0.05 mm below the lower tab. block-to-tabs clearance is 0.20 mm."
+  },
+  {
+   "attachment_sha256": "9099d793a07329e82831d1c0fce6325f0a8fb895d03b4ed13befc050dd2be434",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/pin_1/iso.png",
+   "status": "viewed",
+   "observation": "Plain r1.0 shank with a flat r1.6 x 0.8 head. The leading end has no chamfer or lead-in, although it must pass three interference holes in series (tab 0.05, block 0.03, tab 0.05)."
+  },
+  {
+   "attachment_sha256": "1adde00bafd6d9c541379bf0b2895a4521eb4a99e1246908161d3d6dd848dcb6",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/pin_2/iso.png",
+   "status": "viewed",
+   "observation": "Same as pin_1: no lead-in. The heads of pin_1 and pin_2 are 0.42 mm apart."
+  },
+  {
+   "attachment_sha256": "050356801d2aeda691f8a770b330147a3a9e385f31a5a33dc7bb7c243bf4d58b",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/rest_stop/iso.png",
+   "status": "viewed",
+   "observation": "Lug block clipped by the cavity skin, STEP bbox x 14.7-17.4, y 26.4-29.2. Its declared 0.1 mm preload overlap with the stop tab is measured at 0.66 mm3, within the declared band."
+  },
+  {
+   "attachment_sha256": "52aa764c72264f04e38ce40e8654c955c7062c5828b3988846f471c590337c4f",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/shell/iso.png",
+   "status": "viewed",
+   "observation": "Shell with the rectangular window and a visible 0.4 mm running gap. The tabs and lug are inside and not visible here, and the cavity is open at the bottom."
+  },
+  {
+   "attachment_sha256": "7b7ff223cd76a231584532d3550c5add6ea3acfa2b6bc33c58be318ab63c7a92",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/switch_body/iso.png",
+   "status": "viewed",
+   "observation": "Plain box placeholder 12.7 x 6.65 x 5.8 (zippy_df_pin), STEP y 15.55-22.2, so the ASSUMED PCB plane is at y=15.55. There is no PCB solid in the CAD."
+  },
+  {
+   "attachment_sha256": "0bd38f60814b8f72ba6c292c88ff9ed2a7bb948c300c9eda780c3b16278db22e",
+   "kind": "image",
+   "attachment_path": "/home/user/core/cadmcp-all-in-one-2026-09-17/01_CURRENT/verification/side-button-flow-r17-20261008/workspace/studio/side-button-flow/d7a29f948428cd85-0c1f669b/switch_pin/iso.png",
+   "status": "viewed",
+   "observation": "Box pin drawn up to 0.001 mm below the insert tip (pair distance 0.001). Its height is set by the tip, not by the profile free position (7.35 max), so it does not show where the real pin rests."
+  }
+ ],
+ "remaining_uncertainties": [
+  "Owner policy is followed in the CAD: all printed parts are ABS (shell, carrier, insert, pins) and no screws are used. OP1-supplied screws are not used by this carrier.",
+  "Revision-16 items rechecked: rest preload now declared and measured (0.66 mm3 overlap). Leaf tips joined over the full width. Insert tip is now r0.5 and clears the switch body, but that sweep is continuous not_proven. Yaw is now checked. Pins are now pressable in principle, from below with heads accessible. Insert removal is still not shown (A3).",
+  "The vertical leg of carrier entry was not in the recipe. My own sampled probe (carrier at Y-12, Z offsets -20..0) found at least 2.4 mm to the shell, so it is not a finding, but it is not part of the measured record.",
+  "Press-fit retention, hoop stress near the 0.83 mm block wall at pin_1, and tab bending under pin pressing are not verified (rigid overlap only).",
+  "Real shell, real PCB position and real switch are UNKNOWN. The OP1 side switch is likely the Kailh GM 2.0, which is unverified in the profiles; only the owner can confirm it.",
+  "Disassembly (pulling pins with 0.8 mm heads out of the blind holes) is not described or checked.",
+  "Physical tests not possible in CAD: pin pressing force and carrier location after pressing, face flushness and preload on printed parts, insert swap cycles, and feel of the press.",
+  "My probes moved the button rigidly and ignore leaf compliance, so they show sensitivity, not final positions."
+ ]
+}
