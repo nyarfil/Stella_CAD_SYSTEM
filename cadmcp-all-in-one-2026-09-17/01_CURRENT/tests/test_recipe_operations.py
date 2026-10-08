@@ -379,3 +379,36 @@ def test_translation_blocking_and_carried_parts():
     assert run([])['verdict']=='fail'            # the body alone never meets the lug
     blocked=run(['tab'])
     assert blocked['verdict']=='pass' and blocked['kind']=='sampled_translation_blocking'
+
+
+@kernel
+def test_flexure_thickness_tolerance_judges_the_worst_case():
+    import cadquery as cq
+    from cadmcp_brain.studio.recipe import evaluate_geometry
+    part=cq.Solid.makeBox(23.,6.,5.,cq.Vector(-3.,-3.,0.)).cut(cq.Solid.makeBox(20.,2.5,5.,cq.Vector(0.,.5,0.))).cut(cq.Solid.makeBox(20.,2.5,5.,cq.Vector(0.,-3.,0.)))
+    nominal=next(c for c in evaluate_geometry(Recipe.model_validate(_flexure_recipe()),{'part':part})['checks'] if c['id']=='leaf-spring')
+    toleranced=next(c for c in evaluate_geometry(Recipe.model_validate(_flexure_recipe(thickness_tolerance_mm=.1)),{'part':part})['checks'] if c['id']=='leaf-spring')
+    # Stress scales with thickness at a given deflection; force with its cube.
+    assert toleranced['checks']['stress']['nominal_mpa']==pytest.approx(nominal['checks']['stress']['nominal_mpa']*1.1)
+    assert toleranced['checks']['force']['beam_n']==pytest.approx(nominal['checks']['force']['beam_n']*1.1**3)
+    assert toleranced['checks']['force']['total_n_at_minus_tolerance']<nominal['checks']['force']['total_n']
+
+
+@kernel
+def test_placement_tolerance_checks_every_corner():
+    import cadquery as cq
+    from cadmcp_brain.studio.recipe import evaluate_geometry
+    ops=[{'id':'wall','op':'box','function_id':'Shell','reason':'Fixed wall.','size_mm':[1.,10.,10.],'center_mm':[5.5,0.,0.]},
+         {'id':'part','op':'box','function_id':'Button','reason':'Placed part 0.3 mm from the wall.','size_mm':[2.,2.,2.],'center_mm':[3.7,0.,0.]}]
+    shapes={'wall':cq.Solid.makeBox(1.,10.,10.,cq.Vector(5.,-5.,-5.)),'part':cq.Solid.makeBox(2.,2.,2.,cq.Vector(2.7,-1.,-1.))}
+    def run(dx,rot):
+        data=base(ops,[{'part_id':'wall','node':'wall'},{'part_id':'part','node':'part'}],
+                  placement_tolerances=[{'id':'part-pose','part':'part','translation_mm':[dx,0.,0.],'rotation_deg':rot,'rotation_axis':[0.,0.,1.],
+                                         'rotation_origin_mm':[3.7,0.,0.],'basis':'Test tolerance on the part placement.'}],
+                  clearance_checks=[{'id':'gap','part_a':'part','part_b':'wall','min_mm':.2,'tolerance_ids':['part-pose']}])
+        return next(c for c in evaluate_geometry(Recipe.model_validate(data),shapes)['checks'] if c['id']=='gap')
+    ok=run(.05,0.)
+    assert ok['verdict']=='pass' and len(ok['placement_corners'])==2 and ok['worst_placement']['min_distance_mm']==pytest.approx(.25)
+    assert run(.15,0.)['verdict']=='fail'      # +0.15 mm leaves 0.15 mm < 0.2 mm
+    tilted=run(.05,5.)
+    assert len(tilted['placement_corners'])==4 and tilted['verdict']=='fail'  # the corner swings toward the wall

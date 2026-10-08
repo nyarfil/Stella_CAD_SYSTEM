@@ -339,6 +339,24 @@ class Clearance(Strict):
     part_b: Name
     min_mm: float = Field(ge=0, le=1_000_000)
     max_overlap_mm3: float = Field(default=1e-7, ge=0, le=1e-3)
+    tolerance_ids: list[Name] = Field(default_factory=list, max_length=4)
+
+class PlacementTolerance(Strict):
+    """Declared rigid placement tolerance of a part (and parts that move with it): +/- each translation component and +/- one rotation."""
+    id: Name
+    part: Name
+    carried_parts: list[Name] = Field(default_factory=list, max_length=8)
+    translation_mm: Vec = Field(default_factory=lambda:[0.,0.,0.])
+    rotation_deg: float = Field(default=0., ge=0, le=10)
+    rotation_axis: Vec = Field(default_factory=lambda:[0.,0.,1.])
+    rotation_origin_mm: Vec = Field(default_factory=lambda:[0.,0.,0.])
+    basis: str = Field(min_length=8, max_length=500)
+    @model_validator(mode='after')
+    def meaningful(self):
+        if any(v<0 for v in self.translation_mm):raise ValueError('Translation tolerances are magnitudes (>= 0).')
+        if not any(self.translation_mm) and self.rotation_deg==0:raise ValueError('A placement tolerance needs a nonzero component.')
+        if abs(sum(x*x for x in self.rotation_axis)-1)>1e-6:raise ValueError('Rotation axis must be a unit direction.')
+        return self
 
 class Dimension(Strict):
     id: Name
@@ -366,6 +384,7 @@ class Motion(Strict):
     # 'blocked': the translation must be stopped by rigid contact within the sweep (e.g. an outward rest stop).
     expect: Literal['clear','blocked'] = 'clear'
     min_blocking_overlap_mm3: float = Field(default=1e-3, gt=0, le=1e3)
+    tolerance_ids: list[Name] = Field(default_factory=list, max_length=4)
 
 class RotationMotion(Strict):
     """Rigid rotation of one part about a fixed axis (button hinge, wheel, lever)."""
@@ -397,6 +416,7 @@ class RotationMotion(Strict):
     # threaded into a button); they move rigidly with it and are checked
     # against the obstacles too.
     carried_parts: list[Name] = Field(default_factory=list, max_length=8)
+    tolerance_ids: list[Name] = Field(default_factory=list, max_length=4)
     @model_validator(mode='after')
     def meaningful_rotation(self):
         if abs(sum(x*x for x in self.axis_direction)-1) > 1e-6:raise ValueError('Rotation axis must be a unit direction.')
@@ -498,6 +518,8 @@ class FlexureCheck(Strict):
     max_twist_deg: float | None = Field(default=None, gt=0, le=45)
     # Peak-to-nominal stress factor at the root (sharp re-entrant corners); 1 means none is claimed.
     stress_concentration: float = Field(default=1., ge=1, le=5)
+    # Thickness (bend-axis size) tolerance: stress and the upper force are judged at +tol, the lower force at -tol.
+    thickness_tolerance_mm: float = Field(default=0., ge=0, le=1)
     stress_concentration_basis: str = Field(default='No stress concentration applied.', min_length=8, max_length=500)
     @model_validator(mode='after')
     def axes_differ(self):
@@ -527,6 +549,7 @@ class Recipe(Strict):
     press_fits: list[PressFit] = Field(default_factory=list, max_length=16)
     base_shape_checks: list[BaseShapeCheck] = Field(default_factory=list, max_length=8)
     flexure_checks: list[FlexureCheck] = Field(default_factory=list, max_length=8)
+    placement_tolerances: list[PlacementTolerance] = Field(default_factory=list, max_length=8)
     unverified_requirements: list[str] = Field(min_length=1, max_length=100)
     @model_validator(mode='after')
     def connected(self):
@@ -589,6 +612,13 @@ class Recipe(Strict):
             if fx.material not in MATERIALS:raise ValueError('Flexure material must be a registered material.')
             if any(s not in PROFILES for s in fx.switch_profiles):raise ValueError('Unknown switch profile.')
             ids.append(fx.id)
+        tol_ids=set()
+        for tol in self.placement_tolerances:
+            if tol.part not in parts or any(x not in parts or x==tol.part for x in tol.carried_parts):raise ValueError('Placement tolerance must name output parts.')
+            if any(p.part_id in [tol.part,*tol.carried_parts] and p.node in protected for p in self.outputs):raise ValueError('Protected hardware pose must stay fixed.')
+            tol_ids.add(tol.id);ids.append(tol.id)
+        for chk in [*self.clearance_checks,*self.motion_checks,*self.rotation_checks]:
+            if any(i not in tol_ids for i in chk.tolerance_ids):raise ValueError('Check names an undeclared placement tolerance.')
         for b in self.base_shape_checks:
             if b.base_node not in defined:raise ValueError('Base-shape check must name a defined node as its base.')
             if any(x not in parts for x in b.parts) or len(b.parts)!=len(set(b.parts)):raise ValueError('Base-shape check must reference distinct output parts.')
@@ -772,22 +802,28 @@ def _flexure_check(recipe,check,part_shapes,node_shapes):
     if modulus is None or strength is None:
         return {**out,'verdict':'fail','reason':'The material datasheet gives no value for the needed modulus or strength in this orientation (UNKNOWN); no substitute is used.'}
     e_mpa=modulus*1000.
-    inertia=b*h**3/12.
-    if check.end_condition=='guided':
-        stiffness=12.*e_mpa*inertia/a**3  # N/mm per leaf
-        moment=6.*e_mpa*inertia*check.deflection_mm/a**2
-    else:
-        stiffness=3.*e_mpa*inertia/a**3
-        moment=stiffness*check.deflection_mm*a
-    beam_force=stiffness*check.deflection_mm*check.parallel_count
-    nominal_stress=moment*(h/2.)/inertia  # MPa, root of one leaf
+    def beam(thick):
+        inertia=b*thick**3/12.
+        if check.end_condition=='guided':
+            stiffness=12.*e_mpa*inertia/a**3  # N/mm per leaf
+            moment=6.*e_mpa*inertia*check.deflection_mm/a**2
+        else:
+            stiffness=3.*e_mpa*inertia/a**3
+            moment=stiffness*check.deflection_mm*a
+        return stiffness,stiffness*check.deflection_mm*check.parallel_count,moment*(thick/2.)/inertia
+    tol=check.thickness_tolerance_mm
+    if tol>=h:return {**out,'verdict':'fail','reason':'Thickness tolerance is not smaller than the thickness.'}
+    stiffness,beam_force_nominal,_=beam(h)
+    _,beam_force,nominal_stress=beam(h+tol)   # worst case for stress and the upper force band
+    _,beam_force_low,_=beam(h-tol)            # worst case for the lower force band
     stress=nominal_stress*check.stress_concentration
     unknown_switch=[s for s in check.switch_profiles if not PROFILES[s].operating_force.known]
     switch_force=max((PROFILES[s].operating_force.value*GF_TO_N for s in check.switch_profiles if PROFILES[s].operating_force.known),default=0.)
     total=beam_force*check.beam_force_ratio+switch_force*check.switch_force_ratio
+    total_low=beam_force_low*check.beam_force_ratio+switch_force*check.switch_force_ratio
     allowed=check.stress_allowance*strength if strength is not None else None
     checks={'beam_in_part':{'fraction':inside,'pass':inside>=.999},
-            'stress':{'peak_mpa':stress,'nominal_mpa':nominal_stress,'stress_concentration':check.stress_concentration,
+            'stress':{'peak_mpa':stress,'nominal_mpa':nominal_stress,'at_thickness_mm':h+tol,'stress_concentration':check.stress_concentration,
                       'stress_concentration_basis':check.stress_concentration_basis,'allowed_mpa':allowed,'strength_mpa':strength,'basis':check.strength_basis,
                       'allowance':check.stress_allowance,'allowance_basis':check.allowance_basis,
                       'pass':allowed is not None and stress<=allowed},
@@ -795,7 +831,8 @@ def _flexure_check(recipe,check,part_shapes,node_shapes):
                      'beam_force_ratio':check.beam_force_ratio,'switch_force_ratio':check.switch_force_ratio,'ratio_basis':check.ratio_basis,
                      'band_n':[check.min_force_n,check.max_force_n],'basis':check.force_basis,
                      'switch_profiles_without_force':unknown_switch,
-                     'pass':check.min_force_n<=total<=check.max_force_n and not unknown_switch}}
+                     'thickness_tolerance_mm':tol,'beam_n_nominal':beam_force_nominal,'total_n_at_minus_tolerance':total_low,
+                     'pass':check.min_force_n<=total_low and total<=check.max_force_n and not unknown_switch}}
     if check.torque_nmm>0:
         if check.poisson_ratio is None or check.max_twist_deg is None:
             checks['twist']={'pass':False,'reason':'Torque given without a Poisson ratio or a twist limit.'}
@@ -857,11 +894,108 @@ def _base_shape_check(check,part_shapes,node_shapes):
             'base_points_off_form':removed,'worst_base_point_distance_mm':worst,'off_form_examples':[m for m in misses if m][:20]}
 
 
+def _clearance_check(c,part_shapes):
+    distance,overlap=pair_clearance(part_shapes[c.part_a],part_shapes[c.part_b])
+    return {'id':c.id,'kind':'static_clearance','distance_mm':distance,'overlap_mm3':overlap,
+            'required_mm':c.min_mm,'max_overlap_mm3':c.max_overlap_mm3,
+            'verdict':'pass' if distance+1e-8>=c.min_mm and overlap<=c.max_overlap_mm3 else 'fail'}
+
+
+def _motion_check(motion,part_shapes):
+    import numpy as np
+    # For fixed orientation, distance(A+t*v, B) is ||v||-Lipschitz in t.
+    # A uniform grid bounds unsampled distance by min(grid distances) -
+    # half the sample spacing in mm. This is conditional on the explicitly
+    # stated kernel distance-error allowance, NOT a formal OCCT proof.
+    count=motion.samples if motion.expect=='clear' else motion.max_samples;cache={};lower_bound=None;certificate=False
+    travel=float(np.linalg.norm(motion.translation_end_mm))
+    body=part_shapes[motion.moving_part]
+    if motion.carried_parts:
+        import cadquery as cq
+        body=cq.Compound.makeCompound([body,*(part_shapes[p] for p in motion.carried_parts)])
+    while True:
+        samples=[]
+        for t in np.linspace(0.,1.,count):
+            moving=body.translate(tuple(np.asarray(motion.start_translation_mm)+np.asarray(motion.translation_end_mm)*t))
+            for obstacle in motion.obstacles:
+                key=(float(t),obstacle)
+                if key not in cache:cache[key]=pair_clearance(moving,part_shapes[obstacle])
+                distance,overlap=cache[key]
+                samples.append({'t':float(t),'obstacle':obstacle,'distance_mm':distance,'overlap_mm3':overlap,
+                                'verdict':'pass' if distance+1e-8>=motion.min_mm and overlap<=motion.max_overlap_mm3 else 'fail'})
+        if motion.expect=='blocked':break
+        min_observed=min(s['distance_mm'] for s in samples)
+        lower_bound=min_observed-travel/(2*(count-1))-motion.assumed_distance_error_mm
+        failed=any(s['verdict']=='fail' for s in samples)
+        certificate=not failed and lower_bound>=motion.min_mm and lower_bound>0
+        if failed or certificate or count>=motion.max_samples:break
+        count=min(2*(count-1)+1,motion.max_samples)
+    if motion.expect=='blocked':
+        blocked=[s for s in samples if s['overlap_mm3']>=motion.min_blocking_overlap_mm3]
+        first=min(blocked,key=lambda s:s['t']) if blocked else None
+        return ({'id':motion.id,'kind':'sampled_translation_blocking','expect':'blocked','samples':samples,
+                       'carried_parts':list(motion.carried_parts),'start_translation_mm':list(motion.start_translation_mm),
+                       'first_blocked_t':first['t'] if first else None,'first_blocking_obstacle':first['obstacle'] if first else None,
+                       'verdict':'pass' if blocked else 'fail',
+                       'scope':'Rigid interference means the motion is stopped by contact before this overlap; stop stiffness is not modeled. Blocking is located only to the sample spacing.'})
+    return ({'id':motion.id,'kind':'sampled_translation_clearance','samples':samples,'carried_parts':list(motion.carried_parts),
+                   'start_translation_mm':list(motion.start_translation_mm),
+                   'verdict':'pass' if all(x['verdict']=='pass' for x in samples) else 'fail',
+                   'continuous_swept_motion':'distance_bound_satisfied_under_stated_assumptions' if certificate else 'not_proven',
+                   'continuous_distance_lower_bound_mm':lower_bound,
+                   'assumed_distance_error_mm':motion.assumed_distance_error_mm,
+                   'initial_samples':motion.samples,'final_samples':count,
+                   'certificate_scope':'Fixed-orientation linear translation against fixed obstacles. The numerical distance-error allowance is an assumption, not a certified OCCT error bound. Rotations, deformation, wear and tolerance variation are excluded.'})
+
+
+def _tolerance_variants(part_shapes,tolerance_list):
+    """Part-shape sets at every corner of the declared placement tolerances (each nonzero component at + and -)."""
+    import itertools
+    import numpy as np
+    variants=[({},part_shapes)]
+    for tol in tolerance_list:
+        axes=[(i,v) for i,v in enumerate(tol.translation_mm) if v>0]
+        corners=[]
+        for signs in itertools.product((-1.,1.),repeat=len(axes)+(1 if tol.rotation_deg>0 else 0)):
+            shift=[0.,0.,0.]
+            for (i,v),s in zip(axes,signs):shift[i]=s*v
+            angle=signs[-1]*tol.rotation_deg if tol.rotation_deg>0 else 0.
+            corners.append((shift,angle))
+        new=[]
+        for label,shapes in variants:
+            for shift,angle in corners:
+                moved=dict(shapes)
+                origin=np.asarray(tol.rotation_origin_mm);tip=origin+np.asarray(tol.rotation_axis)
+                for name in [tol.part,*tol.carried_parts]:
+                    body=moved[name]
+                    if angle:body=body.rotate(tuple(origin),tuple(tip),angle)
+                    if any(shift):body=body.translate(tuple(shift))
+                    moved[name]=body
+                new.append(({**label,tol.id:{'translation_mm':shift,'rotation_deg':angle}},moved))
+        variants=new
+    return variants
+
+
+def _with_tolerances(fn,check,part_shapes,tolerances):
+    ids=getattr(check,'tolerance_ids',[])
+    if not ids:return fn(check,part_shapes)
+    results=[]
+    for label,shapes in _tolerance_variants(part_shapes,[tolerances[i] for i in ids]):
+        res=fn(check,shapes)
+        results.append({'placement':label,'verdict':res['verdict'],
+                        'min_distance_mm':min([s['distance_mm'] for s in res.get('samples',[])] or [res.get('distance_mm',float('nan'))])})
+    nominal=fn(check,part_shapes)
+    worst=min(results,key=lambda r:r['min_distance_mm'])
+    return {**nominal,'tolerance_ids':list(ids),'placement_corners':results,'worst_placement':worst,
+            'verdict':'pass' if nominal['verdict']=='pass' and all(r['verdict']=='pass' for r in results) else 'fail',
+            'tolerance_scope':'Rigid placement corners only (every nonzero component at its + and - limit); intermediate placements and form errors are not covered.'}
+
+
 def evaluate_geometry(recipe,part_shapes,node_shapes=None):
     """Overlap, dimension, clearance and sampled-motion checks. Does not export files."""
     import numpy as np
     recipe=Recipe.model_validate(recipe) if not isinstance(recipe,Recipe) else recipe
-    checks=[]
+    checks=[];tolerances={tol.id:tol for tol in recipe.placement_tolerances}
     from .measurement import volume_cross_check
     for output in recipe.outputs:
         body=part_shapes[output.part_id]
@@ -905,57 +1039,11 @@ def evaluate_geometry(recipe,part_shapes,node_shapes=None):
                        'nominal_mm':d.nominal_mm,'tolerance_mm':d.tolerance_mm,'verdict':'pass' if passes else 'fail',
                        'scope':'Analytic surface presence/dimension only; a cylindrical surface does not prove a through-bore.'})
     for c in recipe.clearance_checks:
-        distance,overlap=pair_clearance(part_shapes[c.part_a],part_shapes[c.part_b])
-        checks.append({'id':c.id,'kind':'static_clearance','distance_mm':distance,'overlap_mm3':overlap,
-                       'required_mm':c.min_mm,'max_overlap_mm3':c.max_overlap_mm3,
-                       'verdict':'pass' if distance+1e-8>=c.min_mm and overlap<=c.max_overlap_mm3 else 'fail'})
+        checks.append(_with_tolerances(_clearance_check,c,part_shapes,tolerances))
     for motion in recipe.motion_checks:
-        # For fixed orientation, distance(A+t*v, B) is ||v||-Lipschitz in t.
-        # A uniform grid bounds unsampled distance by min(grid distances) -
-        # half the sample spacing in mm. This is conditional on the explicitly
-        # stated kernel distance-error allowance, NOT a formal OCCT proof.
-        count=motion.samples if motion.expect=='clear' else motion.max_samples;cache={};lower_bound=None;certificate=False
-        travel=float(np.linalg.norm(motion.translation_end_mm))
-        body=part_shapes[motion.moving_part]
-        if motion.carried_parts:
-            import cadquery as cq
-            body=cq.Compound.makeCompound([body,*(part_shapes[p] for p in motion.carried_parts)])
-        while True:
-            samples=[]
-            for t in np.linspace(0.,1.,count):
-                moving=body.translate(tuple(np.asarray(motion.start_translation_mm)+np.asarray(motion.translation_end_mm)*t))
-                for obstacle in motion.obstacles:
-                    key=(float(t),obstacle)
-                    if key not in cache:cache[key]=pair_clearance(moving,part_shapes[obstacle])
-                    distance,overlap=cache[key]
-                    samples.append({'t':float(t),'obstacle':obstacle,'distance_mm':distance,'overlap_mm3':overlap,
-                                    'verdict':'pass' if distance+1e-8>=motion.min_mm and overlap<=motion.max_overlap_mm3 else 'fail'})
-            if motion.expect=='blocked':break
-            min_observed=min(s['distance_mm'] for s in samples)
-            lower_bound=min_observed-travel/(2*(count-1))-motion.assumed_distance_error_mm
-            failed=any(s['verdict']=='fail' for s in samples)
-            certificate=not failed and lower_bound>=motion.min_mm and lower_bound>0
-            if failed or certificate or count>=motion.max_samples:break
-            count=min(2*(count-1)+1,motion.max_samples)
-        if motion.expect=='blocked':
-            blocked=[s for s in samples if s['overlap_mm3']>=motion.min_blocking_overlap_mm3]
-            first=min(blocked,key=lambda s:s['t']) if blocked else None
-            checks.append({'id':motion.id,'kind':'sampled_translation_blocking','expect':'blocked','samples':samples,
-                           'carried_parts':list(motion.carried_parts),'start_translation_mm':list(motion.start_translation_mm),
-                           'first_blocked_t':first['t'] if first else None,'first_blocking_obstacle':first['obstacle'] if first else None,
-                           'verdict':'pass' if blocked else 'fail',
-                           'scope':'Rigid interference means the motion is stopped by contact before this overlap; stop stiffness is not modeled. Blocking is located only to the sample spacing.'})
-            continue
-        checks.append({'id':motion.id,'kind':'sampled_translation_clearance','samples':samples,'carried_parts':list(motion.carried_parts),
-                       'start_translation_mm':list(motion.start_translation_mm),
-                       'verdict':'pass' if all(x['verdict']=='pass' for x in samples) else 'fail',
-                       'continuous_swept_motion':'distance_bound_satisfied_under_stated_assumptions' if certificate else 'not_proven',
-                       'continuous_distance_lower_bound_mm':lower_bound,
-                       'assumed_distance_error_mm':motion.assumed_distance_error_mm,
-                       'initial_samples':motion.samples,'final_samples':count,
-                       'certificate_scope':'Fixed-orientation linear translation against fixed obstacles. The numerical distance-error allowance is an assumption, not a certified OCCT error bound. Rotations, deformation, wear and tolerance variation are excluded.'})
+        checks.append(_with_tolerances(_motion_check,motion,part_shapes,tolerances))
     for rotation in recipe.rotation_checks:
-        checks.append(_rotation_check(rotation,part_shapes))
+        checks.append(_with_tolerances(_rotation_check,rotation,part_shapes,tolerances))
     for flexure in recipe.flexure_checks:
         checks.append(_flexure_check(recipe,flexure,part_shapes,node_shapes))
     for base_check in recipe.base_shape_checks:
