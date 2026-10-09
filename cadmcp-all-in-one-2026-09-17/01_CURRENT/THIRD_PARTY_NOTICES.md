@@ -45,4 +45,4 @@ upstream runtimes, model weights and complete data have not been vendored.
 
 ## PyMeshLab (optional, subprocess only)
 
-`brain_mouse_scan_model` runs PyMeshLab (GPL-3.0) in a separate virtualenv through `cadmcp_brain/studio/scan_model_worker.py`; it is never imported into the cadmcp_brain process and is not bundled. Exchange is files and JSON only.
+`brain_mouse_scan_model` runs PyMeshLab (GPL-3.0) in a separate virtualenv through `cadmcp_brain/studio/scan_model_worker.py`; it is never imported into the cadmcp_brain process and is not bundled. Exchange is files and JSON only. `brain_mouse_scan_clean` uses the same arrangement (`cadmcp_brain/studio/scan_clean_worker.py`, `python -I` in the scan virtualenv).
