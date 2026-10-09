@@ -31,14 +31,16 @@ def trapezoid(d, depth):
     return depth * np.clip((HW_TOP - np.abs(d)) / (HW_TOP - HW_FLOOR), 0, 1)
 
 
-def slab(noise: float = 0.004, bump: bool = False, seed: int = 2):
+def slab(noise: float = 0.004, bump: bool = False, seed: int = 2, wobble: float = 0.0):
     """Closed slab 60 x 40 x 8 mm: top surface is a gentle dome with a straight groove along x (y = LINE_Y) and a circular groove ring."""
     xs = np.arange(-30, 30 + 1e-9, STEP)
     ys = np.arange(-20, 20 + 1e-9, STEP)
     nx, ny = len(xs), len(ys)
     X, Y = np.meshgrid(xs, ys, indexing='ij')
     z = 0.0015 * X ** 2 + 0.001 * Y ** 2
-    z = z - trapezoid(Y - LINE_Y, DEPTH_LINE)
+    cy = LINE_Y + wobble * (np.sin(X / 1.7) + 0.6 * np.sin(X / 0.9 + 1.0))       # ragged centre line (design-intent test)
+    wid = 1.0 + (0.5 * wobble / 0.12) * np.sin(X / 1.1) if wobble else 1.0
+    z = z - trapezoid((Y - cy) / wid, DEPTH_LINE)
     rr = np.hypot(X - RING_C[0], Y - RING_C[1])
     z = z - trapezoid(rr - RING_R, DEPTH_RING)
     rng = np.random.default_rng(seed)
@@ -160,6 +162,36 @@ def test_zone_repair_flattens_a_bump_and_respects_the_cap():
     assert W.topology(vn, f)['watertight']
 
 
+def test_intent_cap_fades_beyond_the_cap():
+    dl = np.array([[0.3, 0, 0], [0.6, 0, 0], [0.9, 0, 0], [1.2, 0, 0], [2.0, 0, 0]])
+    out, over, far = W.apply_intent_cap(dl, 0.6)
+    assert np.allclose(np.linalg.norm(out, axis=1), [0.3, 0.6, 0.45, 0.0, 0.0]) and over == 3 and far == 2
+
+
+def test_intent_centre_is_straight_for_a_wobbly_line():
+    class C:      # minimal stand-in of a fitted unit: centres wobble +-0.1 mm around a straight line
+        pass
+    x = np.arange(0, 12, 0.05)
+    rng = np.random.default_rng(0)
+    P = np.stack([x, np.full_like(x, 2.0), 0.001 * x ** 2], 1)
+    cur = C()
+    cur.P, cur.s, cur.n = P, x, len(x)
+    cur.U = np.tile([0, 1.0, 0], (len(x), 1))
+    cur.N = np.tile([0, 0, 1.0], (len(x), 1))
+    un = C()
+    un.curve = cur
+    st = np.arange(0.5, 11.5, 0.5)
+    th = np.zeros((len(st), 11))
+    off = 0.1 * np.sin(st / 1.3) + rng.normal(0, 0.03, len(st))
+    th[:, 0], th[:, 1], th[:, 2], th[:, 3] = off - 0.5, 0.4, 0.2, 0.4          # centre = u1 + g1 + g2 / 2 = off
+    un.T = np.c_[st, th, np.full(len(st), 0.01), np.full(len(st), 500.0)]
+    un.df_raw = np.full(len(st), 0.25)
+    un.df_bad = 0.7
+    pts, info = W.intent_centre(un, 1.0, None)
+    assert info['straight'] and np.ptp(pts[:, 1]) < 0.05 and pts[:, 0].min() < 0.0 + 0.1 and pts[:, 0].max() > 10.9
+    assert info['max_curvature_per_mm'] < 0.01
+
+
 def test_pymeshlab_is_never_imported_in_the_server_process():
     src = ''.join(Path(m.__file__).read_text(encoding='utf-8') for m in (sc, seeds_mod))
     assert 'import pymeshlab' not in src
@@ -230,6 +262,40 @@ def test_scan_clean_grooves_end_to_end(tmp_path, scan_python, monkeypatch):
     rejects('SCAN_CLEAN_OUTPUT_CHANGED', lambda: sc.scan_clean(tmp_path, relative_path='in/s.stl', unit='mm', grooves=[seed_line(), seed_ring()]))
 
 
+def test_scan_clean_design_intent_makes_a_ragged_groove_straight_and_constant(tmp_path, scan_python, monkeypatch):
+    monkeypatch.setenv(smod.ENV_PYTHON, str(scan_python))
+    v, f = slab(wobble=0.12)
+    (tmp_path / 'in').mkdir()
+    write_stl(tmp_path / 'in' / 's.stl', v, f)
+    before = (tmp_path / 'in' / 's.stl').read_bytes()
+    kw = dict(relative_path='in/s.stl', unit='mm', grooves=[{**seed_line(), 'straight': True}], design_intent=True)
+    r = sc.scan_clean(tmp_path, **kw)
+    assert r['status'] == 'READY', r['blocking_reasons']
+    assert r['settings']['design_intent'] is True and r['code_version']['scan_clean'] == sc.SCAN_CLEAN_INTENT_VERSION
+    c = r['checks']
+    assert c['watertight'] == c['manifold'] == c['winding_consistent'] == 'PASS' and c['outside_zone_deviation'] == 'PASS'
+    g = r['edits']['line']['design_intent']
+    assert g['straight'] is True and abs(g['depth_mm'] - DEPTH_LINE) < 0.08
+    o = g['original_stations']
+    assert o['fitted'] + o['rebuilt_by_intent'] + o['left_original'] == o['total'] and o['rebuilt_by_intent'] > 0
+    folder = tmp_path / 'mouse' / 'scans' / r['clean_id']
+    params = json.loads((folder / 'groove_params.json').read_text(encoding='utf-8'))
+    assert len(params['grooves']['line']['design_intent']['station_status']) == o['total']
+    cp = np.array(params['grooves']['line']['centerline_bspline']['control_points_mm'])
+    assert np.ptp(cp[:, 1]) < 0.08                                   # the wobbling centre line became straight
+    widths = {s_['width_half_depth_mm'] for s_ in params['grooves']['line']['stations'] if s_['present']}
+    assert len(widths) == 1                                          # constant width
+    rl = r['roughness']['line']
+    assert rl['b3_median_deg_cleaned'] <= rl['b3_median_deg_original'] + 0.3
+    assert (tmp_path / 'in' / 's.stl').read_bytes() == before
+    again = sc.scan_clean(tmp_path, **kw)
+    assert again['cached'] is True and again['clean_id'] == r['clean_id']
+    plain = sc.scan_clean(tmp_path, relative_path='in/s.stl', unit='mm', grooves=[seed_line()])
+    assert plain['clean_id'] != r['clean_id']                         # a different result is a different id
+    rejects('SCAN_CLEAN_SETTINGS', lambda: sc.scan_clean(tmp_path, relative_path='in/s.stl', unit='mm', mode='zones', design_intent=True,
+                                                         zones=[{'name': 'z', 'box': {'min': [0, 0, 0], 'max': [1, 1, 1]}}]))
+
+
 def test_scan_clean_stops_when_no_groove_is_there(tmp_path, scan_python, monkeypatch):
     monkeypatch.setenv(smod.ENV_PYTHON, str(scan_python))
     v, f = slab()
@@ -277,3 +343,21 @@ def test_real_scan_click_gap_and_rear_cross(tmp_path, scan_python, monkeypatch):
     assert rough['b3_median_deg_original'] > 4.0 and rough['b3_median_deg_cleaned'] < 1.8
     rim = next(v for k, v in r['edits'].items() if k.startswith('rim'))
     assert rim['deviation_cleaned_to_original_mm']['max'] < 0.25
+
+
+@pytest.mark.skipif(not REAL_PLY.is_file(), reason='real LH2 scan not available')
+def test_real_scan_design_intent_rim_and_gap(tmp_path, scan_python, monkeypatch):
+    """Design intent on the real scan: the rim groove and the click gap get ONE width / depth and a smooth centre line; every station is accounted for; outside <= 0.05 mm."""
+    monkeypatch.setenv(smod.ENV_PYTHON, str(scan_python))
+    (tmp_path / 'in').mkdir()
+    (tmp_path / 'in' / 'scan.ply').write_bytes(REAL_PLY.read_bytes())
+    m = smod.scan_model(tmp_path, 'in/scan.ply', 'mm')
+    r = sc.scan_clean(tmp_path, scan_id=m['model_id'], design_intent=True)
+    assert r['status'] == 'READY', r['blocking_reasons']
+    assert r['checks']['watertight'] == 'PASS' and r['checks']['manifold'] == 'PASS' and r['checks']['outside_zone_deviation'] == 'PASS'
+    for prefix in ('gap', 'rim'):
+        e = next(v for k, v in r['edits'].items() if k.startswith(prefix))
+        di = e['design_intent']
+        o = di['original_stations']
+        assert o['fitted'] + o['rebuilt_by_intent'] + o['left_original'] == o['total']
+        assert di['profile_stations_used'] >= 4 and di['max_curvature_per_mm'] <= 0.25

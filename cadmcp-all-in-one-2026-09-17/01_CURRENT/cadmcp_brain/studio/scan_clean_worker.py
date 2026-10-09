@@ -32,13 +32,19 @@ from scipy.spatial import cKDTree
 sys.path.insert(0, str(Path(__file__).resolve().parent))     # the worker runs with -I; the numpy-only topology helpers live next to it
 from scan_model_worker import read_stl_topology, topology    # noqa: E402
 
-WORKER_VERSION = 'scan_clean/1'
+WORKER_VERSION = 'scan_clean/2'
 LAMBDA_OPEN, LAMBDA_LOOP = 30.0, 12.0      # segmentation penalty (larger = fewer steps)
 DF_MIN = 0.05                               # a groove shallower than this (mm) is "absent": left original
 SKIN_HALF_WIDTH = {'open': 0.9, 'loop': 1.4}
 SUBDIVISION_LEVELS = 2
 OUTSIDE_MARGIN_MM = 0.6
 SAMPLE_DENSITY = 300.0                      # face samples per mm^2 near a groove
+INTENT_EXTEND_MM = 1.0                      # design intent: the clean groove continues this far past the last trusted station
+INTENT_KNOT_MM = (6.0, 9.0, 14.0, 20.0)     # centre-line spline knot spacings tried in turn until the curvature limit holds
+INTENT_MAX_CURVATURE = 0.2                  # 1/mm (radius >= 5 mm) for the smoothed centre line
+INTENT_STRAIGHT_P95_MM = 0.2                # auto 'straight': 95th percentile of the in-plan scatter of the fitted centres
+INTENT_STRAIGHT_MAX_LEN_MM = 25.0
+INTENT_AGREE_DEPTH_MM, INTENT_AGREE_WIDTH_MM, INTENT_AGREE_CENTRE_MM = 0.06, 0.2, 0.08
 
 
 # ------------------------------------------------------------------ mesh helpers
@@ -337,6 +343,7 @@ class Unit:
 
     def __init__(self, name: str, curve: Curve, T: np.ndarray, closed: bool, lam: float, rms_bad: float = 0.06, df_bad: float = 0.7, sig_side: float = 2):
         self.name, self.curve, self.T, self.closed, self.lam, self.sig_side = name, curve, T, closed, lam, sig_side
+        self.df_bad = df_bad
         self.L = curve.L
         self._finalize(rms_bad, df_bad)
 
@@ -487,8 +494,213 @@ def subdivide_sel(V: np.ndarray, F: np.ndarray, sel: np.ndarray, levels: int):
     return V, F, sel
 
 
+# ------------------------------------------------------------------ design intent: constant clean groove on a smooth centre line
+def _huber_w(r: np.ndarray, k: float) -> np.ndarray:
+    return 1.0 / np.maximum(1.0, np.abs(r) / k)
+
+
+def _polyline_curvature(P: np.ndarray) -> float:
+    d = np.diff(P, axis=0)
+    ln = np.linalg.norm(d, axis=1)
+    t = d / np.maximum(ln, 1e-12)[:, None]
+    ang = np.arccos(np.clip((t[1:] * t[:-1]).sum(1), -1, 1))
+    return float((ang / np.maximum(0.5 * (ln[1:] + ln[:-1]), 1e-12)).max()) if len(ang) else 0.0
+
+
+def intent_trusted(un: 'Unit') -> np.ndarray:
+    th, T = un.T[:, 1:12], un.T
+    return ~np.isnan(th[:, 0]) & (T[:, 12] < 0.08) & (un.df_raw > 0.06) & (un.df_raw < un.df_bad)
+
+
+def intent_centre(un: 'Unit', ext: float, straight: bool | None) -> tuple[np.ndarray, dict[str, Any]] | None:
+    """Smooth, low-curvature centre line through the centres of the trusted stations (robust), extended by ext mm at both ends."""
+    c = un.curve
+    ref = intent_trusted(un)
+    if ref.sum() < 6:
+        return None
+    th = un.T[ref, 1:12]
+    uc = th[:, 0] + th[:, 1] + 0.5 * th[:, 2]
+    idx = np.searchsorted(c.s, un.T[ref, 0]).clip(0, c.n - 1)
+    C = c.P[idx] + uc[:, None] * c.U[idx]
+    Nm = c.N[idx].mean(0)
+    Nm /= np.linalg.norm(Nm)
+    c0 = np.median(C, axis=0)
+    D = C - c0
+    Dp = D - (D @ Nm)[:, None] * Nm
+    w = np.ones(len(C))
+    e = np.zeros(3)
+    for _ in range(4):
+        cov = (Dp * w[:, None]).T @ Dp
+        e = np.linalg.eigh(cov)[1][:, -1]
+        lat = Dp - (Dp @ e)[:, None] * e
+        w = _huber_w(np.linalg.norm(lat, axis=1), 0.1)
+    if e @ (C[-1] - C[0]) < 0:
+        e = -e
+    m = np.cross(Nm, e)
+    scatter = np.abs(D @ m)
+    p95 = float(np.percentile(scatter, 95))
+    length = float(np.linalg.norm(C[-1] - C[0]))
+    is_straight = bool(straight) if straight is not None else (p95 <= INTENT_STRAIGHT_P95_MM and length <= INTENT_STRAIGHT_MAX_LEN_MM)
+    step = 0.25
+    info: dict[str, Any] = {'trusted_stations': int(ref.sum()), 'trusted_s_range_mm': [float(un.T[ref, 0].min()), float(un.T[ref, 0].max())],
+                            'centre_scatter_p95_mm_about_plan_line': round(p95, 4), 'extend_mm': ext}
+    if is_straight:
+        t = D @ e
+        z = D @ Nm
+        wz = np.ones(len(t))
+        for _ in range(4):
+            co = np.polyfit(t, z, 2, w=wz)
+            wz = _huber_w(z - np.polyval(co, t), 0.05)
+        tg = np.arange(t.min() - ext, t.max() + ext + 1e-9, step)
+        pts = c0 + tg[:, None] * e + np.polyval(co, tg)[:, None] * Nm
+        info.update({'shape': 'straight in plan (line in the surface-tangent plane, height from a quadratic of the fitted centres)', 'straight': True,
+                     'in_plan_residual_rms_mm': float(np.sqrt(np.mean(scatter ** 2))), 'max_curvature_per_mm': _polyline_curvature(pts)})
+        return pts, info
+    from scipy.interpolate import make_lsq_spline
+    tau = np.r_[0, np.cumsum(np.linalg.norm(np.diff(C, axis=0), axis=1))]
+    tau, ordr = np.unique(tau, return_index=True)
+    Cs = C[ordr]
+    best = None
+    for kn in INTENT_KNOT_MM:
+        nint = max(0, int(round((tau[-1] - tau[0]) / kn)) - 1)
+        knots = np.r_[[tau[0]] * 4, np.linspace(tau[0], tau[-1], nint + 2)[1:-1], [tau[-1]] * 4]
+        wt = np.ones(len(tau))
+        sp3 = None
+        try:
+            for _ in range(5):
+                sp3 = make_lsq_spline(tau, Cs, knots, k=3, w=wt)
+                wt = _huber_w(np.linalg.norm(sp3(tau) - Cs, axis=1), 0.1)
+        except Exception:
+            continue
+        tg = np.r_[np.arange(tau[0], tau[-1], step), tau[-1]]
+        body = sp3(tg)
+        t0, t1 = sp3(tau[0], 1), sp3(tau[-1], 1)
+        t0, t1 = t0 / np.linalg.norm(t0), t1 / np.linalg.norm(t1)
+        ks = np.arange(step, ext + 1e-9, step)[:, None]
+        pts = np.vstack([body[0] - ks[::-1] * t0, body, body[-1] + ks * t1])
+        kap = _polyline_curvature(pts)
+        res = float(np.sqrt(np.mean((sp3(tau) - Cs) ** 2)))
+        best = (pts, kn, kap, res)
+        if kap <= INTENT_MAX_CURVATURE:
+            break
+    if best is None:
+        return None
+    pts, kn, kap, res = best
+    info.update({'shape': 'smooth cubic B-spline through the robust centres', 'straight': False, 'knot_spacing_mm': kn, 'max_curvature_per_mm': kap,
+                 'curvature_limit_per_mm': INTENT_MAX_CURVATURE, 'curvature_limit_met': bool(kap <= INTENT_MAX_CURVATURE), 'centre_fit_rms_mm': res})
+    return pts, info
+
+
+def intent_refit_skins(curve: Curve, Pq: np.ndarray, T2: np.ndarray, prof: np.ndarray, win: float = 0.3, umax: float = 3.0, nmin: int = 40) -> tuple[np.ndarray, np.ndarray]:
+    """Per station skins (left / right quadratic) from the samples OUTSIDE the constant groove only, outliers (slit interior, flash) trimmed. Returns (skins (n, 6), ok (n,))."""
+    s, u, _, h, _ = curve.query(Pq)
+    keep = (np.abs(u) < umax) & (np.abs(h) < 3)
+    s, u, h = s[keep], u[keep], h[keep]
+    o = np.argsort(s)
+    s, u, h = s[o], u[o], h[o]
+    u1 = prof[0]
+    u4 = prof[0] + prof[1] + prof[2] + prof[3]
+    n = len(T2)
+    out = np.full((n, 6), np.nan)
+    ok = np.zeros(n, bool)
+    for i in range(n):
+        si = T2[i, 0]
+        lo, hi = np.searchsorted(s, [si - win, si + win])
+        uu, hh = u[lo:hi], h[lo:hi]
+        res = []
+        for side, m in ((0, uu < u1 - 0.1), (1, uu > u4 + 0.1)):
+            if m.sum() < nmin:
+                break
+            x, y = uu[m], hh[m]
+            co = np.polyfit(x, y, 2)[::-1]
+            if np.isfinite(T2[i, 1]):
+                co = np.asarray(T2[i, 6 + 3 * side:9 + 3 * side], float)
+            good = True
+            for scale in (0.25, 0.12, 0.08):
+                r = y - (co[0] + co[1] * x + co[2] * x * x)
+                k = np.abs(r) < scale
+                if k.sum() < nmin:
+                    good = False
+                    break
+                co = np.polyfit(x[k], y[k], 2)[::-1]
+            if not good:
+                break
+            res.append(co)
+        if len(res) == 2:
+            out[i], ok[i] = np.r_[res[0], res[1]], True
+    return out, ok
+
+
+def build_intent_unit(un: 'Unit', seed: dict[str, Any], skin: Skin, centre: np.ndarray, Pq: np.ndarray, log) -> tuple['Unit', dict[str, Any]] | dict[str, Any]:
+    """Replace a fitted open groove by the design-intent groove: smoothed centre line, constant robust-median width / depth, skins refitted from the trusted surface."""
+    cen = intent_centre(un, INTENT_EXTEND_MM, seed.get('straight'))
+    if cen is None:
+        return {'not_found': 'design intent: fewer than 6 trusted stations (depth 0.06-0.7 mm, fit rms below 0.08 mm); the fitted groove is used'}
+    pts, cinfo = cen
+    cur = Curve(pts, False, skin, centre, smooth=0.0)
+    T2 = fit_stations(cur, Pq)
+    th2 = T2[:, 1:12]
+    df2 = np.array([depth_of(x) if not np.isnan(x[0]) else np.nan for x in th2])
+    good2 = ~np.isnan(th2[:, 0]) & (T2[:, 12] < 0.08) & (df2 > 0.06) & (df2 < un.df_bad)
+    if good2.sum() < 4:
+        return {'not_found': 'design intent: the refit along the smoothed centre line has fewer than 4 trusted stations; the fitted groove is used'}
+    q = np.c_[th2[good2, :4], df2[good2]]
+    med = np.median(q, axis=0)
+    mad = np.median(np.abs(q - med), axis=0)
+    prof = med[:4]
+    depth = float(med[4])
+    skins, sok = intent_refit_skins(cur, Pq, T2, prof)
+    if sok.sum() < 4:
+        return {'not_found': 'design intent: too few stations with trusted skins on both sides; the fitted groove is used'}
+    s2 = T2[:, 0]
+    for k in range(6):
+        skins[:, k] = np.interp(s2, s2[sok], skins[sok, k])
+        skins[:, k] = gaussian_filter1d(skins[:, k], 3, mode='nearest')
+    u1 = prof[0]
+    u2, u3 = u1 + prof[1], u1 + prof[1] + prof[2]
+    u4 = u3 + prof[3]
+    hl = skins[:, 0] + skins[:, 1] * u1 + skins[:, 2] * u1 ** 2
+    hr = skins[:, 3] + skins[:, 4] * u4 + skins[:, 5] * u4 ** 2
+    hf = hl + (hr - hl) * (0.5 * (u2 + u3) - u1) / (u4 - u1) - depth
+    n = len(s2)
+    Tint = np.c_[s2, np.tile(prof, (n, 1)), hf, skins, np.zeros(n), np.full(n, 999.0)]
+    new = Unit(un.name, cur, Tint, False, LAMBDA_OPEN, df_bad=un.df_bad, sig_side=1)
+    new.ctrl, new.seed_kind = pts, seed.get('kind')
+    # classify the stations of the ORIGINAL fit
+    c = un.curve
+    th = un.T[:, 1:12]
+    uc_o = th[:, 0] + th[:, 1] + 0.5 * th[:, 2]
+    idx = np.searchsorted(c.s, un.T[:, 0]).clip(0, c.n - 1)
+    X = c.P[idx] + np.nan_to_num(uc_o)[:, None] * c.U[idx]
+    sn, u_off, tan, _, _ = cur.query(X)
+    covered = (np.abs(tan) < 0.3) & (sn > 0.05) & (sn < cur.L - 0.05)
+    w_o = widths(np.nan_to_num(th))
+    w_med = float((u3 + max(prof[3], 0.05) * 0.5) - (u1 + max(prof[1], 0.05) * 0.5))
+    fit_ok = ~un.bad & ~np.isnan(un.df_raw)
+    agree = (fit_ok & (np.abs(np.nan_to_num(un.df_raw, nan=9) - depth) <= INTENT_AGREE_DEPTH_MM) & (np.abs(w_o - w_med) <= INTENT_AGREE_WIDTH_MM)
+             & (np.abs(u_off - 0.5 * (u1 + u4)) <= INTENT_AGREE_CENTRE_MM))
+    status = np.where(~covered, 'original', np.where(agree, 'fitted', 'intent'))
+    n_fail = int(((status == 'intent') & ~fit_ok).sum())
+    info = {**cinfo, 'width_half_depth_mm': round(w_med, 4), 'depth_mm': round(depth, 4), 'depth_mad_mm': round(float(mad[4]), 4),
+            'profile_mm': {'u1': round(float(prof[0]), 4), 'wall_in': round(float(prof[1]), 4), 'floor': round(float(prof[2]), 4), 'wall_out': round(float(prof[3]), 4)},
+            'profile_stations_used': int(good2.sum()), 'profile_stations_total': int(n), 'skin_stations_interpolated': int((~sok).sum()),
+            'original_stations': {'total': int(len(status)), 'fitted': int((status == 'fitted').sum()), 'rebuilt_by_intent': int((status == 'intent').sum()),
+                                  'left_original': int((status == 'original').sum()), 'rebuilt_fit_failed': n_fail,
+                                  'rebuilt_scan_differs': int((status == 'intent').sum()) - n_fail},
+            'station_status': [{'s_mm': round(float(a), 2), 'status': str(b)} for a, b in zip(un.T[:, 0], status)]}
+    log(f'{un.name}: design intent: {info["original_stations"]}, width {w_med:.3f} depth {depth:.3f}, {info["shape"]}')
+    return new, info
+
+
+def apply_intent_cap(dl: np.ndarray, cap: float) -> tuple[np.ndarray, int, int]:
+    """Displacement up to cap mm is applied fully; between cap and 2 cap it fades to zero (deep undercuts such as a slit interior stay as scanned)."""
+    mag = np.linalg.norm(dl, axis=1)
+    fac = np.where(mag <= cap, 1.0, np.clip(2.0 - mag / np.maximum(cap, 1e-12), 0.0, 1.0))
+    return dl * fac[:, None], int((mag > cap).sum()), int((mag >= 2 * cap).sum())
+
+
 # ------------------------------------------------------------------ grooves pipeline
-def build_unit(seed: dict[str, Any], v: np.ndarray, f: np.ndarray, skin: Skin, centre: np.ndarray, log) -> Unit | dict[str, Any]:
+def build_unit(seed: dict[str, Any], v: np.ndarray, f: np.ndarray, skin: Skin, centre: np.ndarray, log, intent: bool = False) -> Unit | dict[str, Any]:
     """Fit one groove from its seed polyline. Returns a Unit, or {'not_found': reason}."""
     pts = np.asarray(seed['points'], float)
     closed = bool(seed['closed'])
@@ -521,12 +733,22 @@ def build_unit(seed: dict[str, Any], v: np.ndarray, f: np.ndarray, skin: Skin, c
     unit = Unit(seed['name'], cur, T, closed, LAMBDA_LOOP if closed else LAMBDA_OPEN)
     unit.ctrl = ctrl_cur
     unit.seed_kind = seed.get('kind')
+    unit.intent = None
+    unit.intent_failed = None
     if not unit.fit_ok:
         return {'not_found': f'only {unit.n_good} of {unit.n_stations} stations could be fitted'}
+    if intent and not closed:
+        r = build_intent_unit(unit, seed, skin, centre, Pq, log)
+        if isinstance(r, tuple):
+            new, info = r
+            new.intent, new.intent_failed = info, None
+            return new
+        log(f'{seed["name"]}: {r["not_found"]}')
+        unit.intent_failed = r['not_found']
     return unit
 
 
-def apply_units(v: np.ndarray, f: np.ndarray, units: list[Unit], log):
+def apply_units(v: np.ndarray, f: np.ndarray, units: list[Unit], log, cap: float = 0.6):
     """Subdivide round every unit and move vertices to the model profile along the curve normal."""
     cen = v[f].mean(1)
     sel = np.zeros(len(f), bool)
@@ -547,12 +769,16 @@ def apply_units(v: np.ndarray, f: np.ndarray, units: list[Unit], log):
         act = om > 1e-6
         ci = cand[act]
         dl = (om[act] * off[act])[:, None] * N[act]
+        cap_info: dict[str, Any] = {}
+        if getattr(un, 'intent', None) is not None:
+            dl, n_over, n_far = apply_intent_cap(dl, cap)
+            cap_info = {'cap_mm': cap, 'vertices_over_cap': n_over, 'vertices_left_as_scanned_beyond_2cap': n_far, 'cap_binds': bool(n_over > 0)}
         mag = np.linalg.norm(dl, axis=1)
         better = mag > bn[ci]
         best[ci[better]] = dl[better]
         bn[ci[better]] = mag[better]
         owner[ci[better]] = k
-        info[un.name] = {'vertices_active': int(act.sum()), 'max_displacement_mm': float(mag.max()) if len(mag) else 0.0}
+        info[un.name] = {'vertices_active': int(act.sum()), 'max_displacement_mm': float(mag.max()) if len(mag) else 0.0, **cap_info}
     return V2, F2, V2 + best, owner, info
 
 
@@ -662,7 +888,17 @@ def groove_record(un: Unit) -> dict[str, Any]:
         'segments_constant_profile': un.segments, 'step_positions_s_mm': steps,
         'floor_shape': 'trapezoid with a measured flat floor width; round versus flat floor is not resolvable at the scan edge length',
         'stations_total': int(un.n_stations), 'stations_fit_failed': int(un.bad.sum()), 'stations_absent_or_left_original': int((un.pres < 0.5).sum()),
-        'stations': _station_rows(un)}
+        'stations': _station_rows(un), **_intent_record(un)}
+
+
+def _intent_record(un: Unit) -> dict[str, Any]:
+    it = getattr(un, 'intent', None)
+    if it is None:
+        return {'design_intent': {'applied': False, 'reason': getattr(un, 'intent_failed', None)}} if getattr(un, 'intent_failed', None) else {}
+    o = it['original_stations']
+    return {'design_intent': {'applied': True, **it},
+            'stations_total': o['total'], 'stations_fit_failed': o['rebuilt_fit_failed'], 'stations_absent_or_left_original': o['left_original'],
+            'stations_fitted': o['fitted'], 'stations_rebuilt_by_intent': o['rebuilt_by_intent']}
 
 
 # ------------------------------------------------------------------ zones mode
@@ -777,7 +1013,7 @@ def run(req: dict[str, Any]) -> dict[str, Any]:
         units: list[Unit] = []
         not_found: list[dict[str, Any]] = []
         for sd in seeds:
-            r = build_unit(sd, v, f, skin, centre, log)
+            r = build_unit(sd, v, f, skin, centre, log, bool(req.get('design_intent')))
             if isinstance(r, Unit):
                 units.append(r)
                 absent_all = all(sg['absent'] for sg in r.segments)
@@ -792,7 +1028,7 @@ def run(req: dict[str, Any]) -> dict[str, Any]:
             res['edited'] = False
             res['seconds'] = round(time.time() - t0, 1)
             return res
-        V2, F2, Vn, owner, info = apply_units(v, f, active, log)
+        V2, F2, Vn, owner, info = apply_units(v, f, active, log, float(req['max_zone_deviation_mm']))
         res['not_found'] = [n for n in not_found if n['name'] not in {u.name for u in active}]
         edited_groups = [(u.name, k) for k, u in enumerate(active)]
     else:

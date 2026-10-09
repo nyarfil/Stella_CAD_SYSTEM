@@ -7,6 +7,9 @@ PASS / FAIL / UNVERIFIED and stop codes replace loosening.
 mode 'grooves': narrow grooves the scan under-resolves (0.6-1.2 mm wide, about the mesh edge length) are re-cut from a fitted parametric
   model (3D B-spline centre line + piecewise width / depth profile). Seeds come from the region boundaries of brain_mouse_recognize_regions,
   or from the `grooves` argument.
+  design_intent=True (mode grooves, open grooves only): the groove is REPLACED along a smoothed low-curvature centre line (straight where the fitted centres are straight)
+  by one constant width / depth (robust median of the trusted stations), skins refitted from the trusted surface outside the groove; displacement up to
+  max_zone_deviation_mm (fades to zero between 1x and 2x, so undercuts stay as scanned). Every station is reported as fitted / rebuilt by intent / left original.
 mode 'zones': explicit boxes / face selections are filled from their surroundings (topology preserving), displacement capped.
 """
 from __future__ import annotations
@@ -28,6 +31,7 @@ from ..util import digest, file_hash
 from .scan_shell import scan_dir
 
 SCAN_CLEAN_VERSION = 'C1.0'
+SCAN_CLEAN_INTENT_VERSION = 'C1.1'   # design_intent runs are a different result; the C1.0 ids of existing runs stay valid
 WORKER = Path(__file__).with_name('scan_clean_worker.py')
 REPORT = 'scan_clean_report.json'
 PARAMS = 'groove_params.json'
@@ -44,6 +48,8 @@ LIMITS = [
     'A groove is displaced along the local surface normal only; walls steeper than the normal field, undercuts and fold-overs are not repaired.',
     'Mode zones fills a zone from its surroundings (moving least squares, tapered over three edges, capped). It smooths and may erase real features inside the zone, and it does not re-cut grooves or retriangulate patches.',
     'Self-intersection counts come from a PyMeshLab face selection that over-reports on refined meshes; the check is UNVERIFIED unless the cleaned mesh has none.',
+    'design_intent: the groove is moved along the surface normal only. The parting slit under the click panels (an undercut 1.5-3 mm deep behind the lip, with a ragged mouth) is NOT a groove: it is not rebuilt, and seeding it as one produced spikes (tested and removed). The auto rim seed follows the upper panel rim, not that slit.',
+    'design_intent: one width / depth for the whole groove; real steps along the groove are removed. Stations outside the trusted span (extended by 1 mm) are left as scanned and listed.',
     'Surface-only: geometry behind the scanned skin, tolerances of the real part and function are not known or verified.',
 ]
 
@@ -102,7 +108,10 @@ def _validate_grooves(grooves: list[dict[str, Any]], v: np.ndarray) -> list[dict
         if (pts < lo).any() or (pts > hi).any():
             raise BrainError('SCAN_CLEAN_GROOVES', f"Groove {g['name']}: points lie outside the scan (+10 mm). Coordinates are mm in the prepared-scan frame.")
         closed = bool(g.get('closed', False))
-        out.append({'name': g['name'], 'kind': 'loop' if closed else 'open', 'closed': closed, 'source': 'user', 'points': pts.round(4).tolist()})
+        item = {'name': g['name'], 'kind': 'loop' if closed else 'open', 'closed': closed, 'source': 'user', 'points': pts.round(4).tolist()}
+        if g.get('straight') is not None:
+            item['straight'] = bool(g['straight'])
+        out.append(item)
     return out
 
 
@@ -138,7 +147,7 @@ def _validate_zones(zones: list[dict[str, Any]], nf: int) -> list[dict[str, Any]
 
 def scan_clean(workspace: Path, scan_id: str | None = None, relative_path: str | None = None, unit: str | None = None, mode: str = 'grooves',
                grooves: list[dict[str, Any]] | None = None, zones: list[dict[str, Any]] | None = None, max_zone_deviation_mm: float = 0.6,
-               outside_tolerance_mm: float = 0.05) -> dict[str, Any]:
+               outside_tolerance_mm: float = 0.05, design_intent: bool = False) -> dict[str, Any]:
     if mode not in MODES:
         raise BrainError('SCAN_CLEAN_SETTINGS', f'mode must be one of {list(MODES)}.', {'given': mode})
     for name, val, top in (('max_zone_deviation_mm', max_zone_deviation_mm, 5.0), ('outside_tolerance_mm', outside_tolerance_mm, 1.0)):
@@ -150,6 +159,8 @@ def scan_clean(workspace: Path, scan_id: str | None = None, relative_path: str |
         raise BrainError('SCAN_CLEAN_SETTINGS', "grooves belong to mode 'grooves'; mode 'zones' takes the zones list.")
     if mode == 'zones' and not zones:
         raise BrainError('SCAN_CLEAN_ZONES', "mode 'zones' needs an explicit zones list; nothing is guessed.")
+    if design_intent and mode != 'grooves':
+        raise BrainError('SCAN_CLEAN_SETTINGS', "design_intent belongs to mode 'grooves'.")
     sid, prep, from_model = _resolve(workspace, scan_id, relative_path, unit)
     d, prep = scan_shell.load_prepared(workspace, sid)
     v, f = scan_shell.load_prepared_mesh(d)
@@ -175,8 +186,8 @@ def scan_clean(workspace: Path, scan_id: str | None = None, relative_path: str |
         zone_list = _validate_zones(zones or [], len(f))
         seeds = []
     settings = {'mode': mode, 'max_zone_deviation_mm': float(max_zone_deviation_mm), 'outside_tolerance_mm': float(outside_tolerance_mm),
-                'grooves': seeds, 'zones': zone_list, 'regions_run': regions_run}
-    clean_id = 'clean_' + digest({'npz': prep['prepared_npz_sha256'], 'settings': settings, 'version': SCAN_CLEAN_VERSION})[:12]
+                'grooves': seeds, 'zones': zone_list, 'regions_run': regions_run, **({'design_intent': True} if design_intent else {})}
+    clean_id = 'clean_' + digest({'npz': prep['prepared_npz_sha256'], 'settings': settings, 'version': SCAN_CLEAN_INTENT_VERSION if design_intent else SCAN_CLEAN_VERSION})[:12]
     out = scan_dir(workspace, clean_id)
     if (out / REPORT).is_file():
         return _stored(out)
@@ -189,7 +200,7 @@ def scan_clean(workspace: Path, scan_id: str | None = None, relative_path: str |
         with (tmp / 'input.npz').open('wb') as fh:
             np.savez(fh, vertices=v, faces=f)
         req = {'mode': mode, 'input_npz': str(tmp / 'input.npz'), 'out_dir': str(tmp / 'out'), 'grooves': seeds, 'zones': zone_list,
-               'max_zone_deviation_mm': float(max_zone_deviation_mm), 'outside_tolerance_mm': float(outside_tolerance_mm)}
+               'max_zone_deviation_mm': float(max_zone_deviation_mm), 'outside_tolerance_mm': float(outside_tolerance_mm), 'design_intent': bool(design_intent)}
         (tmp / 'request.json').write_text(json.dumps(req), encoding='utf-8')
         try:
             proc = subprocess.run([str(python), '-I', str(WORKER), str(tmp / 'request.json')], capture_output=True, text=True, encoding='utf-8', errors='replace',
@@ -226,7 +237,8 @@ def _groove_summary(g: dict[str, Any], dev: dict[str, Any] | None, rough: dict[s
             'stations_fit_failed': g['stations_fit_failed'], 'segments': len(segs), 'step_positions_s_mm': g['step_positions_s_mm'],
             'depth_mm_range': [min(s['depth_mm'] for s in live), max(s['depth_mm'] for s in live)] if live else None,
             'width_half_depth_mm_range': [min(s['width_half_depth_mm'] for s in live), max(s['width_half_depth_mm'] for s in live)] if live else None,
-            'deviation_cleaned_to_original_mm': (dev or {}).get('cleaned_to_original'), 'roughness_b3_deg': rough}
+            'deviation_cleaned_to_original_mm': (dev or {}).get('cleaned_to_original'), 'roughness_b3_deg': rough,
+            **({'design_intent': {k: v for k, v in g['design_intent'].items() if k != 'station_status'}, 'stations_fitted': g['stations_fitted'], 'stations_rebuilt_by_intent': g['stations_rebuilt_by_intent']} if g.get('design_intent') else {})}
 
 
 def _report(res: dict[str, Any], folder: Path, clean_id: str, sid: str, prep: dict[str, Any], from_model: str | None, settings: dict[str, Any],
@@ -272,6 +284,15 @@ def _report(res: dict[str, Any], folder: Path, clean_id: str, sid: str, prep: di
         if g['stations_absent_or_left_original']:
             warnings.append({'code': 'STATIONS_LEFT_ORIGINAL', 'groove': name, 'stations': g['stations_absent_or_left_original'], 'of': g['stations_total'],
                              'note': 'Fit failed or groove shallower than 0.05 mm there; the scanned surface is kept.'})
+    for name, g in grooves.items():
+        di = g.get('design_intent') or {}
+        if di.get('applied') is False:
+            warnings.append({'code': 'DESIGN_INTENT_NOT_APPLIED', 'groove': name, 'reason': di.get('reason'), 'note': 'The fitted groove is used.'})
+        ci = (res.get('edit_info') or {}).get(name) or {}
+        if ci.get('cap_binds'):
+            warnings.append({'code': 'DESIGN_INTENT_CAP_BINDS', 'groove': name, 'cap_mm': ci['cap_mm'], 'vertices_over_cap': ci['vertices_over_cap'],
+                             'vertices_left_as_scanned_beyond_2cap': ci['vertices_left_as_scanned_beyond_2cap'],
+                             'note': 'The clean groove wants a larger displacement than max_zone_deviation_mm there; fading to zero up to twice the cap.'})
     cap_ok = None
     if mode == 'zones':
         cap_ok = res['max_displacement_mm'] <= settings['max_zone_deviation_mm'] + 1e-9
@@ -288,9 +309,9 @@ def _report(res: dict[str, Any], folder: Path, clean_id: str, sid: str, prep: di
             blockers.append('ZONE_DEVIATION_CAP_EXCEEDED')
     return {
         'schema': 'scan_clean_report/1', 'clean_id': clean_id, 'status': 'NOT_READY' if blockers else 'READY', 'blocking_reasons': blockers, 'warnings': warnings,
-        'code_version': {'scan_clean': SCAN_CLEAN_VERSION, 'worker': res['worker'], 'package': __version__, 'pymeshlab': res.get('pymeshlab'), 'scan_python': res.get('python')},
+        'code_version': {'scan_clean': SCAN_CLEAN_INTENT_VERSION if settings.get('design_intent') else SCAN_CLEAN_VERSION, 'worker': res['worker'], 'package': __version__, 'pymeshlab': res.get('pymeshlab'), 'scan_python': res.get('python')},
         'source': {'scan_id': sid, 'model_id': from_model, 'prepared_npz_sha256': prep['prepared_npz_sha256'], 'source': prep['source']},
-        'settings': {'mode': mode, 'max_zone_deviation_mm': settings['max_zone_deviation_mm'], 'outside_tolerance_mm': settings['outside_tolerance_mm'], 'regions_run': settings['regions_run'],
+        'settings': {'mode': mode, 'design_intent': bool(settings.get('design_intent')), 'max_zone_deviation_mm': settings['max_zone_deviation_mm'], 'outside_tolerance_mm': settings['outside_tolerance_mm'], 'regions_run': settings['regions_run'],
                      'grooves': [{'name': g['name'], 'kind': g['kind'], 'points': len(g['points']), 'source': g['source']} for g in settings['grooves']],
                      'zones': [{'name': z['name'], 'box': z.get('box'), 'faces': len(z.get('faces') or [])} for z in settings['zones']]},
         'seeds_source': seeds_source, 'units': {'input': 'mm (prepared scan)', 'output': 'mm', 'frame': 'prepared-scan frame'},
