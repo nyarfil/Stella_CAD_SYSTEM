@@ -154,16 +154,36 @@ def run(req: dict[str, Any]) -> dict[str, Any]:
         plate = np.arange(N)
         source = 'all_faces'
         warnings.append({'code': 'FLUSH_NO_LABELS', 'message': 'No labels: the dominant down-facing plane of the whole mesh is used; give a bottom_plate region to be certain.'})
-    cand = plate[n[plate, 2] < -min_nz]
-    if len(cand) < 10:
-        raise FlushError('FLUSH_NO_PLATE', 'Too few down-facing plate faces; the mesh must be in the standard frame (z up) with the plate roughly horizontal.',
-                         {'candidate_faces': int(len(cand)), 'min_down_nz': min_nz})
-    Pc, Ac = cen[cand], a[cand]
-    best = ransac_plane(Pc, Ac, tol, iters, min_nz=min_nz)
-    if best is None:
-        raise FlushError('FLUSH_NO_PLANE', 'No plane within the allowed tilt was found among the plate faces.', {'candidate_faces': int(len(cand))})
-    inl = best[1]
-    mu, nn = weighted_plane(Pc[inl], Ac[inl])
+    def fit_plane(ids: np.ndarray):
+        c = ids[n[ids, 2] < -min_nz]
+        if len(c) < 10:
+            return None
+        P_, A_ = cen[c], a[c]
+        b = ransac_plane(P_, A_, tol, iters, min_nz=min_nz)
+        if b is None:
+            return None
+        m_, nn_ = weighted_plane(P_[b[1]], A_[b[1]])
+        return c, P_, A_, b[1], m_, nn_
+
+    chosen = fit_plane(plate)
+    if labels is not None:                       # labels are a hint: cross-check with the whole mesh; the geometry decides
+        whole = fit_plane(np.arange(N))
+        if chosen is not None and whole is not None:
+            ang = float(np.degrees(np.arccos(np.clip(abs(float(chosen[5] @ whole[5])), -1, 1))))
+            off = float(abs((chosen[4] - whole[4]) @ whole[5]))
+            if ang > 0.3 or off > tol:
+                use_whole = float(whole[2][whole[3]].sum()) > float(chosen[2][chosen[3]].sum())
+                warnings.append({'code': 'FLUSH_LABEL_DISAGREES', 'message': 'The plane fitted on the bottom_plate label differs from the plane fitted on the whole mesh; the one with more inlier area is used.',
+                                 'details': {'angle_deg': ang, 'offset_mm': off, 'label_inlier_area_mm2': float(chosen[2][chosen[3]].sum()),
+                                             'whole_inlier_area_mm2': float(whole[2][whole[3]].sum()), 'used': 'whole_mesh' if use_whole else 'labels'}})
+                if use_whole:
+                    chosen, source = whole, 'all_faces (label disagreed)'
+        elif chosen is None and whole is not None:
+            chosen, source = whole, 'all_faces (label unusable)'
+            warnings.append({'code': 'FLUSH_LABEL_UNUSABLE', 'message': 'No plane was found on the bottom_plate label; the whole mesh was used.'})
+    if chosen is None:
+        raise FlushError('FLUSH_NO_PLANE', 'No down-facing plane within the allowed tilt was found (the mesh must be in the standard frame, z up, plate roughly horizontal).', {'min_down_nz': min_nz})
+    cand, Pc, Ac, inl, mu, nn = chosen
     tilt = tilt_deg(nn)
     if tilt > max_tilt:
         raise FlushError('FLUSH_TILT_TOO_LARGE', f'The fitted plate is tilted {tilt:.2f} deg, above max_tilt_deg; refusing to guess.', {'tilt_deg': tilt, 'max_tilt_deg': max_tilt})

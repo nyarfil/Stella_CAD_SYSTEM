@@ -168,7 +168,8 @@ def test_refusals(tmp_path):
     (tmp_path / 'labels.json').write_text(json.dumps({'bottom_plate': [10 ** 9]}))
     rejects('FLUSH_LABELS', lambda: _run(request(tmp_path)))
     (tmp_path / 'labels.json').write_text(json.dumps({'bottom_plate': [0, 1, 2]}))
-    rejects('FLUSH_NO_PLATE', lambda: _run(request(tmp_path)))
+    r = _run(request(tmp_path))                      # an unusable label is only a hint: the whole mesh is used, with a warning
+    assert any(w['code'] == 'FLUSH_LABEL_UNUSABLE' for w in r['warnings'])
 
 
 def _run(req):
@@ -245,3 +246,20 @@ def test_tool_end_to_end_in_the_scan_python(tmp_path, monkeypatch):
     rejects('FLUSH_OUTPUT_CHANGED', lambda: t.call('brain_mouse_scan_flush', args))
     (tmp_path / 'in' / 'bad.json').write_text('{"top_shell": [1]}')
     rejects('FLUSH_PLATE_LABEL_MISSING', lambda: t.call('brain_mouse_scan_flush', {**args, 'labels_path': 'in/bad.json'}))
+
+
+def test_label_agrees_gives_no_disagreement_warning(tmp_path):
+    write_case(tmp_path)
+    r = W.run(request(tmp_path))
+    assert not any(w['code'] == 'FLUSH_LABEL_DISAGREES' for w in r['warnings'])
+
+
+def test_wrong_label_is_only_a_hint(tmp_path):
+    m, plate, _ = write_case(tmp_path, bump=True)
+    down = np.where(np.asarray(m.face_normals)[:, 2] < -0.9)[0]
+    other = np.setdiff1d(down, plate)
+    if len(other) < 10:
+        pytest.skip('synthetic slab has no other down-facing faces')
+    (tmp_path / 'labels.json').write_text(json.dumps({'bottom_plate': other.tolist()}), encoding='utf-8')
+    r = W.run(request(tmp_path))
+    assert r['fit']['tilt_before_deg'] == pytest.approx(TILT_DEG, abs=0.1)
