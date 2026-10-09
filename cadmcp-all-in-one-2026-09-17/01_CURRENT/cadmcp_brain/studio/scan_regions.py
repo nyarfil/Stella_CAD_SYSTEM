@@ -9,7 +9,9 @@ Pipeline (numpy / scipy / Pillow, no mesh library):
      response; the side-button pads are the plateau edge (crest of the slope ring round the raised pad);
   3. smoothed outlines: true corners kept, smoothing splines between, left and right click share ONE centre-line chain;
   4. outline masks are mapped back to face ids (the side pads combine the flank view with the thumb-shoulder view);
-  5. every boundary is checked against the boundary cue; unsupported stretches are listed as inferred.
+  5. every boundary is checked against the boundary cue; unsupported stretches are listed as inferred;
+  6. R2.1 (scan_grooves): the click / wheel / remainder boundaries are re-drawn on the mesh: groove-penalised growth from the region
+     interiors, the groove ridge traced across each boundary and fitted as a smooth 3-D curve, faces assigned by side of the curve.
 Results are stored with hashes under mouse/scans/<scan_id>/regions/<run_id>/ and never overwritten.
 """
 from __future__ import annotations
@@ -19,14 +21,15 @@ from typing import Any
 import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.csgraph as cg
+from scipy import ndimage as ndi
 from scipy.spatial import cKDTree
-from . import scan_segment, scan_shell
+from . import scan_grooves, scan_segment, scan_shell
 from .. import __version__
 from ..errors import BrainError
 from ..req2cad.common import atomic_json, json_load
 from ..util import digest, file_hash, safe_id
 
-REGIONS_VERSION = 'R2.0'
+REGIONS_VERSION = 'R2.1'
 PIX = scan_segment.PIX
 H_SEAM = 0.06                 # groove strength scale (mm) of the handedness probe and the palm / base split
 K_COST = 30.0                 # groove crossing penalty of the palm / base split
@@ -199,6 +202,56 @@ def _confidence(frac: float, extra_down: int = 0) -> str:
     return ('low', 'med', 'high')[level]
 
 
+# ------------------------------------------------------------------ R2.1 groove-following boundaries
+def _crease_window() -> tuple[float, float, float, float]:
+    x0, x1, y0, y1 = scan_segment.PRIOR['wheel_win']
+    return (x0 - 2.0, x1 + 2.0, y0 - 2.0, y1 + 2.0)
+
+
+def _wheel_well(M: _Mesh, seg: dict[str, Any]) -> np.ndarray:
+    """Faces in the wheel well: the knurl blob footprint of the top view shrunk by WELL_ERODE_MM, upper half of the mouse (any normal)."""
+    sT = seg['stacks']['top']
+    wm = scan_segment.wheel_marker(sT, seg['cues']['top'], scan_segment.PRIOR)
+    inner = ndi.binary_erosion(wm, iterations=max(int(scan_grooves.WELL_ERODE_MM / PIX), 1))
+    zmid = 0.5 * (M.P[:, 2].min() + M.P[:, 2].max())
+    return scan_segment._pix_in(inner, sT, M.cen[:, 0], M.cen[:, 1]) & (M.cen[:, 2] > zmid)
+
+
+def _boundary_3d(gr: dict[str, Any], idx: int, names_out: dict[str, str]) -> dict[str, Any]:
+    cvs = [c for c in gr['curves'] if idx in c['pair']]
+    tot = sum(len(c['pts']) for c in cvs) * scan_grooves.STEP
+    sup = sum(int((c['cue'] >= scan_grooves.RIDGE_MIN).sum()) for c in cvs) * scan_grooves.STEP
+    inf: list[dict[str, Any]] = []
+    nb: dict[str, float] = {}
+    for c in cvs:
+        o = c['pair'][1] if c['pair'][0] == idx else c['pair'][0]
+        on = names_out.get(NAMES[o], NAMES[o].lower())
+        nb[on] = nb.get(on, 0.0) + len(c['pts']) * scan_grooves.STEP
+        inf += [{'with': on, **r} for r in scan_grooves.inferred_runs(c)]
+
+    def wav(key: str):
+        ws = [w for p, w in gr[key].items() if idx in p]
+        tl = sum(w['length_mm'] for w in ws)
+        return round(sum(w['rms_mm'] * w['length_mm'] for w in ws) / tl, 3) if tl else None
+    return {'length_mm': round(tot, 1), 'groove_followed_fraction': round(sup / tot, 2) if tot else 0.0, 'neighbours_mm': {k: round(v, 1) for k, v in nb.items()},
+            'inferred_stretches': sorted(inf, key=lambda r: -r['length_mm']),
+            'waviness_rms_mm': {'v4_labels': wav('waviness_before'), 'r21_labels': wav('waviness_after')},
+            'frame': 'work frame (x front, y thumb side, z up, mm)'}
+
+
+def _refine_summary(gr: dict[str, Any], names_out: dict[str, str]) -> dict[str, Any]:
+    def nm(i: int) -> str:
+        return names_out.get(NAMES[i], NAMES[i].lower())
+
+    def tab(key: str) -> dict[str, Any]:
+        return {f'{nm(a)}|{nm(b)}': {k: round(v, 3) if isinstance(v, float) else v for k, v in w.items()} for (a, b), w in gr[key].items()}
+    return {'method': 'groove-penalised growth from region interiors, groove ridge traced across each boundary, cue-weighted smooth 3-D curve, faces by side of curve',
+            'curves': len(gr['curves']), 'island_faces_moved': gr['island_faces_moved'],
+            'waviness_note': 'rms / max deviation (mm) between the 0.5 mm and 2.5 mm smoothings of the face-label boundary (mm-scale jaggedness; the sub-face staircase cancels)',
+            'waviness_v4_labels': tab('waviness_before'), 'waviness_r21_labels': tab('waviness_after'),
+            'side_buttons': 'unchanged by R2.1 (pad edge = slope-ring crest of the flank view, not a groove)'}
+
+
 # ------------------------------------------------------------------ driver
 def _not_ready(scan_id: str, reasons: list[str], extra: dict[str, Any] | None = None) -> dict[str, Any]:
     return {'schema': 'scan_regions_report/1', 'scan_id': scan_id, 'status': 'NOT_READY', 'blocking_reasons': reasons, 'surface_only': True,
@@ -271,7 +324,9 @@ def recognize_regions(workspace: Path, scan_id: str, handedness: str = 'auto', o
     except scan_segment.SegmentError as exc:
         raise BrainError('REGIONS_PRIORS_NOT_FOUND', str(exc) + '. This mesh does not look like the calibrated mouse layout.', {**exc.detail, 'calibrated_on': CALIBRATED_ON}) from exc
     palm_base = _palm_base(M, sv, seg['lab'])
-    lab = np.where(seg['lab'] >= 0, seg['lab'], palm_base)
+    lab_v4 = np.where(seg['lab'] >= 0, seg['lab'], palm_base)
+    gr = scan_grooves.refine_regions(M.P, M.F, M.cen, M.fn, M.vn, M.L, ft, lab_v4, _wheel_well(M, seg), _crease_window())
+    lab = gr['lab']
     # ------------------------------------------------------------ report
     names_out = dict(OUT_NAMES)
     if mirrored:     # positional names: the physical left button of a mirrored mouse is the region on the mirrored model's right
@@ -313,10 +368,16 @@ def recognize_regions(workspace: Path, scan_id: str, handedness: str = 'auto', o
             notes = [f"{int(ev['supported_fraction'] * 100)}% of the {ev['boundary_mm']} mm outline lies on a boundary cue (<= 0.3 mm) or on the silhouette."]
             for it in ev['inferred']:
                 notes.append(f"{it['edge']} edge: {it['inferred_mm']} of {it['edge_mm']} mm inferred (no groove), placed by the watershed between the markers.")
+            if k in ('LC', 'RC', 'WH'):
+                b3 = _boundary_3d(gr, NAMES.index(k), names_out)
+                row['boundary_3d'] = b3
+                notes.append(f"R2.1: the face labels follow fitted 3-D groove curves ({b3['length_mm']} mm); {int(b3['groove_followed_fraction'] * 100)}% of that length lies on a "
+                             f"traced groove, the rest is inferred (listed in boundary_3d.inferred_stretches). The outline and groove_supported_fraction above describe the top-view (v4) outline.")
             row['note'] = ' '.join(notes + extra)
         else:
             row.update({'confidence': 'low', 'groove_supported_fraction': None, 'inferred_boundaries': [{'edge': 'all', 'note': 'remainder region'}],
                         'note': 'Remainder shell behind and around the functional regions (grown from rear and base seeds); its boundaries follow no groove. Not a verified mechanical region.'})
+            row['boundary_3d'] = _boundary_3d(gr, NAMES.index(k), names_out)
         regions[names_out[k]] = row
     other = int((face_codes == 0).sum())
     status = 'READY'
@@ -345,6 +406,16 @@ def recognize_regions(workspace: Path, scan_id: str, handedness: str = 'auto', o
         np.savez_compressed(fh, **ol)
     files['outlines'] = {'file': 'outlines.npz', 'sha256': file_hash(out / 'outlines.npz'),
                          'frame': 'work frame (x front, y thumb side, z up, mm; the mirrored model for a left-hand mouse); _2d in the view named in regions.*.outline.frame, _3d lifted onto the surface'}
+    bc = {}
+    for i, cv in enumerate(gr['curves']):
+        a, b = (names_out.get(NAMES[j], NAMES[j].lower()) for j in cv['pair'])
+        bc[f'{a}__{b}__{i:02d}'] = cv['pts']
+        bc[f'{a}__{b}__{i:02d}_cue'] = cv['cue']
+    with (out / 'boundary_curves.npz').open('wb') as fh:
+        np.savez_compressed(fh, **bc)
+    files['boundary_curves'] = {'file': 'boundary_curves.npz', 'sha256': file_hash(out / 'boundary_curves.npz'),
+                                'note': 'R2.1 fitted 3-D boundary curves (work frame, mm, 0.1 mm spacing) per region pair <a>__<b>__<n>; <...>_cue is the groove contrast along the curve '
+                                        f'(>= {scan_grooves.RIDGE_MIN} = on a traced groove). palm_shell / base are the remainder.'}
     sets = {}
     for k, alt in seg['alt_face_sets'].items():
         for mode, ids_ in alt.items():
@@ -356,7 +427,7 @@ def recognize_regions(workspace: Path, scan_id: str, handedness: str = 'auto', o
     ov = None
     if overlay:
         try:
-            ov = _overlay(M, lab, seg, out, names_out, mirrored)
+            ov = _overlay(M, lab, seg, out, names_out, mirrored, gr['curves'])
         except ImportError:
             warnings.append({'code': 'OVERLAY_SKIPPED', 'note': 'Pillow is not installed (geometry extra).'})
     if ov:
@@ -366,7 +437,8 @@ def recognize_regions(workspace: Path, scan_id: str, handedness: str = 'auto', o
         'code_version': {'scan_regions': REGIONS_VERSION, 'package': __version__}, 'settings': {'handedness': handedness, 'overlay': bool(overlay)},
         'scan': {'prepared_npz_sha256': prep['prepared_npz_sha256'], 'source_sha256': prep['source']['sha256'], 'faces': int(len(f))},
         'surface_only': True, 'limitations': _LIMITS, 'frame': frame_info, 'handedness': {**hand_info, 'used': use, 'mirrored_for_detection': mirrored},
-        'regions': regions, 'other_faces': other, 'files': files, 'method': 'scan_segment v4 (geometry only: no texture, no label files)', 'seconds': round(time.time() - t0, 1),
+        'regions': regions, 'other_faces': other, 'files': files, 'method': 'scan_segment v4 + scan_grooves R2.1 (geometry only: no texture, no label files)',
+        'boundary_refinement': _refine_summary(gr, names_out), 'seconds': round(time.time() - t0, 1),
         'region_naming': 'positional: left_click is the button on the mouse-left (+y) side of the frame; for a left-hand mouse the thumb-side main button is therefore right_click',
         'checks': {'prepared_scan_ready': 'PASS', 'frame_orientation_consistent': 'PASS', 'every_region_nonempty': 'PASS' if status == 'READY' else 'FAIL', 'physical_function': 'UNVERIFIED'},
         'execution': {'completed': True},
@@ -386,7 +458,7 @@ def _stored(out: Path, scan_id: str) -> dict[str, Any]:
 
 
 # ------------------------------------------------------------------ overlay png
-def _overlay(M: _Mesh, lab: np.ndarray, seg: dict[str, Any], out: Path, names_out: dict[str, str], mirrored: bool) -> list[dict[str, Any]]:
+def _overlay(M: _Mesh, lab: np.ndarray, seg: dict[str, Any], out: Path, names_out: dict[str, str], mirrored: bool, curves: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     from PIL import Image, ImageDraw, ImageFont
     cols = {'LC': (224, 32, 42), 'RC': (31, 95, 214), 'WH': (18, 160, 74), 'B1': (255, 138, 0), 'B2': (208, 32, 200)}
     ss, ppm = 2, 7.0                       # 2x supersampling, 7 px per mm
@@ -417,7 +489,17 @@ def _overlay(M: _Mesh, lab: np.ndarray, seg: dict[str, Any], out: Path, names_ou
         for i in ii:
             dr.polygon([tuple(p) for p in px[i]], fill=tuple(int(x) for x in base[i]))
         keys = ('LC', 'RC', 'WH') if view == 'top' else ('B1', 'B2')
-        for k in keys:
+        if view == 'top' and curves:     # R2.1: the fitted 3-D boundary curves the labels follow (parts facing the viewer)
+            tree = cKDTree(M.P)
+            for cv in curves:
+                o3 = cv['pts']
+                o3 = o3[(M.vn[tree.query(o3)[1]] @ t) > 0.02]
+                if len(o3) < 2:
+                    continue
+                sx_ = (o3 @ r - lo[0]) * ppm * ss
+                sy_ = hpx - (o3 @ u - lo[1]) * ppm * ss
+                dr.point(list(zip(sx_.tolist(), sy_.tolist())), fill=cols.get(NAMES[cv['pair'][0]], (60, 60, 60)))
+        for k in (keys if view != 'top' or not curves else ()):
             o3 = seg['outlines_3d'][k]
             o3 = np.vstack([o3, o3[:1]])
             q = np.stack([o3 @ r, o3 @ u], -1)

@@ -5,11 +5,13 @@ import sys
 from pathlib import Path
 import numpy as np
 import pytest
+from scipy.spatial import cKDTree
 from cadmcp_brain.api import Tools
 from cadmcp_brain.engine import Brain
 from cadmcp_brain.errors import BrainError
 from cadmcp_brain.studio import scan_model as smod
 from cadmcp_brain.studio import scan_model_worker as W
+from cadmcp_brain.studio import scan_grooves as sgr
 from cadmcp_brain.studio import scan_regions as sr
 from cadmcp_brain.studio import scan_segment as sg
 from cadmcp_brain.studio import scan_shell as sh
@@ -227,7 +229,15 @@ def test_real_scan_end_to_end_and_ground_truth(tmp_path, scan_python, monkeypatc
         iou[k] = _iou(tris(t2[codes == code[k]], -30, 12, -15, 0), poly(gt[k], -30, 12, -15, 0))
     print('IoU', iou)
     # measured (R2.0, geometry only): LC 0.936, RC 0.938, B1 0.838, B2 0.874. Goals: LC, RC >= 0.93, side button 1 >= 0.8, 2 >= 0.7.
-    assert iou['LC'] >= 0.93 and iou['RC'] >= 0.93 and iou['B1'] >= 0.8 and iou['B2'] >= 0.7
+    # measured (R2.1, groove-following 3-D boundaries): LC 0.944, RC 0.960, B1 0.838, B2 0.874 (side buttons unchanged by R2.1).
+    assert iou['LC'] >= 0.94 and iou['RC'] >= 0.95 and iou['B1'] >= 0.83 and iou['B2'] >= 0.87
+    assert r['code_version']['scan_regions'] == 'R2.1' and (out / 'boundary_curves.npz').is_file()
+    for k in ('left_click', 'right_click', 'wheel', 'palm_shell'):
+        b3 = r['regions'][k]['boundary_3d']
+        assert {'length_mm', 'groove_followed_fraction', 'neighbours_mm', 'inferred_stretches', 'waviness_rms_mm'} <= set(b3)
+        assert b3['waviness_rms_mm']['r21_labels'] < b3['waviness_rms_mm']['v4_labels']
+    # measured groove_followed_fraction: left 0.71, right 0.60, wheel 0.49, palm 0.64
+    assert r['regions']['left_click']['boundary_3d']['groove_followed_fraction'] >= 0.6 and r['regions']['right_click']['boundary_3d']['groove_followed_fraction'] >= 0.5
     # shell / sensor step on the same prepared scan (offline reference, full-resolution raster: aperture centre x -8.68, y -2.82 mm,
     # rounded rectangle 5.31 x 3.70 mm, floor depth 2.9 mm in this frame; no ground truth is read by the tool)
     s2 = t.call('brain_mouse_recognize_shell', {'scan_id': p['scan_id']})
@@ -258,6 +268,41 @@ def test_real_scan_end_to_end_and_ground_truth(tmp_path, scan_python, monkeypatc
     assert pt['bottom_plate']['face_count'] + pt['top_shell']['face_count'] + rg['unassigned_faces']['face_count'] == s2['scan']['faces']
     assert pt['top_shell']['components'] == 1 and rg['unassigned_faces']['face_count'] == 0
     assert t.call('brain_mouse_recognize_shell', {'scan_id': p['scan_id']})['cached'] is True
+
+
+# ------------------------------------------------------------------ scan_grooves (R2.1) helpers: synthetic
+def _grid(nx=80, ny=60, h=0.5):
+    xs, ys = np.meshgrid(np.arange(nx) * h, np.arange(ny) * h, indexing='ij')
+    P = np.column_stack([xs.ravel(), ys.ravel(), np.zeros(xs.size)])
+    i, j = np.meshgrid(np.arange(nx - 1), np.arange(ny - 1), indexing='ij')
+    a = (i * ny + j).ravel()
+    F = np.vstack([np.column_stack([a, a + ny, a + ny + 1]), np.column_stack([a, a + ny + 1, a + 1])])
+    return P, F
+
+
+def test_grooves_chain_waviness_and_ridge_probe():
+    P, F = _grid()
+    cen = P[F].mean(1)
+    lab = np.where(cen[:, 0] < 20.0, 0, 1)
+    ea, eb, E = sgr.face_edges(F)
+    chs = sgr.boundary_chains(lab, ea, eb, E, (0, 1))
+    assert len(chs) == 1 and np.allclose(P[chs[0], 0], 20.0) and abs(np.ptp(P[chs[0], 1]) - 29.5) < 1e-6
+    line = np.column_stack([np.linspace(0, 30, 301), np.zeros(301), np.zeros(301)])
+    zig = line + np.column_stack([np.zeros(301), 0.4 * np.sign(np.sin(np.linspace(0, 30, 301) * np.pi / 1.0)), np.zeros(301)])
+    assert sgr.waviness(line, False)[0] < 0.01 and sgr.waviness(zig, False)[0] > 0.1
+    vn = np.tile([0.0, 0.0, 1.0], (len(P), 1))
+    gv = np.exp(-((P[:, 0] - 20.4) / 0.3) ** 2)       # a groove 0.4 mm in front of the probed boundary
+    q = np.column_stack([np.full(201, 20.0), np.linspace(5, 25, 201), np.zeros(201)])
+    off, cue, d = sgr.ridge_probe(q, vn, gv, cKDTree(P), False)
+    shift = (off[:, None] * d)[:, 0]
+    assert np.all(cue[20:-20] >= sgr.RIDGE_MIN) and np.median(np.abs(shift[20:-20] - 0.4)) < 0.1
+    fit = sgr.fit_curve(q, off, cue, d, False)
+    assert np.median(np.abs(fit[30:-30, 0] - 20.4)) < 0.1
+    flat_off, flat_cue, d2 = sgr.ridge_probe(q, vn, np.zeros(len(P)), cKDTree(P), False)
+    assert np.all(flat_cue < sgr.RIDGE_MIN)                    # no groove: the stretch is inferred
+    assert sgr.inferred_runs({'cue': flat_cue, 'pts': q})[0]['length_mm'] > 15
+    src = Path(sgr.__file__).read_text(encoding='utf-8')
+    assert 'pymeshlab' not in src
 
 
 # ------------------------------------------------------------------ scan_segment helpers and shell step: synthetic
