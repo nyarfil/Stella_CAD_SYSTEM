@@ -23,7 +23,7 @@ def test_lifecycle_requires_initialized(brain):
     assert p.handle(request('tools/list'))['error']['code']==-32002
     result=initialize(p)
     assert result['result']['protocolVersion']==PROTOCOL
-    assert len(p.handle(request('tools/list'))['result']['tools'])== 65
+    assert len(p.handle(request('tools/list'))['result']['tools'])== 66
     assert p.handle(request('initialize'))['error']['code']==-32600
 
 
