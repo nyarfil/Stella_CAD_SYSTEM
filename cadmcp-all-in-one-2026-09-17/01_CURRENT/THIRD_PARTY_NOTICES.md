@@ -42,3 +42,7 @@ access-restricted images or font files are included.
 iDesignGPT morphological-analysis prompts and the public hankaiuu/Req2CAD backend
 were inspected as method references; see docs/UPSTREAM_AUDIT_JA.md. Original
 upstream runtimes, model weights and complete data have not been vendored.
+
+## PyMeshLab (optional, subprocess only)
+
+`brain_mouse_scan_model` runs PyMeshLab (GPL-3.0) in a separate virtualenv through `cadmcp_brain/studio/scan_model_worker.py`; it is never imported into the cadmcp_brain process and is not bundled. Exchange is files and JSON only.

@@ -10,7 +10,7 @@ import math
 from typing import Any, Literal
 from pydantic import Field, ValidationError, model_validator
 from .recipe import Name, Strict
-from . import scan_fit, scan_shell
+from . import scan_fit, scan_model, scan_regions, scan_shell, scan_shellparts
 from .. import geometry
 from ..errors import BrainError
 from ..req2cad.common import atomic_json, json_load, write_lock
@@ -457,6 +457,18 @@ class MouseToolsMixin:
     def brain_mouse_prepare_scan(self, relative_path: str, unit: str, transform: list[float] | None = None, repairs: dict[str, Any] | None = None) -> dict[str, Any]:
         """Inspect a closed scan mesh (STL/OBJ) for scan-to-shell stage A1: unit (required, never guessed), topology, orientation, components, holes. Only allow-listed repairs run (all default off) and each is reported. Writes mouse/scans/<scan_id>/; READY or NOT_READY with reasons. Self-intersection stays UNVERIFIED."""
         return scan_shell.prepare_scan(self.brain.store.root, relative_path, unit, transform, repairs)
+
+    def brain_mouse_scan_model(self, relative_path: str, unit: str, target_max_error_mm: float = 0.05, hard_limit_error_mm: float = 0.10, min_component_faces: int = 100, close_holes_max_edges: int = 30, thin_wall_mm: float = 1.0) -> dict[str, Any]:
+        """Turn a PLY scan into cleaned, decimated, watertight STL files for brain_mouse_prepare_scan. unit is required (never guessed); output is mm. Vertices are welded by exact position first (textured PLY files carry fake UV seams), then topology-only cleanup, then quadric decimation searched to the smallest face count within target_max_error_mm (two-sided Hausdorff vs the welded original; hard_limit_error_mm is the fallback). Watertight, manifold and winding are verified on the written STL; thin-wall zones are reported separately and are not part of the budget. Runs PyMeshLab (GPL-3.0) as a subprocess in a separate python (env CADMCP_SCAN_PYTHON), never in this process; SCAN_PYTHON_MISSING when absent. Never modifies the source and never overwrites outputs (mouse/scans/<model_id>/). Self-intersection stays UNVERIFIED."""
+        return scan_model.scan_model(self.brain.store.root, relative_path, unit, target_max_error_mm, hard_limit_error_mm, min_component_faces, close_holes_max_edges, thin_wall_mm)
+
+    def brain_mouse_recognize_regions(self, scan_id: str, handedness: str = 'auto', overlay: bool = True) -> dict[str, Any]:
+        """Find left click, right click, scroll wheel, side button 1 and 2 and the palm shell on a READY prepared scan (best on the full-resolution cleaned STL). Frame, front/rear, base and right/left-hand mouse are detected from the mesh (handedness auto|right|left). Returns per-region face count, area, bbox, a high/med/low confidence and a note for every boundary stretch that is inferred rather than supported by a groove; writes face labels (hashed) and optional top/flank overlay PNGs under mouse/scans/<scan_id>/regions/. NOT_READY for a mesh that is not welded/closed. Surface-only: hinges, switches and the wheel axle are not visible and are not inferred. Calibrated on an OP1-class mouse; no CAD is generated."""
+        return scan_regions.recognize_regions(self.brain.store.root, scan_id, handedness, overlay)
+
+    def brain_mouse_recognize_shell(self, scan_id: str, handedness: str = 'auto') -> dict[str, Any]:
+        """Find the bottom plate, top shell, parting seam and sensor window on a READY prepared scan (runs brain_mouse_recognize_regions first; the click, wheel and side-button faces are excluded from the top shell). Geometry only (no texture): the seam is the groove of the outer wall found by a circular path search over 1 degree azimuth bins; bins without a clear groove (typically the rear) are interpolated and listed as inferred, with a supported fraction and a confidence. The sensor window is the deep pocket in the underside (centre and size in the work frame mm and in the canonical frame, depth above the fitted plate plane). Writes hashed face labels (bottom_plate=1, top_shell=2) and seam / sensor outlines under mouse/scans/<scan_id>/shell/. Surface-only: the sensor PCB and chip behind the window are not visible. No CAD is generated."""
+        return scan_shellparts.recognize_shell(self.brain.store.root, scan_id, handedness)
 
     def brain_mouse_build_shell_brep(self, scan_id: str, thickness_mm: float, opening: dict[str, Any], route: str = 'faceted_sdf', voxel_mm: float = 0.5, outer_tolerance_mm: float = 0.15, thickness_tolerance_mm: float = 0.1, max_faces: int = 60000, max_voxels: int = 40000000, grid: int | None = None, degree_min: int | None = None, degree_max: int | None = None, fit_tolerance_mm: float | None = None, smoothing: float | None = None) -> dict[str, Any]:
         """Hollow a READY scan into an open-bottom solid. route faceted_sdf (default): signed-distance shell, surface nets, one planar face per triangle (voxel_mm, max_faces, max_voxels). route smooth_fit: two fitted B-spline surfaces (outer skin = scan, inner skin = phi=-thickness) on the same rays + a planar ring on the opening plane; needs a scan that is star-shaped from the opening-section centroid and locally thicker than 2 x thickness (grid default 121, max 201; degree_min, degree_max, fit_tolerance_mm, smoothing). Routes never fall back to each other; checks report PASS/FAIL/UNVERIFIED and stop codes replace coarsening or loosening."""
