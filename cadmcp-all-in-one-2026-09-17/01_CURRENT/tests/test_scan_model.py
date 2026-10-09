@@ -244,7 +244,19 @@ def test_real_scan_end_to_end_and_ground_truth(tmp_path, scan_python, monkeypatc
     print('OUTLINE', ol['family'], ol['residuals_mm'], s2['sensor']['window_size_mm'])
     assert ol['found'] and ol['residuals_mm']['rms_mm'] < 0.08 and ol['polyline_points'] >= 100
     assert 'ellipse (reference only)' in ol['families'] and not ol['family'].startswith('ellipse')
-    assert s2['regions']['bottom_plate']['components'] == 1 and s2['seam']['supported_fraction'] > 0.5
+    # parting seam / binary split (S1.2, geometry only). Measured: supported 0.85, closure gap 0, max step 0.29 mm/deg, one bottom plate,
+    # top shell + functional faces one region. Offline check against the owner's hand-drawn seam (not read by the tool): median 0.24-0.54 mm per view.
+    sm, rg = s2['seam'], s2['regions']
+    print('SEAM', sm['supported_fraction'], sm['closure_gap_mm'], sm['max_step_per_degree_mm'], sm['height_above_wall_lower_edge_mm'], len(sm['segments']))
+    assert rg['bottom_plate']['components'] == 1 and rg['top_shell']['components_with_functional_faces'] == 1
+    assert sm['closed_loop'] is True and sm['closure_gap_mm'] <= 0.2 and sm['supported_fraction'] >= 0.8
+    assert sm['max_step_per_degree_mm']['z'] <= 0.5 and sm['max_step_per_degree_mm']['height_above_lower_edge'] <= 0.5 and sm['max_point_spacing_mm'] < 1.5
+    assert all(v == 0 for k, v in rg['split_checks'].items() if k in ('bottom_on_outer_wall_above_seam', 'top_on_outer_wall_below_seam', 'top_on_underside', 'functional_faces_in_bottom'))
+    assert {o['view'] for o in s2['files']['overlays']} == {'side_pos_y', 'side_neg_y', 'bottom'}
+    pt = s2['parts_tree']['mouse']['children']
+    assert set(pt['top_shell']['children']) == {'body', 'left_click', 'right_click', 'wheel', 'side_button_1', 'side_button_2'}
+    assert pt['bottom_plate']['face_count'] + pt['top_shell']['face_count'] + rg['unassigned_faces']['face_count'] == s2['scan']['faces']
+    assert pt['top_shell']['components'] == 1 and rg['unassigned_faces']['face_count'] == 0
     assert t.call('brain_mouse_recognize_shell', {'scan_id': p['scan_id']})['cached'] is True
 
 

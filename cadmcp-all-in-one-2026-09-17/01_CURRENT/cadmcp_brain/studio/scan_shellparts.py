@@ -25,13 +25,24 @@ from ..errors import BrainError
 from ..req2cad.common import atomic_json, json_load
 from ..util import digest, file_hash, safe_id
 
-SHELL_VERSION = 'S1.1'
+SHELL_VERSION = 'S1.2'
 LABEL_CODES = {'other': 0, 'bottom_plate': 1, 'top_shell': 2}
-NBINS = 360
-OFFSETS = np.arange(0.4, 9.0, 0.2)          # seam height above the wall's lower edge searched, mm
-HARM = 6                                     # harmonics of the robust seam-height fit
-OUTLIER_MM = 0.9                             # a groove this far from the fitted loop is not the seam
-SUPPORT_Z = 1.0                              # a bin is supported when the groove at the chosen height is this many sigma deep
+# parting seam (S1.2): exact vertical sections round the footprint, crease + groove cues, circular Viterbi; lengths in mm (prepared scans are mm)
+SEAM_COLS = 720                              # sections round the loop (0.5 degree)
+PROFILE_STEP = 0.1                           # arc-length resampling of each section, mm
+LEAVE_PHI, LEAVE_RUN, LEAVE_ZWIN = 20.0, 20, 8.0   # lower edge of the wall: profile rising > 20 deg for 2 mm, within 8 mm of the section's lowest point
+LEAVE_JUMP_MM = 1.5                          # a section whose lower edge is this far off its neighbours crosses a scan hole: not used
+ROI_SAMPLES = 130                            # seam searched up to 13 mm of arc above the lower edge
+KINK_SIGMA, KINK_SHIFT = 2.0, 3              # crease channel: curvature smoothed 0.2 mm, read 0.3 mm higher (gap below the shell's rounded edge)
+GROOVE_W = 0.7                               # weight of the groove channel against the crease channel
+GATE_BELOW_DEG, GATE_ABOVE_DEG, GATE_PEN = 30.0, 40.0, 6.0   # a seam has a wall below (> 30 deg) and above (> 40 deg); the plate fillet does not
+DP_LAM = 10.0                                # smoothness: cost per mm of height change between neighbouring sections
+PRIOR_HARM, PRIOR_W, PRIOR_TOL = 3, 2.0, 1.0  # robust 3-harmonic prior on the arc offset above the lower edge; penalty 2 / mm beyond 1 mm
+SUPPORT_SCORE, SUPPORT_CONTRAST, CONTRAST_SEP_MM, CONTRAST_WIN_MM = 4.0, 1.0, 1.0, 2.0   # supported: cue score > 4 and > 1 above any other point of
+#   the section >= 1 mm away within the prior band (+-3 mm)
+MIN_RUN = 4                                  # supported runs shorter than 2 degrees are reported as inferred
+EVID_KINK, EVID_GROOVE = 3.0, 2.0            # evidence label per section
+BAND_ALONG_MM, BAND_ACROSS_MM, TOP_SEED_MM = 3.0, 1.5, 4.0   # seam band for the face split; faces 4 mm above the seam seed the top shell
 # sensor window: geometry only, no pose prior and no fixed coordinates; every length threshold is relative to the footprint length L
 FLAT_TOL_DEG = 8.0                           # normals of the base face family lie within this cone
 RASTER_PER_LENGTH = 1500.0                   # underside raster pixel = L / 1500 (0.08 mm for a 120 mm mouse); rim points are sub-pixel
@@ -62,97 +73,344 @@ def _circ_smooth(a: np.ndarray, med: int, sig: float) -> np.ndarray:
     return ndi.gaussian_filter1d(ndi.median_filter(ap, size=med, mode='nearest'), sig, mode='nearest')[k:-k]
 
 
-def _viterbi_circular(cost: np.ndarray, lam: float) -> np.ndarray:
+def _edge_table(F: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    E2 = np.sort(np.r_[F[:, [0, 1]], F[:, [1, 2]], F[:, [2, 0]]], 1)
+    E, inv = np.unique(E2, axis=0, return_inverse=True)
+    return E, inv.reshape(3, -1).T
+
+
+def section_profile(P: np.ndarray, F: np.ndarray, E: np.ndarray, FE: np.ndarray, cenF: np.ndarray, hv: np.ndarray, c0: np.ndarray, az: float) -> dict[str, Any] | None:
+    """Exact section of the mesh with the vertical half-plane at azimuth `az` round c0, chained into one ordered polyline that starts at the
+    underside end and runs out over the wall to the top; resampled every PROFILE_STEP of arc length (r = distance from c0, z, groove map hv)."""
+    a = np.radians(az)
+    n, u = np.array([-np.sin(a), np.cos(a)]), np.array([np.cos(a), np.sin(a)])
+    s = (P[:, :2] - c0) @ n
+    sf = s[F]
+    fids = np.flatnonzero((sf.min(1) < 0) & (sf.max(1) > 0) & ((cenF[:, :2] - c0) @ u > 0))
+    if len(fids) < 10:
+        return None
+    sa, sb = s[E[:, 0]], s[E[:, 1]]
+    cross = sa * sb < 0
+    fe = FE[fids]
+    cm = cross[fe]
+    two = cm.sum(1) == 2
+    fe, cm = fe[two], cm[two]
+    e1 = np.where(cm[:, 0], fe[:, 0], fe[:, 1])
+    e2 = np.where(cm[:, 2], fe[:, 2], fe[:, 1])
+    nodes, ni = np.unique(np.r_[e1, e2], return_inverse=True)
+    ni = ni.reshape(2, -1).T
+    nn = len(nodes)
+    G = sp.coo_matrix((np.ones(len(ni)), (ni[:, 0], ni[:, 1])), shape=(nn, nn)).tocsr()
+    G = ((G + G.T) > 0).astype(np.int8).tocsr()
+    _, lab = connected_components(G, directed=False)
+    big = int(np.argmax(np.bincount(lab)))
+    deg = np.asarray(G.sum(1)).ravel()
+    t = sa[nodes] / (sa[nodes] - sb[nodes])
+    X = P[E[nodes, 0]] + t[:, None] * (P[E[nodes, 1]] - P[E[nodes, 0]])
+    r, z = (X[:, :2] - c0) @ u, X[:, 2]
+    ends = np.flatnonzero((deg == 1) & (lab == big))
+    start = int(ends[np.argmin(z[ends] + 0.2 * r[ends])]) if len(ends) else int(np.flatnonzero(lab == big)[0])
+    ind, ptr = G.indices, G.indptr
+    order, prev, cur = [start], -1, start
+    while len(order) <= nn:
+        nb = [k for k in ind[ptr[cur]:ptr[cur + 1]] if k != prev]
+        if not nb or nb[0] == start:
+            break
+        prev, cur = cur, int(nb[0])
+        order.append(cur)
+    if len(order) < 20:
+        return None
+    o = np.array(order)
+    R, Z, XY = r[o], z[o], X[o, :2]
+    hvn = (hv[E[nodes, 0]] * (1 - t) + hv[E[nodes, 1]] * t)[o]
+    sarc = np.r_[0, np.cumsum(np.hypot(np.diff(R), np.diff(Z)))]
+    S = np.arange(0, sarc[-1], PROFILE_STEP)
+    return {'s': S, 'r': np.interp(S, sarc, R), 'z': np.interp(S, sarc, Z), 'hv': np.interp(S, sarc, hvn),
+            'x': np.interp(S, sarc, XY[:, 0]), 'y': np.interp(S, sarc, XY[:, 1])}
+
+
+def profile_cues(p: dict[str, Any]) -> dict[str, np.ndarray]:
+    """Cue channels along a section profile: tangent angle phi (deg from horizontal, 90 = vertical wall), crease = curvature (deg/mm, > 0
+    where the profile turns upwards), mean phi just below / above each sample, and the groove depth (negative band-pass normal offset)."""
+    rs, zs = ndi.gaussian_filter1d(p['r'], 1.5), ndi.gaussian_filter1d(p['z'], 1.5)
+    phi = np.degrees(np.unwrap(np.arctan2(np.gradient(zs), np.gradient(rs))))
+    cv = np.gradient(ndi.gaussian_filter1d(phi, 2.0)) / PROFILE_STEP
+    n = len(phi)
+    c = np.r_[0, np.cumsum(phi)]
+    i = np.arange(n)
+
+    def mean_win(a0: int, a1: int) -> np.ndarray:
+        lo, hi = np.clip(i + a0, 0, n), np.clip(i + a1, 0, n)
+        return (c[hi] - c[lo]) / np.maximum(hi - lo, 1)
+    k = ndi.gaussian_filter1d(cv, KINK_SIGMA)
+    k = np.r_[k[KINK_SHIFT:], np.full(KINK_SHIFT, k[-1])]       # crease read KINK_SHIFT samples higher: the seam gap sits just below the shell's rounded lower edge
+    return {'phi': phi, 'kink': k, 'phib': mean_win(-20, -5), 'phia': mean_win(3, 15), 'groove': -ndi.gaussian_filter1d(p['hv'], 2.0)}
+
+
+def _leave_index(p: dict[str, Any], c: dict[str, np.ndarray]) -> int:
+    """Lower edge of the outer wall: first sample (outer part of the profile, near the underside level) after which the profile keeps rising
+    (phi > LEAVE_PHI) for LEAVE_RUN samples."""
+    n = len(p['s'])
+    if n <= LEAVE_RUN + 1:
+        return -1
+    up = (c['phi'] > LEAVE_PHI).astype(int)
+    cs = np.r_[0, np.cumsum(up)]
+    full = (cs[LEAVE_RUN:] - cs[:-LEAVE_RUN]) == LEAVE_RUN
+    m = n - LEAVE_RUN
+    cand = np.flatnonzero(full[:m] & (p['z'][:m] < p['z'].min() + LEAVE_ZWIN) & (p['r'][:m] > np.percentile(p['r'], 60)))
+    return int(cand[0]) if len(cand) else -1
+
+
+def _viterbi_z(cost: np.ndarray, Z: np.ndarray, lam: float) -> np.ndarray:
+    """Circular Viterbi: one state per column, transition cost lam * |dz| between consecutive columns (z of each state given per column)."""
     n, k = cost.shape
-    c3 = np.vstack([cost, cost, cost])
-    d = np.zeros((3 * n, k))
-    p = np.zeros((3 * n, k), int)
-    d[0] = c3[0]
-    pen = lam * np.abs(OFFSETS[:, None] - OFFSETS[None, :])
+    c3, z3 = np.vstack([cost, cost, cost]), np.vstack([Z, Z, Z])
+    d = c3[0].copy()
+    bp = np.zeros((3 * n, k), np.int32)
+    ar = np.arange(k)
     for i in range(1, 3 * n):
-        tot = d[i - 1][None, :] + pen
-        p[i] = np.argmin(tot, 1)
-        d[i] = c3[i] + tot[np.arange(k), p[i]]
-    j = int(np.argmin(d[-1]))
+        dz = np.abs(z3[i][:, None] - z3[i - 1][None, :])
+        tot = d[None, :] + lam * np.where(np.isnan(dz), 1e3, dz)
+        bp[i] = np.argmin(tot, 1)
+        d = c3[i] + tot[ar, bp[i]]
+    j = int(np.argmin(d))
     path = [j]
     for i in range(3 * n - 1, 0, -1):
-        j = p[i][j]
+        j = int(bp[i][j])
         path.append(j)
     return np.array(path[::-1][n:2 * n])
 
 
-def seam_profile(M: Any, ft: dict[str, Any]) -> dict[str, Any]:
-    """Seam height per azimuth bin from the groove map of the outer wall."""
-    P, cen = M.P, M.cen
+def _runs(mask: np.ndarray) -> list[np.ndarray]:
+    """Circular runs of equal value: list of index arrays (in order, possibly wrapping)."""
+    n = len(mask)
+    if (mask == mask[0]).all():
+        return [np.arange(n)]
+    start = int(np.flatnonzero(mask != np.roll(mask, 1))[0])
+    order = np.r_[start:n, 0:start]
+    runs, cur = [], [order[0]]
+    for b in order[1:]:
+        if mask[b] == mask[cur[0]]:
+            cur.append(b)
+        else:
+            runs.append(np.array(cur))
+            cur = [b]
+    runs.append(np.array(cur))
+    return runs
+
+
+def _circ_interp(i: np.ndarray, good: np.ndarray, val: np.ndarray, n: int) -> np.ndarray:
+    g = np.flatnonzero(good)
+    return np.interp(i, np.r_[g - n, g, g + n], np.r_[val[g], val[g], val[g]])
+
+
+def seam_loop(M: Any, ft: dict[str, Any]) -> dict[str, Any]:
+    """Parting seam from geometry alone. Exact vertical sections every 360 / SEAM_COLS degrees round the footprint centre; per section the
+    outer wall from its lower edge up to ROI_SAMPLES * PROFILE_STEP of arc length. Cue = convex crease (curvature, log-compressed) + groove
+    (negative normal offset), gated so the plate-to-wall fillet (flat below it) cannot win. A circular Viterbi path with a |dz| smoothness
+    prior picks one seam point per section; a robust low-harmonic prior on the seam's arc offset above the lower edge (fitted to the clearly
+    supported sections) steers a second pass. Sections whose cue is weak are INFERRED: their offset follows the prior's shape, shifted to meet
+    the neighbouring supported ends."""
+    P, F = M.P, M.F
     c0 = np.array([(P[:, 0].min() + P[:, 0].max()) / 2, (P[:, 1].min() + P[:, 1].max()) / 2])
-    th = np.degrees(np.arctan2(cen[:, 1] - c0[1], cen[:, 0] - c0[0]))
-    rad = np.hypot(cen[:, 0] - c0[0], cen[:, 1] - c0[1])
-    wall = np.abs(ft['fs'][:, 2]) < 0.75
-    hv = ft['hv'][M.F].mean(1)
-    cost = np.zeros((NBINS, len(OFFSETS)))
-    zl = np.full(NBINS, np.nan)
-    for b in range(NBINS):
-        t = -180 + (b + .5) * 360 / NBINS
-        s = wall & (np.abs((th - t + 180) % 360 - 180) < 1.5)
-        if s.sum() < 30:
-            continue
-        z, h = cen[s, 2], hv[s]
-        zl[b] = np.percentile(z, 2)
-        for k, o in enumerate(OFFSETS):
-            m = (z >= zl[b] + o - 0.15) & (z < zl[b] + o + 0.15)
-            if m.sum() >= 2:
-                cost[b, k] = h[m].mean()
-    ok = ~np.isnan(zl)
-    if ok.sum() < NBINS * 0.8:
-        raise BrainError('SHELL_WALL_NOT_FOUND', 'The outer wall of the scan could not be sampled round the footprint.', {'bins_with_wall': int(ok.sum())})
-    zl = np.where(ok, zl, np.nanmedian(zl))
-    sd = max(float(np.abs(cost[ok]).std()), 1e-9)
-    cost = cost / sd                              # a groove is a negative normal offset
-    path = _viterbi_circular(cost, 1.0)
-    depth = -cost[np.arange(NBINS), path]
-    return {'c0': c0, 'th': th, 'rad': rad, 'wall': wall, 'zl': zl, 'off': OFFSETS[path], 'groove_sigma': depth, 'supported': ok & (depth >= SUPPORT_Z)}
-
-
-def refine_seam(M: Any, ft: dict[str, Any], sp_: dict[str, Any]) -> dict[str, Any]:
-    zl, off, sup = sp_['zl'], sp_['off'], sp_['supported']
-    n = NBINS
-    i = np.arange(n)
-    if sup.sum() < 20:
-        raise BrainError('SHELL_SEAM_NOT_FOUND', 'No groove of a parting seam was found round the wall; the shell split is not attempted.', {'supported_bins': int(sup.sum())})
-    z0 = zl + off
-    ang0 = np.radians(-180 + (i + .5) * 360 / n)
-    Bf = np.column_stack([np.ones(n)] + [g(k * ang0) for k in range(1, HARM + 1) for g in (np.cos, np.sin)])
-    use = sup.copy()
-    for _ in range(8):                      # robust low-order Fourier fit of the seam height; grooves far from it are other features
-        if use.sum() < 2 * HARM + 3:
-            break
-        co = np.linalg.lstsq(Bf[use], z0[use], rcond=None)[0]
-        res = np.abs(z0 - Bf @ co)
-        use = sup & (res < OUTLIER_MM)
-    fit = Bf @ co
-    sup = use
-    if sup.sum() < 20:
-        raise BrainError('SHELL_SEAM_NOT_FOUND', 'The groove candidates of the seam do not form a smooth loop; the shell split is not attempted.', {'supported_bins': int(sup.sum())})
-    r_ = z0 - fit
-    xs = np.r_[i[sup] - n, i[sup], i[sup] + n]
-    r_f = np.interp(i, xs, np.r_[r_[sup], r_[sup], r_[sup]])
-    z_seam = _circ_smooth(fit + np.where(sup, r_, 0.5 * r_f), 5, 1.2)
-    cen = M.cen
-    th = sp_['th']
-    # outer radius of the wall at the seam, per bin
-    rad = np.full(n, np.nan)
-    for b in range(n):
-        t = -180 + (b + .5) * 360 / n
-        s = sp_['wall'] & (np.abs((th - t + 180) % 360 - 180) < 1.5) & (np.abs(cen[:, 2] - z_seam[b]) < 0.6)
-        if s.sum() >= 3:
-            rad[b] = np.percentile(sp_['rad'][s], 90)
-    good = ~np.isnan(rad)
-    rad = np.interp(i, np.r_[i[good] - n, i[good], i[good] + n], np.r_[rad[good], rad[good], rad[good]])
-    rad = _circ_smooth(rad, 5, 1.0)
-    ang = np.radians(-180 + (i + .5) * 360 / n)
-    pts = np.stack([sp_['c0'][0] + rad * np.cos(ang), sp_['c0'][1] + rad * np.sin(ang), z_seam], 1)
+    E, FE = _edge_table(F)
+    n = SEAM_COLS
+    AZ = -180 + (np.arange(n) + .5) * 360 / n
+    PR: list[Any] = []
+    CU: list[Any] = []
+    LV = np.full(n, -1)
+    for j, az in enumerate(AZ):
+        p = section_profile(P, F, E, FE, M.cen, ft['hv'], c0, az)
+        c = profile_cues(p) if p is not None else None
+        PR.append(p)
+        CU.append(c)
+        if p is not None:
+            LV[j] = _leave_index(p, c)
+    valid = LV >= 0
+    for j in np.flatnonzero(valid):
+        if len(PR[j]['s']) - LV[j] < ROI_SAMPLES // 2:
+            valid[j] = False
+    if valid.sum() < 0.8 * n:
+        raise BrainError('SHELL_WALL_NOT_FOUND', 'The outer wall of the scan could not be sectioned round the footprint.', {'columns_with_wall': int(valid.sum()), 'columns': n})
+    zl = np.array([PR[j]['z'][LV[j]] if valid[j] else np.nan for j in range(n)])
+    rl = np.array([PR[j]['r'][LV[j]] if valid[j] else np.nan for j in range(n)])
+    ii = np.arange(n)
+    for arr in (zl, rl):                                   # a section through a scan hole has a lower edge off its neighbours: not a wall section
+        ref = _circ_interp(ii, valid, np.nan_to_num(arr), n)
+        ref = _circ_smooth(ref, 11, 0.1)
+        valid &= ~(np.abs(np.nan_to_num(arr, nan=1e9) - ref) > LEAVE_JUMP_MM)
+    vi = np.flatnonzero(valid)
+    if len(vi) < 0.8 * n:
+        raise BrainError('SHELL_WALL_NOT_FOUND', 'The outer wall of the scan could not be sectioned round the footprint.', {'columns_with_wall': int(len(vi)), 'columns': n})
+    K = ROI_SAMPLES
+    m = len(vi)
+    cost = np.full((m, K), 1e3)
+    Zs, DS = np.full((m, K), np.nan), np.full((m, K), np.nan)
+    KZ, GZ = np.zeros((m, K)), np.zeros((m, K))
+    allk = np.concatenate([CU[j]['kink'][LV[j]:LV[j] + K] for j in vi])
+    allg = np.concatenate([CU[j]['groove'][LV[j]:LV[j] + K] for j in vi])
+    sk = max(1.4826 * float(np.median(np.abs(allk - np.median(allk)))), 1e-9)
+    sgv = max(1.4826 * float(np.median(np.abs(allg - np.median(allg)))), 1e-12)
+    for q, j in enumerate(vi):
+        r = np.arange(LV[j], min(LV[j] + K, len(PR[j]['s'])))
+        c = CU[j]
+        kz = 2 * np.log1p(np.maximum(c['kink'][r], 0) / sk)
+        gz = np.clip(c['groove'][r] / sgv, -3, 6)
+        gate = (c['phib'][r] > GATE_BELOW_DEG) & (c['phia'][r] > GATE_ABOVE_DEG)
+        cost[q, :len(r)] = -(kz + GROOVE_W * gz) + np.where(gate, 0, GATE_PEN)
+        Zs[q, :len(r)] = PR[j]['z'][r]
+        DS[q, :len(r)] = PR[j]['s'][r] - PR[j]['s'][LV[j]]
+        KZ[q, :len(r)], GZ[q, :len(r)] = kz, gz
+    rows = np.arange(m)
+    path = _viterbi_z(cost, Zs, DP_LAM)
+    angv = np.radians(AZ[vi])
+    B = np.column_stack([np.ones(m)] + [g(k * angv) for k in range(1, PRIOR_HARM + 1) for g in (np.cos, np.sin)])
+    prior = np.zeros(m)
+    for _ in range(2):
+        ds = DS[rows, path]
+        use = -cost[rows, path] > SUPPORT_SCORE
+        co = np.linalg.lstsq(B, ds, rcond=None)[0]
+        sup0 = use.copy()
+        for _ in range(6):
+            if use.sum() < B.shape[1] + 3:
+                break
+            co = np.linalg.lstsq(B[use], ds[use], rcond=None)[0]
+            res = ds - B @ co
+            sig = 1.4826 * float(np.median(np.abs(res[use])))
+            use = sup0 & (np.abs(res) < max(3 * sig, 0.5))
+        prior = B @ co
+        path = _viterbi_z(cost + PRIOR_W * np.maximum(np.abs(DS - prior[:, None]) - PRIOR_TOL, 0), Zs, DP_LAM)
+    score = -cost[rows, path]
+    # contrast: against every other position of the section that the loop prior allows (>= 1 mm away); a stronger crease far outside the
+    # prior band (button gap, front lip step) does not make the seam ambiguous
+    allowed = np.abs(DS - prior[:, None]) <= PRIOR_TOL + CONTRAST_WIN_MM
+    others = np.where((np.abs(DS - DS[rows, path][:, None]) > CONTRAST_SEP_MM) & allowed, -cost, -1e9)
+    contrast = score - others.max(1)
+    sup = (score > SUPPORT_SCORE) & (contrast > SUPPORT_CONTRAST)
+    if sup.sum() < 0.1 * m:
+        raise BrainError('SHELL_SEAM_NOT_FOUND', 'No crease or groove of a parting seam was found round the wall; the shell split is not attempted.', {'supported_columns': int(sup.sum())})
+    # a single section below the threshold inside a continuous cue ridge is noise; supported specks shorter than MIN_RUN sections are not support
+    for rr in _runs(sup):
+        if not sup[rr[0]] and len(rr) <= 1:
+            sup[rr] = True
+    for rr in _runs(sup):
+        if sup[rr[0]] and len(rr) < MIN_RUN:
+            sup[rr] = False
+    ds = DS[rows, path]
+    off_f = _circ_interp(np.arange(m), sup, ds - prior, m)       # inferred: prior shape, shifted linearly to meet the supported ends
+    ds = _circ_smooth(np.where(sup, ds, prior + off_f), 3, 1.0)
+    full_ds = np.zeros(n)
+    full_ds[vi] = ds
+    sup_full = np.zeros(n, bool)
+    sup_full[vi] = sup
+    kz_full, gz_full, sc_full, ct_full = np.zeros(n), np.zeros(n), np.zeros(n), np.zeros(n)
+    kz_full[vi], gz_full[vi], sc_full[vi], ct_full[vi] = KZ[rows, path], GZ[rows, path], score, contrast
+    pts = np.zeros((n, 3))
+    tan = np.zeros((n, 2))
+    for j in vi:
+        p = PR[j]
+        sj = p['s'][LV[j]] + full_ds[j]
+        pts[j] = [np.interp(sj, p['s'], p['x']), np.interp(sj, p['s'], p['y']), np.interp(sj, p['s'], p['z'])]
+        k0 = int(np.clip(round(sj / PROFILE_STEP), 3, len(p['s']) - 4))
+        d = np.array([p['r'][k0 + 3] - p['r'][k0 - 3], p['z'][k0 + 3] - p['z'][k0 - 3]])
+        tan[j] = d / max(float(np.linalg.norm(d)), 1e-12)
+    for k in range(3):                                    # sections through scan holes: interpolated round the loop (and inferred);
+        pts[:, k] = _circ_smooth(_circ_interp(ii, valid, pts[:, k], n), 5, 1.0)   # then a light 3-D smoothing (lower-edge jitter of single sections)
+    for k in range(2):
+        tan[:, k] = _circ_interp(ii, valid, tan[:, k], n)
+    tan /= np.linalg.norm(tan, axis=1)[:, None] + 1e-12
+    zl_f = _circ_smooth(_circ_interp(ii, valid, np.nan_to_num(zl), n), 5, 1.0)
+    rl_f = _circ_smooth(_circ_interp(ii, valid, np.nan_to_num(rl), n), 5, 1.0)
+    rad = np.hypot(pts[:, 0] - c0[0], pts[:, 1] - c0[1])
     seglen = np.linalg.norm(np.roll(pts, -1, 0) - pts, axis=1)
-    return {'z': z_seam, 'rad': rad, 'pts': pts, 'supported': sup, 'seglen': seglen, 'ang': ang}
+    ev = np.where(~sup_full, 'inferred', np.where((kz_full >= EVID_KINK) & (gz_full >= EVID_GROOVE), 'crease+groove',
+                                                   np.where(gz_full >= EVID_GROOVE, 'groove', 'crease')))
+    return {'c0': c0, 'ang': np.radians(AZ), 'az': AZ, 'pts': pts, 'z': pts[:, 2], 'rad': rad, 'tan': tan, 'supported': sup_full, 'valid': valid,
+            'seglen': seglen, 'ds': full_ds, 'zl': zl_f, 'rl': rl_f, 'score': sc_full, 'contrast': ct_full, 'kink_z': kz_full, 'groove_z': gz_full, 'evidence': ev,
+            'scales': {'crease_deg_per_mm': sk, 'groove_mm': sgv}}
+
+
+def _face_graph(F: np.ndarray, cen: np.ndarray) -> sp.csr_matrix:
+    nv = int(F.max()) + 1
+    e = np.concatenate([F[:, [0, 1]], F[:, [1, 2]], F[:, [2, 0]]])
+    e.sort(1)
+    fid = np.tile(np.arange(len(F)), 3)
+    key = e[:, 0] * nv + e[:, 1]
+    o = np.argsort(key, kind='stable')
+    k, f = key[o], fid[o]
+    same = k[1:] == k[:-1]
+    a, b = f[:-1][same], f[1:][same]
+    w = np.linalg.norm(cen[a] - cen[b], axis=1) + 1e-6
+    G = sp.coo_matrix((w, (a, b)), shape=(len(F), len(F))).tocsr()
+    return (G + G.T).tocsr()
+
+
+def classify(M: Any, ft: dict[str, Any], seam: dict[str, Any], buttons: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
+    """Bottom plate / top shell from the seam loop. Outer-wall faces within a band round the seam take the side of the seam along the section
+    tangent; faces at or below the wall's lower edge inside the footprint seed the bottom plate; faces well above the seam seed the top
+    parent. The split uses geometry only: the click / wheel / side-button faces of the region step are NOT inputs to it (`buttons` is used
+    only afterwards, to carve the functional children out of the top parent and to count conflicts). Every other face (sensor pocket, screw bosses, label recess, scan-hole walls) joins its nearest seed along the mesh
+    (multi-source Dijkstra). Finally both classes are made single edge-connected components: detached bottom islands join the top parent, detached
+    top-parent islands (enclosed by the plate) join the bottom."""
+    from scipy.sparse.csgraph import dijkstra
+    cen = M.cen
+    c0 = seam['c0']
+    th = np.degrees(np.arctan2(cen[:, 1] - c0[1], cen[:, 0] - c0[0]))
+    rf = np.hypot(cen[:, 0] - c0[0], cen[:, 1] - c0[1])
+    rs, zs = _seam_at(seam['rad'], th), _seam_at(seam['z'], th)
+    tr, tz = _seam_at(seam['tan'][:, 0], th), _seam_at(seam['tan'][:, 1], th)
+    nrm = np.hypot(tr, tz) + 1e-12
+    tr, tz = tr / nrm, tz / nrm
+    dr, dz = rf - rs, cen[:, 2] - zs
+    along = dr * tr + dz * tz
+    across = dr * tz - dz * tr                            # > 0 outside the wall
+    band = (np.abs(along) < BAND_ALONG_MM) & (np.abs(across) < BAND_ACROSS_MM)
+    zl, rl = _seam_at(seam['zl'], th), _seam_at(seam['rl'], th)
+    seed_b = (band & (along < 0)) | ((cen[:, 2] < zl + 0.3) & (rf < rl + 0.5))
+    seed_t = ((band & (along >= 0)) | (dz > TOP_SEED_MM)) & ~seed_b
+    seeds = np.flatnonzero(seed_b | seed_t)
+    G = _face_graph(M.F, cen)
+    _, _, src = dijkstra(G, directed=False, indices=seeds, min_only=True, return_predecessors=True)
+    bottom = np.where(src >= 0, seed_b[np.maximum(src, 0)], False)
+    bottom[seed_b] = True
+    bottom[seed_t] = False
+    moved = {'bottom_islands_to_top': 0, 'top_islands_to_bottom': 0}
+    islands: list[dict[str, Any]] = []
+
+    def note(fl: np.ndarray, lab_: np.ndarray, sel_: np.ndarray, to: str) -> None:
+        for k in np.unique(lab_[sel_]):
+            ff = fl[lab_[sel_] == k]
+            islands.append({'faces': int(len(ff)), 'area_mm2': round(float(M.farea[ff].sum()), 2), 'centre_mm': [round(float(c), 1) for c in cen[ff].mean(0)], 'moved_to': to})
+    for _ in range(4):
+        changed = False
+        idx, lab, nc = _components(M.F, bottom)
+        if nc > 1:
+            big = int(np.argmax(np.bincount(lab)))
+            flip = idx[lab != big]
+            note(idx[lab != big], lab, lab != big, 'top_shell')
+            bottom[flip] = False
+            moved['bottom_islands_to_top'] += int(len(flip))
+            changed = True
+        idx, lab, nc = _components(M.F, ~bottom)
+        if nc > 1:
+            big = int(np.argmax(np.bincount(lab)))
+            flip = idx[lab != big]
+            note(idx[lab != big], lab, lab != big, 'bottom_plate')
+            bottom[flip] = True
+            moved['top_islands_to_bottom'] += int(len(flip))
+            changed = True
+        if not changed:
+            break
+    if buttons is None:
+        buttons = np.zeros(len(M.F), bool)
+    top = ~bottom & ~buttons                              # top shell body = the remainder of the top parent
+    outer = np.abs(across) < BAND_ACROSS_MM
+    info = {'band_faces': int(band.sum()), 'seed_bottom_faces': int(seed_b.sum()), 'seed_top_faces': int(seed_t.sum()), **moved,
+            'bottom_on_outer_wall_above_seam': int((bottom & outer & (along > 0.3) & (np.abs(along) < 15)).sum()),
+            'top_on_outer_wall_below_seam': int((top & outer & (along < -0.3) & (np.abs(along) < 15)).sum()),
+            'top_on_underside': int((top & (cen[:, 2] < zl + 0.3) & (rf < rl + 0.5)).sum()),
+            'functional_faces_in_bottom': int((bottom & buttons).sum()), 'islands': islands}
+    return bottom, top, info
 
 
 def _seam_at(arr: np.ndarray, th_deg: np.ndarray) -> np.ndarray:
@@ -179,28 +437,6 @@ def _components(F: np.ndarray, sel: np.ndarray):
     G = sp.coo_matrix((np.ones(same.sum()), (f[:-1][same], f[1:][same])), shape=(len(idx), len(idx)))
     n, lab = connected_components(G, directed=False)
     return idx, lab, n
-
-
-def classify(M: Any, ft: dict[str, Any], seam: dict[str, Any], c0: np.ndarray, buttons: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    cen = M.cen
-    th = np.degrees(np.arctan2(cen[:, 1] - c0[1], cen[:, 0] - c0[0]))
-    zseam = _seam_at(seam['z'], th)
-    bottom = cen[:, 2] < zseam
-    rad = np.hypot(cen[:, 0] - c0[0], cen[:, 1] - c0[1])
-    inside = rad < _seam_at(seam['rad'], th) - 2.5                       # interior underside (plate surface, sensor pocket, feet) lies inside the seam loop
-    bottom |= inside & (ft['fs'][:, 2] < -0.3) & (cen[:, 2] < zseam + 5.0)
-    for _ in range(2):
-        idx, lab, n = _components(M.F, bottom)
-        if n > 1:
-            cnt = np.bincount(lab)
-            keep = cnt >= max(0.02 * cnt.max(), 50)
-            bottom[idx[~keep[lab]]] = False
-        idx, lab, n = _components(M.F, ~bottom)
-        if n > 1:
-            cnt = np.bincount(lab)
-            big = int(np.argmax(cnt))
-            bottom[idx[(lab != big) & (cnt[lab] < 300)]] = True
-    return bottom, ~bottom & ~buttons
 
 
 def _idbuf_pix(t2: np.ndarray, depth: np.ndarray, x0: float, y0: float, nx: int, ny: int, pix: float, valid: np.ndarray) -> np.ndarray:
@@ -1018,6 +1254,87 @@ def sensor_window(M: Any, ft: dict[str, Any]) -> dict[str, Any]:
             'thresholds': r['thresholds'], 'underside_normal_work': [float(v) for v in -n_w], 'candidates': _cand_json(r, to_work)}
 
 
+# ------------------------------------------------------------------ overlay png (owner check of the split)
+OVERLAY_COLOURS = {'bottom_plate': (120, 200, 235), 'top_shell': (245, 222, 120), 'functional': (165, 165, 165)}
+SEAM_COLOURS = {'supported': (0, 95, 120), 'inferred': (235, 110, 20)}
+
+
+def shell_overlays(M: Any, face_codes: np.ndarray, seam: dict[str, Any], out: Path, mirrored: bool) -> list[dict[str, Any]]:
+    """Orthographic overlays: both flanks and the underside. Bottom plate light blue, top shell light yellow, functional faces grey; the seam
+    is drawn solid where a crease / groove supports it and dashed where it is inferred (only where its outer wall faces the viewer)."""
+    from PIL import Image, ImageDraw, ImageFont
+    ss, ppm = 2, 7.0
+    light = np.array([-0.4, 0.5, 0.75])
+    light /= np.linalg.norm(light)
+    col = np.zeros((len(face_codes), 3))
+    col[face_codes == LABEL_CODES['bottom_plate']] = OVERLAY_COLOURS['bottom_plate']
+    col[face_codes == LABEL_CODES['top_shell']] = OVERLAY_COLOURS['top_shell']
+    col[face_codes == LABEL_CODES['other']] = OVERLAY_COLOURS['functional']
+    c0, ang, tan = seam['c0'], seam['ang'], seam['tan']
+    n3 = np.c_[tan[:, 1] * np.cos(ang), tan[:, 1] * np.sin(ang), -tan[:, 0]]       # outward wall normal at the seam
+    views = {'side_pos_y': (np.array([-1.0, 0, 0]), np.array([0, 0, 1.0]), np.array([0, 1.0, 0]), 'flank +y (mouse-left), front left'),
+             'side_neg_y': (np.array([1.0, 0, 0]), np.array([0, 0, 1.0]), np.array([0, -1.0, 0]), 'flank -y (mouse-right), front right'),
+             'bottom': (np.array([1.0, 0, 0]), np.array([0, -1.0, 0]), np.array([0, 0, -1.0]), 'underside, front right, +y down')}
+    result = []
+    for view, (r, u, t, _) in views.items():
+        pr = np.stack([M.P @ r, M.P @ u, M.P @ t], -1)
+        lo, hi = pr[:, :2].min(0) - 4, pr[:, :2].max(0) + 4
+        wpx, hpx = int((hi[0] - lo[0]) * ppm * ss), int((hi[1] - lo[1]) * ppm * ss) + 40 * ss
+        img = Image.new('RGB', (wpx, hpx), (252, 252, 252))
+        dr = ImageDraw.Draw(img)
+        trp = pr[M.F]
+        ft_ = M.fn @ t
+        ii = np.flatnonzero(ft_ > 0.0)
+        ii = ii[np.argsort(trp[ii, :, 2].mean(1))]
+        shade = np.clip(0.45 + 0.25 * np.abs(ft_) + 0.35 * np.clip(M.fn @ (light[0] * r + light[1] * u + light[2] * t), 0, 1), 0, 1)
+        rgb = np.clip(col * shade[:, None], 0, 255).astype(int)
+        px = (trp[:, :, :2] - lo) * ppm * ss
+        px[:, :, 1] = hpx - px[:, :, 1]
+        for i in ii:
+            dr.polygon([tuple(p) for p in px[i]], fill=tuple(rgb[i]))
+        q = np.stack([seam['pts'] @ r, seam['pts'] @ u], -1)
+        sx = (q[:, 0] - lo[0]) * ppm * ss
+        sy = hpx - (q[:, 1] - lo[1]) * ppm * ss
+        vis = (n3 @ t) > (0.05 if view != 'bottom' else -0.35)
+        nn = len(sx)
+        dash = 0
+        for j in range(nn):
+            k = (j + 1) % nn
+            if not (vis[j] and vis[k]):
+                continue
+            if seam['supported'][j] and seam['supported'][k]:
+                dr.line([(sx[j], sy[j]), (sx[k], sy[k])], fill=SEAM_COLOURS['supported'], width=3 * ss)
+            else:
+                dash += 1
+                if (dash // 3) % 2 == 0:
+                    dr.line([(sx[j], sy[j]), (sx[k], sy[k])], fill=SEAM_COLOURS['inferred'], width=3 * ss)
+        img = img.resize((wpx // ss, hpx // ss), Image.LANCZOS)
+        d2 = ImageDraw.Draw(img)
+        try:
+            font = ImageFont.load_default(size=13)
+        except TypeError:
+            font = ImageFont.load_default()
+        d2.text((8, 6), views[view][3] + ('  [mirrored model]' if mirrored else ''), fill=(30, 30, 30), font=font)
+        x0 = 8
+        for name, cc in (('bottom plate', OVERLAY_COLOURS['bottom_plate']), ('top shell', OVERLAY_COLOURS['top_shell']), ('functional (click / wheel / side)', OVERLAY_COLOURS['functional'])):
+            d2.rectangle([x0, 24, x0 + 14, 36], fill=cc, outline=(60, 60, 60))
+            d2.text((x0 + 18, 23), name, fill=(30, 30, 30), font=font)
+            x0 += 30 + 7 * len(name)
+        d2.line([(x0, 30), (x0 + 22, 30)], fill=SEAM_COLOURS['supported'], width=3)
+        d2.text((x0 + 26, 23), 'seam: crease / groove', fill=(30, 30, 30), font=font)
+        x0 += 26 + 7 * 21 + 10
+        d2.line([(x0, 30), (x0 + 6, 30)], fill=SEAM_COLOURS['inferred'], width=3)
+        d2.line([(x0 + 12, 30), (x0 + 18, 30)], fill=SEAM_COLOURS['inferred'], width=3)
+        d2.text((x0 + 24, 23), 'seam: inferred', fill=(30, 30, 30), font=font)
+        bar = int(10 * ppm)
+        d2.line([(img.width - 16 - bar, img.height - 14), (img.width - 16, img.height - 14)], fill=(0, 0, 0), width=1)
+        d2.text((img.width - 16 - bar, img.height - 30), '10 mm', fill=(0, 0, 0), font=font)
+        name = f'overlay_{view}.png'
+        img.save(out / name)
+        result.append({'file': name, 'sha256': file_hash(out / name), 'view': view})
+    return result
+
+
 def _not_ready(scan_id: str, reasons: list[str], extra: dict[str, Any] | None = None) -> dict[str, Any]:
     return {'schema': 'scan_shell_report/1', 'scan_id': scan_id, 'status': 'NOT_READY', 'blocking_reasons': reasons, 'surface_only': True, 'limitations': LIMITS,
             **(extra or {}), 'execution': {'completed': True}}
@@ -1042,38 +1359,66 @@ def recognize_shell(workspace: Path, scan_id: str, handedness: str = 'auto') -> 
     codes = np.load(d / 'regions' / reg['run_id'] / 'face_labels.npz')['face_labels']
     buttons = (codes >= 1) & (codes <= 5)
     ft = sg.surface_features(M.P, M.F, M.L, M.vn, M.fn)
-    sp_ = seam_profile(M, ft)
-    seam = refine_seam(M, ft, sp_)
-    bottom, top = classify(M, ft, seam, sp_['c0'], buttons)
+    seam = seam_loop(M, ft)
+    bottom, top, cls_info = classify(M, ft, seam, buttons)       # the split itself is geometry only; buttons only carve the children
+    islands = cls_info.pop('islands')
     sup = seam['supported']
     tot = float(seam['seglen'].sum())
     frac_sup = float(seam['seglen'][sup].sum() / tot)
-    seg_runs = []
-    start = int(np.argmax(sup != np.roll(sup, 1))) if (sup != sup[0]).any() else 0
-    order = np.r_[start:NBINS, 0:start]
-    cur = [order[0]]
-    for b in order[1:]:
-        if sup[b] == sup[cur[0]]:
-            cur.append(b)
-        else:
-            seg_runs.append(cur)
-            cur = [b]
-    seg_runs.append(cur)
-    segments = [{'support': 'groove' if sup[r[0]] else 'inferred', 'azimuth_from_deg': round(float(np.degrees(seam['ang'][r[0]])), 1),
-                 'azimuth_to_deg': round(float(np.degrees(seam['ang'][r[-1]])), 1), 'length_mm': round(float(seam['seglen'][r].sum()), 1)} for r in seg_runs]
+    segments = []
+    for r in _runs(sup):
+        e, cnt = np.unique(seam['evidence'][r], return_counts=True)
+        sc = float(np.mean(seam['score'][r]))
+        segments.append({'support': 'groove' if sup[r[0]] else 'inferred', 'azimuth_from_deg': round(float(seam['az'][r[0]]), 2), 'azimuth_to_deg': round(float(seam['az'][r[-1]]), 2),
+                         'length_mm': round(float(seam['seglen'][r].sum()), 1), 'sections': int(len(r)),
+                         'evidence': {str(k): int(v) for k, v in zip(e, cnt)}, 'mean_cue_score': round(sc, 2),
+                         'confidence': ('high' if sc >= 6 else 'medium') if sup[r[0]] else ('medium' if len(r) <= 2 * MIN_RUN else 'low')})
+    hgt = seam['z'] - seam['zl']
+    deg_per_col = 360.0 / SEAM_COLS
+    step_h = float(np.max(np.abs(np.diff(np.r_[hgt, hgt[:1]])))) / deg_per_col
+    step_z = float(np.max(np.abs(np.diff(np.r_[seam['z'], seam['z'][:1]])))) / deg_per_col
+    closed = np.vstack([seam['pts'], seam['pts'][:1]])
     area = M.farea
     comp_b = _components(M.F, bottom)
     comp_t = _components(M.F, top)
+    comp_tf = _components(M.F, top | buttons)
     sens = sensor_window(M, ft)
     blockers: list[str] = []
     warnings: list[dict[str, Any]] = []
     if frac_sup < 0.5:
-        warnings.append({'code': 'SEAM_MOSTLY_INFERRED', 'supported_fraction': round(frac_sup, 2), 'note': 'less than half of the seam loop shows a groove; treat the plate / shell split as indicative'})
+        warnings.append({'code': 'SEAM_MOSTLY_INFERRED', 'supported_fraction': round(frac_sup, 2), 'note': 'less than half of the seam loop shows a crease or groove; treat the plate / shell split as indicative'})
+    if comp_b[2] != 1 or comp_tf[2] != 1:
+        warnings.append({'code': 'SHELL_SPLIT_FRAGMENTED', 'bottom_plate_components': int(comp_b[2]), 'top_shell_with_functional_components': int(comp_tf[2])})
     if not sens['found']:
         warnings.append({'code': 'SENSOR_NOT_FOUND', 'note': sens['reason']})
     elif sens['confidence'] == 'low':
         warnings.append({'code': 'SENSOR_AMBIGUOUS', 'note': 'the best recess candidate is weak or not clearly ahead of the runner-up; see sensor.candidates'})
-    face_codes = np.where(bottom, LABEL_CODES['bottom_plate'], np.where(top, LABEL_CODES['top_shell'], 0)).astype(np.uint8)
+    unassigned = np.flatnonzero(bottom & buttons)
+    unassigned_clusters = list(islands)
+    if len(unassigned):
+        ui, ul, un = _components(M.F, bottom & buttons)
+        for k in range(un):
+            ff = ui[ul == k]
+            unassigned_clusters.append({'faces': int(len(ff)), 'area_mm2': round(float(area[ff].sum()), 2), 'centre_mm': [round(float(c), 1) for c in M.cen[ff].mean(0)],
+                                        'moved_to': None, 'reason': 'functional label inside the bottom plate'})
+    bottom_part = bottom & ~buttons
+    face_codes = np.where(bottom_part, LABEL_CODES['bottom_plate'], np.where(top, LABEL_CODES['top_shell'], 0)).astype(np.uint8)
+    seam_conf = 'high' if frac_sup >= 0.85 else ('medium' if frac_sup >= 0.6 else 'low')
+    children: dict[str, Any] = {'body': {'face_count': int(top.sum()), 'area_mm2': round(float(area[top].sum()), 1), 'confidence': seam_conf,
+                                         'definition': 'remainder of the top shell parent after the functional children'}}
+    for name, cd in sr.LABEL_CODES.items():
+        if 1 <= cd <= 5:
+            sel = (codes == cd) & ~bottom
+            children[name] = {'face_count': int(sel.sum()), 'area_mm2': round(float(area[sel].sum()), 1),
+                              'confidence': (reg.get('regions', {}).get(name) or {}).get('confidence'), 'source': 'brain_mouse_recognize_regions ' + reg['run_id']}
+    parent = ~bottom
+    parts_tree = {'mouse': {'face_count': int(len(f)), 'area_mm2': round(float(area.sum()), 1), 'children': {
+        'bottom_plate': {'face_count': int(bottom_part.sum()), 'area_mm2': round(float(area[bottom_part].sum()), 1), 'components': int(comp_b[2]), 'confidence': seam_conf},
+        'top_shell': {'face_count': int(parent.sum()), 'area_mm2': round(float(area[parent].sum()), 1), 'components': int(_components(M.F, parent)[2]),
+                      'confidence': seam_conf, 'children': children}}},
+        'order': 'bottom_plate vs top_shell first (parting seam, geometry only, independent of the region step); the top shell children come from the '
+                 'region step (run on the whole mesh, unchanged) restricted to the top shell parent',
+        'unassigned_faces': int(len(unassigned))}
     ext = np.array([(M.P[:, 0].min(), M.P[:, 0].max()), (M.P[:, 1].min(), M.P[:, 1].max())])
     sensor: dict[str, Any] = {'found': bool(sens['found'])}
     if sens['found']:
@@ -1129,36 +1474,62 @@ def recognize_shell(workspace: Path, scan_id: str, handedness: str = 'auto') -> 
     npz = out / 'face_labels.npz'
     with npz.open('wb') as fh:
         np.savez_compressed(fh, face_labels=face_codes, codes=np.array([f'{k}={c}' for k, c in LABEL_CODES.items()]))
-    arrs: dict[str, Any] = {'seam_xyz': seam['pts'], 'seam_supported': sup}
+    arrs: dict[str, Any] = {'seam_xyz': seam['pts'], 'seam_supported': sup, 'seam_xyz_closed': closed, 'seam_azimuth_deg': seam['az'],
+                            'seam_lower_edge_z': seam['zl'], 'seam_cue_score': seam['score'], 'seam_evidence': seam['evidence'].astype('U16')}
     if sens['found']:
         arrs['sensor_outline_xy'] = sens['outline_xy']
         arrs['sensor_rim_xy'] = sens['rim_xy']
     with (out / 'outlines.npz').open('wb') as fh:
         np.savez_compressed(fh, **arrs)
+    overlays = None
+    try:
+        overlays = shell_overlays(M, face_codes, seam, out, mirrored)
+    except ImportError:
+        warnings.append({'code': 'OVERLAY_SKIPPED', 'note': 'Pillow is not installed (geometry extra).'})
     report = {
         'schema': 'scan_shell_report/1', 'run_id': run_id, 'scan_id': scan_id, 'status': 'NOT_READY' if blockers else 'READY', 'blocking_reasons': blockers, 'warnings': warnings,
         'code_version': {'scan_shell': SHELL_VERSION, 'package': __version__}, 'settings': {'handedness': handedness}, 'regions_run': reg['run_id'],
         'scan': {'prepared_npz_sha256': prep['prepared_npz_sha256'], 'faces': int(len(f))}, 'surface_only': True, 'limitations': LIMITS,
         'regions': {'bottom_plate': {'face_count': int(bottom.sum()), 'area_mm2': round(float(area[bottom].sum()), 1), 'components': int(comp_b[2]),
-                                     'definition': 'faces below the parting seam of their azimuth plus the interior underside (feet, label area, sensor pocket)'},
+                                     'definition': 'outer skirt below the parting seam plus the whole underside (feet, label area, screw bosses, sensor pocket): '
+                                                   'one edge-connected region'},
                     'top_shell': {'face_count': int(top.sum()), 'area_mm2': round(float(area[top].sum()), 1), 'components': int(comp_t[2]),
-                                  'definition': 'everything above the seam except the left / right click, wheel and side-button faces of the region step'},
-                    'excluded_functional_faces': int(buttons.sum())},
-        'seam': {'frame': 'work frame (x front, y thumb side, z up, mm)', 'length_mm': round(tot, 1), 'bins': NBINS, 'supported_fraction': round(frac_sup, 2),
-                 'segments': segments, 'closure_gap_mm': round(float(np.linalg.norm(seam['pts'][0] - seam['pts'][-1])), 2),
-                 'height_above_wall_lower_edge_mm': {'min': round(float(np.min(seam['z'] - sp_['zl'])), 2), 'median': round(float(np.median(seam['z'] - sp_['zl'])), 2), 'max': round(float(np.max(seam['z'] - sp_['zl'])), 2)},
-                 'method': 'groove (band-pass normal offset) of the outer wall, circular Viterbi over 1 degree bins; inferred bins interpolated',
-                 'confidence': 'medium' if frac_sup >= 0.7 else 'low'},
+                                  'components_with_functional_faces': int(comp_tf[2]),
+                                  'definition': 'everything above the seam except the left / right click, wheel and side-button faces of the region step '
+                                                '(those cut the top shell apart; top shell + functional faces is one edge-connected region)'},
+                    'excluded_functional_faces': int(buttons.sum()),
+                    'split_checks': {**cls_info, 'definition': 'counts of faces violating the split rules (0 = clean) and of island faces moved by the connectivity clean-up'},
+                    'unassigned_faces': {'face_count': int(len(unassigned)), 'area_mm2': round(float(area[unassigned].sum()), 2), 'clusters': unassigned_clusters,
+                                         'definition': 'functional faces of the region step lying inside the bottom plate (conflicts, left in no part: label code 0); '
+                                                       'detached islands moved by the connectivity clean-up are listed in clusters with moved_to'}},
+        'parts_tree': parts_tree,
+        'seam': {'frame': 'work frame (x front, y thumb side, z up, mm)', 'length_mm': round(tot, 1), 'bins': SEAM_COLS, 'supported_fraction': round(frac_sup, 2),
+                 'segments': segments, 'closed_loop': True,
+                 'closure_gap_mm': round(float(np.linalg.norm(closed[0] - closed[-1])), 3),
+                 'max_point_spacing_mm': round(float(seam['seglen'].max()), 3),
+                 'height_above_wall_lower_edge_mm': {'min': round(float(np.min(hgt)), 2), 'median': round(float(np.median(hgt)), 2), 'max': round(float(np.max(hgt)), 2)},
+                 'max_step_per_degree_mm': {'height_above_lower_edge': round(step_h, 3), 'z': round(step_z, 3)},
+                 'sections_through_scan_holes': int((~seam['valid']).sum()),
+                 'cue_scales': {k: round(float(v), 5) for k, v in seam['scales'].items()},
+                 'method': 'exact vertical sections every %.1f degrees round the footprint; per section the outer wall from its lower edge up 13 mm; cue = convex '
+                           'crease (profile curvature) + groove (band-pass normal offset), gated against the plate fillet; circular Viterbi with a height '
+                           'smoothness prior and a robust 3-harmonic prior on the offset above the lower edge; weak sections are inferred (prior shape '
+                           'between the supported ends)' % deg_per_col,
+                 'confidence': 'high' if frac_sup >= 0.85 else ('medium' if frac_sup >= 0.6 else 'low')},
         'sensor': sensor, 'files': {'face_labels': {'file': 'face_labels.npz', 'sha256': file_hash(npz), 'faces': int(len(f)), 'codes': LABEL_CODES},
-                                    'outlines': {'file': 'outlines.npz', 'sha256': file_hash(out / 'outlines.npz'), 'note': 'seam_xyz (360 x 3, work frame), seam_supported, sensor_outline_xy (fitted aperture), sensor_rim_xy (traced rim points)'}},
+                                    'outlines': {'file': 'outlines.npz', 'sha256': file_hash(out / 'outlines.npz'), 'note': 'seam_xyz (%d x 3, work frame, one point per section), seam_xyz_closed (first point repeated), seam_supported, seam_azimuth_deg, '
+                                             'seam_lower_edge_z, seam_cue_score, seam_evidence, sensor_outline_xy (fitted aperture), sensor_rim_xy (traced rim points)' % SEAM_COLS}},
         'seconds': round(time.time() - t0, 1), 'checks': {'regions_ready': 'PASS', 'seam_closed_loop': 'PASS', 'physical_function': 'UNVERIFIED'}, 'execution': {'completed': True}}
+    if overlays:
+        report['files']['overlays'] = overlays
     atomic_json(out / 'shell_report.json', report)
     return report
 
 
 def _stored(out: Path) -> dict[str, Any]:
     rep = json_load(out / 'shell_report.json')
-    for it in rep['files'].values():
+    items = [v for k, v in rep['files'].items() if k != 'overlays'] + list(rep['files'].get('overlays') or [])
+    for it in items:
         p = out / it['file']
         if not p.is_file() or file_hash(p) != it['sha256']:
             raise BrainError('SHELL_OUTPUT_CHANGED', 'A stored shell result no longer matches its recorded hash; it is not overwritten.', {'file': it['file']})
