@@ -66,24 +66,9 @@ startup_timeout_sec = 60
 tool_timeout_sec = 1300
 
 
-[mcp_servers.cgal-mcp]
-command = "E:\\aiwork\\cgal-mcp\\.venv\\Scripts\\python.exe"
-args = ["E:\\aiwork\\Stella_CAD_SYSTEM\\integration\\cgal\\stella_cgal_mcp.py"]
-cwd = "E:\\aiwork\\cgal-mcp"
-enabled = true
-startup_timeout_sec = 30
-tool_timeout_sec = 300
-
-[mcp_servers.cgal-mcp.env]
-CGAL_MCP_WORKER = "E:\\aiwork\\cgal-mcp\\build\\Release\\cgal-worker.exe"
-CGAL_MCP_DISTANCE = "E:\\aiwork\\cgal-mcp\\build\\Release\\cgal-distance.exe"
-CGAL_MCP_DATA = "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace\\cgal-mcp"
-PYTHONUTF8 = "1"
-PYTHONIOENCODING = "utf-8"
-
-# CGAL Master MCP (native generic server; v0.1 cgal-mcp above stays as the compatible fallback).
+# CGAL Master MCP, the single official CGAL server registered as cgal-mcp (v0.1 sidecar removed).
 # Persistent workers and the result cache stay OFF; derived data lives in the gitignored cadmcp-workspace.
-[mcp_servers.cgal-master]
+[mcp_servers.cgal-mcp]
 command = "E:\\aiwork\\cgal-mcp\\.venv\\Scripts\\python.exe"
 args = ["-m", "cgal_mcp.master.server", "stdio"]
 cwd = "E:\\aiwork\\cgal-mcp"
@@ -91,7 +76,7 @@ enabled = true
 startup_timeout_sec = 60
 tool_timeout_sec = 300
 
-[mcp_servers.cgal-master.env]
+[mcp_servers.cgal-mcp.env]
 CGAL_MASTER_WORKER = "E:\\aiwork\\cgal-mcp\\build-master\\Release\\cgal-master-worker.exe"
 CGAL_MASTER_DATA = "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace\\cgal-master"
 CGAL_MASTER_CATALOG = "E:\\aiwork\\cgal-mcp\\catalog"

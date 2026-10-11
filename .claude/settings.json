@@ -37,15 +37,15 @@
       "mcp__cgal-mcp__search_api",
       "mcp__cgal-mcp__route_goal",
       "mcp__cgal-mcp__job_status",
-      "mcp__cgal-master__cgal_get_guide",
-      "mcp__cgal-master__cgal_capabilities_search",
-      "mcp__cgal-master__cgal_capabilities_describe",
-      "mcp__cgal-master__cgal_docs_search",
-      "mcp__cgal-master__cgal_system_health",
-      "mcp__cgal-master__cgal_artifact_inspect",
-      "mcp__cgal-master__cgal_plan",
-      "mcp__cgal-master__cgal_validate",
-      "mcp__cgal-master__cgal_job_status",
+      "mcp__cgal-mcp__cgal_get_guide",
+      "mcp__cgal-mcp__cgal_capabilities_search",
+      "mcp__cgal-mcp__cgal_capabilities_describe",
+      "mcp__cgal-mcp__cgal_docs_search",
+      "mcp__cgal-mcp__cgal_system_health",
+      "mcp__cgal-mcp__cgal_artifact_inspect",
+      "mcp__cgal-mcp__cgal_plan",
+      "mcp__cgal-mcp__cgal_validate",
+      "mcp__cgal-mcp__cgal_job_status",
       "mcp__mouse-library"
     ],
     "ask": [
@@ -55,15 +55,15 @@
       "mcp__cadmcp-design-brain__brain_backend_call",
       "mcp__cadmcp-design-brain__brain_fusion_handoff",
       "mcp__cadmcp-design-brain__brain_export",
-      "mcp__cgal-master__cgal_artifact_import",
-      "mcp__cgal-master__cgal_execute",
-      "mcp__cgal-master__cgal_artifact_export",
-      "mcp__cgal-master__cgal_job_cancel"
+      "mcp__cgal-mcp__cgal_artifact_import",
+      "mcp__cgal-mcp__cgal_execute",
+      "mcp__cgal-mcp__cgal_artifact_export",
+      "mcp__cgal-mcp__cgal_job_cancel"
     ],
     "deny": [
       "Read(**/.env)",
       "Read(**/*.pem)"
     ]
   },
-  "enabledMcpjsonServers": ["cadmcp-design-brain", "cgal-mcp", "cgal-master", "mouse-library"]
+  "enabledMcpjsonServers": ["cadmcp-design-brain", "cgal-mcp", "mouse-library"]
 }

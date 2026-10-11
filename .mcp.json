@@ -22,20 +22,6 @@
       "type": "stdio",
       "command": "E:/aiwork/cgal-mcp/.venv/Scripts/python.exe",
       "args": [
-        "E:/aiwork/Stella_CAD_SYSTEM/integration/cgal/stella_cgal_mcp.py"
-      ],
-      "env": {
-        "CGAL_MCP_WORKER": "E:/aiwork/cgal-mcp/build/Release/cgal-worker.exe",
-        "CGAL_MCP_DISTANCE": "E:/aiwork/cgal-mcp/build/Release/cgal-distance.exe",
-        "CGAL_MCP_DATA": "E:/aiwork/Stella_CAD_SYSTEM/cadmcp-workspace/cgal-mcp",
-        "PYTHONUTF8": "1",
-        "PYTHONIOENCODING": "utf-8"
-      }
-    },
-    "cgal-master": {
-      "type": "stdio",
-      "command": "E:/aiwork/cgal-mcp/.venv/Scripts/python.exe",
-      "args": [
         "-m",
         "cgal_mcp.master.server",
         "stdio"

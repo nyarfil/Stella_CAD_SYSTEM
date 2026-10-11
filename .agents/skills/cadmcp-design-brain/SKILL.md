@@ -5,13 +5,12 @@ description: Design physical CAD with an owner-enabled cadMCP server. Use refere
 
 # Structure-first mechanical design
 
-For CGAL mesh simplification/shape-error checks, use the installed `cgal-mcp`
-sidecar and read `docs/CGAL_INTEGRATION_JA.md`. Discover its real tools first.
-`stella_cgal_simplify_file` consumes explicit-unit STL/OFF and publishes only a
-verified new derived mesh; it does not switch CAD backends, replace native
-solids, or provide CAD Undo. If the current chat has not loaded the new server,
-use the documented local bridge and report that fact rather than claiming an
-MCP tool was called. Keep the source CAD and its document guards.
+For CGAL mesh simplification/shape-error checks, use the registered `cgal-mcp`
+(CGAL Master MCP). Call `cgal_get_guide` first and read `docs/CGAL_INTEGRATION_JA.md`.
+It publishes only a validated new derived mesh via `cgal_artifact_export`; it does not
+switch CAD backends, replace native solids, or provide CAD Undo. If the current chat
+has not loaded the server, use `integration/cgal/master_derive.py` and report that
+fact rather than claiming an MCP tool was called. Keep the source CAD and its document guards.
 
 Use only when the owner has enabled the product for CAD work. Development of
 cadMCP itself does not use this workflow or require MCP startup.
