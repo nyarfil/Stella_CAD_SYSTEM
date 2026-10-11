@@ -25,8 +25,10 @@ from ..errors import BrainError
 from ..req2cad.common import atomic_json, json_load
 from ..util import digest, file_hash, safe_id
 
-SHELL_VERSION = 'S1.2'
+SHELL_VERSION = 'S1.3'
 LABEL_CODES = {'other': 0, 'bottom_plate': 1, 'top_shell': 2}
+# S1.3 hand-off files (keys added only): one label file with the shell split AND the functional regions, plus the prepared mesh in the canonical frame
+COMBINED_CODES = {'other': 0, 'bottom_plate': 1, 'top_shell': 2, 'left_click': 3, 'right_click': 4, 'wheel': 5, 'side_button_1': 6, 'side_button_2': 7}
 # parting seam (S1.2): exact vertical sections round the footprint, crease + groove cues, circular Viterbi; lengths in mm (prepared scans are mm)
 SEAM_COLS = 720                              # sections round the loop (0.5 degree)
 PROFILE_STEP = 0.1                           # arc-length resampling of each section, mm
@@ -1481,6 +1483,16 @@ def recognize_shell(workspace: Path, scan_id: str, handedness: str = 'auto') -> 
         arrs['sensor_rim_xy'] = sens['rim_xy']
     with (out / 'outlines.npz').open('wb') as fh:
         np.savez_compressed(fh, **arrs)
+    # hand-off for the mesh-stage tools (brain_mouse_scan_flush / scan_symmetrise / scan_click_grooves / shell_fit): they take ONE STL in the standard
+    # frame and ONE label file. canonical frame = mesh-derived (x front, y mouse-left, z up; not mirrored, no prior); face order = prepared scan.
+    comb = face_codes.astype(np.uint8).copy()
+    for name, cd in sr.LABEL_CODES.items():
+        if 1 <= cd <= 5:
+            comb[(codes == cd) & ~bottom] = COMBINED_CODES[name]
+    with (out / 'labels.npz').open('wb') as fh:
+        np.savez_compressed(fh, face_labels=comb, codes=np.array([f'{k}={c}' for k, c in COMBINED_CODES.items()]))
+    _write_stl(out / 'canonical.stl', q, f)
+    T = np.eye(4); T[:3, :3] = fr['rotation']; T[:3, 3] = -fr['rotation'] @ fr['centroid'] - fr['shift']
     overlays = None
     try:
         overlays = shell_overlays(M, face_codes, seam, out, mirrored)
@@ -1518,12 +1530,29 @@ def recognize_shell(workspace: Path, scan_id: str, handedness: str = 'auto') -> 
                  'confidence': 'high' if frac_sup >= 0.85 else ('medium' if frac_sup >= 0.6 else 'low')},
         'sensor': sensor, 'files': {'face_labels': {'file': 'face_labels.npz', 'sha256': file_hash(npz), 'faces': int(len(f)), 'codes': LABEL_CODES},
                                     'outlines': {'file': 'outlines.npz', 'sha256': file_hash(out / 'outlines.npz'), 'note': 'seam_xyz (%d x 3, work frame, one point per section), seam_xyz_closed (first point repeated), seam_supported, seam_azimuth_deg, '
-                                             'seam_lower_edge_z, seam_cue_score, seam_evidence, sensor_outline_xy (fitted aperture), sensor_rim_xy (traced rim points)' % SEAM_COLS}},
+                                             'seam_lower_edge_z, seam_cue_score, seam_evidence, sensor_outline_xy (fitted aperture), sensor_rim_xy (traced rim points)' % SEAM_COLS},
+                                    'labels': {'file': 'labels.npz', 'sha256': file_hash(out / 'labels.npz'), 'faces': int(len(f)), 'codes': COMBINED_CODES,
+                                               'note': 'shell split + functional regions in one file (functional faces inside the bottom plate stay bottom_plate); '
+                                                       'face order of the prepared scan = canonical.stl'},
+                                    'canonical_stl': {'file': 'canonical.stl', 'sha256': file_hash(out / 'canonical.stl'), 'faces': int(len(f)),
+                                                      'frame': 'canonical: x rear -> front, y mouse-left, z base -> top, origin rear end / mid-line / base (mm, not mirrored)',
+                                                      'scan_to_canonical_4x4': T.round(9).tolist(),
+                                                      'next': 'brain_mouse_scan_flush(relative_path=<this folder>/canonical.stl, unit mm, labels_path=<this folder>/labels.npz)'}},
         'seconds': round(time.time() - t0, 1), 'checks': {'regions_ready': 'PASS', 'seam_closed_loop': 'PASS', 'physical_function': 'UNVERIFIED'}, 'execution': {'completed': True}}
     if overlays:
         report['files']['overlays'] = overlays
     atomic_json(out / 'shell_report.json', report)
     return report
+
+
+def _write_stl(path: Path, v: np.ndarray, f: np.ndarray) -> None:
+    tri = v[f].astype(np.float32)
+    n = np.cross(tri[:, 1] - tri[:, 0], tri[:, 2] - tri[:, 0])
+    n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-30)
+    rec = np.zeros(len(f), dtype=[('n', '<f4', 3), ('v', '<f4', (3, 3)), ('a', '<u2')])
+    rec['n'], rec['v'] = n, tri
+    with path.open('wb') as fh:
+        fh.write(b'cadmcp recognize_shell canonical frame'.ljust(80, b' ')); fh.write(np.uint32(len(f)).tobytes()); fh.write(rec.tobytes())
 
 
 def _stored(out: Path) -> dict[str, Any]:

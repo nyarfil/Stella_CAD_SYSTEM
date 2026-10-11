@@ -19,8 +19,9 @@ from .studio.mixin import StudioToolsMixin
 from .studio.mouse import BoardRegistry, ShellRegistry, MouseToolsMixin, structure_gate
 from .mouse_knowledge import MouseKnowledgeToolsMixin
 from .studio.backend_routing import BackendRoutingToolsMixin
+from .studio.mesh_backend import MeshBackendToolsMixin
 
-class Tools(BackendRoutingToolsMixin,MouseKnowledgeToolsMixin,MouseToolsMixin,StudioToolsMixin,Req2CADToolsMixin):
+class Tools(MeshBackendToolsMixin,BackendRoutingToolsMixin,MouseKnowledgeToolsMixin,MouseToolsMixin,StudioToolsMixin,Req2CADToolsMixin):
     def __init__(self,brain: Brain,backend: AgentCADClient | None=None):
         self.brain=brain
         self.backend=backend or AgentCADClient(None)

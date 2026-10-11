@@ -28,7 +28,7 @@ import numpy as np
 from scipy.ndimage import distance_transform_edt, gaussian_filter1d, map_coordinates, maximum_filter1d
 from scipy.spatial import cKDTree
 
-WORKER_VERSION = 'scan_click_grooves/1'
+WORKER_VERSION = 'scan_click_grooves/6'
 UNIT_MM = {'mm': 1.0, 'cm': 10.0, 'm': 1000.0, 'in': 25.4}
 STEP = 0.2                    # station spacing of the sweeps, mm
 PIXEL = 0.1                   # height-field pixel, mm
@@ -38,7 +38,14 @@ ROLE_ALIASES = {'LC': 'left_click', 'left_click': 'left_click', 'RC': 'right_cli
 
 
 DEFAULTS = {'slot_width_mm': 0.5, 'slot_depth_mm': 2.0, 'panel_overlap_mm': 0.2, 'perimeter_clearance_mm': 0.005, 'fit_tolerance_mm': 0.2, 'fillet_radius_mm': None,
-            'min_wall_mm': 0.0, 'rebuild_window': True, 'overlay': True, 'gap_clear_mm': 2.0, 'gap_front_margin_mm': 2.5, 'gap_overshoot_mm': 0.5}
+            'min_wall_mm': 0.0, 'rebuild_window': True, 'overlay': True, 'gap_clear_mm': 2.0, 'gap_front_margin_mm': 2.5, 'gap_overshoot_mm': 0.5,
+            # G1.4 regular outline (lines + one fillet radius, symmetric where near-symmetric) and its gates
+            'symmetric_outline': True, 'symmetry_tol_mm': 1.5, 'min_turn_deg': 10.0, 'merge_dev_mm': 0.4, 'concave_dev_mm': 1.5, 'overhang_mm': 0.5,
+            'max_overhang_mm': 1.5, 'max_overhang_length_mm': 15.0, 'spike_width_mm': 2.0, 'roughness_max_dev_mm': 0.02, 'window_on_gap_tol_mm': 1.0,
+            'mirror_plane': None, 'gap_snap_tol_mm': 2.0, 'min_corner_radius_mm': 0.5,
+            # G1.5 window rule and its gate
+            'window_source': 'envelope', 'window_corner_radius_mm': None, 'window_corner_frac': 0.8, 'window_clear_mm': 0.5, 'window_min_corner_radius_mm': 2.0,
+            'window_aspect_min': 1.0, 'window_aspect_max': 4.0}
 
 
 class GrooveError(Exception):
@@ -221,10 +228,13 @@ def seg_dist(P: np.ndarray, A: np.ndarray, closed: bool = False) -> np.ndarray:
     return d
 
 
-def fillet_open(Pq: np.ndarray, R: float, step_deg: float = 1.5) -> np.ndarray:
-    """Round every interior vertex of an open polyline with radius R (clipped to 0.45 of the adjacent pieces)."""
+def fillet_open(Pq: np.ndarray, R, step_deg: float = 1.5, clip: float = 0.45) -> np.ndarray:
+    """Round every interior vertex of an open polyline with radius R (a number, or one radius per interior vertex; clipped to clip x the
+    adjacent pieces)."""
     out = [Pq[0]]
+    Rs = np.broadcast_to(np.asarray(R, float), (max(len(Pq) - 2, 0),)) if np.ndim(R) == 0 else np.asarray(R, float)
     for i in range(1, len(Pq) - 1):
+        R = float(Rs[i - 1])
         a, b, c = Pq[i - 1], Pq[i], Pq[i + 1]
         la, lc = np.linalg.norm(a - b), np.linalg.norm(c - b)
         if la < 1e-9 or lc < 1e-9:
@@ -234,7 +244,7 @@ def fillet_open(Pq: np.ndarray, R: float, step_deg: float = 1.5) -> np.ndarray:
         if np.pi - ang < 1e-3:
             out.append(b)
             continue
-        t = min(R / np.tan(ang / 2), 0.45 * la, 0.45 * lc)
+        t = min(R / np.tan(ang / 2), clip * la, clip * lc)
         r_eff = t * np.tan(ang / 2)
         p1, p2 = b + u * t, b + w * t
         bis = u + w
@@ -313,6 +323,160 @@ def fit_polyline(T: np.ndarray, tol: float, bin_mm: float = 0.5) -> np.ndarray:
     return np.vstack([start[None], np.array(verts).reshape(-1, 2), end[None]])
 
 
+def _dir_along(P: np.ndarray, d: np.ndarray) -> np.ndarray:
+    return d if (P[-1] - P[0]) @ d >= 0 else -d
+
+
+def fit_lines_regular(T: np.ndarray, tol: float, bin_mm: float = 0.5, min_turn_deg: float = 10.0, merge_dev_mm: float = 0.4,
+                      concave_dev_mm: float = 1.5, min_piece_mm: float = 4.0) -> dict[str, Any]:
+    """Regularised straight pieces through an ordered (open) point chain: Douglas-Peucker on bin means, total least squares per piece, then
+    pieces are merged while a joint has a turn below min_turn_deg (scan noise kink) or turns against the dominant direction (wave / step)
+    and the merged piece still fits its points (p95 distance <= merge_dev_mm, <= concave_dev_mm for an opposite turn). Vertices at the
+    intersections of consecutive lines. A piece shorter than min_piece_mm (chord) is always merged into the neighbour it fits best: corners
+    are rounded by the fillets, never by short pieces. Returns {'verts', 'lines': [(c, d)], 'groups': [(s0, s1)], 'merged': n, 'opposite_turns_kept': n}."""
+    s = np.r_[0, np.cumsum(np.linalg.norm(np.diff(T, axis=0), axis=1))]
+    bx = np.floor(s / bin_mm).astype(int)
+    ub = np.unique(bx)
+    Tm = np.array([T[bx == i].mean(0) for i in ub])
+    Tb = np.array([s[bx == i].mean() for i in ub])
+    idx = dp_indices(Tm, tol)
+    groups = [(Tb[a] - bin_mm / 2 - 0.01, Tb[b] + bin_mm / 2 + 0.01) for a, b in zip(idx[:-1], idx[1:])]
+    groups[0] = (s[0] - 1.0, groups[0][1])
+    groups[-1] = (groups[-1][0], s[-1] + 1.0)
+
+    def pts(g):
+        return T[(s >= g[0]) & (s <= g[1])]
+
+    def line(g):
+        sel = pts(g)
+        if len(sel) < 2:
+            return None, sel
+        c, d = tls_line(sel)
+        return (c, _dir_along(sel, d)), sel
+    merged = 0
+    while True:
+        lines = [line(g)[0] for g in groups]
+        if any(ln is None for ln in lines):
+            k = next(i for i, ln in enumerate(lines) if ln is None)
+            j = k - 1 if k > 0 else k + 1
+            if len(groups) == 1:
+                raise GrooveError('CLICK_GROOVE_PERIMETER_FIT', 'The perimeter chain could not be fitted by straight pieces.')
+            a, b = sorted((j, k))
+            groups[a:b + 1] = [(groups[a][0], groups[b][1])]
+            continue
+        if len(groups) < 2:
+            break
+        chords = [np.linalg.norm(pts(g)[-1] - pts(g)[0]) for g in groups]
+        short = [i for i, c in enumerate(chords) if c < min_piece_mm]
+        if short:
+            i = min(short, key=lambda q: chords[q])
+            opts = [j for j in (i - 1, i + 1) if 0 <= j < len(groups)]
+            def mdev(j):
+                a, b = sorted((i, j))
+                ln, sel = line((groups[a][0], groups[b][1]))
+                return np.inf if ln is None else float(np.percentile(np.abs((sel - ln[0]) @ np.array([-ln[1][1], ln[1][0]])), 95))
+            j = min(opts, key=mdev)
+            a, b = sorted((i, j))
+            groups[a:b + 1] = [(groups[a][0], groups[b][1])]
+            merged += 1
+            continue
+        turns = np.array([np.arctan2(lines[i][1][0] * lines[i + 1][1][1] - lines[i][1][1] * lines[i + 1][1][0], lines[i][1] @ lines[i + 1][1])
+                          for i in range(len(lines) - 1)])
+        dom = np.sign(turns.sum()) or 1.0
+        best = None
+        for i, t in enumerate(turns):
+            opposite = np.sign(t) != dom and abs(t) > 1e-9
+            if abs(t) >= np.radians(min_turn_deg) and not opposite:
+                continue
+            g = (groups[i][0], groups[i + 1][1])
+            ln, sel = line(g)
+            if ln is None:
+                continue
+            c, d = ln
+            dev = float(np.percentile(np.abs((sel - c) @ np.array([-d[1], d[0]])), 95))
+            lim = concave_dev_mm if opposite else merge_dev_mm
+            if dev <= lim and (best is None or dev < best[0]):
+                best = (dev, i)
+        if best is None:
+            break
+        i = best[1]
+        groups[i:i + 2] = [(groups[i][0], groups[i + 1][1])]
+        merged += 1
+    lines = [line(g)[0] for g in groups]
+    verts = []
+    for i in range(len(lines) - 1):
+        p = lines_intersect(*lines[i], *lines[i + 1])
+        cut = T[np.argmin(np.abs(s - groups[i][1]))]
+        if p is None or np.linalg.norm(p - cut) > 3.0:
+            p = cut
+        verts.append(p)
+    c0, d0 = lines[0]
+    c1, d1 = lines[-1]
+    start = c0 + ((T[0] - c0) @ d0) * d0
+    end = c1 + ((T[-1] - c1) @ d1) * d1
+    turns = [np.arctan2(lines[i][1][0] * lines[i + 1][1][1] - lines[i][1][1] * lines[i + 1][1][0], lines[i][1] @ lines[i + 1][1]) for i in range(len(lines) - 1)]
+    dom = np.sign(sum(turns)) or 1.0
+    return {'verts': np.vstack([start[None], np.array(verts).reshape(-1, 2), end[None]]), 'lines': lines, 'groups': groups, 'merged': merged,
+            'opposite_turns_kept': int(sum(1 for t in turns if np.sign(t) != dom and abs(t) > 1e-9))}
+
+
+def select_radii(path: np.ndarray, raw: np.ndarray, r_min: float = 0.5, r_max: float = 60.0, slack_mm: float = 0.01, clip: float = 0.49) -> np.ndarray:
+    """One fillet radius per interior vertex: the largest radius (r_min..r_max, clipped by clip x the adjacent pieces) whose local rounded
+    corner fits the raw outline points near the vertex as well as the best radius (rms within slack_mm). A sharp corner keeps a small
+    radius; a polygonal stretch over a round outline becomes a chain of tangent arcs (G1)."""
+    cands = np.unique(np.r_[r_min, np.geomspace(max(r_min, 0.1), r_max, 40)])
+    out = []
+    for i in range(1, len(path) - 1):
+        a, b, c = path[i - 1], path[i], path[i + 1]
+        la, lc = np.linalg.norm(a - b), np.linalg.norm(c - b)
+        rho = clip * min(la, lc)
+        near = raw[np.linalg.norm(raw - b, axis=1) <= rho + 0.25]
+        if len(near) < 5:
+            out.append(r_min)
+            continue
+        rms = []
+        for R in cands:
+            loc = fillet_open(np.array([a, b, c]), R, clip=clip)
+            rms.append(float(np.sqrt((seg_dist(near, loc) ** 2).mean())))
+        rms = np.array(rms)
+        ok = rms <= rms.min() + slack_mm
+        out.append(float(cands[ok].max()))
+    return np.array(out)
+
+
+def outline_roughness(P: np.ndarray, step: float = 0.2, win_mm: float = 6.0, kappa_win_mm: float = 3.0, kappa_eps: float = 0.02,
+                      corner_kappa: float = 0.1) -> dict[str, Any]:
+    """Roughness of a plan outline (open polyline, mm): resampled at step; smooth_dev = distance from its Savitzky-Golay smoothed fit
+    (cubic, win_mm window) on the straight / gently curved stretches (stations farther than win_mm / 2 from a corner, |curvature| >
+    corner_kappa); curvature sign changes = changes between turning left and right (|curvature| > kappa_eps, cubic SG over kappa_win_mm).
+    A clean outline of straight lines and constant-radius arcs that turns one way has smooth_dev ~ 0 and no sign change."""
+    from scipy.signal import savgol_filter
+    Q, _ = resample(np.asarray(P, float), step)
+    w = int(round(win_mm / step)) | 1
+    kw = int(round(kappa_win_mm / step)) | 1
+    if len(Q) < w + 2:
+        return {'stations': int(len(Q)), 'smooth_dev_max_mm': 0.0, 'smooth_dev_p95_mm': 0.0, 'curvature_sign_changes': 0, 'note': 'too short to measure'}
+    d1 = np.c_[savgol_filter(Q[:, 0], kw, 3, deriv=1), savgol_filter(Q[:, 1], kw, 3, deriv=1)]
+    d2 = np.c_[savgol_filter(Q[:, 0], kw, 3, deriv=2), savgol_filter(Q[:, 1], kw, 3, deriv=2)]
+    kap = (d1[:, 0] * d2[:, 1] - d1[:, 1] * d2[:, 0]) / (np.linalg.norm(d1, axis=1) ** 3 + 1e-12) / step
+    Qs = np.c_[savgol_filter(Q[:, 0], w, 3), savgol_filter(Q[:, 1], w, 3)]
+    dev = np.linalg.norm(Q - Qs, axis=1)
+    corner = maximum_filter1d((np.abs(kap) > corner_kappa).astype(np.uint8), size=w) > 0
+    flat = ~corner
+    flat[: w // 2] = False
+    flat[-(w // 2):] = False
+    sg = np.sign(kap) * (np.abs(kap) > kappa_eps)
+    sg[: kw // 2] = 0                                   # Savitzky-Golay end effect: the half window at each open end is not judged
+    sg[len(sg) - kw // 2:] = 0
+    nzi = np.flatnonzero(sg != 0)
+    nz = sg[nzi]
+    chg = nzi[1:][np.diff(nz) != 0] if len(nz) > 1 else np.zeros(0, int)
+    return {'stations': int(len(Q)), 'smooth_dev_max_mm': float(dev[flat].max()) if flat.any() else 0.0,
+            'smooth_dev_p95_mm': float(np.percentile(dev[flat], 95)) if flat.any() else 0.0,
+            'curvature_sign_changes': int(len(chg)), 'sign_change_xy': Q[chg].round(2).tolist()[:20], 'curvature_max_per_mm': float(np.abs(kap).max()),
+            'method': {'step_mm': step, 'smooth_window_mm': win_mm, 'curvature_window_mm': kappa_win_mm, 'kappa_eps_per_mm': kappa_eps, 'corner_kappa_per_mm': corner_kappa}}
+
+
 # ------------------------------------------------------------------ input
 def read_labels(path: Path, n_faces: int) -> dict[str, np.ndarray]:
     """Region face ids by role. .json: {role: [ids]} or {"regions": {role: {"face_ids": [...]} | [...]}}; .npz: face_labels + codes ('name=code')."""
@@ -356,7 +520,7 @@ def run(req: dict[str, Any]) -> dict[str, Any]:
     t_start = time.time()
     L = _load_libs()
     tm, mf, shp = L.tm, L.mf, L.shp
-    P = req['params']
+    P = {**DEFAULTS, **req['params']}
     W, DEPTH, OVERLAP = float(P['slot_width_mm']), float(P['slot_depth_mm']), float(P['panel_overlap_mm'])
     warnings: list[dict[str, Any]] = []
     src_mesh = tm.load(req['input_path'], force='mesh', process=False)
@@ -406,6 +570,7 @@ def run(req: dict[str, Any]) -> dict[str, Any]:
     wx_range = (window['hole'].bounds[0], window['hole'].bounds[2]) if window else None
     # ---- gap start lines
     gap = _fit_gap_lines(shp, PA, PB, xmin, xmax, wx_range, float(P['gap_front_margin_mm']))
+    _snap_gap_to_plane(gap, P.get('mirror_plane'), xmin, xmax, float(P['gap_snap_tol_mm']))
     if window:
         _finish_window(window, V, F, zf, gap, P, shp, warnings)
         if window.get('failed'):
@@ -497,9 +662,21 @@ def run(req: dict[str, Any]) -> dict[str, Any]:
         part.export(out_dir / fn)
         regions_out[name] = {'file': fn, 'faces': int(sel.sum())}
     files['regions'] = regions_out
+    layout = {'schema': 'click_slot_layout/1', 'frame': 'input mesh frame (mm): x front, y left, z up, plate z 0',
+              'note': 'Plan (x, y) start lines of the slots, for brain_mouse_click_slots (B-rep). The slot band lies on slot_side of the travel direction.',
+              'slot_width_mm': W, 'slot_depth_mm': DEPTH,
+              'perimeter': {'points': np.asarray(per['A'], float).round(5).tolist(), 'slot_side': 'left' if per['out'] > 0 else 'right',
+                            'allowed_curvature_sign_changes': 2 * int(per['symmetry'].get('opposite_turns_kept', 0)), 'symmetry_mode': per['symmetry']['mode']},
+              'centre_gap': {'segments': [[[float(x0), float(gl[0] * x0 + gl[1])], [float(x1), float(gl[0] * x1 + gl[1])]] for _, x0, x1 in runs if x1 - x0 >= 0.5],
+                             'width_mm': 2 * W, 'line': {'slope': float(gl[0]), 'intercept_y': float(gl[1])}},
+              'window': ({'corners_TR_TL_BL_BR': window['corners_TR_TL_BL_BR'], 'corner_radius_mm': window['corner_radius_mm'], 'rim_plane': window['rim_plane'],
+                          'floor_plane': window['floor_plane']} if window else None)}
+    (out_dir / 'slot_layout.json').write_text(json.dumps(layout, default=_json_default), encoding='utf-8')
+    files['layout'] = {'file': 'slot_layout.json'}
     # ---- measurements
     metrics = _measure(tm, shp, src, res, fid, N, V, F, sweeps, infos, window, gap, per, runs, cutters, DEPTH, W)
     metrics['volume'] = {'before_mm3': float(src.volume), 'after_mm3': float(res.volume), 'removed_mm3': float(src.volume - res.volume)}
+    metrics['outline_quality'] = outline_quality(per, window, gap, P)
     metrics['watertight'] = {'before': bool(src.is_watertight), 'after': bool(res.is_watertight)}
     metrics['faces'] = {'before': int(N), 'after': int(len(res.faces))}
     metrics['cleanup'] = cleanup
@@ -518,15 +695,44 @@ def run(req: dict[str, Any]) -> dict[str, Any]:
     params_used = {'slot_width_mm': W, 'slot_depth_mm': DEPTH, 'panel_overlap_mm': OVERLAP, 'perimeter_clearance_mm': float(P['perimeter_clearance_mm']),
                    'fit_tolerance_mm': float(P['fit_tolerance_mm']), 'min_wall_mm': min_wall, 'rebuild_window': bool(window),
                    'fillet_radius_mm': per['R'], 'fillet_radius_source': 'given' if P.get('fillet_radius_mm') else 'fitted to the outline',
-                   'gap_clear_mm': float(P['gap_clear_mm']), 'gap_front_margin_mm': float(P['gap_front_margin_mm']), 'gap_overshoot_mm': float(P['gap_overshoot_mm'])}
+                   'gap_clear_mm': float(P['gap_clear_mm']), 'gap_front_margin_mm': float(P['gap_front_margin_mm']), 'gap_overshoot_mm': float(P['gap_overshoot_mm']),
+                   **{k: P[k] for k in ('spike_width_mm', 'symmetric_outline', 'symmetry_tol_mm', 'min_turn_deg', 'merge_dev_mm', 'concave_dev_mm', 'overhang_mm', 'max_overhang_mm',
+                                        'max_overhang_length_mm', 'roughness_max_dev_mm', 'window_on_gap_tol_mm', 'min_corner_radius_mm', 'window_source',
+                                        'window_corner_radius_mm', 'window_corner_frac', 'window_clear_mm', 'window_min_corner_radius_mm', 'window_aspect_min', 'window_aspect_max')}}
     fit = {'upper_click': upper, 'lower_click': lower, 'gap_start_lines': {k: {'slope': gap[k][0], 'intercept_y': gap[k][1], **gap[k + '_fit']} for k in ('upper', 'lower')},
-           'gap_mid_line': {'slope': gap['mid'][0], 'intercept_y': gap['mid'][1]}, 'gap_lines_merged': bool(gap['merged']), 'gap_line_separation_mm': gap['line_separation_mm'],
+           'gap_mid_line': {'slope': gap['mid'][0], 'intercept_y': gap['mid'][1]}, 'gap_mirror_plane': gap.get('mirror_plane'), 'gap_lines_merged': bool(gap['merged']), 'gap_line_separation_mm': gap['line_separation_mm'],
            'perimeter': {'vertices_after_fit': int(len(per['path'])), 'fillet_radius_mm': per['R'], 'fit_rms_mm': per['rms'], 'fit_max_mm': per['max'], 'stations': int(len(per['A'])),
                          'outward_sign_along_left_normal': per['out'], 'encroachment': per['encroachment']},
-           'window': ({k: window[k] for k in ('corners_TR_TL_BL_BR', 'corner_radius_mm', 'dims_mm', 'rim_plane', 'floor_plane', 'gap_x_range', 'edge_fit_dev_mm', 'source', 'min_wall_raise_mm')} if window else None),
+           'window': ({k: window[k] for k in ('corners_TR_TL_BL_BR', 'corner_radius_mm', 'dims_mm', 'rim_plane', 'floor_plane', 'gap_x_range', 'edge_fit_dev_mm', 'source', 'rim_detection', 'min_wall_raise_mm', 'gap_alignment', 'side_fits_uv', 'corner_fit_rms_mm')} if window else None),
            'slot_stations': {k: infos[i]['n'] for i, k in enumerate([x['tag'] for x in infos])}}
     return {'status': 'OK', 'worker': WORKER_VERSION, 'files': files, 'metrics': metrics, 'fit': fit, 'params_used': params_used, 'warnings': warnings,
             'seconds': round(time.time() - t_start, 1), 'libs': {'manifold3d': getattr(mf, '__version__', None), 'shapely': shp.__version__, 'trimesh': tm.__version__}}
+
+
+def outline_quality(per: dict[str, Any], window: dict[str, Any] | None, gap: dict[str, Any], P: dict[str, Any]) -> dict[str, Any]:
+    """Gate inputs: perimeter roughness (smooth_dev, curvature sign changes; allowed = 2 per deliberate concave corner the regular fit kept),
+    and the window centre / axis relative to the centre-gap line."""
+    allowed = 2 * int(per['symmetry'].get('opposite_turns_kept', 0))
+    r = per['roughness']
+    q = {'perimeter': {**r, 'allowed_sign_changes': allowed, 'max_dev_limit_mm': float(P['roughness_max_dev_mm']),
+                       'ok': bool(r['smooth_dev_max_mm'] <= float(P['roughness_max_dev_mm']) and r['curvature_sign_changes'] <= allowed)},
+         'perimeter_symmetry': per['symmetry']}
+    if window:
+        C = np.asarray(window['corners_TR_TL_BL_BR'], float)
+        m_, b_ = float(gap['mid'][0]), float(gap['mid'][1])
+        c = C.mean(0)
+        off = float((c[1] - (m_ * c[0] + b_)) / np.hypot(1.0, m_))
+        ax = C[0] - C[1]
+        ang = float(np.degrees(abs(np.arctan2(ax[1], ax[0]) - np.arctan(m_))))
+        on = bool(window.get('gap_alignment', {}).get('on_gap_line'))
+        q['window_gap'] = {'centre_offset_mm': off, 'axis_angle_deg': ang, 'on_gap_line': on, 'ok': bool((not on) or (abs(off) <= 1e-3 and ang <= 0.01))}
+        L_, H_ = float(window['dims_mm']['width_x']), float(window['dims_mm']['height_y'])
+        Rw_, asp = float(window['corner_radius_mm']), max(L_, H_) / max(min(L_, H_), 1e-9)
+        rmin = min(float(P['window_min_corner_radius_mm']), 0.45 * min(L_, H_))
+        q['window_shape'] = {'corner_radius_mm': Rw_, 'length_mm': L_, 'width_mm': H_, 'aspect': asp, 'min_corner_radius_mm': rmin,
+                             'aspect_range': [float(P['window_aspect_min']), float(P['window_aspect_max'])],
+                             'ok': bool(Rw_ >= rmin - 1e-9 and float(P['window_aspect_min']) <= asp <= float(P['window_aspect_max']))}
+    return q
 
 
 # ------------------------------------------------------------------ stages
@@ -583,6 +789,30 @@ def _fit_gap_lines(shp, PA, PB, xmin: float, xmax: float, wx_range, front_margin
     return out
 
 
+def _snap_gap_to_plane(gap: dict[str, Any], plane: dict[str, Any] | None, xmin: float, xmax: float, tol: float) -> None:
+    """With a mirror plane (n . p = d, taken at z = 0 like brain_mouse_click_slots) the centre-gap line is moved onto the plane's plan line when
+    it lies within tol mm of it over the click x range (coarse test; otherwise kept and reported)."""
+    if not plane:
+        gap['mirror_plane'] = None
+        return
+    n = np.asarray(plane['normal'], float)
+    n = n / np.linalg.norm(n)
+    d = float(plane['d'])
+    if abs(n[1]) < 0.7:
+        gap['mirror_plane'] = {'snapped': False, 'note': 'mirror plane is not across y (frame x front, y left)'}
+        return
+    ps, pi = -n[0] / n[1], d / n[1]
+    xx = np.array([xmin, xmax])
+    off = np.abs(np.polyval(gap['mid'], xx) - np.polyval([ps, pi], xx)) / np.hypot(1.0, ps)
+    ok = bool(off.max() <= tol)
+    gap['mirror_plane'] = {'snapped': ok, 'max_offset_mm': float(off.max()), 'tolerance_mm': tol, 'line': {'slope': float(ps), 'intercept_y': float(pi)}}
+    if ok:
+        dm, db = ps - gap['mid'][0], pi - gap['mid'][1]
+        for k in ('upper', 'lower'):
+            gap[k] = (gap[k][0] + dm, gap[k][1] + db)
+        gap['mid'] = (float(ps), float(pi))
+
+
 def _fit_window(shp, V, F, wheel_ids, union, PA, PB, zf, warnings, P) -> dict[str, Any] | None:
     wxy = V[F[wheel_ids]][:, :, :2].reshape(-1, 2)
     wc = shp.Point(wxy.mean(0))
@@ -597,48 +827,215 @@ def _fit_window(shp, V, F, wheel_ids, union, PA, PB, zf, warnings, P) -> dict[st
     if best is None or best[0] > 5.0:
         warnings.append({'code': 'WINDOW_NOT_FOUND', 'note': 'No hole of the click outline holds the wheel; the window is not rebuilt.'})
         return None
-    return {'hole': best[1], 'wheel_xy': wxy, 'PA': PA, 'PB': PB}
+    return {'hole': best[1], 'wheel_xy': wxy, 'PA': PA, 'PB': PB, 'wheel_ids': np.asarray(wheel_ids)}
+
+
+def _window_rim(V, F, wheel_ids, hole, drop_mm: float = 0.3, open_mm: float = 1.0):
+    """Rim of the wheel well from the geometry: top height field without the wheel faces; the well = pixels without a surface or deeper than
+    drop_mm below the quadratic surface fitted to a ring 2-5 mm outside the label hole (= the top edge of the rim chamfer); opened by open_mm (drops thin grooves such as the centre gap),
+    component holding the hole centre, holes filled. Returns (boundary points, info) or (None, reason)."""
+    from scipy.ndimage import binary_fill_holes, binary_opening, label as nd_label
+    from shapely import contains_xy
+    keep = np.ones(len(F), bool)
+    keep[np.asarray(wheel_ids, np.int64)] = False
+    x0, y0, x1, y1 = hole.bounds
+    m = 6.0
+    xs, ys, Z = raster_top(V, F[keep], x0 - m, x1 + m, y0 - m, y1 + m)
+    gx, gy = np.meshgrid(xs, ys)
+    pts = np.c_[gx.ravel(), gy.ravel()]
+    inside = contains_xy(hole, pts[:, 0], pts[:, 1]).reshape(Z.shape)
+    dist = distance_transform_edt(~inside) * PIXEL
+    ring = (dist > 2.0) & (dist < 5.0) & np.isfinite(Z)
+    if ring.sum() < 200:
+        return None, 'too few top-surface pixels round the label hole'
+    cx_, cy_ = float(gx[ring].mean()), float(gy[ring].mean())
+    def basis(x, y):
+        u, v = x - cx_, y - cy_
+        return np.stack([np.ones_like(u), u, v, u * u, u * v, v * v], -1)
+    A = basis(gx[ring], gy[ring])
+    zr = Z[ring]
+    ok = np.ones(len(zr), bool)
+    for _ in range(3):
+        coef, *_ = np.linalg.lstsq(A[ok], zr[ok], rcond=None)
+        res = zr - A @ coef
+        ok = np.abs(res) < max(3.0 * res[ok].std(), 0.05)
+    plane = basis(gx, gy) @ coef
+    deep = ~np.isfinite(Z) | (Z < plane - drop_mm)
+    r = max(1, int(round(open_mm / PIXEL)))
+    yy, xx = np.mgrid[-r:r + 1, -r:r + 1]
+    deep = binary_opening(deep, structure=(xx ** 2 + yy ** 2) <= r * r)
+    lab, n = nd_label(deep)
+    c = np.asarray(hole.centroid.coords[0])
+    ci, cj = int(round((c[1] - ys[0]) / PIXEL)), int(round((c[0] - xs[0]) / PIXEL))
+    if not (0 <= ci < Z.shape[0] and 0 <= cj < Z.shape[1]) or lab[ci, cj] == 0:
+        return None, 'the label hole centre is not inside a well deeper than drop_mm'
+    comp = lab == lab[ci, cj]
+    # the window must also clear the protruding wheel: footprint box of wheel vertices higher than drop_mm above the ring surface + clear_mm
+    WV = V[F[np.asarray(wheel_ids, np.int64)]].reshape(-1, 3)
+    hi = WV[WV[:, 2] > basis(WV[:, 0], WV[:, 1]) @ coef + drop_mm]
+    clear_mm = 0.5
+    well = binary_fill_holes(comp)
+    well_edge = well & ~(np.roll(well, 1, 0) & np.roll(well, -1, 0) & np.roll(well, 1, 1) & np.roll(well, -1, 1))
+    box = footprint = hull = None
+    if len(hi):
+        bx0, by0 = hi[:, :2].min(0) - clear_mm
+        bx1, by1 = hi[:, :2].max(0) + clear_mm
+        comp |= (gx >= bx0) & (gx <= bx1) & (gy >= by0) & (gy <= by1)
+        box = [float(bx0), float(by0), float(bx1), float(by1)]
+        footprint = [float(v) for v in (*(hi[:, :2].min(0)), *(hi[:, :2].max(0)))]
+        if len(hi) >= 3:
+            from scipy.spatial import ConvexHull
+            try:
+                hull = hi[ConvexHull(hi[:, :2]).vertices, :2].round(4).tolist()
+            except Exception:
+                hull = None
+    comp = binary_fill_holes(comp)
+    if comp[0].any() or comp[-1].any() or comp[:, 0].any() or comp[:, -1].any():
+        return None, 'the well reaches the search box edge (not a closed window)'
+    area = comp.sum() * PIXEL ** 2
+    if not hole.area * 0.8 <= area <= hole.area * 4.0:
+        return None, f'well area {area:.1f} mm2 is not comparable with the label hole ({hole.area:.1f} mm2)'
+    edge = comp & ~(np.roll(comp, 1, 0) & np.roll(comp, -1, 0) & np.roll(comp, 1, 1) & np.roll(comp, -1, 1))
+    B = np.c_[gx[edge], gy[edge]]
+    return B, {'source': 'rim of the wheel well (top height field without the wheel faces, drop >= %.1f mm below the ring surface)' % drop_mm,
+               'well_area_mm2': float(area), 'label_hole_area_mm2': float(hole.area), 'rim_points': int(len(B)), 'wheel_box_xy': box, 'wheel_footprint_xy': footprint, 'wheel_hull_xy': hull,
+               '_well_edge': np.c_[gx[well_edge], gy[well_edge]]}
 
 
 def _finish_window(win: dict[str, Any], V, F, zf, gap, P, shp, warnings) -> None:
     hole, PA, PB = win['hole'], win['PA'], win['PB']
-    x0, y0, x1, y1 = hole.bounds
-    cx, cy, w, h = (x0 + x1) / 2, (y0 + y1) / 2, x1 - x0, y1 - y0
-    raw = np.vstack([_densify(shp, PA.exterior, 0.05), _densify(shp, PB.exterior, 0.05)])
-    d = shp.distance(hole.exterior, shp.points(raw))
-    raw = raw[d < 0.35]
-    gy = gap['mid'][0] * raw[:, 0] + gap['mid'][1]
-    gapm = np.abs(raw[:, 1] - gy) < 1.0
-    sel = {
-        'top': raw[(raw[:, 1] > cy) & (np.abs(raw[:, 0] - cx) < 0.3 * w)],
-        'bottom': raw[(raw[:, 1] < cy) & (np.abs(raw[:, 0] - cx) < 0.3 * w)],
-        'left': raw[(raw[:, 0] < cx) & (np.abs(raw[:, 1] - cy) < 0.28 * h) & ~gapm],
-        'right': raw[(raw[:, 0] > cx) & (np.abs(raw[:, 1] - cy) < 0.28 * h) & ~gapm]}
-    for k, pts in sel.items():
-        if len(pts) < 8:
-            warnings.append({'code': 'WINDOW_EDGE_UNSUPPORTED', 'edge': k, 'note': 'Too few outline points on this window edge; the window is not rebuilt.'})
-            win.clear()
-            win['failed'] = True
-            return
-    pt = robust_line(sel['top'][:, 0], sel['top'][:, 1])
-    pb = robust_line(sel['bottom'][:, 0], sel['bottom'][:, 1])
-    pl = robust_line(sel['left'][:, 1], sel['left'][:, 0])        # x = a y + b
-    pr = robust_line(sel['right'][:, 1], sel['right'][:, 0])
+    rim, rinfo = _window_rim(V, F, win['wheel_ids'], hole) if win.get('wheel_ids') is not None else (None, 'no wheel faces')
+    well_edge = rinfo.pop('_well_edge', None) if isinstance(rinfo, dict) else None
+    # G1.5 window rule (generic): rounded rectangle in the centre-gap frame (u along the gap line, v across it).
+    #  sides  = outer envelope of the wheel-well rim (geometry) and the label notch of the click outline (window_source 'envelope'; or
+    #           'rim' / 'labels' only); the window only grows, half height symmetric about the gap line when on it;
+    #  radius = best fit to the label-notch corners (else the well-rim corners), <= 0.45 x the short side; window_corner_radius_mm overrides;
+    #  cover  = the sides grow (never the radius shrinks) until the protruding wheel footprint + window_clear_mm lies inside the rounded corners.
+    m_, b_ = float(gap['mid'][0]), float(gap['mid'][1])
+    nrm_ = np.hypot(1.0, m_)
+    ax_, ay_, o_ = np.array([1.0, m_]) / nrm_, np.array([-m_, 1.0]) / nrm_, np.array([0.0, b_])
+    to_uv = lambda X: np.c_[(X - o_) @ ax_, (X - o_) @ ay_]
+    lab_raw = np.vstack([_densify(shp, PA.exterior, 0.05), _densify(shp, PB.exterior, 0.05)])
+    lab_raw = lab_raw[shp.distance(hole.exterior, shp.points(lab_raw)) < 0.35]
+    if rim is None:
+        warnings.append({'code': 'WINDOW_RIM_FROM_LABELS', 'note': f'Wheel-well rim not found from the geometry ({rinfo}); the window is fitted to the '
+                                                               'label hole of the click outline (may be smaller than the real rim).'})
+        rinfo = None
+    mode = str(P.get('window_source', 'envelope'))
+    srcs = {}
+    if rim is not None and mode in ('envelope', 'rim'):
+        srcs['rim'] = to_uv(rim)
+    if (mode in ('envelope', 'labels') or not srcs) and len(lab_raw) >= 32:
+        srcs['labels'] = to_uv(lab_raw)
+    q = float(P.get('window_rim_quantile', 95.0))
+    sides, sel, fits = None, {}, {}
+    for name, U in srcs.items():
+        u0, v0 = U.min(0)
+        u1, v1 = U.max(0)
+        cu, cv, w, h = (u0 + u1) / 2, (v0 + v1) / 2, u1 - u0, v1 - v0
+        gm = np.abs(U[:, 1]) < 1.0
+        ss = {'top': U[(U[:, 1] > cv) & (np.abs(U[:, 0] - cu) < 0.3 * w), 1], 'bottom': U[(U[:, 1] < cv) & (np.abs(U[:, 0] - cu) < 0.3 * w), 1],
+              'left': U[(U[:, 0] < cu) & (np.abs(U[:, 1] - cv) < 0.28 * h) & ~gm, 0], 'right': U[(U[:, 0] > cu) & (np.abs(U[:, 1] - cv) < 0.28 * h) & ~gm, 0]}
+        if min(len(v) for v in ss.values()) < 8:
+            continue
+        if name == 'rim':        # scan noise / wheel leftovers only make the well smaller: outer envelope (quantile q) of the rim points
+            f = {'top': np.percentile(ss['top'], q), 'bottom': np.percentile(ss['bottom'], 100 - q), 'left': np.percentile(ss['left'], 100 - q),
+                 'right': np.percentile(ss['right'], q)}
+        else:                    # label notch edge = a line: median
+            f = {k: float(np.median(v)) for k, v in ss.items()}
+        fits[name] = {k: float(v) for k, v in f.items()}
+        sel[name] = ss
+        sides = dict(f) if sides is None else {'top': max(sides['top'], f['top']), 'bottom': min(sides['bottom'], f['bottom']),
+                                               'left': min(sides['left'], f['left']), 'right': max(sides['right'], f['right'])}
+    if sides is None:
+        warnings.append({'code': 'WINDOW_EDGE_UNSUPPORTED', 'note': 'Too few outline points on a window edge; the window is not rebuilt.'})
+        win.clear()
+        win['failed'] = True
+        return
+    sides = {k: float(v) for k, v in sides.items()}
+    off_perp = 0.5 * (sides['top'] + sides['bottom'])
+    on_gap = abs(off_perp) <= float(P['window_on_gap_tol_mm'])
 
-    def corner(pa, pc):
-        y = (pa[0] * pc[1] + pa[1]) / (1 - pa[0] * pc[0])
-        return np.array([pc[0] * y + pc[1], y])
-    C = np.array([corner(pt, pr), corner(pt, pl), corner(pb, pl), corner(pb, pr)])      # TR, TL, BL, BR
-    cp = raw[(np.linalg.norm(raw[:, None, :] - C[None], axis=2).min(1) < 5.0) & ~gapm]
-    rmax = 0.45 * min(np.linalg.norm(C[0] - C[1]), np.linalg.norm(C[1] - C[2]))
-    best = (1e9, 0.5)
+    def symm(sd):
+        if on_gap:
+            hh = max(sd['top'], -sd['bottom'])
+            sd['top'], sd['bottom'] = hh, -hh
+    symm(sides)
+    gap_align = {'fitted_centre_offset_mm': float(off_perp), 'on_gap_line': bool(on_gap), 'tolerance_mm': float(P['window_on_gap_tol_mm'])}
+
+    def corners_xy(sd):
+        Cu = np.array([[sd['right'], sd['top']], [sd['left'], sd['top']], [sd['left'], sd['bottom']], [sd['right'], sd['bottom']]])
+        return o_ + Cu[:, :1] * ax_ + Cu[:, 1:] * ay_                                # TR, TL, BL, BR
+    C = corners_xy(sides)
+    # corner radius from the label notch corners (the drawn window), else from the well rim (without the wheel box)
+    if 'labels' in srcs:
+        cp, cp_src = lab_raw[np.abs(srcs['labels'][:, 1]) > 1.0], 'label notch corners'
+    else:
+        cp, cp_src = (well_edge if well_edge is not None and len(well_edge) >= 8 else rim), 'well rim corners'
+    cp = cp[np.linalg.norm(cp[:, None, :] - C[None], axis=2).min(1) < 5.0]
     if len(cp):
-        for Rr in np.arange(0.5, min(6.0, rmax) + 1e-9, 0.25):
+        cp = cp[seg_dist(cp, C, closed=True) < 1.5]
+    short_ = lambda sd: min(sd['right'] - sd['left'], sd['top'] - sd['bottom'])
+    rmax = 0.45 * short_(sides)
+    best = (float('nan'), 0.5)
+    given = P.get('window_corner_radius_mm')
+    # the label notch is the drawn window only when it is about as large as the window (>= 90 % of its area); then its corner radius is
+    # fitted; otherwise (automatic labels hug the wheel) radius rule = window_corner_frac x half the short side (near-obround)
+    lf = fits.get('labels')
+    lab_ok = bool(lf) and (lf['right'] - lf['left']) * (lf['top'] - lf['bottom']) >= 0.9 * (sides['right'] - sides['left']) * (sides['top'] - sides['bottom'])
+    r_rule = 'override' if given else ('label notch corner fit' if lab_ok and len(cp) else 'window_corner_frac x half short side')
+    if given:
+        best = (float('nan'), float(min(float(given), rmax)))
+    elif r_rule == 'label notch corner fit':
+        best = (1e9, 0.5)
+        for Rr in np.arange(0.5, min(8.0, rmax) + 1e-9, 0.25):
             e = seg_dist(cp, fillet_closed(C, Rr), closed=True)
             rms = float(np.sqrt((e ** 2).mean()))
             if rms < best[0] - 1e-9:
                 best = (rms, float(Rr))
-    Rw = best[1]
+    else:
+        best = (float('nan'), float(min(rmax, float(P['window_corner_frac']) * 0.5 * short_(sides))))
+    Rw = best[1] if given else max(best[1], min(float(P['window_min_corner_radius_mm']), rmax))   # never a sharp window corner
+    ref = dict(sides)
+    box = (rinfo or {}).get('wheel_footprint_xy') if isinstance(rinfo, dict) else None
+    hull = (rinfo or {}).get('wheel_hull_xy') if isinstance(rinfo, dict) else None
+    if box:
+        cl = float(P.get('window_clear_mm', 0.5))
+        if hull and len(hull) >= 3:      # plan outline of the protruding wheel (convex hull) + clearance: round tyre ends stay round
+            from shapely.geometry import Polygon as _Pg
+            Bp = to_uv(np.asarray(_Pg(hull).buffer(cl, 8).exterior.coords)[:-1])
+        else:
+            Bu = to_uv(np.array([[box[0], box[1]], [box[0], box[3]], [box[2], box[1]], [box[2], box[3]]]))
+            Bp = np.array([[Bu[:, 0].min() - cl, Bu[:, 1].min() - cl], [Bu[:, 0].min() - cl, Bu[:, 1].max() + cl],
+                           [Bu[:, 0].max() + cl, Bu[:, 1].min() - cl], [Bu[:, 0].max() + cl, Bu[:, 1].max() + cl]])
+        for _ in range(8):
+            before = dict(sides)
+            for bu_, bv_ in Bp:
+                ku = 'right' if bu_ > 0.5 * (sides['left'] + sides['right']) else 'left'
+                kv = 'top' if bv_ > 0.5 * (sides['top'] + sides['bottom']) else 'bottom'
+                du = (sides['right'] - bu_) if ku == 'right' else (bu_ - sides['left'])
+                dv = (sides['top'] - bv_) if kv == 'top' else (bv_ - sides['bottom'])
+                gu, gv = max(0.0, -du), max(0.0, -dv)
+                du, dv = du + gu, dv + gv
+                a_, b2 = Rw - du, Rw - dv
+                if a_ > 0 and b2 > 0 and a_ * a_ + b2 * b2 > Rw * Rw:     # the footprint corner sits in the rounded-off corner: grow both sides
+                    disc = (a_ + b2) ** 2 - 2 * (a_ * a_ + b2 * b2 - Rw * Rw)
+                    d_ = 0.5 * ((a_ + b2) - np.sqrt(max(disc, 0.0)))
+                    gu, gv = gu + d_, gv + d_
+                sides[ku] += gu if ku == 'right' else -gu
+                sides[kv] += gv if kv == 'top' else -gv
+            symm(sides)
+            if r_rule == 'window_corner_frac x half short side':
+                Rw = float(min(0.45 * short_(sides), float(P['window_corner_frac']) * 0.5 * short_(sides)))
+            if all(abs(sides[k] - before[k]) < 1e-6 for k in sides):
+                break
+        C = corners_xy(sides)
+    grown = {k: float(abs(sides[k] - ref[k])) for k in sides}
+    x0, y0 = C.min(0)
+    x1, y1 = C.max(0)
+    src_note = 'G1.5 window: sides = outer envelope of %s + wheel plan outline with %.2f mm clearance; corner radius: %s' % (
+        ' + '.join(srcs), float(P.get('window_clear_mm', 0.5)), r_rule if r_rule != 'label notch corner fit' else r_rule + ' (' + cp_src + ')')
+    win['_fits_uv'] = {'sources': fits, 'final_sides_uv': {k: float(v) for k, v in sides.items()}, 'wheel_cover_growth_mm': grown}
     poly = fillet_closed(C, Rw)
     from shapely.geometry import Polygon
     from shapely.geometry.polygon import orient
@@ -655,16 +1052,14 @@ def _finish_window(win: dict[str, Any], V, F, zf, gap, P, shp, warnings) -> None
     line_mid = shp.LineString([(x0 - 5, gap['mid'][0] * (x0 - 5) + gap['mid'][1]), (x1 + 5, gap['mid'][0] * (x1 + 5) + gap['mid'][1])])
     seg = pg.intersection(line_mid)
     gx = seg.bounds
-    dev = {}
-    for k, pts, (ax, pp) in (('top', sel['top'], (0, pt)), ('bottom', sel['bottom'], (0, pb)), ('left', sel['left'], (1, pl)), ('right', sel['right'], (1, pr))):
-        tt, vv = (pts[:, 0], pts[:, 1]) if ax == 0 else (pts[:, 1], pts[:, 0])
-        r = np.abs(vv - np.polyval(pp, tt)) / np.sqrt(1 + pp[0] ** 2)
-        dev[k] = {'max': float(r.max()), 'rms': float(np.sqrt((r ** 2).mean()))}
+    fu = win.pop('_fits_uv')
+    dev = {name: {k: {'p50_mm': float(np.median(np.abs(v - fu['final_sides_uv'][k]))), 'max_mm': float(np.abs(v - fu['final_sides_uv'][k]).max())}
+                  for k, v in ss.items()} for name, ss in sel.items()}
     FLOOR = float(coef[0])
-    win.update({'poly': poly, 'poly_geom': pg, 'corners_TR_TL_BL_BR': C.round(4).tolist(), 'corner_radius_mm': Rw, 'corner_fit_rms_mm': best[0],
+    win.update({'poly': poly, 'poly_geom': pg, 'corners_TR_TL_BL_BR': C.round(4).tolist(), 'corner_radius_mm': Rw, 'corner_fit_rms_mm': (float(best[0]) if np.isfinite(best[0]) else None),
                 'dims_mm': {'width_x': float(np.linalg.norm(C[0] - C[1])), 'height_y': float(np.linalg.norm(C[1] - C[2]))},
                 'rim_plane': {'a': float(coef[0]), 'b': float(coef[1]), 'c': float(coef[2]), 'resid_max_mm': float(np.abs(resid).max()), 'resid_rms_mm': float(resid.std())},
-                'edge_fit_dev_mm': dev, 'gap_x_range': [float(gx[0]), float(gx[2])], 'source': 'hole of the closed click outline holding the wheel',
+                'edge_fit_dev_mm': dev, 'side_fits_uv': fu, 'gap_x_range': [float(gx[0]), float(gx[2])], 'source': src_note, 'rim_detection': rinfo, 'gap_alignment': gap_align,
                 'base_plane': coef, 'min_wall_raise_mm': 0.0})
     off = 0.0
     nominal = FLOOR - float(P['slot_depth_mm'])
@@ -725,19 +1120,7 @@ def _perimeter(shp, union, PA, PB, gap, P, warnings) -> dict[str, Any]:
     T = ring[seq[~excl[seq]]]
     if len(T) < 20:
         raise GrooveError('CLICK_GROOVE_PERIMETER_FIT', 'The perimeter chain is too short.')
-    path = fit_polyline(T, float(P['fit_tolerance_mm']))
-    given = P.get('fillet_radius_mm')
-    if given:
-        Rsel = float(given)
-        A = fillet_open(path, Rsel)
-    else:
-        scan = []
-        for Rr in np.arange(0.5, 6.01, 0.25):
-            e = seg_dist(T, fillet_open(path, Rr))
-            scan.append((float(Rr), float(np.sqrt((e ** 2).mean()))))
-        rbest = min(r for _, r in scan)
-        Rsel = max(Rr for Rr, r in scan if r <= rbest + 0.002)       # the outline barely constrains R: the largest radius that fits as well as the best (within 2 micrometres rms)
-        A = fillet_open(path, Rsel)
+    path, sym, A, Rsel = _regular_path(T, gap, P)
     d = seg_dist(T, A)
     Q0, _ = resample(A)
     tg = np.gradient(Q0, axis=0)
@@ -754,18 +1137,162 @@ def _perimeter(shp, union, PA, PB, gap, P, warnings) -> dict[str, Any]:
             out = np.maximum(out, np.where(inn, dd, -dd))
         return out
     d_in = depth_inside(Q0)
+    # label overhang: a run of stations where the labelled panel sticks out of the regular outline by more than overhang_mm (scan / label
+    # noise the regular fit dropped on purpose) does not push the whole slot outward; it is reported and gated by its size.
+    ovh_lim = float(P['overhang_mm'])
+    enc_run = d_in > 0.05
+    overhang = np.zeros(len(Q0), bool)
+    idx = np.flatnonzero(np.diff(np.r_[0, enc_run.astype(int), 0]))
+    ovh_runs = []
+    for a, b in zip(idx[::2], idx[1::2]):
+        if d_in[a:b].max() > ovh_lim:
+            overhang[a:b] = True
+            ovh_runs.append({'length_mm': float(STEP * (b - a)), 'max_mm': float(d_in[a:b].max()), 'xy': Q0[a + int(np.argmax(d_in[a:b]))].round(2).tolist()})
+    counted = ~overhang
     clear = float(P['perimeter_clearance_mm'])
-    shift = max(0.0, float(d_in.max())) + clear
+    # label outline = hint: spikes of the region boundary narrower than spike_width_mm (morphological opening along the arc) do not move
+    # the slot; any wider encroachment (a real panel edge inside the slot) is cleared in full
+    wq = max(1, int(round(float(P['spike_width_mm']) / STEP)))
+    from scipy.ndimage import grey_opening
+    def qv(d):
+        if not counted.any():
+            return 0.0
+        dd = np.where(counted, d, -1e3)
+        return float(grey_opening(dd, size=wq, mode='nearest')[counted].max())
+    q = float(P['spike_width_mm'])
+    shift = max(0.0, qv(d_in)) + clear
     Aout = Q0 + sgn * shift * nl
     d_after = depth_inside(Aout)
-    for _ in range(12):                      # the outline is not parallel to the path everywhere: push on until nothing is inside
-        if d_after.max() <= -clear + 1e-9:
+    for _ in range(12):                      # the outline is not parallel to the path everywhere: push on until the quantile is outside
+        if qv(d_after) <= -clear + 1e-9:
             break
-        shift += float(d_after.max()) + clear
+        shift += qv(d_after) + clear
         Aout = Q0 + sgn * shift * nl
         d_after = depth_inside(Aout)
-    enc = {'max_inside_before_mm': float(d_in.max()), 'shift_outward_mm': float(shift), 'max_inside_after_mm': float(d_after.max())}
-    return {'path': path, 'A': Aout, 'R': Rsel, 'rms': float(np.sqrt((d ** 2).mean())), 'max': float(d.max()), 'out': sgn, 'encroachment': enc}
+    spikes = counted & (d_after > 0)
+    enc = {'max_inside_before_mm': float(d_in.max()), 'shift_outward_mm': float(shift), 'spike_width_mm': q, 'inside_after_robust_mm': qv(d_after),
+           'max_inside_after_mm': float(d_after[counted].max()), 'label_spikes_inside_after': {'stations': int(spikes.sum()), 'length_mm': float(STEP * spikes.sum())},
+           'label_overhang': {'limit_mm': ovh_lim, 'runs': ovh_runs, 'total_length_mm': float(sum(r['length_mm'] for r in ovh_runs)),
+                              'max_mm': float(max([r['max_mm'] for r in ovh_runs], default=0.0)), 'max_inside_after_incl_overhang_mm': float(d_after.max())}}
+    return {'path': path, 'A': Aout, 'R': Rsel, 'rms': float(np.sqrt((d ** 2).mean())), 'max': float(d.max()), 'out': sgn, 'encroachment': enc, 'symmetry': sym,
+            'roughness': outline_roughness(Aout)}
+
+
+def _outside_excess(other: np.ndarray, verts: np.ndarray, width_mm: float) -> float:
+    """Half frame (+v side, path from the rear centre outward): how far the other branch's points lie OUTSIDE the fitted half path (away
+    from the gap line), robust over width_mm of arc (morphological opening: narrower label spikes do not count)."""
+    import shapely
+    from scipy.ndimage import grey_opening
+    ring = np.vstack([verts, [[verts[-1, 0], 0.0], [verts[0, 0], 0.0]]])
+    pg = shapely.Polygon(ring).buffer(0)
+    d = seg_dist(other, verts)
+    out = ~shapely.contains_xy(pg, other[:, 0], other[:, 1]) & (other[:, 1] > 0)
+    dep = np.where(out, d, -d)
+    ds = np.median(np.linalg.norm(np.diff(other, axis=0), axis=1)) if len(other) > 1 else 1.0
+    wq = max(1, int(round(width_mm / max(ds, 1e-6))))
+    return float(grey_opening(dep, size=wq, mode='nearest').max()) if len(dep) else 0.0
+
+
+def _regular_path(T: np.ndarray, gap: dict[str, Any], P: dict[str, Any]) -> tuple[np.ndarray, dict[str, Any], np.ndarray, Any]:
+    """Regular perimeter start line (before the fillets) from the ordered outer-ring chain T (front end -> round the rear -> other front end;
+    the stretch at the rear gap crossing is already removed). Frame: u along the centre-gap line, v across it. When both branches (one per
+    click) are near-symmetric about the gap line (coarse test per fitted piece: p90 distance of the other branch's points to the mirrored
+    piece <= symmetry_tol_mm), the branch with the better fit (lower rms) is mirrored onto the other one (no forced symmetry: a failed
+    piece keeps both branches as fitted); the rear piece is made perpendicular to the gap line when it is within 5 degrees of it."""
+    tol = float(P['fit_tolerance_mm'])
+    kw = {'min_turn_deg': float(P['min_turn_deg']), 'merge_dev_mm': float(P['merge_dev_mm']), 'concave_dev_mm': float(P['concave_dev_mm'])}
+    m_, b_ = float(gap['mid'][0]), float(gap['mid'][1])
+    eu = np.array([1.0, m_]) / np.hypot(1.0, m_)
+    ev = np.array([-eu[1], eu[0]])
+    o = np.array([0.0, b_])
+    to_f = lambda X: np.c_[(X - o) @ eu, (X - o) @ ev]
+    from_f = lambda U: o + U[:, :1] * eu + U[:, 1:2] * ev
+    Tf = to_f(T)
+    info: dict[str, Any] = {'mode': 'as_fitted', 'tolerance_mm': float(P['symmetry_tol_mm'])}
+    whole = fit_lines_regular(T, tol, **kw)
+    info['whole_fit'] = {'pieces': len(whole['lines']), 'merged': whole['merged'], 'opposite_turns_kept': whole['opposite_turns_kept']}
+    given = P.get('fillet_radius_mm')
+
+    def finish(Vw, raw_w, extra):
+        R = float(given) if given else select_radii(Vw, raw_w, r_min=float(P['min_corner_radius_mm']))
+        A = fillet_open(Vw, R, clip=0.49)
+        Rinfo = float(given) if given else {'per_vertex_mm': [round(float(r), 3) for r in R], 'min_mm': float(np.min(R)) if len(R) else None,
+                                            'max_mm': float(np.max(R)) if len(R) else None}
+        return Vw, {**info, **extra}, A, Rinfo
+    if not P.get('symmetric_outline', True):
+        info['mode'] = 'as_fitted (symmetric_outline off)'
+        return finish(whole['verts'], T, {'opposite_turns_kept': whole['opposite_turns_kept']})
+    j = int(np.argmax(np.linalg.norm(np.diff(Tf, axis=0), axis=1)))           # the bridged rear gap crossing
+    br = [Tf[:j + 1][::-1], Tf[j + 1:]]                                       # both from the rear centre outward
+    sg = [float(np.sign(np.median(b[:, 1]))) for b in br]
+    if len(br[0]) < 20 or len(br[1]) < 20 or sg[0] == sg[1] or 0.0 in sg:
+        info['note'] = 'the chain does not split into one branch per side of the gap line'
+        return finish(whole['verts'], T, {'opposite_turns_kept': whole['opposite_turns_kept']})
+    half = [b * [1.0, s] for b, s in zip(br, sg)]                             # both branches on the +v side
+    fits = [fit_lines_regular(h, tol, **kw) for h in half]
+    rms = [float(np.sqrt((seg_dist(h, f['verts']) ** 2).mean())) for h, f in zip(half, fits)]
+    # which branch is mirrored: the other branch's label outline must not stick out of the mirrored one by more than overhang_mm over
+    # any stretch wider than spike_width_mm (else the mirrored slot would cut into that click); among the admissible ones the lower rms.
+    # Mirror-equivariant: a mirrored scan picks the same physical branch.
+    out_x = [_outside_excess(half[1 - i], fits[i]['verts'], float(P['spike_width_mm'])) for i in range(2)]
+    adm = [i for i in range(2) if out_x[i] <= float(P['overhang_mm'])]
+    k = min(adm, key=lambda i: rms[i]) if adm else int(np.argmin(out_x))
+    info['branch_outside_excess_mm'] = out_x
+    best, other = fits[k], half[1 - k]
+    dist = seg_dist(other, best['verts'])
+    # per fitted piece: the other branch's points nearest to that piece
+    vb = best['verts']
+    piece = np.full(len(other), -1)
+    dmin = np.full(len(other), np.inf)
+    for i, (a, b) in enumerate(zip(vb[:-1], vb[1:])):
+        dd = seg_dist(other, np.array([a, b]))
+        upd = dd < dmin
+        piece[upd], dmin[upd] = i, dd[upd]
+    regions = []
+    for i in range(len(vb) - 1):
+        sel = piece == i
+        p90 = float(np.percentile(dist[sel], 90)) if sel.sum() >= 3 else 0.0
+        regions.append({'piece': i, 'from_uv': vb[i].round(2).tolist(), 'to_uv': vb[i + 1].round(2).tolist(), 'points': int(sel.sum()), 'p90_mm': p90,
+                        'near_symmetric': bool(p90 <= info['tolerance_mm'])})
+    info.update({'branch_fit_rms_mm': rms, 'better_branch': 'v' + ('+' if sg[k] > 0 else '-'), 'regions': regions})
+    if not all(r['near_symmetric'] for r in regions):
+        info['mode'] = 'as_fitted (not near-symmetric in every region)'
+        return finish(whole['verts'], T, {'opposite_turns_kept': whole['opposite_turns_kept']})
+    V = best['verts'].copy()
+    c0, d0 = best['lines'][0]
+    if abs(d0 @ np.array([1.0, 0.0])) <= np.sin(np.radians(5.0)):              # rear piece ~ perpendicular to the gap line
+        # the following pieces that are within min_turn_deg of the perpendicular join the rear piece (no small kink where the forced
+        # perpendicular line meets a slightly tilted next piece); its position = mean u of all their points
+        ang_ok = lambda d: abs(d @ np.array([1.0, 0.0])) <= np.sin(np.radians(float(P['min_turn_deg'])))
+        nj = 1
+        while nj < len(best['lines']) - 1 and ang_ok(best['lines'][nj][1]):
+            nj += 1
+        s_ = np.r_[0, np.cumsum(np.linalg.norm(np.diff(half[k], axis=0), axis=1))]
+        sel = half[k][(s_ >= best['groups'][0][0]) & (s_ <= best['groups'][nj - 1][1])]
+        cu = float(sel[:, 0].mean())
+        line0 = (np.array([cu, 0.0]), np.array([0.0, 1.0]))
+        V = np.vstack([V[:1], V[nj:]])
+        if len(best['lines']) > nj:
+            p = lines_intersect(*line0, *best['lines'][nj])
+            if p is not None:
+                V[1] = p
+        V[0] = np.array([cu, 0.0])
+        info['rear_piece'] = 'perpendicular to the gap line' + (f' ({nj} pieces joined)' if nj > 1 else '')
+        full = np.vstack([(V[1:] * [1, -1])[::-1], V[1:]])                   # the rear centre is a straight continuation, no vertex
+    else:
+        p = lines_intersect(c0, d0, np.array([0.0, 0.0]), np.array([1.0, 0.0]))
+        if p is not None and np.linalg.norm(p - V[0]) < 6.0:
+            V[0] = p
+        V[0, 1] = 0.0
+        info['rear_piece'] = 'corner on the gap line'
+        full = np.vstack([(V[1:] * [1, -1])[::-1], V])
+    first_side = float(np.sign(np.median(Tf[: max(3, len(Tf) // 10), 1])))
+    if np.sign(full[0, 1]) != first_side:
+        full = full * [1, -1]
+    info['mode'] = 'mirrored better branch about the centre-gap line'
+    raw_sym = np.vstack([half[k], half[k] * [1, -1]])                      # the better branch on both sides: radii come out symmetric
+    Vw, inf2, A, Rinfo = finish(full, raw_sym, {'opposite_turns_kept': best['opposite_turns_kept']})
+    return from_f(Vw), inf2, from_f(A), Rinfo
 
 
 def _orient(tm, m):
@@ -931,7 +1458,7 @@ def _measure(tm, shp, src, res, fid, N, V, F, sweeps, infos, window, gap, per, r
     wall = nz < 0.5
     out['new_faces'] = {'total': int(newf.sum()), 'wall_like': int(wall.sum()), 'wall_max_abs_nz': float(nz[wall].max()) if wall.any() else None,
                         'wall_area_weighted_mean_abs_nz': float((nz[wall] * area[wall]).sum() / area[wall].sum()) if wall.any() else None,
-                        'wall_faces_nz_gt_0p01': int((nz[wall] > 0.01).sum()), 'wall_area_mm2': float(area[wall].sum()), 'floor_like': int((~wall).sum()),
+                        'wall_faces_nz_gt_0p01': int((nz[wall] > 0.01).sum()), 'wall_area_nz_gt_0p05_mm2': float(area[wall & (nz > 0.05)].sum()), 'wall_area_mm2': float(area[wall].sum()), 'floor_like': int((~wall).sum()),
                         'floor_area_mm2': float(area[~wall].sum()), 'floor_normal_tilt_deg_max': float(np.degrees(np.arccos(np.clip(nz[~wall], 0, 1))).max()) if (~wall).any() else None}
     # cut-through: slot floor points outside the original solid, and the material left below the floor
     ct: dict[str, Any] = {}

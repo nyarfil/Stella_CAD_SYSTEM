@@ -23,7 +23,7 @@ from ..errors import BrainError
 from ..req2cad.common import atomic_json, json_load
 from ..util import digest, file_hash, safe_path
 
-CLICK_GROOVES_VERSION = 'G1.0'
+CLICK_GROOVES_VERSION = 'G1.5'
 WORKER = Path(__file__).with_name('scan_click_grooves_worker.py')
 TIMEOUT_S = 1800
 REPORT = 'click_grooves_report.json'
@@ -37,7 +37,7 @@ def scan_click_grooves(workspace: Path, relative_path: str, labels_path: str, un
                        perimeter_clearance_mm: float = DEFAULTS['perimeter_clearance_mm'], fit_tolerance_mm: float = DEFAULTS['fit_tolerance_mm'],
                        fillet_radius_mm: float | None = None, min_wall_mm: float = DEFAULTS['min_wall_mm'], rebuild_window: bool = True, overlay: bool = True,
                        gap_clear_mm: float = DEFAULTS['gap_clear_mm'], gap_front_margin_mm: float = DEFAULTS['gap_front_margin_mm'],
-                       gap_overshoot_mm: float = DEFAULTS['gap_overshoot_mm']) -> dict[str, Any]:
+                       gap_overshoot_mm: float = DEFAULTS['gap_overshoot_mm'], symmetry_report_path: str | None = None) -> dict[str, Any]:
     if unit not in sm.UNIT_MM:
         raise BrainError('SCAN_UNIT', 'unit is required and must be one of mm, cm, m, in. It is never guessed.', {'given': unit})
     given = {'slot_width_mm': slot_width_mm, 'slot_depth_mm': slot_depth_mm, 'panel_overlap_mm': panel_overlap_mm, 'perimeter_clearance_mm': perimeter_clearance_mm,
@@ -59,9 +59,15 @@ def scan_click_grooves(workspace: Path, relative_path: str, labels_path: str, un
         raise BrainError('CLICK_GROOVE_LABELS', 'labels_path must be a regular .json (region name -> face ids) or .npz (face_labels + codes) file inside the workspace.')
     if lab.stat().st_size > MAX_LABEL_BYTES:
         raise BrainError('CLICK_GROOVE_LABELS', 'The label file is too large.')
-    settings = {**given, 'fillet_radius_mm': None if fillet_radius_mm is None else float(fillet_radius_mm), 'rebuild_window': bool(rebuild_window), 'overlay': bool(overlay),
+    mp = None
+    if symmetry_report_path is not None:
+        from .scan_cad_common import mirror_from_report
+        mp = mirror_from_report(workspace, symmetry_report_path, 'CLICK_GROOVE_SETTINGS')
+    settings = {**given, 'mirror_plane': mp, 'fillet_radius_mm': None if fillet_radius_mm is None else float(fillet_radius_mm), 'rebuild_window': bool(rebuild_window), 'overlay': bool(overlay),
                 'unit': unit}
     settings = {k: (float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else v) for k, v in settings.items()}
+    if symmetry_report_path is not None:
+        settings['symmetry_report_path'] = symmetry_report_path
     sha, lsha = file_hash(src), file_hash(lab)
     groove_id = 'grv_' + digest({'mesh': sha, 'labels': lsha, 'settings': settings, 'version': CLICK_GROOVES_VERSION})[:12]
     out = scan_dir(workspace, groove_id)
@@ -74,7 +80,7 @@ def scan_click_grooves(workspace: Path, relative_path: str, labels_path: str, un
     tmp.mkdir(parents=True)
     try:
         req = {'input_path': str(src), 'labels_path': str(lab), 'unit_scale': sm.UNIT_MM[unit], 'out_dir': str(tmp / 'out'),
-               'params': {**{k: v for k, v in settings.items() if k != 'unit'}}}
+               'params': {**{k: v for k, v in settings.items() if k not in ('unit', 'symmetry_report_path')}}}
         (tmp / 'request.json').write_text(json.dumps(req), encoding='utf-8')
         try:
             proc = subprocess.run([str(python), '-I', str(WORKER), str(tmp / 'request.json')], capture_output=True, text=True, encoding='utf-8', errors='replace',
@@ -101,6 +107,33 @@ def scan_click_grooves(workspace: Path, relative_path: str, labels_path: str, un
     return report
 
 
+def gate_blockers(m: dict[str, Any], params_used: dict[str, Any]) -> list[str]:
+    """NOT_READY reasons from the worker metrics (also used by the tests)."""
+    blockers: list[str] = []
+    if not m['watertight']['after']:
+        blockers.append('RESULT_NOT_WATERTIGHT')
+    if m['bodies']['components'] != 1 or not m['bodies']['winding_consistent']:
+        blockers.append('RESULT_NOT_ONE_BODY')
+    enc = m['encroachment']
+    if enc.get('inside_after_robust_mm', enc['max_inside_after_mm']) > 1e-3 or enc['max_inside_after_mm'] > params_used.get('overhang_mm', 0.5):
+        blockers.append('PERIMETER_SLOT_ENCROACHES_PANEL_EDGE')
+    oq = m.get('outline_quality') or {}
+    if not (oq.get('perimeter') or {}).get('ok', False):
+        blockers.append('PERIMETER_OUTLINE_ROUGH')
+    if not (oq.get('window_gap') or {'ok': True})['ok']:
+        blockers.append('WINDOW_OFF_GAP_LINE')
+    if not (oq.get('window_shape') or {'ok': True})['ok']:
+        blockers.append('WINDOW_SHAPE_IRREGULAR')
+    ovh = m['encroachment'].get('label_overhang') or {}
+    lim = params_used
+    if ovh.get('max_mm', 0.0) > lim['max_overhang_mm'] or ovh.get('total_length_mm', 0.0) > lim['max_overhang_length_mm']:
+        blockers.append('PANEL_LABEL_OVERHANG_TOO_LARGE')
+    widths = [v['width_mm_p5_50_95'][1] for k, v in m['slot_measure'].items() if k == 'perimeter']
+    if not widths:
+        blockers.append('NO_SLOT_MEASURED')
+    return blockers
+
+
 def _check(ok: bool) -> str:
     return 'PASS' if ok else 'FAIL'
 
@@ -112,24 +145,21 @@ def _report(res: dict[str, Any], folder: Path, groove_id: str, rel: str, labels_
                'regions': {k: {'relative_path': f"{base}/{v['file']}", 'sha256': file_hash(folder / v['file']), 'faces': v['faces']} for k, v in files['regions'].items()}}
     if files.get('overlay'):
         outputs['overlay'] = {'relative_path': f"{base}/{files['overlay']['file']}", 'sha256': file_hash(folder / files['overlay']['file'])}
+    if files.get('layout'):
+        outputs['layout'] = {'relative_path': f"{base}/{files['layout']['file']}", 'sha256': file_hash(folder / files['layout']['file'])}
     m = res['metrics']
-    blockers: list[str] = []
-    if not m['watertight']['after']:
-        blockers.append('RESULT_NOT_WATERTIGHT')
-    if m['bodies']['components'] != 1 or not m['bodies']['winding_consistent']:
-        blockers.append('RESULT_NOT_ONE_BODY')
-    if m['encroachment']['max_inside_after_mm'] > 1e-3:
-        blockers.append('PERIMETER_SLOT_ENCROACHES_PANEL_EDGE')
-    widths = [v['width_mm_p5_50_95'][1] for k, v in m['slot_measure'].items() if k == 'perimeter']
-    if not widths:
-        blockers.append('NO_SLOT_MEASURED')
+    blockers = gate_blockers(m, res['params_used'])
+    oq = m.get('outline_quality') or {}
     return {
         'schema': 'scan_click_grooves_report/1', 'groove_id': groove_id, 'status': 'NOT_READY' if blockers else 'READY', 'blocking_reasons': blockers, 'warnings': res['warnings'],
         'code_version': {'scan_click_grooves': CLICK_GROOVES_VERSION, 'worker': res['worker'], 'package': __version__, 'libs': res.get('libs')},
         'source': {'relative_path': rel, 'sha256': sha, 'labels_relative_path': labels_rel, 'labels_sha256': lsha}, 'settings': settings, 'units': {'input': settings['unit'], 'output': 'mm'},
         'params_used': res['params_used'], 'fit': res['fit'], 'metrics': m, 'outputs': outputs, 'seconds': res['seconds'],
         'checks': {'watertight_after': _check(m['watertight']['after']), 'single_body': _check(m['bodies']['components'] == 1), 'winding_consistent': _check(m['bodies']['winding_consistent']),
-                   'no_perimeter_encroachment': _check(m['encroachment']['max_inside_after_mm'] <= 1e-3),
+                   'no_perimeter_encroachment': _check('PERIMETER_SLOT_ENCROACHES_PANEL_EDGE' not in blockers),
+                   'perimeter_outline_regular': _check((oq.get('perimeter') or {}).get('ok', False)),
+                   'window_on_gap_line': _check((oq.get('window_gap') or {'ok': True})['ok']),
+                   'window_shape': _check((oq.get('window_shape') or {'ok': True})['ok']),
                    'cut_through': 'REPORTED' if any(v['cut_through_runs'] for v in m['cut_through'].values()) else 'NONE', 'physical_function': 'UNVERIFIED'},
         'limits': ['Surface mesh only: the click switches, hinges and wall thickness behind the slots are not known; cut-through is reported, never prevented unless min_wall_mm > 0.',
                    'The mesh must already be in the standard frame (x front, y left, z up, bottom plate at z 0 mm) and welded; the labels come from brain_mouse_recognize_regions / recognize_shell or a manual list.',
@@ -140,7 +170,7 @@ def _report(res: dict[str, Any], folder: Path, groove_id: str, rel: str, labels_
 
 def _stored(folder: Path) -> dict[str, Any]:
     rep = json_load(folder / REPORT)
-    items = [rep['outputs']['combined'], *rep['outputs']['regions'].values(), *([rep['outputs']['overlay']] if 'overlay' in rep['outputs'] else [])]
+    items = [rep['outputs']['combined'], *rep['outputs']['regions'].values(), *([rep['outputs']['overlay']] if 'overlay' in rep['outputs'] else []), *([rep['outputs']['layout']] if 'layout' in rep['outputs'] else [])]
     for item in items:
         p = folder / Path(item['relative_path']).name
         if not p.is_file() or file_hash(p) != item['sha256']:
