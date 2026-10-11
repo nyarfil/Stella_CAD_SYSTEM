@@ -81,6 +81,26 @@ CGAL_MCP_DATA = "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace\\cgal-mcp"
 PYTHONUTF8 = "1"
 PYTHONIOENCODING = "utf-8"
 
+# CGAL Master MCP (native generic server; v0.1 cgal-mcp above stays as the compatible fallback).
+# Persistent workers and the result cache stay OFF; derived data lives in the gitignored cadmcp-workspace.
+[mcp_servers.cgal-master]
+command = "E:\\aiwork\\cgal-mcp\\.venv\\Scripts\\python.exe"
+args = ["-m", "cgal_mcp.master.server", "stdio"]
+cwd = "E:\\aiwork\\cgal-mcp"
+enabled = true
+startup_timeout_sec = 60
+tool_timeout_sec = 300
+
+[mcp_servers.cgal-master.env]
+CGAL_MASTER_WORKER = "E:\\aiwork\\cgal-mcp\\build-master\\Release\\cgal-master-worker.exe"
+CGAL_MASTER_DATA = "E:\\aiwork\\Stella_CAD_SYSTEM\\cadmcp-workspace\\cgal-master"
+CGAL_MASTER_CATALOG = "E:\\aiwork\\cgal-mcp\\catalog"
+CGAL_MASTER_DOCS_INDEX = "E:\\aiwork\\cgal-mcp\\work\\master-docs-index.sqlite"
+CGAL_MASTER_PERSISTENT_WORKERS = "0"
+CGAL_MASTER_RESULT_CACHE = "0"
+PYTHONUTF8 = "1"
+PYTHONIOENCODING = "utf-8"
+
 # StellaCAD STEVE Fusion bridge (document allow-list stays STELLA_FUSION_SANDBOX; set enabled = false to disable).
 [mcp_servers.stella-fusion-steve]
 command = "C:/Users/nikis/AppData/Local/Programs/Python/Python313/python.exe"

@@ -6,7 +6,7 @@ Claude Code でも Cursor / Codex と同じ規則（`AGENTS.md`）と同じ cadM
 | 要素 | 場所 | 役割 |
 |---|---|---|
 | 入口 | `CLAUDE.md`（`@AGENTS.md` を取り込み） | 共通規則 + Claude 固有の補足 |
-| MCP | `.mcp.json` | cadmcp-design-brain / cgal-mcp / mouse-library（案件共有、初回は承認が必要） |
+| MCP | `.mcp.json` | cadmcp-design-brain / cgal-mcp（v0.1互換）/ cgal-master（CGAL Master。最初に`cgal_get_guide`、詳細は`docs/CGAL_INTEGRATION_JA.md`）/ mouse-library（案件共有、初回は承認が必要） |
 | 権限 | `.claude/settings.json` | 読取専用の brain 工具のみ事前許可。build/import/submit 等の書込系は毎回確認。`LLM_cad_Projects/` の編集も確認 |
 | Skill | `.claude/skills/stella-cad-design/` | 設計順・5役レビュー・禁止事項（長文版は `.agents/skills/cadmcp-design-brain/SKILL.md`） |
 | 5役 | `.claude/agents/cadmcp-{requirements,mechanism,assembly,manufacturing,verification}.md` | 読取専用の別コンテキストレビュー（Read/Grep/Glob のみ、MCP 呼出し不可） |

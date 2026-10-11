@@ -1,0 +1,238 @@
+{
+  "config": "E:\\aiwork\\Stella_CAD_SYSTEM\\.mcp.json",
+  "master": {
+    "handshake": {
+      "server": "CGAL Master MCP",
+      "tools": [
+        "cgal_get_guide",
+        "cgal_capabilities_search",
+        "cgal_capabilities_describe",
+        "cgal_plan",
+        "cgal_execute",
+        "cgal_validate",
+        "cgal_artifact_inspect",
+        "cgal_docs_search",
+        "cgal_system_health",
+        "cgal_artifact_import",
+        "cgal_artifact_export",
+        "cgal_job_status",
+        "cgal_job_cancel"
+      ],
+      "resources": [
+        "cgal://guide/start",
+        "cgal://guide/families",
+        "cgal://guide/recipes",
+        "cgal://guide/errors",
+        "cgal://guide/glossary",
+        "cgal://guide/limits-and-status",
+        "cgal://guide/ja/start",
+        "cgal://guide/ja/families",
+        "cgal://guide/ja/recipes",
+        "cgal://guide/ja/errors",
+        "cgal://guide/ja/glossary",
+        "cgal://guide/ja/limits-and-status"
+      ],
+      "prompts": [
+        "start_here",
+        "repair_and_simplify_mesh",
+        "reconstruct_surface_from_points",
+        "validate_geometry",
+        "compare_meshes",
+        "2d_boolean_offset",
+        "choose_operation"
+      ],
+      "guide_start_chars": 2880,
+      "registry_revision": "a5b7174e7631c60967d60478cdaac2414394960185cfe50ef42223081a30eace",
+      "worker_pool": {
+        "mode": "one_shot",
+        "policy": null,
+        "idle_workers": 0,
+        "busy_workers": 0,
+        "started": 0,
+        "reused": 0,
+        "recycled": {}
+      },
+      "result_cache": {
+        "enabled": false
+      }
+    },
+    "refusals": [
+      {
+        "input": "model.stl (500 faces)",
+        "refused": "job not accepted: state=failed validation=not_run error={'class': 'unmet_precondition', 'code': 'unmet_precondition', 'message': 'mesh.distance.symmetric_hausdorff requires faces<=400', 'recoverable': False, 'suggested_operations': []}"
+      }
+    ],
+    "derivation": {
+      "schema": "stellacad.cgal_master_derivation/1",
+      "created_utc": "2026-10-11T04:37:14+00:00",
+      "derived_only": true,
+      "source_modified": false,
+      "source": {
+        "path": "E:\\aiwork\\Stella_CAD_SYSTEM\\integration\\cgal\\verification\\20261011-master\\stella_icosphere_r10mm_320f.stl",
+        "sha256": "daf90ca703958c2087ac8bffeed7d28f0b2a44573870648c1fe0fcff71862e6a",
+        "unit": "mm",
+        "conversion": "stl_exact_vertex_weld_to_off",
+        "welded_sha256": "1b9347425593d65b7cf121ab86b96468139765880fddbb81ad137e35866207d4",
+        "artifact_id": "art_52a0d8e3e4d14bd394b667773056b34b",
+        "artifact_sha256": "1b9347425593d65b7cf121ab86b96468139765880fddbb81ad137e35866207d4"
+      },
+      "operations": [
+        "mesh.simplify.edge_collapse",
+        "mesh.validate.simplification_integrity",
+        "mesh.distance.symmetric_hausdorff"
+      ],
+      "parameters": {
+        "hausdorff_error_bound": {
+          "value": 0.05,
+          "unit": "mm"
+        },
+        "max_symmetric_deviation": {
+          "value": 1.0,
+          "unit": "mm"
+        },
+        "policy": "lindstrom_turk",
+        "stop": {
+          "kind": "face_ratio",
+          "value": 0.5
+        }
+      },
+      "server": {
+        "name": "cgal-master",
+        "registry_revision": "a5b7174e7631c60967d60478cdaac2414394960185cfe50ef42223081a30eace",
+        "cgal_version": "6.2.1",
+        "plan_id": "plan_b9bfb58ba2586a15acec84b1cc4a3f34a04bfbc0c39c0394fe7a46bcd1951466",
+        "job_id": "job_71ee719c9e9847b2b6c31686f894b18f"
+      },
+      "validation_status": "passed",
+      "validators": [
+        {
+          "operation": "mesh.validate.simplification_integrity",
+          "step_id": "s1_validate_1",
+          "verdict": "pass",
+          "report": {
+            "bounds_volume": true,
+            "candidate_border_count": 0,
+            "candidate_component_count": 1,
+            "candidate_component_topology": [
+              {
+                "border_count": 0,
+                "closed": true,
+                "euler_characteristic": 2,
+                "nesting_level": 0,
+                "orientation": "outward"
+              }
+            ],
+            "closedness_preserved": true,
+            "component_topology_preserved": true,
+            "degenerate_face_count": 0,
+            "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+            "non_manifold_vertex_count": 0,
+            "open_surface_winding_preserved": true,
+            "protected_edge_count": 0,
+            "protected_edges_preserved": true,
+            "self_intersection": false,
+            "source_border_count": 0,
+            "source_component_count": 1,
+            "source_component_topology": [
+              {
+                "border_count": 0,
+                "closed": true,
+                "euler_characteristic": 2,
+                "nesting_level": 0,
+                "orientation": "outward"
+              }
+            ],
+            "status": "pass",
+            "triangulated": true,
+            "valid": true
+          }
+        },
+        {
+          "operation": "mesh.distance.symmetric_hausdorff",
+          "step_id": "s1_validate_2",
+          "verdict": "pass",
+          "report": {
+            "distance_estimate": {
+              "unit": "mm",
+              "value": 0.46803061673293456
+            },
+            "effective_concurrency": "sequential",
+            "effective_kernel": "CGAL::Exact_predicates_inexact_constructions_kernel",
+            "error_bound": {
+              "unit": "mm",
+              "value": 0.05
+            },
+            "lower_bound": {
+              "unit": "mm",
+              "value": 0.41803061673293457
+            },
+            "method": "bounded_error_symmetric",
+            "operation": "mesh.distance.symmetric_hausdorff",
+            "parameters": {
+              "error_bound": {
+                "unit": "mm",
+                "value": 0.05
+              },
+              "tolerance": {
+                "unit": "mm",
+                "value": 1.0
+              }
+            },
+            "report_kind": "hausdorff_bounded_symmetric",
+            "report_type": "ValidationReport",
+            "results": {
+              "distance": 0.46803061673293456,
+              "distance_unit": "mm"
+            },
+            "schema_version": 1,
+            "source": {
+              "candidate_sha256": "cc9f55fda446d7c86f0a53075ba702f7532d83b2e31ed203ab305608e5df68d8",
+              "reference_sha256": "1b9347425593d65b7cf121ab86b96468139765880fddbb81ad137e35866207d4"
+            },
+            "status": "pass",
+            "tolerance": {
+              "unit": "mm",
+              "value": 1.0
+            },
+            "upper_bound": {
+              "unit": "mm",
+              "value": 0.5180306167329346
+            },
+            "valid": true,
+            "verdict": "pass"
+          }
+        }
+      ],
+      "output": {
+        "path": "E:\\aiwork\\Stella_CAD_SYSTEM\\integration\\cgal\\verification\\20261011-master\\stella_icosphere_simplified.off",
+        "sha256": "cc9f55fda446d7c86f0a53075ba702f7532d83b2e31ed203ab305608e5df68d8",
+        "unit": "mm",
+        "artifact_id": "art_cfa0043083df4e37ad892f4e3ddc9782",
+        "type": "TriangleSurfaceMesh",
+        "faces": 158,
+        "vertices": 81,
+        "source_faces": 320
+      }
+    }
+  },
+  "v01_fallback": {
+    "tools": [
+      "discover_capabilities",
+      "describe_capability",
+      "search_api",
+      "register_mesh",
+      "plan_simplification",
+      "plan_hausdorff",
+      "route_goal",
+      "execute_plan",
+      "job_status",
+      "cancel_job",
+      "get_artifact",
+      "stella_cgal_simplify_file"
+    ],
+    "faces": [
+      200,
+      92
+    ]
+  }
+}

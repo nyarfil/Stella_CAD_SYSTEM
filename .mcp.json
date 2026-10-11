@@ -32,6 +32,25 @@
         "PYTHONIOENCODING": "utf-8"
       }
     },
+    "cgal-master": {
+      "type": "stdio",
+      "command": "E:/aiwork/cgal-mcp/.venv/Scripts/python.exe",
+      "args": [
+        "-m",
+        "cgal_mcp.master.server",
+        "stdio"
+      ],
+      "env": {
+        "CGAL_MASTER_WORKER": "E:/aiwork/cgal-mcp/build-master/Release/cgal-master-worker.exe",
+        "CGAL_MASTER_DATA": "E:/aiwork/Stella_CAD_SYSTEM/cadmcp-workspace/cgal-master",
+        "CGAL_MASTER_CATALOG": "E:/aiwork/cgal-mcp/catalog",
+        "CGAL_MASTER_DOCS_INDEX": "E:/aiwork/cgal-mcp/work/master-docs-index.sqlite",
+        "CGAL_MASTER_PERSISTENT_WORKERS": "0",
+        "CGAL_MASTER_RESULT_CACHE": "0",
+        "PYTHONUTF8": "1",
+        "PYTHONIOENCODING": "utf-8"
+      }
+    },
     "mouse-library": {
       "type": "stdio",
       "command": "E:/aiwork/Stella_CAD_SYSTEM/cadmcp-all-in-one-2026-09-17/01_CURRENT/.venv/Scripts/python.exe",
