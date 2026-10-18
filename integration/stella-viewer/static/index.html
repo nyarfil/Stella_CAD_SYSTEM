@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stella Viewer</title>
+<style>
+html,body{margin:0;height:100%;background:#1b1d21;color:#ddd;font:14px system-ui,sans-serif}
+#side{position:fixed;left:0;top:0;bottom:0;width:260px;overflow:auto;background:#23262b;padding:8px;box-sizing:border-box}
+#side div.f{padding:5px 6px;cursor:pointer;border-radius:4px;word-break:break-all}
+#side div.f:hover,#side div.f.on{background:#3a4150}
+#view{position:fixed;left:260px;right:0;top:0;bottom:0}
+#bar{position:fixed;left:270px;top:8px;background:#000a;padding:6px 10px;border-radius:6px;font-size:13px}
+#bar label{margin-right:10px}
+#info{margin-top:4px;color:#9fd}
+@media(max-width:700px){#side{position:static;width:auto;max-height:30%}#view{left:0;top:30%}#bar{left:8px;top:32%}}
+</style></head><body>
+<div id="side"></div><div id="view"></div>
+<div id="bar">
+<label>断面 <select id="axis"><option value="">なし</option><option>X</option><option>Y</option><option>Z</option></select></label>
+<input id="pos" type="range" min="0" max="1" step="0.001" value="0.5" style="width:160px">
+<label><input id="wire" type="checkbox"> ワイヤ</label>
+<div id="info">モデルを選択</div></div>
+<script type="importmap">{"imports":{"three":"/vendor/three/build/three.module.js","three/addons/":"/vendor/three/examples/jsm/"}}</script>
+<script type="module" src="/static/viewer.js"></script>
+</body></html>
