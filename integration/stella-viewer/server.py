@@ -50,6 +50,21 @@ def step_to_glb(p):
     return out.read_bytes()
 
 
+def step_to_shapes(p):
+    st = p.stat()
+    key = hashlib.sha1(f"shapes|{p}|{st.st_mtime_ns}|{st.st_size}".encode()).hexdigest()[:20]
+    CACHE.mkdir(parents=True, exist_ok=True)
+    out = CACHE / f"{key}.json"
+    if not out.is_file():
+        tmp = out.with_suffix(".tmp")
+        r = subprocess.run([STEP_PYTHON, "-I", str(HERE / "step_to_shapes.py"), str(p), str(tmp)],
+                           capture_output=True, text=True, timeout=600)
+        if r.returncode != 0:
+            raise RuntimeError("STEP conversion failed: " + (r.stderr.strip().splitlines() or ["?"])[-1])
+        tmp.replace(out)
+    return out.read_bytes()
+
+
 def to_glb(p):
     if p.suffix.lower() in (".glb", ".gltf"):
         return p.read_bytes()
@@ -87,6 +102,12 @@ class Handler(SimpleHTTPRequestHandler):
                         items.append({"path": p.relative_to(ROOT).as_posix(), "mtime": st.st_mtime, "size": st.st_size})
                 items.sort(key=lambda x: -x["mtime"])
                 return self._send(200, json.dumps(items[:500]).encode(), "application/json")
+            if u.path == "/api/shapes":
+                rel = parse_qs(u.query).get("path", [""])[0]
+                p = safe(rel)
+                if p.suffix.lower() not in STEP_EXT or not p.is_file():
+                    return self._send(404, b"not found", "text/plain")
+                return self._send(200, step_to_shapes(p), "application/json")
             if u.path == "/api/mesh":
                 rel = parse_qs(u.query).get("path", [""])[0]
                 p = safe(rel)

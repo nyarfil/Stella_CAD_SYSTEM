@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 
-const view = document.getElementById('view'), side = document.getElementById('side');
+const view = document.getElementById('view'), side = document.getElementById('flist');
 const info = document.getElementById('info');
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.localClippingEnabled = true;
