@@ -19,3 +19,11 @@ python integration/stella-viewer/server.py --root <モデルのフォルダ>
 - 変換は `step_to_shapes.py`（OCP）。結果は一時フォルダにキャッシュされます。9 MBのSTEPで約2秒。
 - 距離測定は「mesh based」（三角形に基づく概算）です。厳密な寸法は `BRepExtrema` による数値検査で確認すること。
 - 測定ツールは既定で非表示です。コンソールから `__viewer.showMeasureTools(true)` で出します（画面ボタン化は未実装）。
+
+## MCP (段階2) — `mcp_server.py`
+build123d-mcp の venv で動く stdio MCP。`.mcp.json` の `stella-viewer` に登録。
+- `viewer_snapshot(path, view, clip, width, height)` — ヘッドレスEdgeでビューアを撮影しPNGを返す（STEPは断面の蓋つき）。
+- `step_info(path)` — bbox・ソリッドごとの体積/面積/重心。
+- `step_distance(path, solid_a, solid_b)` — 厳密な最小距離（接触時は重なり体積）。
+- `step_thickness(path, solid)` — 光線法の肉厚統計。
+実測: ZA13_Z30_assembly.step (186 MB) は step_info 約136秒、thickness 約70秒、snapshot（初回変換込み）約90秒+。変換結果はキャッシュされる。

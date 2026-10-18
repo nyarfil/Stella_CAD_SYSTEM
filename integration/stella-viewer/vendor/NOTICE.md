@@ -15,3 +15,7 @@
 - The ESM bundle is self-contained: it embeds three.js r184 (MIT), postprocessing 6.39.0 (Zlib, `LICENSE.postprocessing`) and n8ao 1.10.1 (`LICENSE.n8ao`, the file is CC0 1.0 although the npm metadata says ISC; both are permissive).
 - The bundle contains URL strings for downloading optional HDR lighting maps from polyhaven.org (Studio tab). They are fetched only if the user selects such an environment; nothing is loaded from the network by default.
 - The simple mesh page (`static/index.html`) keeps using three.js r186 from `vendor/three/`; the CAD page uses the bundled r184 and does not share it.
+
+## Python packages added for the MCP server (2026-10-18)
+- rtree 1.4.1, MIT, ~1.3 MB, installed into integration/build123d-mcp/.venv (needed by trimesh ray queries for step_thickness). Not vendored.
+- mcp 2.3.0 (already present in that venv) provides MCPServer.

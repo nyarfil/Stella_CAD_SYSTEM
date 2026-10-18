@@ -2,8 +2,13 @@ import {Viewer, Display} from '/vendor/three-cad-viewer/three-cad-viewer.esm.min
 
 const box = document.getElementById('cad'), list = document.getElementById('list'), msg = document.getElementById('msg');
 let display = null, viewer = null, current = null, curM = 0;
+const UI0 = new URLSearchParams(location.search).get('ui') === '0';
+if (UI0) { document.getElementById('side').style.display = 'none'; box.style.left = '0'; }
 
-function sizes() { return {cadWidth: Math.max(300, box.clientWidth - 260), height: Math.max(300, box.clientHeight - 40), treeWidth: 240}; }
+function sizes() {
+  if (UI0) return {cadWidth: box.clientWidth, height: box.clientHeight, treeWidth: 0};
+  return {cadWidth: Math.max(300, box.clientWidth - 260), height: Math.max(300, box.clientHeight - 40), treeWidth: 240};
+}
 
 function fresh() {
   box.innerHTML = '';
@@ -23,6 +28,26 @@ async function load(path) {
     edgeColor: 0x707070, defaultOpacity: 0.5, normalLen: 0}, {target: [0, 0, 0], up: 'Z'});
   window.__viewer = viewer;
   msg.textContent = path;
+  applyParams();
+  document.title = 'READY';
+}
+
+// URL parameters make a view reproducible (used for headless snapshots):
+//   path=<rel>&view=iso|front|rear|left|right|top|bottom&clip=z:18[,x:0]&ui=0&hide=<substring>
+function applyParams() {
+  const q = new URLSearchParams(location.search);
+  const view = q.get('view');
+  if (view) { try { viewer.presetCamera(view); } catch (e) { /* unknown preset */ } }
+  const clip = q.get('clip');
+  if (UI0) { try { viewer.glassMode(true); display.showTools(false); } catch (e) { /* cosmetic */ } }
+  if (clip) {
+    try { viewer.setActiveTab('clip'); } catch (e) { /* clipping stays off */ }
+    for (const part of clip.split(',')) {
+      const [ax, val] = part.split(':');
+      const i = 'xyz'.indexOf(ax.toLowerCase());
+      if (i >= 0) viewer.setClipSlider(i, parseFloat(val));
+    }
+  }
 }
 
 async function refresh() {
@@ -39,5 +64,6 @@ async function refresh() {
   const cur = steps.find(m => m.path === current);
   if (cur && cur.mtime !== curM) { curM = cur.mtime; load(current); }
 }
-refresh();
-setInterval(refresh, 3000);
+const qpath = new URLSearchParams(location.search).get('path');
+if (qpath) { current = qpath; load(qpath); }
+else { refresh(); setInterval(refresh, 3000); }
