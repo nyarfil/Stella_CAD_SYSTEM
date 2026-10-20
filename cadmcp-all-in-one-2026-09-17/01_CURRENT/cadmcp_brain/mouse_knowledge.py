@@ -174,7 +174,11 @@ class MouseKnowledgeToolsMixin:
 
     def brain_mouse_knowledge_plan(self, requirements: dict[str, Any]) -> dict[str, Any]:
         """Create CAD-agnostic staged guidance; call brain_mouse_knowledge_schema first."""
-        return _call("mouse_library_plan", {"requirements": requirements})
+        from .studio import scan_origin
+        result = _call("mouse_library_plan", {"requirements": requirements})
+        if isinstance(result, dict):  # scan-origin branch first: the user decides real scan vs fused original
+            result = {"scan_origin": scan_origin.hint(self.brain.store.root), **result}
+        return result
 
     def brain_mouse_knowledge_brief(self, requirements: dict[str, Any]) -> dict[str, Any]:
         """Create a draft; call brain_mouse_knowledge_schema before validation."""

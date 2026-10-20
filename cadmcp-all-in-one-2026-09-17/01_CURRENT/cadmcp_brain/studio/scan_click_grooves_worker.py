@@ -42,7 +42,7 @@ DEFAULTS = {'slot_width_mm': 0.5, 'slot_depth_mm': 2.0, 'panel_overlap_mm': 0.2,
             # G1.4 regular outline (lines + one fillet radius, symmetric where near-symmetric) and its gates
             'symmetric_outline': True, 'symmetry_tol_mm': 1.5, 'min_turn_deg': 10.0, 'merge_dev_mm': 0.4, 'concave_dev_mm': 1.5, 'overhang_mm': 0.5,
             'max_overhang_mm': 1.5, 'max_overhang_length_mm': 15.0, 'spike_width_mm': 2.0, 'roughness_max_dev_mm': 0.02, 'window_on_gap_tol_mm': 1.0,
-            'mirror_plane': None, 'gap_snap_tol_mm': 2.0, 'min_corner_radius_mm': 0.5,
+            'mirror_plane': None, 'gap_snap_tol_mm': 2.0, 'min_corner_radius_mm': 0.5, 'gap_fit_tol_mm': 0.3,
             # G1.5 window rule and its gate
             'window_source': 'envelope', 'window_corner_radius_mm': None, 'window_corner_frac': 0.8, 'window_clear_mm': 0.5, 'window_min_corner_radius_mm': 2.0,
             'window_aspect_min': 1.0, 'window_aspect_max': 4.0}
@@ -569,7 +569,9 @@ def run(req: dict[str, Any]) -> dict[str, Any]:
         window = _fit_window(shp, V, F, roles['wheel'], union, PA, PB, zf, warnings, P)
     wx_range = (window['hole'].bounds[0], window['hole'].bounds[2]) if window else None
     # ---- gap start lines
-    gap = _fit_gap_lines(shp, PA, PB, xmin, xmax, wx_range, float(P['gap_front_margin_mm']))
+    gap = _fit_gap_lines(shp, PA, PB, xmin, xmax, wx_range, float(P['gap_front_margin_mm']), gap_fit_tol_mm=float(P['gap_fit_tol_mm']))
+    if gap.get('slices_rejected_warning'):
+        warnings.append(gap['slices_rejected_warning'])
     _snap_gap_to_plane(gap, P.get('mirror_plane'), xmin, xmax, float(P['gap_snap_tol_mm']))
     if window:
         _finish_window(window, V, F, zf, gap, P, shp, warnings)
@@ -756,7 +758,7 @@ def _densify(shp, ring, step: float) -> np.ndarray:
     return np.array([ring.interpolate(s).coords[0] for s in np.linspace(0, ring.length, n, endpoint=False)])
 
 
-def _fit_gap_lines(shp, PA, PB, xmin: float, xmax: float, wx_range, front_margin: float, merge_tol: float = 0.3) -> dict[str, Any]:
+def _fit_gap_lines(shp, PA, PB, xmin: float, xmax: float, wx_range, front_margin: float, merge_tol: float = 0.3, gap_fit_tol_mm: float = 0.3) -> dict[str, Any]:
     ba, bb = _densify(shp, PA.exterior, 0.05), _densify(shp, PB.exterior, 0.05)
     xs_, ya, yb = [], [], []
     for xc in np.arange(xmin + 0.25, xmax - front_margin, 0.5):
@@ -771,7 +773,41 @@ def _fit_gap_lines(shp, PA, PB, xmin: float, xmax: float, wx_range, front_margin
     if len(xs_) < 8:
         raise GrooveError('CLICK_GROOVE_NO_GAP', 'The centre gap between the two clicks could not be measured (fewer than 8 slices with both click edges).', {'slices': len(xs_)})
     xs_, ya, yb = np.array(xs_), np.array(ya), np.array(yb)
-    out: dict[str, Any] = {}
+    # Consensus slices: automatic labels are only trustworthy where the two click edges run along ONE straight gap; round the wheel well and
+    # where the labels of the two clicks interleave the slices scatter by many mm and, when they outnumber the clean stretch, drag a plain
+    # least-squares line off the real gap. The slices kept are those on the straight line pair (one per click edge) that most slices agree
+    # with (RANSAC over slice pairs, inlier distance gap_fit_tol_mm on BOTH edges); too few agreeing slices -> all slices, as before.
+    tol_in = float(gap_fit_tol_mm)
+    ii, jj = np.triu_indices(len(xs_), 1)
+    ok = xs_[jj] - xs_[ii] >= 2.0
+    ii, jj = ii[ok], jj[ok]
+    keep = np.ones(len(xs_), bool)
+    if len(ii):
+        dx = xs_[jj] - xs_[ii]
+        best_n, best_mask = -1, keep
+        for c0 in range(0, len(ii), 512):
+            sl = slice(c0, c0 + 512)
+            inl = np.ones((len(ii[sl]), len(xs_)), bool)
+            for yy in (ya, yb):
+                sl_ = (yy[jj[sl]] - yy[ii[sl]]) / dx[sl]
+                pred = yy[ii[sl]][:, None] + sl_[:, None] * (xs_[None] - xs_[ii[sl]][:, None])
+                inl &= np.abs(pred - yy[None]) <= tol_in
+            cnt = inl.sum(1)
+            k = int(np.argmax(cnt))
+            if cnt[k] > best_n:
+                best_n, best_mask = int(cnt[k]), inl[k]
+        if best_n >= 8:
+            keep = best_mask
+    n_total = len(xs_)
+    if not keep.all():
+        warnings_gap = {'code': 'GAP_FIT_SLICES_REJECTED', 'kept': int(keep.sum()), 'rejected': int((~keep).sum()), 'tolerance_mm': tol_in,
+                        'x_range_kept_mm': [float(xs_[keep].min()), float(xs_[keep].max())],
+                        'note': 'Slices whose click edges do not lie on the straight line pair most slices agree with (label noise round the wheel well / '
+                                'where the click labels interleave) were left out of the centre-gap fit.'}
+        xs_, ya, yb = xs_[keep], ya[keep], yb[keep]
+    else:
+        warnings_gap = None
+    out: dict[str, Any] = {'slices_total': n_total, 'slices_rejected_warning': warnings_gap}
     for key, yy in (('upper', ya), ('lower', yb)):
         p = robust_line(xs_, yy, floor=0.03, iters=4)
         r = yy - np.polyval(p, xs_)
@@ -933,7 +969,7 @@ def _finish_window(win: dict[str, Any], V, F, zf, gap, P, shp, warnings) -> None
         u0, v0 = U.min(0)
         u1, v1 = U.max(0)
         cu, cv, w, h = (u0 + u1) / 2, (v0 + v1) / 2, u1 - u0, v1 - v0
-        gm = np.abs(U[:, 1]) < 1.0
+        gm = np.abs(U[:, 1]) < min(1.0, 0.12 * h)        # centre-gap groove excluded from the side fits; scaled down for a small window (the side band is +-0.28 h)
         ss = {'top': U[(U[:, 1] > cv) & (np.abs(U[:, 0] - cu) < 0.3 * w), 1], 'bottom': U[(U[:, 1] < cv) & (np.abs(U[:, 0] - cu) < 0.3 * w), 1],
               'left': U[(U[:, 0] < cu) & (np.abs(U[:, 1] - cv) < 0.28 * h) & ~gm, 0], 'right': U[(U[:, 0] > cu) & (np.abs(U[:, 1] - cv) < 0.28 * h) & ~gm, 0]}
         if min(len(v) for v in ss.values()) < 8:
@@ -1051,7 +1087,7 @@ def _finish_window(win: dict[str, Any], V, F, zf, gap, P, shp, warnings) -> None
     resid = zr - Mx @ coef
     line_mid = shp.LineString([(x0 - 5, gap['mid'][0] * (x0 - 5) + gap['mid'][1]), (x1 + 5, gap['mid'][0] * (x1 + 5) + gap['mid'][1])])
     seg = pg.intersection(line_mid)
-    gx = seg.bounds
+    gx = seg.bounds if not seg.is_empty else (x0, y0, x1, y1)     # window off the gap line: reported by the window_gap gate, never NaN
     fu = win.pop('_fits_uv')
     dev = {name: {k: {'p50_mm': float(np.median(np.abs(v - fu['final_sides_uv'][k]))), 'max_mm': float(np.abs(v - fu['final_sides_uv'][k]).max())}
                   for k, v in ss.items()} for name, ss in sel.items()}

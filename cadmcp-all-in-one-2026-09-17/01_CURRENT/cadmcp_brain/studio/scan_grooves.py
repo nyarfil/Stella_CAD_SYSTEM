@@ -230,7 +230,7 @@ def _islands(lab, ea, eb, fixed, nF, prior=None):
         l2 = np.where(bad, -1, lab)
         for _ in range(500):
             for x, y in ((ea, eb), (eb, ea)):
-                m = (l2[x] < 0) & (l2[y] >= 0)
+                m = (l2[x] < 0) & (l2[y] >= 0) & (fixed[y] < 0)      # fixed regions (side-button pads) never absorb stray pieces
                 l2[x[m]] = l2[y[m]]
             if (l2 >= 0).all():
                 break

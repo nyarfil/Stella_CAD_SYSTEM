@@ -3,7 +3,8 @@
 Detects the side buttons of the scan (side-button labels of the recognition / flush steps, or raised flank patches without labels), builds a
 regular pad per button (straight edges, small corner radii, crisp top = quadratic fit of the scan pad top, or skin + default proud when the
 confidence is below high) with a groove round it, on the given shell STEP (normally slotted_shell.step of brain_mouse_click_slots) and writes a
-new STEP. Generic: 0..max_per_flank buttons per flank, any handedness, never mirrored. Runs scan_side_buttons_worker.py in the server python
+new STEP. Generic: 0..max_per_flank buttons per flank, any handedness, never mirrored. Existing slots / grooves of the shell are detected from the skin and
+never moved: the pad outline is clipped to keep min_land_mm (default 1.0, minimum intact skin between the groove and a slot). Runs scan_side_buttons_worker.py in the server python
 (OCP); outputs once under mouse/cad/<sb_id>/; the input STEP is never modified.
 """
 from __future__ import annotations
@@ -15,13 +16,13 @@ from .. import __version__
 from ..errors import BrainError
 from ..req2cad.common import json_load
 
-SB_VERSION = 'SB1.0'
+SB_VERSION = 'SB1.8'
 WORKER = Path(__file__).with_name('scan_side_buttons_worker.py')
 REPORT = 'side_buttons_report.json'
 CODE = 'SIDE_BUTTONS'
 IMAGE_SUFFIXES = ('.png', '.jpg', '.jpeg', '.webp', '.bmp')
 _RANGES = {'groove_width_mm': (0.0, 2.0), 'groove_depth_mm': (0.0, 5.0), 'corner_radius_mm': (0.1, 5.0), 'top_threshold_mm': (0.05, 2.0),
-           'outline_tol_mm': (0.05, 2.0), 'min_area_mm2': (1.0, 500.0), 'default_proud_mm': (0.3, 3.0)}
+           'outline_tol_mm': (0.05, 2.0), 'min_area_mm2': (1.0, 500.0), 'default_proud_mm': (0.3, 3.0), 'min_land_mm': (0.0, 5.0)}
 
 
 def _regions(workspace: Path, rel: str) -> tuple[Path, dict[str, str], str | None]:
@@ -38,10 +39,10 @@ def _regions(workspace: Path, rel: str) -> tuple[Path, dict[str, str], str | Non
 def side_buttons(workspace: Path, shell_step_path: str, mesh_path: str, labels_path: str | None = None, regions_report_path: str | None = None,
                  reference_images: list[str] | None = None, groove_width_mm: float = 0.4, groove_depth_mm: float = 1.5, corner_radius_mm: float = 1.0,
                  proud_mm: float | None = None, default_proud_mm: float = 1.0, top_threshold_mm: float = 0.35, outline_tol_mm: float = 0.35,
-                 max_per_flank: int = 2, min_area_mm2: float = 15.0) -> dict[str, Any]:
+                 max_per_flank: int = 2, min_area_mm2: float = 15.0, min_land_mm: float = 1.0) -> dict[str, Any]:
     workspace = Path(workspace)
     vals = {'groove_width_mm': groove_width_mm, 'groove_depth_mm': groove_depth_mm, 'corner_radius_mm': corner_radius_mm, 'top_threshold_mm': top_threshold_mm,
-            'outline_tol_mm': outline_tol_mm, 'min_area_mm2': min_area_mm2, 'default_proud_mm': default_proud_mm}
+            'outline_tol_mm': outline_tol_mm, 'min_area_mm2': min_area_mm2, 'default_proud_mm': default_proud_mm, 'min_land_mm': min_land_mm}
     for k, (lo, hi) in _RANGES.items():
         check_range(k, vals[k], lo, hi, 'SIDE_BUTTONS_SETTINGS')
     if proud_mm is not None:

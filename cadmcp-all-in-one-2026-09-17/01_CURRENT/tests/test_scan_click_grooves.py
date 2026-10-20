@@ -450,3 +450,39 @@ def test_mirrored_mesh_gives_the_mirrored_layout(tmp_path):
     assert wa['corner_radius_mm'] == pytest.approx(wb['corner_radius_mm'], abs=1e-6)
     assert wa['dims_mm']['width_x'] == pytest.approx(wb['dims_mm']['width_x'], abs=0.05) and wa['dims_mm']['height_y'] == pytest.approx(wb['dims_mm']['height_y'], abs=0.05)
     assert scg.gate_blockers(a['metrics'], a['params_used']) == scg.gate_blockers(b['metrics'], b['params_used']) == []
+
+
+def _gap_polygons(shp):
+    """Click outlines with a clean straight gap at the rear (x 0..20) and label noise that outnumbers it (wheel well + interleaved front)."""
+    lo, hi = [(0.0, 0.1), (20.0, 0.1)], [(0.0, -0.1), (20.0, -0.1)]
+    lo += [(20.0, -2.0), (34.0, -2.0)] + [(35.0 + i, 3.0 + 3.0 * ((i % 3) - 1)) for i in range(0, 26)]
+    hi += [(20.0, -1.5), (34.0, -1.5)] + [(35.0 + i, 7.0 + 2.0 * ((i % 4) - 1.5)) for i in range(0, 26)]
+    PA = shp.Polygon(lo + [(60.0, 30.0), (0.0, 30.0)])
+    PB = shp.Polygon(hi + [(60.0, -30.0), (0.0, -30.0)])
+    return PA, PB
+
+
+def test_gap_fit_uses_the_consensus_slices_when_label_noise_outnumbers_the_clean_gap():
+    """Regression (Lamzu Inca): a plain least-squares line through all slices ran 4.6 mm off the mirror plane and the window missed the gap
+    line (NaN). The straight stretch most slices agree with decides; the rejected slices are reported."""
+    shp = W._load_libs().shp
+    PA, PB = _gap_polygons(shp)
+    g = W._fit_gap_lines(shp, PA, PB, 0.0, 60.0, None, 2.5)
+    assert abs(g['mid'][0]) < 0.01 and abs(g['mid'][1]) < 0.2, g['mid']
+    w = g['slices_rejected_warning']
+    assert w and w['rejected'] > w['kept'] and w['x_range_kept_mm'][1] <= 20.5
+    assert g['upper_fit']['max_dev_mm'] < 0.3 and g['lower_fit']['max_dev_mm'] < 0.3
+    # clean data: nothing is rejected and the fit is unchanged
+    clean_a = shp.Polygon([(0, 0.1), (60, 0.1), (60, 30), (0, 30)])
+    clean_b = shp.Polygon([(0, -0.1), (60, -0.1), (60, -30), (0, -30)])
+    g2 = W._fit_gap_lines(shp, clean_a, clean_b, 0.0, 60.0, None, 2.5)
+    assert g2['slices_rejected_warning'] is None and g2['upper_fit']['slices'] == g2['lower_fit']['slices'] == g2['slices_total']
+
+
+def test_off_centre_mirror_plane_and_a_small_window_are_handled(tmp_path):
+    """Nothing assumes the mirror plane is y = 0 or that the wheel window is tall: gap at y = 4, window only 4 mm high."""
+    write_case(tmp_path, gap_y=4.0, window=(15.0, 27.0, 2.0, 6.0))
+    res = W.run(request(tmp_path, mirror_plane={'normal': [0.0, 1.0, 0.0], 'd': 4.0}))
+    assert not any(w['code'] == 'WINDOW_EDGE_UNSUPPORTED' for w in res['warnings']), res['warnings']
+    assert res['fit']['gap_mirror_plane']['snapped'] and abs(res['fit']['gap_mid_line']['intercept_y'] - 4.0) < 0.05
+    assert res['metrics']['window'] is not None

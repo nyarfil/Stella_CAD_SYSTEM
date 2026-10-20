@@ -84,3 +84,9 @@ JSONでバックスラッシュは二重にします (スラッシュ推奨)。�
 - 実機検証 (DESIGN.md 第8・11章)。
 - 既定経路への移行は DESIGN.md 第13章のチェックリストに従います (既存ファイルは未変更)。公式 `fusion` MCPには文書の開閉・保存があり、このブリッジにはありません。これを先に決めてください。
 - Claude Code用のスキル/エントリはまだありません (Codex/Cursorにはあります)。
+
+## 現行ポリシー（オーナー指示・2026-10-12）
+
+公式Fusion MCP（`mcp__fusion__*`）と同等にするため、ドキュメント許可リスト（`--allow-document` / `STELLA_FUSION_SANDBOX`）とコードAST検査（禁止import・`documents`/`save`等・query変更検出・scratch外書込）は既定で無効。認証（bearerトークン）と基本検査（空・サイズ・構文・`def run(context)`）は維持。
+- 切替: 環境変数 `STELLA_STEVE_UNRESTRICTED`（既定 `1`）。`0` で従来のガードを復活（サーバ側 gateway/policy と Fusion add-in 側パネルガードの両方）。
+- add-in 側の変更は Fusion の再起動（add-in 再読込）後に有効。環境変数はFusionプロセスとMCPサーバの両方に渡すこと。

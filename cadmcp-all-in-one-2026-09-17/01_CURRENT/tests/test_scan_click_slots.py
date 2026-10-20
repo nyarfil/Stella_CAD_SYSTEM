@@ -193,3 +193,124 @@ def test_rough_perimeter_is_not_ready(tmp_path):
     assert rep['status'] == 'NOT_READY'
     clean = _run_layout(tmp_path, _gap_window_layout(win_dy=0.0), 'clean.json')
     assert clean['checks']['perimeter_outline_regular'] == 'PASS' and clean['quality']['perimeter_roughness']['curvature_sign_changes'] == 0
+
+
+# ------------------------------------------------------------------ CS1.7: the panel ends at a crisp crease of the shell (no slot band on the lip edge)
+def make_capped_shell(path: Path, z_cap: float = 22.0):
+    """Half ellipsoid 120 x 64 x 30 capped flat at z_cap: a crisp crease (flat top / ellipsoid skin) runs round the whole top."""
+    from OCP.BRepAlgoAPI import BRepAlgoAPI_Common
+    from OCP.BRepBuilderAPI import BRepBuilderAPI_GTransform
+    from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox, BRepPrimAPI_MakeSphere
+    from OCP.gp import gp_GTrsf, gp_Mat, gp_Pnt
+    g = gp_GTrsf()
+    g.SetVectorialPart(gp_Mat(60, 0, 0, 0, 32, 0, 0, 0, 30))
+    ell = BRepBuilderAPI_GTransform(BRepPrimAPI_MakeSphere(gp_Pnt(0, 0, 0), 1.0).Shape(), g, True).Shape()
+    box = BRepPrimAPI_MakeBox(gp_Pnt(-70, -40, 0), gp_Pnt(70, 40, z_cap)).Shape()
+    L.write_step(L.solids(BRepAlgoAPI_Common(ell, box).Shape())[0], path)
+
+
+def crease_hugging_layout(z_cap: float = 22.0):
+    """Open clockwise loop on the flat top: 0.99 x the crease ellipse over the front half (the band would straddle the crease round the front
+    corners, where the outward normal is still sideways), shrinking smoothly to 0.8 x at the rear (clear of the crease)."""
+    k = np.sqrt(1.0 - (z_cap / 30.0) ** 2)
+    a, b = 60.0 * k, 32.0 * k
+    t = np.radians(-np.linspace(0.75, 359.25, 240))          # clockwise from just below the front centre: left normal points outward
+    s = 0.99 - 0.19 * np.maximum(0.0, -np.cos(t))
+    P = np.c_[a * s * np.cos(t), b * s * np.sin(t)]
+    return {'schema': 'click_slot_layout/1', 'slot_width_mm': 0.5, 'perimeter': {'points': P.tolist(), 'slot_side': 'left'},
+            'centre_gap': {'segments': [[[-30.0, 0.0], [20.0, 0.0]]], 'width_mm': 1.0}, 'window': None}
+
+
+def test_slot_band_on_a_crisp_crease_is_trimmed_back(tmp_path):
+    """A perimeter path that hugs the shell's crisp crease round the front corners (normal < lip_angle_deg forward, so the lip-angle rule keeps
+    it) is trimmed by the crease rule until its band clears the edge; the cut has no sliver faces and both ends lie behind the front."""
+    (tmp_path / 'c').mkdir(parents=True, exist_ok=True)
+    make_capped_shell(tmp_path / 'c' / 'shell.step')
+    (tmp_path / 'c' / 'lay.json').write_text(json.dumps(crease_hugging_layout()), encoding='utf-8')
+    rep = cs.click_slots(tmp_path, 'c/shell.step', 'c/lay.json')
+    # CS1.9: this path never leaves the shell, so its crease-stopped ends cannot reach the outer edge: the gate must say so
+    assert rep['status'] == 'NOT_READY' and rep['blocking_reasons'] == ['SLOT_END_NOT_AT_EDGE'], (rep['blocking_reasons'], rep['checks'], rep['warnings'])
+    t = rep['trim']['perimeter_lip']
+    assert t['crease_stations_removed'] > 0 and t['lip_angle_stations_removed'] > 0 and t['crease']['crisp_edge_samples'] > 100
+    ends = np.asarray(t['ends_xy'])
+    assert (ends[:, 0] < 0.0).all(), ends                                                      # both ends behind the front half
+    assert not any(e['exits_shell'] for e in t['ends']) and all(e['stub_mm'] is None or e['stub_mm'] > 0.1 for e in t['ends'])
+    assert rep['result']['faces_below_0p05mm2'] == 0 and rep['checks']['no_slivers'] != 'FAIL'
+
+
+@pytest.mark.parametrize('mirrored', [False, True])
+def test_crease_stopped_end_runs_out_through_the_shell_edge(tmp_path, mirrored):
+    """CS1.9: a side slot that crosses the crease and runs on over the skirt to the shell's outer edge is not stopped at the crease: the end is
+    extended to the first station whose band is off the shell, so no uncut stub is left (gate PASS, stub 0 measured on the produced solid).
+    Mirrored: reversed path order and the other slot side (left-handed scan)."""
+    (tmp_path / 'c').mkdir(parents=True, exist_ok=True)
+    make_capped_shell(tmp_path / 'c' / 'shell.step')
+    P = np.c_[np.linspace(-20.0, 70.0, 181), np.full(181, -15.0)]
+    if mirrored:
+        P = P[::-1]
+    lay = {'schema': 'click_slot_layout/1', 'slot_width_mm': 0.5, 'perimeter': {'points': P.tolist(), 'slot_side': 'right' if mirrored else 'left'},
+           'centre_gap': None, 'window': None}
+    (tmp_path / 'c' / 'lay.json').write_text(json.dumps(lay), encoding='utf-8')
+    rep = cs.click_slots(tmp_path, 'c/shell.step', 'c/lay.json')
+    assert rep['status'] == 'READY', (rep['blocking_reasons'], rep['checks'], rep['warnings'])
+    t = rep['trim']['perimeter_lip']
+    ce = [e for e in t['ends'] if e['reason'] == 'crease']
+    assert len(ce) == 1 and ce[0]['exits_shell'] and ce[0]['stub_mm'] == 0.0 and ce[0]['extended_mm'] > 15.0, t['ends']
+    assert rep['checks']['slot_end_not_at_edge'] == 'PASS' and rep['checks']['no_slivers'] != 'FAIL'
+    ex = np.asarray(t['ends_xy'])[:, 0].max()
+    assert ex > 53.0, ex                                                                        # past the skirt edge at y = -15 (x = 52.9)
+
+
+def test_crisp_edge_points_ignore_smooth_seams():
+    from cadmcp_brain.studio import scan_click_slots_worker as SW
+    from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox, BRepPrimAPI_MakeSphere
+    from OCP.gp import gp_Pnt
+    box = BRepPrimAPI_MakeBox(gp_Pnt(0, 0, 0), gp_Pnt(10, 10, 10)).Shape()
+    E = SW.crisp_edge_points(box, 20.0, 0.5)
+    assert E is not None and len(E) >= 12 * 20                                                 # 12 edges of 10 mm, 90 deg each
+    sph = BRepPrimAPI_MakeSphere(gp_Pnt(0, 0, 0), 5.0).Shape()
+    assert SW.crisp_edge_points(sph, 20.0, 0.5) is None                                        # seam edge of the sphere: 0 deg
+
+
+# ------------------------------------------------------------------ CS1.8: through_wall (hollow-first order) keeps every piece
+def make_hollow_shell(path: Path, wall=1.2):
+    """Half-ellipsoid shell 120 x 64 x 30 hollowed by an inner half-ellipsoid (uniform axis offset `wall`), open at z = 0."""
+    from OCP.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
+    from OCP.BRepBuilderAPI import BRepBuilderAPI_GTransform
+    from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox, BRepPrimAPI_MakeSphere
+    from OCP.gp import gp_GTrsf, gp_Mat, gp_Pnt
+
+    def ell(a, b, c):
+        g = gp_GTrsf()
+        g.SetVectorialPart(gp_Mat(a, 0, 0, 0, b, 0, 0, 0, c))
+        return BRepBuilderAPI_GTransform(BRepPrimAPI_MakeSphere(gp_Pnt(0, 0, 0), 1.0).Shape(), g, True).Shape()
+    box = BRepPrimAPI_MakeBox(gp_Pnt(-70, -40, 0), gp_Pnt(70, 40, 40)).Shape()
+    outer = BRepAlgoAPI_Common(ell(60, 32, 30), box).Shape()
+    inner = BRepAlgoAPI_Common(ell(60 - wall, 32 - wall, 30 - wall), BRepPrimAPI_MakeBox(gp_Pnt(-70, -40, -1), gp_Pnt(70, 40, 40)).Shape()).Shape()
+    L.write_step(L.solids(BRepAlgoAPI_Cut(outer, inner).Shape())[0], path)
+
+
+def test_through_wall_keeps_every_piece(tmp_path):
+    """Hollow shell (wall 1.2), default layout plus a second centre-gap segment across the front (closing the U), slot depth 2 > wall:
+    the two click plates fall out as two extra solids; all three pieces are written, valid and meshable after the STEP round trip;
+    the slit width is measured below the skin (not across the cavity); no end ramp is applied."""
+    (tmp_path / 'c').mkdir(parents=True, exist_ok=True)
+    make_hollow_shell(tmp_path / 'c' / 'hollow.step')
+    lay = layout()
+    lay['centre_gap']['segments'] = [[[-9.0, 0.0], [14.5, 0.0]], [[14.0, -13.0], [14.0, 13.0]]]      # full-length centre gap + front closure
+    (tmp_path / 'c' / 'lay.json').write_text(json.dumps(lay), encoding='utf-8')
+    rep = cs.click_slots(tmp_path, 'c/hollow.step', 'c/lay.json', through_wall=True)
+    r = rep['result']
+    assert rep['status'] == 'READY', (rep['blocking_reasons'], rep['checks'], rep['warnings'])
+    assert r['solids_after_cut'] == 3 and r['pieces_written'] == 3 and r['pieces_valid'] is True, r
+    assert rep['checks']['no_loose_pieces'] == 'NOT_APPLICABLE' and rep['checks']['pieces_valid'] == 'PASS'
+    files = [f['file'] for f in rep['outputs']['pieces']]
+    assert files == ['slotted_shell.step', 'piece_2.step', 'piece_3.step']
+    vols = []
+    for f in files:
+        s = L.solids(L.read_step(tmp_path / 'mouse' / 'cad' / rep['slots_id'] / f))
+        assert len(s) == 1 and L.is_valid(s[0])
+        vols.append(L.volume(s[0]))
+    assert vols[0] > 10000 and all(120 < v < 450 for v in vols[1:]) and abs(vols[1] - vols[2]) < 0.1 * vols[1], vols   # two mirror-equal plates
+    assert abs(rep['measured']['perimeter']['width_mm_median'] - 0.5) <= 0.15
+    assert rep['settings']['through_wall'] is True

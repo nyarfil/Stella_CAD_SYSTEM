@@ -267,3 +267,29 @@ def test_bridge_unavailable_has_no_fallback(env, tmp_path):
     gw.cfg.port = 1  # nothing listens
     payload, is_error = gw.handle("stella_fusion_health", {})
     assert is_error and payload["errorCode"] == "bridge_unavailable" and "No other route was tried" in payload["error"]
+
+
+# ---- owner-ordered unrestricted default
+def test_unrestricted_default_runs_on_any_document_without_allowlist(env, monkeypatch):
+    monkeypatch.delenv("STELLA_STEVE_UNRESTRICTED", raising=False)
+    env.app.switch_to(env.other)
+    gw = env.gateway(allow_documents=[])
+    assert gw.cfg.unrestricted is True
+    payload, is_error = gw.handle("stella_fusion_execute", {"title": "x", "code": GOOD_EXEC})
+    assert not is_error, payload
+    assert env.other.design.log == ["made-box"]
+    payload, is_error = gw.handle("stella_fusion_inspect", {})
+    assert not is_error, payload
+    payload, is_error = gw.handle("stella_fusion_query", {"title": "q", "code": "import os\ndef run(context):\n    return 1\n"})
+    assert not is_error, payload
+
+
+# ---- view navigation must not block reads (orbit/pan/zoom never edit the document)
+@pytest.mark.parametrize("command", ["ConstrainedOrbitCommand", "PanCommand", "ZoomCommand"])
+def test_view_navigation_allows_query_but_blocks_execute(env, command):
+    env.app.userInterface.activeCommand = command
+    query = "def run(context):\n    return 1\n"
+    payload, is_error = env.gateway().handle("stella_fusion_query", {"title": "q", "code": query})
+    assert not is_error, payload
+    payload, is_error = env.gateway().handle("stella_fusion_execute", {"title": "x", "code": GOOD_EXEC})
+    assert is_error and env.doc.design.log == []

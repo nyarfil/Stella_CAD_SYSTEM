@@ -23,7 +23,7 @@ from ..errors import BrainError
 from ..req2cad.common import atomic_json, json_load
 from ..util import digest, file_hash, safe_path
 
-CLICK_GROOVES_VERSION = 'G1.5'
+CLICK_GROOVES_VERSION = 'G1.6'
 WORKER = Path(__file__).with_name('scan_click_grooves_worker.py')
 TIMEOUT_S = 1800
 REPORT = 'click_grooves_report.json'

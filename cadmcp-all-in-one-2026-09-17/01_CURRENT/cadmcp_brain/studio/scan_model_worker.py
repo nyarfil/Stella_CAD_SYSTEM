@@ -16,7 +16,7 @@ import traceback
 from pathlib import Path
 import numpy as np
 import scipy.sparse as sp
-from scipy.sparse.csgraph import connected_components
+from scipy.sparse.csgraph import breadth_first_order, connected_components
 from scipy.spatial import cKDTree
 
 WORKER_VERSION = 'scan_model/1'
@@ -164,6 +164,51 @@ def patch_small_holes(v: np.ndarray, f: np.ndarray, maxloop: int = 8) -> tuple[n
     return np.vstack(verts), np.vstack([f, np.array(new, dtype=f.dtype)]), patched
 
 
+def orient_faces(v: np.ndarray, f: np.ndarray) -> tuple[np.ndarray, int]:
+    """Make the face winding coherent over every edge shared by exactly two faces, in numpy (MeshLab's re-orient refuses any
+    mesh that still has a non-manifold edge, which is exactly the state a decimated scan is in). Faces are flipped by a
+    breadth-first parity walk over the face adjacency, then each connected piece is turned so its signed volume is positive
+    (outward). `v` is needed for that. Returns (faces, edges that could not be made coherent)."""
+    nf = len(f)
+    if not nf:
+        return f, 0
+    d = np.concatenate([f[:, [0, 1]], f[:, [1, 2]], f[:, [2, 0]]])
+    key = np.sort(d, axis=1)
+    _, inv, cnt = np.unique(key, axis=0, return_inverse=True, return_counts=True)
+    inv = inv.reshape(-1)
+    two = np.flatnonzero(cnt[inv] == 2)
+    if not len(two):
+        return f, 0
+    order = two[np.argsort(inv[two], kind='stable')]
+    a, b = order[0::2], order[1::2]
+    fa, fb = a % nf, b % nf
+    w = (d[a, 0] != d[b, 1]).astype(np.int8)          # 1 = the two faces disagree about the shared edge direction
+    adj = sp.coo_matrix((np.concatenate([w, w]) + 1, (np.concatenate([fa, fb]), np.concatenate([fb, fa]))), shape=(nf, nf)).tocsr()
+    adj.sum_duplicates()
+    flip = np.zeros(nf, np.int8)
+    seen = np.zeros(nf, bool)
+    pieces = []
+    for s in range(nf):
+        if seen[s]:
+            continue
+        nodes, pred = breadth_first_order(adj, s, directed=False, return_predecessors=True)
+        seen[nodes] = True
+        for n in nodes[1:]:
+            p = pred[n]
+            flip[n] = flip[p] ^ (adj[p, n] - 1)
+        pieces.append(nodes)
+    out = f.copy()
+    fl = flip.astype(bool)
+    out[fl] = out[fl][:, [0, 2, 1]]
+    t = v[out]
+    vol = np.einsum('ij,ij->i', t[:, 0], np.cross(t[:, 1], t[:, 2]))
+    for nodes in pieces:
+        if vol[nodes].sum() < 0:
+            out[nodes] = out[nodes][:, [0, 2, 1]]
+    bad = int(((flip[fa] ^ flip[fb]) != w).sum())
+    return out, bad
+
+
 # ------------------------------------------------------------------ pymeshlab pipeline
 def _closed(t: dict) -> bool:
     return bool(t['watertight'] and t['manifold'] and t['winding_consistent'] and t['components'] == 1 and t['signed_volume_mm3'] > 0)
@@ -221,22 +266,28 @@ def _decimate(ms, src_id: int, n_faces: int, min_component_faces: int, hole_max:
     v, f = np.array(m.vertex_matrix()), np.array(m.face_matrix())
     v, f, patched = patch_small_holes(v, f)
     # An STL merges vertices that coincide after float32 rounding, which turns thin-wall pinches into non-manifold
-    # vertices on disk. Repair on the merged mesh, displacing split vertices by a sub-micron fraction of the edge.
-    for _ in range(4):
-        v2, f2 = stl_weld(v, f)
-        if _closed(topology(v2, f2)):
-            v, f = v2, f2
+    # vertices/edges on disk, and MeshLab's repairs can leave patches wound the wrong way. Each round: merge as the STL will,
+    # make the winding coherent in numpy, and when the result is still not closed repair it in MeshLab (non-manifold edges and
+    # vertices first, then holes), re-orient and patch what is left. A candidate that is still open after the last round is
+    # returned as is: the search treats it as a topology miss and tries another face count.
+    for _ in range(6):
+        v, f = stl_weld(v, f)
+        f, _bad = orient_faces(v, f)
+        if _closed(topology(v, f)):
             break
-        ms.add_mesh(pm.Mesh(vertex_matrix=v2, face_matrix=f2))
-        ms.meshing_re_orient_faces_coherently()
+        ms.add_mesh(pm.Mesh(vertex_matrix=v, face_matrix=f))
         ms.meshing_repair_non_manifold_edges()
         ms.meshing_repair_non_manifold_vertices(vertdispratio=0.002)
         ms.meshing_remove_unreferenced_vertices()
         ms.meshing_remove_connected_component_by_face_number(mincomponentsize=min_component_faces)
+        ms.meshing_close_holes(maxholesize=hole_max)
         ms.meshing_remove_unreferenced_vertices()
         nm = ms.current_mesh()
         v, f = np.array(nm.vertex_matrix()), np.array(nm.face_matrix())
         ms.delete_current_mesh()
+        v, f, more = patch_small_holes(v, f)
+        patched += more
+        f, _bad = orient_faces(v, f)
     ms.set_current_mesh(mid)
     ms.delete_current_mesh()
     ms.add_mesh(pm.Mesh(vertex_matrix=v, face_matrix=f))

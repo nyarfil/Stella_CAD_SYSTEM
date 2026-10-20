@@ -11,6 +11,7 @@ from cadmcp_brain.engine import Brain
 from cadmcp_brain.errors import BrainError
 from cadmcp_brain.studio import scan_model as smod
 from cadmcp_brain.studio import scan_model_worker as W
+from cadmcp_brain.studio import scan_frontwall as sfw
 from cadmcp_brain.studio import scan_grooves as sgr
 from cadmcp_brain.studio import scan_regions as sr
 from cadmcp_brain.studio import scan_segment as sg
@@ -230,8 +231,21 @@ def test_real_scan_end_to_end_and_ground_truth(tmp_path, scan_python, monkeypatc
     print('IoU', iou)
     # measured (R2.0, geometry only): LC 0.936, RC 0.938, B1 0.838, B2 0.874. Goals: LC, RC >= 0.93, side button 1 >= 0.8, 2 >= 0.7.
     # measured (R2.1, groove-following 3-D boundaries): LC 0.944, RC 0.960, B1 0.838, B2 0.874 (side buttons unchanged by R2.1).
-    assert iou['LC'] >= 0.94 and iou['RC'] >= 0.95 and iou['B1'] >= 0.83 and iou['B2'] >= 0.87
-    assert r['code_version']['scan_regions'] == 'R2.1' and (out / 'boundary_curves.npz').is_file()
+    # R2.3 (groove-bounded front wall added to the clicks; its lip projects up to ~1 mm outside the hand-drawn top outline): allowed regression vs R2.1 <= 0.01.
+    assert iou['LC'] >= 0.934 and iou['RC'] >= 0.95 and iou['B1'] >= 0.83 and iou['B2'] >= 0.87
+    assert r['code_version']['scan_regions'] == 'R2.5' and (out / 'boundary_curves.npz').is_file()
+    # R2.2 front wall: the lip below each click's front edge belongs to the click (one piece each, taken from the palm shell only)
+    fw = r['front_wall']
+    assert fw['applied'] and set(fw['clicks']) == {'left_click', 'right_click'}
+    assert all(c['faces_added'] >= 300 and 0.5 < c['thickness_median_mm'] < 3.0 for c in fw['clicks'].values())
+    for kc in (1, 2):
+        sel = codes == kc
+        ea, eb = sfw._face_pairs(f)
+        e2 = sel[ea] & sel[eb]
+        import scipy.sparse as sps
+        import scipy.sparse.csgraph as scg
+        n_comp, comp = scg.connected_components(sps.coo_matrix((np.ones(e2.sum()), (ea[e2], eb[e2])), shape=(len(f), len(f))), directed=False)
+        assert len(np.unique(comp[sel])) <= 3        # main piece (+ at most two tiny scan islands)
     for k in ('left_click', 'right_click', 'wheel', 'palm_shell'):
         b3 = r['regions'][k]['boundary_3d']
         assert {'length_mm', 'groove_followed_fraction', 'neighbours_mm', 'inferred_stretches', 'waviness_rms_mm'} <= set(b3)
@@ -268,6 +282,86 @@ def test_real_scan_end_to_end_and_ground_truth(tmp_path, scan_python, monkeypatc
     assert pt['bottom_plate']['face_count'] + pt['top_shell']['face_count'] + rg['unassigned_faces']['face_count'] == s2['scan']['faces']
     assert pt['top_shell']['components'] == 1 and rg['unassigned_faces']['face_count'] == 0
     assert t.call('brain_mouse_recognize_shell', {'scan_id': p['scan_id']})['cached'] is True
+
+
+# ------------------------------------------------------------------ scan_frontwall (R2.3): synthetic click with a rolled front lip and a parting slit
+def _lip_mesh(drop_slit_for_y=None):
+    """Sheet extruded along y in [-10, 10]; profile (x, z): click top -> rounded edge -> wall (lip) -> slit (down- then up-facing ledge) -> lower wall."""
+    key = [(0, 3), (20, 1), (22, 0), (22, -2), (20.5, -2), (20.5, -2.5), (22, -2.5), (22, -8)]
+    prof = [key[0]]
+    for a, b in zip(key[:-1], key[1:]):
+        n = max(int(np.ceil(np.hypot(b[0] - a[0], b[1] - a[1]) / 0.25)), 1)
+        prof += [(a[0] + (b[0] - a[0]) * t / n, a[1] + (b[1] - a[1]) * t / n) for t in range(1, n + 1)]
+    ys = np.arange(-10, 10.01, 0.5)
+    ny = len(ys)
+    P = np.array([(x, y, z) for (x, z) in prof for y in ys])
+    F = []
+    for i in range(len(prof) - 1):
+        for j in range(ny - 1):
+            a, b, c, d = i * ny + j, (i + 1) * ny + j, (i + 1) * ny + j + 1, i * ny + j + 1
+            F += [(a, b, c), (a, c, d)]
+    F = np.array(F)
+    cen = P[F].mean(1)
+    if drop_slit_for_y:
+        torn = (cen[:, 1] > drop_slit_for_y[0]) & (cen[:, 1] < drop_slit_for_y[1]) & (cen[:, 0] < 21.9) & (cen[:, 2] < -1.9) & (cen[:, 2] > -2.6)
+        F = F[~torn]
+        cen = P[F].mean(1)
+    nv = np.cross(P[F][:, 1] - P[F][:, 0], P[F][:, 2] - P[F][:, 0])
+    fn = nv / np.linalg.norm(nv, axis=1)[:, None]
+    lab = np.where(cen[:, 2] >= 0.0, np.where(cen[:, 1] > 0, 0, 1), 5)
+    return F, cen, fn, lab
+
+
+def test_front_wall_grows_over_the_lip_down_to_the_slit_and_keeps_the_centre_split():
+    F, cen, fn, lab = _lip_mesh()
+    new, info = sfw.extend_click_front(F, cen, fn, lab)
+    assert info['applied'] and set(info['clicks']) == {0, 1}
+    added = new != lab
+    assert added.sum() > 50 and np.all(lab[added] == 5)                                   # only palm-shell faces move
+    assert cen[added, 2].min() > -3.0 and cen[added, 2].min() < -2.4                       # down to the lower lip of the slit, not into the lower wall
+    assert np.all(cen[added & (new == 0), 1] > 0) and np.all(cen[added & (new == 1), 1] < 0)   # the left | right split continues through the strip
+    assert 1.5 < info['clicks'][0]['thickness_median_mm'] < 3.0 and info['clicks'][0]['columns_with_groove_evidence'] >= 0.9
+    wall = (cen[:, 0] > 21.9) & (cen[:, 2] < -3.2)
+    assert np.all(new[wall] == 5)
+    for k in (0, 1):                                                                        # one piece per click
+        e1, e2 = sfw._face_pairs(F)
+        sel = new == k
+        both = sel[e1] & sel[e2]
+        import scipy.sparse as sps
+        import scipy.sparse.csgraph as scg
+        _, comp = scg.connected_components(sps.coo_matrix((np.ones(both.sum()), (e1[both], e2[both])), shape=(len(F), len(F))), directed=False)
+        assert len(np.unique(comp[sel])) == 1
+
+
+def test_front_wall_survives_a_torn_slit_and_refuses_without_a_front_arc():
+    F, cen, fn, lab = _lip_mesh(drop_slit_for_y=(3.0, 5.0))
+    new, info = sfw.extend_click_front(F, cen, fn, lab)
+    assert info['clicks'][0]['columns_with_groove_evidence'] < 1.0                           # the torn columns are interpolated, not skipped
+    torn_cols = (cen[:, 1] > 3.0) & (cen[:, 1] < 5.0) & (new == 0) & (lab == 5)
+    ok_cols = (cen[:, 1] > 7.0) & (cen[:, 1] < 9.0) & (new == 0) & (lab == 5)
+    assert torn_cols.any() and abs(cen[torn_cols, 2].min() - cen[ok_cols, 2].min()) < 0.6
+    same, none = sfw.extend_click_front(F, cen, fn, np.where(lab == 5, 5, -2))               # no remainder next to the clicks -> nothing to take
+    assert not none['applied'] and np.array_equal(same, np.where(lab == 5, 5, -2))
+
+
+def test_front_wall_adds_only_faces_inside_the_groove_loop():
+    """Guard: every face that changes label lies inside the returned groove loop of its click (crest curve above, smoothed slit curve below, evidence ends)."""
+    for torn in (None, (3.0, 5.0)):
+        F, cen, fn, lab = _lip_mesh(drop_slit_for_y=torn)
+        new, info = sfw.extend_click_front(F, cen, fn, lab)
+        for k in (0, 1):
+            moved = (new == k) & (lab != k)
+            assert moved.any()
+            assert sfw.in_loop(cen[moved], info['loops'][k]).all()
+            loop = info['loops'][k]
+            assert loop['zs'].max() < loop['zc'].min()                                          # the slit curve lies below the crest curve
+            assert np.abs(np.diff(loop['zs'])).max() < 0.3                                       # regularised: no ragged jumps along the slit
+        outside = ~(sfw.in_loop(cen, info['loops'][0]) | sfw.in_loop(cen, info['loops'][1]))
+        assert np.all(new[outside] == lab[outside])                                             # nothing outside a loop is touched
+    # a click-sized bump behind the crest (inside the shell, same height band) is not taken: the x-gate of the loop keeps it out
+    F, cen, fn, lab = _lip_mesh()
+    new, info = sfw.extend_click_front(F, cen, fn, lab)
+    assert np.all(new[(cen[:, 0] < 15.0) & (lab == 5)] == 5)
 
 
 # ------------------------------------------------------------------ scan_grooves (R2.1) helpers: synthetic
@@ -399,3 +493,45 @@ def test_sensor_window_d_shaped_pocket_outline_is_lines_and_arcs():
 def test_sensor_window_absent_is_reported_not_invented():
     r = _sensor_on(*_slab_with_pockets(pocket=False, screws=False))
     assert r['found'] is False and r['candidates'] == [] and r['reason']
+
+
+def _sphere_mesh(level=3):
+    v = np.array([[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]], float)
+    f = np.array([[0, 2, 4], [2, 1, 4], [1, 3, 4], [3, 0, 4], [2, 0, 5], [1, 2, 5], [3, 1, 5], [0, 3, 5]], np.int64)
+    for _ in range(level):
+        verts, cache, new = list(v), {}, []
+
+        def mid(a, b):
+            k = (min(a, b), max(a, b))
+            if k not in cache:
+                m = (verts[a] + verts[b]) / 2
+                verts.append(m / np.linalg.norm(m))
+                cache[k] = len(verts) - 1
+            return cache[k]
+        for a, b, c in f:
+            ab, bc, ca = mid(a, b), mid(b, c), mid(c, a)
+            new += [[a, ab, ca], [ab, b, bc], [ca, bc, c], [ab, bc, ca]]
+        v, f = np.array(verts), np.array(new, np.int64)
+    return v * 20.0, f
+
+
+def test_orient_faces_repairs_a_flipped_patch_and_an_inside_out_mesh_without_meshlab():
+    """Regression (Lamzu Inca scan): after decimation + repair a few patch faces were wound the wrong way while an edge was still
+    non-manifold, and MeshLab's re-orient refuses such a mesh ("Orientability requires manifoldness"). orient_faces is numpy-only."""
+    v, f = _sphere_mesh()
+    assert W.topology(v, f)['watertight'] and W.topology(v, f)['winding_consistent'] and W.topology(v, f)['signed_volume_mm3'] > 0
+    bad = f.copy()
+    patch = np.flatnonzero(np.linalg.norm(v[f].mean(1) - np.array([0, 0, 20.0]), axis=1) < 6.0)
+    assert 3 <= len(patch) < len(f) // 4
+    bad[patch] = bad[patch][:, [0, 2, 1]]
+    assert W.topology(v, bad)['inconsistent_winding_edges'] > 0
+    fixed, left = W.orient_faces(v, bad)
+    t = W.topology(v, fixed)
+    assert left == 0 and t['winding_consistent'] and t['watertight'] and t['signed_volume_mm3'] > 0
+    inside_out, left2 = W.orient_faces(v, f[:, [0, 2, 1]])
+    assert left2 == 0 and W.topology(v, inside_out)['signed_volume_mm3'] > 0
+    # a non-manifold edge elsewhere does not stop the repair: a 4th face on one edge is ignored, the rest is made coherent
+    v3 = np.vstack([v, [[0.0, 0.0, 50.0]]])
+    f3 = np.vstack([bad, [[f[0, 0], f[0, 1], len(v)]]])
+    fixed3, _ = W.orient_faces(v3, f3)
+    assert W.topology(v3, fixed3)['inconsistent_winding_edges'] <= 1

@@ -97,3 +97,31 @@ def test_unit_helpers_appended_after_code_and_validate():
             ns["to_cm"](bad)
         with pytest.raises(ValueError):
             ns["to_mm"](bad)
+
+
+# ---- owner-ordered unrestricted default (STELLA_STEVE_UNRESTRICTED, default ON)
+def test_default_unrestricted_accepts_os_import_and_other_documents(monkeypatch):
+    from stella_steve_bridge import policy
+    monkeypatch.delenv("STELLA_STEVE_UNRESTRICTED", raising=False)
+    code = ("import os, subprocess\n"
+            "def run(context):\n"
+            "    docs = context['app'].documents\n"
+            "    docs.item(1).activate()\n"
+            "    open('C:/x.txt', 'w').write(os.getcwd())\n")
+    assert policy.check(code, "execute") == []
+    assert policy.check(code, "query") == []
+    assert policy.check(code, "execute", restricted=True) != []
+
+
+def test_default_unrestricted_keeps_syntax_and_run_contract(monkeypatch):
+    from stella_steve_bridge import policy
+    monkeypatch.delenv("STELLA_STEVE_UNRESTRICTED", raising=False)
+    assert policy.check("def run(:\n")[0]["code"] == "syntax"
+    assert policy.check("x = 1\n")[0]["code"] == "no_run"
+    assert policy.check("  ")[0]["code"] == "empty"
+
+
+def test_switch_off_restores_guards(monkeypatch):
+    from stella_steve_bridge import policy
+    monkeypatch.setenv("STELLA_STEVE_UNRESTRICTED", "0")
+    assert policy.check("import os, subprocess\ndef run(context):\n    pass\n")

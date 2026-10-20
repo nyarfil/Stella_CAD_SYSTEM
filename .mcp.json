@@ -54,17 +54,29 @@
       "type": "stdio",
       "command": "C:/Users/nikis/AppData/Local/Programs/Python/Python313/python.exe",
       "args": [
-        "E:/aiwork/Stella_CAD_SYSTEM/integration/steve-bridge/server/stella_steve_bridge_mcp.py",
-        "--allow-document",
-        "STELLA_FUSION_SANDBOX"
+        "E:/aiwork/Stella_CAD_SYSTEM/integration/steve-bridge/server/stella_steve_bridge_mcp.py"
       ],
       "env": {
         "PYTHONUTF8": "1"
       }
     },
+    "stella_freecad_mouse_b": {
+      "type": "stdio",
+      "command": "E:/aiwork/FreeCAD_OP1_LHD/runtime/mcp-venv/Scripts/python.exe",
+      "args": [
+        "E:/aiwork/FreeCAD_OP1_LHD/tools/launch_mcp.py"
+      ],
+      "cwd": "E:/aiwork/FreeCAD_OP1_LHD"
+    },
     "fusion": {
       "type": "http",
       "url": "http://127.0.0.1:27182/mcp"
+    },
+    "stella-viewer": {
+      "type": "stdio",
+      "command": "E:/aiwork/Stella_CAD_SYSTEM/integration/build123d-mcp/.venv/Scripts/python.exe",
+      "args": ["-I", "E:/aiwork/Stella_CAD_SYSTEM/integration/stella-viewer/mcp_server.py"],
+      "env": {"PYTHONUTF8": "1"}
     },
     "build123d": {
       "type": "stdio",

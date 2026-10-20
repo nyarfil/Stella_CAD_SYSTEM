@@ -1,8 +1,9 @@
 """Bottom-plate flush of a welded scan mesh (brain_mouse_scan_flush).
 
 Input: a welded, outward-oriented STL in the standard frame (x front, y left, z up; mm after the unit factor) and, optionally, the
-label file with the bottom_plate region. The plate plane is fitted (area-weighted RANSAC + refit), the tilt is removed and the plate is put on
-z = 0; the rigid transform and the residual statistics are returned. Face order is unchanged, so the same labels stay valid for the flushed mesh
+label file with the bottom_plate region. The SUPPORT plane of the underside is fitted (the plane the mouse stands on: lowest contact ring, rim or
+plate, from the lower convex hull of the underside; a recessed or ribbed underside is supported by its rim, the recessed parts are reported),
+the tilt is removed and that plane is put on z = 0; the rigid transform and the residual statistics are returned. Face order is unchanged, so the same labels stay valid for the flushed mesh
 (brain_mouse_scan_click_grooves expects exactly this frame). The work runs in the SEPARATE scan python as a subprocess (scan_flush_worker.py:
 numpy, trimesh). The source is never modified; outputs go once under mouse/scans/<flush_id>/ and are never overwritten.
 """
@@ -15,7 +16,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 from . import scan_mesh as sm
-from .scan_flush_worker import DEFAULTS
+from .scan_flush_worker import DEFAULTS, DOMINANT_MIN_PCT, MIN_CONTACT_SPREAD
 from .scan_model import ENV_PYTHON, find_scan_python
 from .scan_shell import scan_dir
 from .. import __version__
@@ -23,21 +24,24 @@ from ..errors import BrainError
 from ..req2cad.common import atomic_json, json_load
 from ..util import digest, file_hash, safe_path
 
-FLUSH_VERSION = 'F1.0'
+FLUSH_VERSION = 'F1.1'
 WORKER = Path(__file__).with_name('scan_flush_worker.py')
 TIMEOUT_S = 600
 REPORT = 'flush_report.json'
 MAX_LABEL_BYTES = 64 * 1024 * 1024
-_RANGES = {'plate_tolerance_mm': (0.01, 1.0), 'min_down_nz': (0.5, 0.999), 'ransac_iterations': (100, 50000), 'max_tilt_deg': (0.1, 45.0)}
+_RANGES = {'plate_tolerance_mm': (0.01, 1.0), 'min_down_nz': (0.5, 0.999), 'ransac_iterations': (100, 50000), 'max_tilt_deg': (0.1, 45.0), 'max_protrusion_pct': (0.0, 50.0)}
 READY_MAX_TILT_AFTER_DEG = 0.05
-READY_MIN_WITHIN_PCT = 50.0
+READY_MIN_WITHIN_PCT = DOMINANT_MIN_PCT          # a flat plate: at least half of the underside lies on the plane
+READY_MIN_CONTACT_PCT = 3.0          # a recessed underside: the contact ring/rim must still carry some area ...
+READY_MIN_CONTACT_SPREAD = MIN_CONTACT_SPREAD   # ... and enclose at least half of the underside footprint (a ridge, a point or a bowed base fails)
 
 
 def scan_flush(workspace: Path, relative_path: str, unit: str, labels_path: str | None = None, plate_tolerance_mm: float = DEFAULTS['plate_tolerance_mm'],
-               min_down_nz: float = DEFAULTS['min_down_nz'], ransac_iterations: int = DEFAULTS['ransac_iterations'], max_tilt_deg: float = DEFAULTS['max_tilt_deg']) -> dict[str, Any]:
+               min_down_nz: float = DEFAULTS['min_down_nz'], ransac_iterations: int = DEFAULTS['ransac_iterations'], max_tilt_deg: float = DEFAULTS['max_tilt_deg'],
+               max_protrusion_pct: float = DEFAULTS['max_protrusion_pct']) -> dict[str, Any]:
     if unit not in sm.UNIT_MM:
         raise BrainError('SCAN_UNIT', 'unit is required and must be one of mm, cm, m, in. It is never guessed.', {'given': unit})
-    given = {'plate_tolerance_mm': plate_tolerance_mm, 'min_down_nz': min_down_nz, 'ransac_iterations': ransac_iterations, 'max_tilt_deg': max_tilt_deg}
+    given = {'plate_tolerance_mm': plate_tolerance_mm, 'min_down_nz': min_down_nz, 'ransac_iterations': ransac_iterations, 'max_tilt_deg': max_tilt_deg, 'max_protrusion_pct': max_protrusion_pct}
     for name, val in given.items():
         lo, hi = _RANGES[name]
         if isinstance(val, bool) or not lo <= val <= hi:
@@ -54,7 +58,7 @@ def scan_flush(workspace: Path, relative_path: str, unit: str, labels_path: str 
             raise BrainError('FLUSH_LABELS', 'labels_path must be a regular .json (region name -> face ids) or .npz (face_labels + codes) file inside the workspace.')
         if lab.stat().st_size > MAX_LABEL_BYTES:
             raise BrainError('FLUSH_LABELS', 'The label file is too large.')
-    settings = {'plate_tolerance_mm': float(plate_tolerance_mm), 'min_down_nz': float(min_down_nz), 'ransac_iterations': int(ransac_iterations), 'max_tilt_deg': float(max_tilt_deg), 'unit': unit}
+    settings = {'plate_tolerance_mm': float(plate_tolerance_mm), 'min_down_nz': float(min_down_nz), 'ransac_iterations': int(ransac_iterations), 'max_tilt_deg': float(max_tilt_deg), 'max_protrusion_pct': float(max_protrusion_pct), 'unit': unit}
     sha, lsha = file_hash(src), (file_hash(lab) if lab else None)
     flush_id = 'fl_' + digest({'mesh': sha, 'labels': lsha, 'settings': settings, 'version': FLUSH_VERSION})[:12]
     out = scan_dir(workspace, flush_id)
@@ -98,6 +102,14 @@ def _check(ok: bool) -> str:
     return 'PASS' if ok else 'FAIL'
 
 
+def _flat_ok(after: dict[str, Any], fit: dict[str, Any]) -> bool:
+    """Flat plate (>= 50 % of the underside on the plane) or a proper support plane of a recessed underside: contact area >= 3 % whose xy hull
+    covers >= 50 % of the underside footprint. A tilted fit, a ridge/point contact or a bowed base fails."""
+    if after['within_tol_pct_area'] >= READY_MIN_WITHIN_PCT:
+        return True
+    return (fit.get('method') == 'support_plane' and after['within_tol_pct_area'] >= READY_MIN_CONTACT_PCT and after['contact_hull_ratio'] >= READY_MIN_CONTACT_SPREAD)
+
+
 def _report(res: dict[str, Any], folder: Path, flush_id: str, rel: str, labels_rel: str | None, sha: str, lsha: str | None, settings: dict[str, Any], python: Path) -> dict[str, Any]:
     base = f'mouse/scans/{flush_id}'
     files = res['files']
@@ -109,7 +121,8 @@ def _report(res: dict[str, Any], folder: Path, flush_id: str, rel: str, labels_r
     blockers: list[str] = []
     if after['fit_tilt_deg'] > READY_MAX_TILT_AFTER_DEG:
         blockers.append('RESIDUAL_TILT_TOO_LARGE')
-    if after['within_tol_pct_area'] < READY_MIN_WITHIN_PCT:
+    flat_ok = _flat_ok(after, fit)
+    if not flat_ok:
         blockers.append('PLATE_NOT_FLAT_ON_Z0')
     return {
         'schema': 'scan_flush_report/1', 'flush_id': flush_id, 'status': 'NOT_READY' if blockers else 'READY', 'blocking_reasons': blockers, 'warnings': res['warnings'],
@@ -117,15 +130,17 @@ def _report(res: dict[str, Any], folder: Path, flush_id: str, rel: str, labels_r
         'source': {'relative_path': rel, 'sha256': sha, 'labels_relative_path': labels_rel, 'labels_sha256': lsha}, 'settings': settings, 'units': {'input': settings['unit'], 'output': 'mm'},
         'params_used': res['params_used'], 'plane_fit': fit, 'transform': res['transform'],
         'residual': {'tilt_before_deg': fit['tilt_before_deg'], 'tilt_after_deg': after['fit_tilt_deg'], 'plate_within_tolerance_pct_area': after['within_tol_pct_area'],
-                     'tolerance_mm': settings['plate_tolerance_mm'], 'rms_z_mm': after.get('rms_z_mm'), 'mean_z_mm': after.get('mean_z_mm'), 'plane_fit_area_mm2': fit['inlier_area_mm2'],
+                     'tolerance_mm': settings['plate_tolerance_mm'], 'support_plane_method': fit.get('method'), 'contact_hull_ratio': after['contact_hull_ratio'],
+                     'recessed': {k: after[k] for k in ('recessed_area_mm2', 'recessed_pct_area', 'recessed_max_depth_mm', 'recessed_depth_p50_mm')},
+                     'protruding': {k: after[k] for k in ('protruding_area_mm2', 'protruding_pct_area', 'protruding_max_depth_mm')}, 'rms_z_mm': after.get('rms_z_mm'), 'mean_z_mm': after.get('mean_z_mm'), 'plane_fit_area_mm2': fit['inlier_area_mm2'],
                      'plane_fit_rms_mm': fit['rms_mm']},
         'extent': res['extent'], 'mesh': res['mesh'], 'outputs': outputs, 'seconds': res['seconds'],
-        'checks': {'residual_tilt': _check(after['fit_tilt_deg'] <= READY_MAX_TILT_AFTER_DEG), 'plate_on_z0': _check(after['within_tol_pct_area'] >= READY_MIN_WITHIN_PCT),
+        'checks': {'residual_tilt': _check(after['fit_tilt_deg'] <= READY_MAX_TILT_AFTER_DEG), 'plate_on_z0': _check(flat_ok),
                    'watertight_after': 'PASS' if res['mesh']['watertight'] else 'NOT_APPLICABLE', 'physical_function': 'UNVERIFIED'},
         'downstream': {'mesh': outputs['flushed']['relative_path'], 'labels': (outputs.get('labels') or {}).get('relative_path'),
                        'note': 'Pass the flushed mesh (and the copied labels, same face order) to brain_mouse_scan_click_grooves; its standard frame is x front, y left, z up, plate at z 0.'},
         'limits': ['Rigid transform only (rotation about the horizontal axis through the plate plane, then a z shift): shape, scale and face order are unchanged.',
-                   'Features that protrude below the plate (skates, feet) end up at negative z and are reported as protrusion_below_plate_mm, never clipped.',
+                   'Features that protrude below the support plane (skates, feet) end up at negative z and are reported as protrusion_below_plate_mm, never clipped; recessed parts are reported in residual.recessed.',
                    'The mesh must already be in the standard frame (x front, y left, z up); no frame detection is done here.'],
         'scan_python': str(python), 'execution': {'completed': True},
     }

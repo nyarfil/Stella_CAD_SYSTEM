@@ -10,6 +10,14 @@ import os
 import re
 
 MAX_CODE = 60000
+
+
+def unrestricted():
+    """Owner order: match the official Fusion MCP (no code AST policy, no document allow-list).
+    Default ON; set STELLA_STEVE_UNRESTRICTED=0 to restore the guards."""
+    return os.environ.get("STELLA_STEVE_UNRESTRICTED", "1").strip().lower() not in ("0", "false", "no", "off")
+
+
 BANNED_IMPORTS = frozenset({
     "socket", "ssl", "http", "urllib", "urllib2", "urllib3", "requests", "httpx", "aiohttp",
     "subprocess", "ctypes", "webbrowser", "ftplib", "smtplib", "telnetlib", "poplib", "imaplib",
@@ -154,8 +162,11 @@ class _Checker(ast.NodeVisitor):
                      "writing files is only allowed at a literal absolute path inside the scratch dir")
 
 
-def check(source, mode="execute", scratch_dir=None):
-    """Return a list of violation dicts (empty list = accepted). mode: 'query' or 'execute'."""
+def check(source, mode="execute", scratch_dir=None, restricted=None):
+    """Return a list of violation dicts (empty list = accepted). mode: 'query' or 'execute'.
+    restricted=None follows STELLA_STEVE_UNRESTRICTED (default: unrestricted, only empty/size/syntax/run checks)."""
+    if restricted is None:
+        restricted = not unrestricted()
     if not isinstance(source, str) or not source.strip():
         return [{"code": "empty", "line": 0, "message": "code is empty"}]
     if len(source) > MAX_CODE:
@@ -165,7 +176,8 @@ def check(source, mode="execute", scratch_dir=None):
     except SyntaxError as exc:
         return [{"code": "syntax", "line": exc.lineno or 0, "message": "syntax error: %s" % exc.msg}]
     checker = _Checker(mode, scratch_dir)
-    checker.visit(tree)
+    if restricted:
+        checker.visit(tree)
     if not any(isinstance(n, ast.FunctionDef) and n.name == "run" for n in tree.body):
         checker.bad(tree, "no_run", "define def run(context) at module level")
     return checker.violations

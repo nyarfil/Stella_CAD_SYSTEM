@@ -11,6 +11,10 @@ Method (generic: no mouse-specific constants, never mirrored, any number of flan
     min_turn_deg merged), straight edges re-fitted to the hull (total least squares), corners filleted (corner_radius_mm on corners
     >= 30 deg, tangent blend arcs on mild turns), one periodic B-spline edge through the rounded outline;
   * top = quadratic height field fitted to the top points (confidence high) or skin + default proud (v6-style default, REVIEW);
+  * existing slots / grooves on the shell (click slots): found as narrow dips of the skin (ray heights along the push direction minus their
+    local median, window slot_window_mm, dip > slot_dev_mm) on a slot_step_mm grid round each button; the pad outline is clipped by half-planes
+    so that the groove ring keeps min_land_mm of intact skin to every slot; NOT_READY (SIDE_BUTTON_BLOCKED_BY_SLOT) only if less than
+    min_kept_area_frac of the pad area (or min_area_mm2) is left. Slots are never moved.
   * groove = outline offset by groove_width_mm, floor = skin (ray hits along -d) - groove_depth_mm; cut; pad = outline prism from
     floor - embed_mm to the top, fused. Crisp edges, no fillets on the pad.
 """
@@ -27,12 +31,13 @@ import numpy as np
 from cadmcp_brain.studio.scan_cad_common import WorkerError, worker_main
 from cadmcp_brain.studio import cad_brep_lib as L
 
-WORKER_VERSION = 'scan_side_buttons/1'
+WORKER_VERSION = 'scan_side_buttons/6'
 DEFAULTS = {'groove_width_mm': 0.4, 'groove_depth_mm': 1.5, 'corner_radius_mm': 1.0, 'min_corner_radius_mm': 0.5, 'proud_mm': None,
             'default_proud_mm': 1.0, 'top_threshold_mm': 0.35, 'outline_tol_mm': 0.35, 'min_turn_deg': 8.0, 'max_per_flank': 2,
             'min_area_mm2': 15.0, 'max_area_mm2': 600.0, 'min_top_points': 40, 'fit_res_max_mm': 0.5, 'hull_dev_max_mm': 1.0,
             'proud_min_mm': 0.2, 'proud_max_mm': 3.0, 'embed_mm': 0.3, 'flank_max_nz': 0.6, 'mesh_max_dist_mm': 1.0,
-            'skin_max_dev_mm': 0.5, 'min_button_gap_mm': 0.8, 'region_confidence': None, 'handedness': None}
+            'skin_max_dev_mm': 0.5, 'min_button_gap_mm': 0.8, 'region_confidence': None, 'handedness': None,
+            'min_land_mm': 1.0, 'slot_dev_mm': 0.4, 'slot_window_mm': 3.0, 'slot_step_mm': 0.2, 'min_kept_area_frac': 0.4}
 BUTTON_KEYS = ('side_button', 'sidebutton', 'thumb_button')
 SHORT = ('B1', 'B2', 'B3', 'B4')
 
@@ -296,6 +301,130 @@ def inside(poly, Q):
     return res
 
 
+# ------------------------------------------------------------------ existing slots / grooves
+def slot_points(rays, fr: Frame, extent_lo, extent_hi, s_far: float, step: float, window_mm: float, dev_mm: float):
+    """2D points (button frame) where the shell skin dips narrowly (ray height minus its local median < -dev_mm) or steps (height jump between
+    neighbouring rays > dev_mm: slot walls). Broad curvature is neither; cells without a skin hit are never slot cells."""
+    from scipy.ndimage import distance_transform_edt, median_filter
+    gu = np.arange(extent_lo[0], extent_hi[0] + step, step)
+    gv = np.arange(extent_lo[1], extent_hi[1] + step, step)
+    G = np.array([[u, v] for u in gu for v in gv])
+    t = np.array([rays.first(q, -fr.d, s_far + 15.0) for q in fr.to3(G, s_far)]).reshape(len(gu), len(gv))
+    ok = np.isfinite(t)
+    if ok.sum() < 9:
+        return np.zeros((0, 2))
+    H = s_far - t
+    idx = distance_transform_edt(~ok, return_distances=False, return_indices=True)
+    Hf = H[tuple(idx)]
+    k = max(3, int(round(window_mm / step)) | 1)
+    D = Hf - median_filter(Hf, size=k, mode='nearest')
+    flag = ok & (D < -dev_mm)
+    # a slot seen at a grazing angle hides its floor behind its far wall: the wall shows as a height step between neighbouring rays
+    jump = np.zeros_like(ok)
+    for ax in (0, 1):
+        dh = np.abs(np.diff(Hf, axis=ax)) > dev_mm
+        dh &= np.diff(ok.astype(int), axis=ax) == 0
+        dh &= ok[tuple(slice(0, -1) if a == ax else slice(None) for a in (0, 1))]
+        lo_ = tuple(slice(0, -1) if a == ax else slice(None) for a in (0, 1))
+        hi_ = tuple(slice(1, None) if a == ax else slice(None) for a in (0, 1))
+        jump[lo_] |= dh
+        jump[hi_] |= dh
+    flag |= ok & jump
+    return G[flag.ravel()]
+
+
+def _clip_half(P: np.ndarray, q: np.ndarray, n: np.ndarray, off: float) -> np.ndarray:
+    """Convex polygon P clipped to {x : (x - q).n <= off} (Sutherland-Hodgman)."""
+    g = (P - q) @ n - off
+    out = []
+    for i in range(len(P)):
+        a, b, ga, gb = P[i], P[(i + 1) % len(P)], g[i], g[(i + 1) % len(P)]
+        if ga <= 0:
+            out.append(a)
+        if (ga < 0 < gb) or (gb < 0 < ga):
+            out.append(a + (b - a) * (ga / (ga - gb)))
+    R = np.array(out) if out else np.zeros((0, 2))
+    if len(R) > 1:
+        R = R[np.r_[True, np.linalg.norm(np.diff(R, axis=0), axis=1) > 1e-4]]
+        if len(R) > 1 and np.linalg.norm(R[0] - R[-1]) <= 1e-4:
+            R = R[:-1]
+    return R
+
+
+def _dist_to_poly(P: np.ndarray, X: np.ndarray):
+    """Distance of points X to the convex polygon P (0 inside), the nearest polygon boundary point and the inside flag."""
+    ins = inside(P, X)
+    best = np.full(len(X), np.inf)
+    near = np.zeros_like(X)
+    for i in range(len(P)):
+        a, b = P[i], P[(i + 1) % len(P)]
+        ab = b - a
+        t = np.clip(((X - a) @ ab) / max(float(ab @ ab), 1e-18), 0, 1)
+        c = a + t[:, None] * ab
+        d = np.linalg.norm(X - c, axis=1)
+        m = d < best
+        best[m], near[m] = d[m], c[m]
+    return np.where(ins, 0.0, best), near, ins
+
+
+def clip_to_land(poly: np.ndarray, hull: np.ndarray, slots: np.ndarray, reach: float, max_cuts: int = 40):
+    """Clip the convex pad polygon (and its scan hull) by half-planes until every slot point is >= reach from it. Each cut is tangent at
+    `reach` from the worst slot point: normal = from the nearest polygon point to that slot point (from the centroid if it lies inside).
+    Returns (poly, hull, n_cuts, clean)."""
+    n_cuts = 0
+    while len(slots) and len(poly) >= 3 and n_cuts < max_cuts:
+        d, near, ins = _dist_to_poly(poly, slots)
+        i = int(np.argmin(d))
+        if d[i] >= reach - 1e-9:
+            return poly, hull, n_cuts, True
+        q = slots[i]
+        v = q - near[i] if not ins[i] and d[i] > 1e-9 else q - poly.mean(0)
+        nv = np.linalg.norm(v)
+        if nv < 1e-9:
+            break
+        n = v / nv
+        new = _clip_half(poly, q, n, -reach)
+        hull = _clip_half(hull, q, n, -reach) if len(hull) >= 3 else hull
+        if len(new) < 3:
+            return new, hull, n_cuts + 1, False
+        poly = new
+        n_cuts += 1
+    clean = (not len(slots)) or (len(poly) >= 3 and bool(_dist_to_poly(poly, slots)[0].min() >= reach - 1e-6))
+    return poly, hull, n_cuts, clean
+
+
+def merge_short_edges(poly: np.ndarray, corner_r: float, min_r: float, slots: np.ndarray, reach: float, max_merges: int = 12) -> np.ndarray:
+    """After a clip: a corner (turn >= 30 deg) whose fillet radius is below min_r because an adjacent edge became short is removed by replacing the
+    shorter adjacent edge with the intersection of its neighbouring edge lines (convex, only kept if the slot distance stays >= reach)."""
+    for _ in range(max_merges):
+        n = len(poly)
+        if n <= 3:
+            break
+        plan = fillet_plan(poly, corner_r)
+        bad = [j for j, c in enumerate(plan) if c['turn_deg'] >= 30 and c['r'] < min_r]
+        if not bad:
+            break
+        ln = np.linalg.norm(np.roll(poly, -1, axis=0) - poly, axis=1)       # ln[e]: edge between vertex e and e+1
+        j = max(bad, key=lambda k: -min(ln[k - 1], ln[k]))
+        e = (j - 1 if ln[j - 1] <= ln[j] else j) % n
+        a, b = poly[e - 1], poly[e]
+        c, d = poly[(e + 1) % n], poly[(e + 2) % n]
+        A = np.c_[b - a, -(d - c)]
+        if abs(np.linalg.det(A)) < 1e-9:
+            break
+        t = np.linalg.solve(A, c - a)
+        if t[0] <= 1.0:
+            break
+        x = a + t[0] * (b - a)
+        keep = [k for k in range(n) if k not in (e, (e + 1) % n)]
+        pos = keep.index((e - 1) % n) + 1
+        new = np.vstack([poly[keep][:pos], x[None], poly[keep][pos:]])
+        if np.any(_turns(new) <= 0) or (len(slots) and _dist_to_poly(new, slots)[0].min() < reach - 1e-6):
+            break
+        poly = new
+    return poly
+
+
 # ------------------------------------------------------------------ B-rep pieces
 class Frame:
     def __init__(self, O, d):
@@ -390,10 +519,15 @@ def run(req: dict[str, Any]) -> dict[str, Any]:
     kd = cKDTree(SP)
     dd, ii = kd.query(V)
     h = np.einsum('ij,ij->i', V - SP[ii], SN[ii])
-    med = float(np.median(dd))
+    # Frame check: the mesh and the shell skin must lie on each other. Either direction may fail for a legitimate input (a full scan also holds
+    # the plate / underside the top shell never covers: mesh -> skin is large; a flank-only patch covers little of the skin: skin -> mesh is
+    # large), so the frame is refused only when BOTH median distances exceed the limit.
+    med_mesh = float(np.median(dd))
+    med_skin = float(np.median(cKDTree(V).query(SP)[0]))
+    med = min(med_mesh, med_skin)
     if med > float(p['mesh_max_dist_mm']):
-        raise WorkerError('SIDE_BUTTONS_FRAME', 'The scan mesh is not in the frame of the shell (median distance above mesh_max_dist_mm).',
-                          {'median_distance_mm': med, 'mesh_max_dist_mm': p['mesh_max_dist_mm']})
+        raise WorkerError('SIDE_BUTTONS_FRAME', 'The scan mesh is not in the frame of the shell (both median distances, mesh to skin and skin to mesh, above mesh_max_dist_mm).',
+                          {'median_distance_mm': med, 'median_mesh_to_skin_mm': med_mesh, 'median_skin_to_mesh_mm': med_skin, 'mesh_max_dist_mm': p['mesh_max_dist_mm']})
     tri_area = 0.5 * np.linalg.norm(np.cross(V[F[:, 1]] - V[F[:, 0]], V[F[:, 2]] - V[F[:, 0]]), axis=1)
     thr = float(p['top_threshold_mm'])
     # ---- candidates
@@ -458,7 +592,7 @@ def run(req: dict[str, Any]) -> dict[str, Any]:
         if dev_h > float(p['hull_dev_max_mm']):
             reasons.append('outline_far_from_hull')
         sharp = [c['r'] for c in plan if c['turn_deg'] >= 30]
-        buttons.append({'name': cd['name'], 'source': source, 'flank': flank, 'frame': fr, 'Q': Q, 's': s, 'poly': poly, 'plan': plan, 'O2': O2,
+        buttons.append({'name': cd['name'], 'source': source, 'flank': flank, 'frame': fr, 'Q': Q, 's': s, 'poly': poly, 'hull': hull, 'plan': plan, 'O2': O2,
                         'hull_dev_mm': dev_h, 'top_poly': cpoly2, 'fit_res_p95_mm': float(np.percentile(np.abs(res), 95)),
                         'n_top': int(len(top)), 'top_source': top_src, 'region_confidence': rc, 'reasons': reasons,
                         'label_area_mm2': float(tri_area[cd['tris']].sum()), 'min_sharp_corner_r': float(min(sharp)) if sharp else None,
@@ -476,8 +610,43 @@ def run(req: dict[str, Any]) -> dict[str, Any]:
     W, DEP, EMB = float(p['groove_width_mm']), float(p['groove_depth_mm']), float(p['embed_mm'])
     grooved = W > 0 and DEP > 0
     cutters, pads = [], []
+    land = float(p['min_land_mm'])
     for b in buttons:
         fr = b['frame']
+        # ---- keep the pad and its groove off existing slots / grooves of the shell (slots are never moved)
+        reach = (W if grooved else 0.0) + land + 0.5 * float(p['slot_step_mm'])
+        s_ray = float(max(b['s'].max(), 0.0) + 6.0)
+        spts = slot_points(rays, fr, b['O2'].min(0) - (reach + 2.0), b['O2'].max(0) + (reach + 2.0), s_ray, float(p['slot_step_mm']),
+                           float(p['slot_window_mm']), float(p['slot_dev_mm']))
+        dmin = float(_dist_to_poly(b['O2'], spts)[0].min()) if len(spts) else None
+        b['slot_clearance'] = {'slot_cells': int(len(spts)), 'required_mm': reach - 0.5 * float(p['slot_step_mm']), 'clipped': False, 'cuts': 0,
+                               'min_distance_before_mm': dmin}
+        if len(spts) and dmin < reach:
+            a0 = _poly_area(b['O2'])
+            npoly, nhull, ncut, clean = clip_to_land(b['poly'], b['hull'], spts, reach)
+            if clean and ncut and len(npoly) >= 4:
+                npoly = merge_short_edges(npoly, float(p['corner_radius_mm']), float(p['min_corner_radius_mm']), spts, reach - 0.5 * float(p['slot_step_mm']))
+            a1 = _poly_area(rounded(fillet_plan(npoly, float(p['corner_radius_mm'])))) if len(npoly) >= 3 else 0.0
+            b['slot_clearance'].update(clipped=True, cuts=ncut, area_before_mm2=a0, area_after_mm2=a1)
+            if not clean or a1 < max(float(p['min_area_mm2']), float(p['min_kept_area_frac']) * a0):
+                blockers.append({'code': 'SIDE_BUTTON_BLOCKED_BY_SLOT', 'name': b['name'], 'area_before_mm2': a0, 'area_after_mm2': a1,
+                                 'min_land_mm': land, 'message': 'An existing slot / groove leaves too little of the button region to keep the land; the slot is not moved.'})
+                b['geometry'] = None
+                continue
+            b['poly'], b['hull'] = npoly, nhull
+            b['plan'] = fillet_plan(npoly, float(p['corner_radius_mm']))
+            b['O2'] = rounded(b['plan'])
+            Hs = np.vstack([np.linspace(nhull[i], nhull[(i + 1) % len(nhull)], 12, endpoint=False) for i in range(len(nhull))])
+            b['hull_dev_mm'] = float(max(np.min(np.linalg.norm(b['O2'][:, None] - Hs[None], axis=2), axis=1).max(),
+                                         np.min(np.linalg.norm(Hs[:, None] - b['O2'][None], axis=2), axis=1).max()))
+            sharp = [c['r'] for c in b['plan'] if c['turn_deg'] >= 30]
+            b['min_sharp_corner_r'] = float(min(sharp)) if sharp else None
+            b['reasons'] = [r for r in b['reasons'] if r != 'outline_far_from_hull']
+            if b['hull_dev_mm'] > float(p['hull_dev_max_mm']):
+                b['reasons'].append('outline_far_from_hull')
+            b['slot_clearance']['min_distance_after_mm'] = float(_dist_to_poly(b['O2'], spts)[0].min())
+            warnings.append({'code': 'SIDE_BUTTON_CLIPPED_BY_SLOT', 'name': b['name'], 'cuts': ncut, 'area_before_mm2': a0, 'area_after_mm2': a1,
+                             'message': 'The pad outline was clipped to keep min_land_mm of skin between the groove and an existing slot.'})
         Og = rounded(b['plan'], W) if grooved else b['O2']
         lo, hi = Og.min(0) - 2.0, Og.max(0) + 2.0
         gu = np.linspace(lo[0], hi[0], int(np.clip(np.ceil((hi[0] - lo[0]) / 0.8) + 1, 9, 61)))
@@ -487,6 +656,14 @@ def run(req: dict[str, Any]) -> dict[str, Any]:
         hits = np.array([rays.first(q, -fr.d, s_far + 15.0) for q in fr.to3(GQ, s_far)])
         sk = s_far - hits
         ok = np.isfinite(sk) & (np.abs(sk) < 5.0)
+        if len(spts):
+            # slot cells and their oblique wall shadow are not skin: drop cells next to a detected slot, then iteratively every cell more than
+            # slot_dev_mm off the quadratic fit of the remaining skin (they are re-filled from the fit below)
+            ok &= cKDTree(spts).query(GQ)[0] > 0.5 * float(p['slot_step_mm']) + 0.3
+            for _ in range(4):
+                if ok.sum() < 6:
+                    break
+                ok &= np.abs(sk - poly2_eval(poly2(GQ[ok], sk[ok]), GQ)) <= float(p['slot_dev_mm'])
         ins = inside(Og, GQ)
         b['skin_rays'] = {'grid': [len(gu), len(gv)], 'missed_inside': int((ins & ~ok).sum())}
         if ok.sum() < 6:
@@ -563,7 +740,7 @@ def run(req: dict[str, Any]) -> dict[str, Any]:
     from OCP.TopTools import TopTools_ListOfShape
     from OCP.TopoDS import TopoDS
 
-    def boolean(cls, a, tools):
+    def boolean(cls, a, tools, fuzzy: float = 0.0):
         op = cls()
         A = TopTools_ListOfShape()
         A.Append(a)
@@ -572,47 +749,83 @@ def run(req: dict[str, Any]) -> dict[str, Any]:
             T.Append(t)
         op.SetArguments(A)
         op.SetTools(T)
+        if fuzzy > 0:
+            op.SetFuzzyValue(fuzzy)
         op.Build()
         if not op.IsDone():
-            raise WorkerError('SIDE_BUTTONS_BOOLEAN', 'A boolean operation failed.', {'op': cls.__name__})
+            raise WorkerError('SIDE_BUTTONS_BOOLEAN', 'A boolean operation failed.', {'op': cls.__name__, 'fuzzy_mm': fuzzy})
         return op.Shape()
     v0 = L.volume(shell)
     body, pieces = shell, 1
+    boolean_log: dict[str, Any] = {'attempts': [], 'fuzzy_mm_used': None}
     if pads and not blockers:
-        body = boolean(BRepAlgoAPI_Cut, shell, cutters) if cutters else shell
-        body = boolean(BRepAlgoAPI_Fuse, body, pads)
-        ss = L.solids(body)
-        pieces = len(ss)
-        body = max(ss, key=L.volume)
-        sfx = ShapeFix_Solid(body)
-        sfx.Perform()
-        body = TopoDS.Solid_s(sfx.Solid())
-        u_ = ShapeUpgrade_UnifySameDomain(body, True, True, False)
-        u_.Build()
-        b2 = L.solids(u_.Shape())
-        if b2 and L.is_valid(b2[0]):
-            body = b2[0]
+        # Gated fuzzy ladder (same as scan_click_slots.cut_gated): the exact Boolean leaves intersection curves that miss a neighbouring edge by
+        # ~1e-4 mm at a shared vertex on the skin; in memory ShapeFix hides it, but the STEP reader re-creates a degenerated bridging edge and
+        # BRepMesh then drops the whole skin face in every downstream tool (LH2: the 140 mm2 top skin face after the pad fuse). Accepted only
+        # when valid + volume bookkeeping (cut removes, pads add) + every face tessellates after a STEP round trip of the written body.
+        from cadmcp_brain.studio.scan_click_slots_worker import FUZZY_LADDER_REL, step_round_trip_unmeshed
+        bb_ = L.bbox(shell)
+        diag = float(np.linalg.norm(np.asarray(bb_[3:]) - np.asarray(bb_[:3])))
+        v_cut, v_pad = sum(L.volume(c) for c in cutters), sum(L.volume(q) for q in pads)
+        best = None
+        for rel in FUZZY_LADDER_REL:
+            fz = float(rel) * diag
+            rec: dict[str, Any] = {'fuzzy_mm': fz}
+            boolean_log['attempts'].append(rec)
+            try:
+                b_ = boolean(BRepAlgoAPI_Cut, shell, cutters, fz) if cutters else shell
+                b_ = boolean(BRepAlgoAPI_Fuse, b_, pads, fz)
+            except WorkerError as exc:
+                rec['error'] = exc.message
+                continue
+            ss = L.solids(b_)
+            if not ss:
+                rec['solids'] = 0
+                continue
+            cand = max(ss, key=L.volume)
+            sfx = ShapeFix_Solid(cand)
+            sfx.Perform()
+            cand = TopoDS.Solid_s(sfx.Solid())
+            u_ = ShapeUpgrade_UnifySameDomain(cand, True, True, False)
+            u_.Build()
+            b2 = L.solids(u_.Shape())
+            if b2 and L.is_valid(b2[0]):
+                cand = b2[0]
+            dv = L.volume(cand) - v0
+            rec.update(solids=len(ss), valid=bool(L.is_valid(cand)), volume_change_mm3=float(dv),
+                       volume_bookkeeping_ok=bool(-v_cut * 1.001 - 1e-3 <= dv <= v_pad * 1.001 + 1e-3))
+            if rec['valid'] and rec['volume_bookkeeping_ok']:
+                rec['unmeshed_faces_after_step_round_trip'] = step_round_trip_unmeshed(cand, out)
+                if not rec['unmeshed_faces_after_step_round_trip']:
+                    rec['accepted'] = True
+                    best = (cand, len(ss))
+                    boolean_log['fuzzy_mm_used'] = fz
+                    break
+            if best is None:
+                best = (cand, len(ss))              # least-bad fallback; the reimport / tessellates gates of the caller then fail
+        if best is None:
+            raise WorkerError('SIDE_BUTTONS_BOOLEAN', 'The side-button Boolean produced no solid at any fuzzy value.', {'boolean': boolean_log})
+        body, pieces = best
     L.write_step(body, out / 'side_buttons_shell.step')
     back = L.solids(L.read_step(out / 'side_buttons_shell.step'))
     rb = back[0] if back else None
-    fa = [L.area(f) for f in L.faces(rb)] if rb is not None else []
+    fa = [abs(L.area(f)) for f in L.faces(rb)] if rb is not None else []
     result = {'valid': bool(rb is not None and L.is_valid(rb)), 'solids_in_step': len(back), 'pieces_after_boolean': pieces,
               'faces': len(fa), 'faces_before': len(L.faces(shell)), 'faces_below_0p05mm2': int(sum(a < 0.05 for a in fa)),
-              'faces_below_1mm2': int(sum(a < 1.0 for a in fa)), 'faces_below_1mm2_before': int(sum(L.area(f) < 1.0 for f in L.faces(shell))),
+              'faces_below_1mm2': int(sum(a < 1.0 for a in fa)), 'faces_below_1mm2_before': int(sum(abs(L.area(f)) < 1.0 for f in L.faces(shell))),
               'volume_before_mm3': v0, 'volume_after_mm3': L.volume(rb) if rb is not None else None,
               'modified': bool(pads and not blockers)}
-    try:
-        L.tessellate(rb, 0.05, 0.2) if rb is not None else None
-        result['tessellates'] = rb is not None
-    except WorkerError:
-        result['tessellates'] = False
+    from cadmcp_brain.studio import mouse_groove_fill_worker as GF
+    result['unmeshed_faces_after_reimport'] = GF.unmeshed_faces(rb, 0.05, clean=True) if rb is not None else []
+    result['tessellates'] = rb is not None and not result['unmeshed_faces_after_reimport']      # every face, on the re-imported file
+    result['boolean'] = boolean_log
     # ---- measurements on the re-imported result
     recs = []
     for b in buttons:
         fr = b['frame']
         rec = {k: b.get(k) for k in ('name', 'source', 'flank', 'confidence', 'reasons', 'region_confidence', 'top_mode', 'n_top', 'top_source',
                                      'fit_res_p95_mm', 'hull_dev_mm', 'label_area_mm2', 'proud_scan_mm', 'proud_used_mm', 'skin_rays',
-                                     'skin_quadratic_dev_mm', 'bspline_outline_dev_mm', 'min_sharp_corner_r')}
+                                     'skin_quadratic_dev_mm', 'bspline_outline_dev_mm', 'min_sharp_corner_r', 'slot_clearance')}
         O2 = b['O2']
         ext = O2.max(0) - O2.min(0)
         rec.update(frame={'origin': fr.O.tolist(), 'push_dir': fr.d.tolist(), 'u': fr.u.tolist(), 'v': fr.v.tolist()},

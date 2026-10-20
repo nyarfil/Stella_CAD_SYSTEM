@@ -147,9 +147,18 @@ def bbox(s, optimal=True):
     return np.array(b.Get())
 
 
+STEP_WRITE_PRECISION_MM = 1e-4
+
+
 def write_step(shape, path: Path) -> None:
     from OCP.STEPControl import STEPControl_Writer, STEPControl_AsIs
     from OCP.IFSelect import IFSelect_RetDone
+    from OCP.Interface import Interface_Static
+    # Write the file uncertainty as a fixed 1e-4 mm (mode 1 "Least") instead of the shape's average tolerance (mode 0, ~1e-3 after Booleans).
+    # The reader takes its precision from the file: at 1e-3 it re-creates degenerated bridging edges (FixLacking) on trimmed B-spline faces whose
+    # pcurve ends miss by ~1e-5 and BRepMesh then drops the face in every downstream tool; at 1e-4 the same faces round-trip and triangulate.
+    Interface_Static.SetIVal_s('write.precision.mode', 1)
+    Interface_Static.SetRVal_s('write.precision.val', STEP_WRITE_PRECISION_MM)
     w = STEPControl_Writer()
     w.Transfer(shape, STEPControl_AsIs)
     if w.Write(str(path)) != IFSelect_RetDone:

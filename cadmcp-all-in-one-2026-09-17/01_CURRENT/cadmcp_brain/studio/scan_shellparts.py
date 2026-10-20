@@ -23,9 +23,22 @@ from . import scan_shell
 from .. import __version__
 from ..errors import BrainError
 from ..req2cad.common import atomic_json, json_load
-from ..util import digest, file_hash, safe_id
+from ..util import digest, file_hash, safe_id, safe_path
 
-SHELL_VERSION = 'S1.3'
+SHELL_VERSION = 'S1.4'
+# S1.4: texture cue (when the prepared scan descends from a textured PLY: plate / shell colour boundary on the outer wall, 2-class Otsu split,
+# polarity from the wall's lower edge), seam sanity gate (status REVIEW) and a seam review image (both flanks, front, rear).
+TEX_W = 8.0                                  # weight of the texture step cue (texture is the primary seam evidence when it separates the two parts)
+TEX_SEP_MIN = 2.0                            # the two luminance classes must be separated by >= 2 pooled sigmas, else the texture carries no seam cue
+TEX_ABOVE, TEX_BELOW = (3, 15), (-20, -5)    # luminance windows (profile samples of 0.1 mm) just above / below a candidate seam point
+EVID_TEX = 0.5                               # texture step >= half the class gap counts as texture evidence
+TEX_MAX_DIST_EDGES = 3.0                     # a prepared vertex farther than 3 median raw edge lengths from any raw vertex gets no colour
+REVIEW_SUPPORT_MIN = 0.3                     # REVIEW: less than 30 % of the loop has crease / groove / texture support
+REVIEW_BAND_DEV_REL = 0.025                  # a bin is off-band when its height above the lower edge differs from the supported median by more than
+#   max(median, 0.025 x footprint length) ...
+REVIEW_INFERRED_DEV_FRAC = 0.10              # ... REVIEW when such off-band bins that are INFERRED make up more than 10 % of the loop
+REVIEW_STEP_MM = 1.0                         # REVIEW: the seam jumps more than 1 mm between neighbouring bins (0.5 degree)
+REVIEW_TEX_DISAGREE_FRAC = 0.20              # REVIEW: the texture shows a clear plate / shell boundary but the seam misses it on > 20 % of the loop
 LABEL_CODES = {'other': 0, 'bottom_plate': 1, 'top_shell': 2}
 # S1.3 hand-off files (keys added only): one label file with the shell split AND the functional regions, plus the prepared mesh in the canonical frame
 COMBINED_CODES = {'other': 0, 'bottom_plate': 1, 'top_shell': 2, 'left_click': 3, 'right_click': 4, 'wheel': 5, 'side_button_1': 6, 'side_button_2': 7}
@@ -64,8 +77,9 @@ OUTLINE_POINTS = 360                         # dense outline polyline length
 RIM_LEVELS = (0.2, 0.35, 0.5)                # rim traced where the depth crosses these fractions of the floor depth; their spread is an uncertainty term
 LIMITS = ['Surface-only: the sensor PCB, chip and lens behind the window are not visible; the window outline is the aperture rim seen from below. '
           'The sensor step uses mesh geometry only (no pose prior, PCB or texture); its thresholds are relative to the footprint length.',
-          'The prepared scan has no texture, so the parting seam is found from its groove only. Bins without a clear groove (typically the rear) are interpolated '
-          'and listed as inferred; the bottom plate / top shell split is only as good as the seam.',
+          'The parting seam is found from the crease / groove of the outer wall and, when the prepared scan descends from a textured PLY, from the plate / shell '
+          'colour boundary. Bins without a clear cue are interpolated and listed as inferred; the bottom plate / top shell split is only as good as the seam. '
+          'Status REVIEW = the seam sanity gate found something to look at in seam_review.png before chaining.',
           f'Calibrated on: {sr.CALIBRATED_ON}.']
 
 
@@ -81,9 +95,11 @@ def _edge_table(F: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return E, inv.reshape(3, -1).T
 
 
-def section_profile(P: np.ndarray, F: np.ndarray, E: np.ndarray, FE: np.ndarray, cenF: np.ndarray, hv: np.ndarray, c0: np.ndarray, az: float) -> dict[str, Any] | None:
+def section_profile(P: np.ndarray, F: np.ndarray, E: np.ndarray, FE: np.ndarray, cenF: np.ndarray, hv: np.ndarray, c0: np.ndarray, az: float,
+                    lv: np.ndarray | None = None) -> dict[str, Any] | None:
     """Exact section of the mesh with the vertical half-plane at azimuth `az` round c0, chained into one ordered polyline that starts at the
-    underside end and runs out over the wall to the top; resampled every PROFILE_STEP of arc length (r = distance from c0, z, groove map hv)."""
+    underside end and runs out over the wall to the top; resampled every PROFILE_STEP of arc length (r = distance from c0, z, groove map hv,
+    optional per-vertex luminance lv -> 'lum', NaN where unknown)."""
     a = np.radians(az)
     n, u = np.array([-np.sin(a), np.cos(a)]), np.array([np.cos(a), np.sin(a)])
     s = (P[:, :2] - c0) @ n
@@ -127,8 +143,18 @@ def section_profile(P: np.ndarray, F: np.ndarray, E: np.ndarray, FE: np.ndarray,
     hvn = (hv[E[nodes, 0]] * (1 - t) + hv[E[nodes, 1]] * t)[o]
     sarc = np.r_[0, np.cumsum(np.hypot(np.diff(R), np.diff(Z)))]
     S = np.arange(0, sarc[-1], PROFILE_STEP)
-    return {'s': S, 'r': np.interp(S, sarc, R), 'z': np.interp(S, sarc, Z), 'hv': np.interp(S, sarc, hvn),
-            'x': np.interp(S, sarc, XY[:, 0]), 'y': np.interp(S, sarc, XY[:, 1])}
+    out = {'s': S, 'r': np.interp(S, sarc, R), 'z': np.interp(S, sarc, Z), 'hv': np.interp(S, sarc, hvn),
+           'x': np.interp(S, sarc, XY[:, 0]), 'y': np.interp(S, sarc, XY[:, 1])}
+    if lv is not None:
+        la, lb = lv[E[nodes, 0]], lv[E[nodes, 1]]
+        ln = np.where(np.isnan(la), lb, np.where(np.isnan(lb), la, la * (1 - t) + lb * t))[o]   # one unknown end: take the other
+        ok = np.isfinite(ln)
+        lum = np.interp(S, sarc[ok], ln[ok]) if ok.sum() >= 2 else np.full(len(S), np.nan)
+        if ok.sum() >= 2:                                   # samples farther than 1 mm of arc from a known value stay unknown
+            near = np.interp(S, sarc, ok.astype(float))
+            lum[near < 0.5] = np.nan
+        out['lum'] = lum
+    return out
 
 
 def profile_cues(p: dict[str, Any]) -> dict[str, np.ndarray]:
@@ -146,7 +172,18 @@ def profile_cues(p: dict[str, Any]) -> dict[str, np.ndarray]:
         return (c[hi] - c[lo]) / np.maximum(hi - lo, 1)
     k = ndi.gaussian_filter1d(cv, KINK_SIGMA)
     k = np.r_[k[KINK_SHIFT:], np.full(KINK_SHIFT, k[-1])]       # crease read KINK_SHIFT samples higher: the seam gap sits just below the shell's rounded lower edge
-    return {'phi': phi, 'kink': k, 'phib': mean_win(-20, -5), 'phia': mean_win(3, 15), 'groove': -ndi.gaussian_filter1d(p['hv'], 2.0)}
+    out = {'phi': phi, 'kink': k, 'phib': mean_win(-20, -5), 'phia': mean_win(3, 15), 'groove': -ndi.gaussian_filter1d(p['hv'], 2.0)}
+    if 'lum' in p:                                          # texture: mean luminance just above / below each sample (NaN-aware windows)
+        lum = p['lum']
+        okl = np.isfinite(lum)
+        cl, cn = np.r_[0, np.cumsum(np.where(okl, lum, 0.0))], np.r_[0, np.cumsum(okl.astype(float))]
+
+        def nan_win(a0: int, a1: int) -> np.ndarray:
+            lo, hi = np.clip(i + a0, 0, n), np.clip(i + a1, 0, n)
+            cnt = cn[hi] - cn[lo]
+            return np.where(cnt >= 3, (cl[hi] - cl[lo]) / np.maximum(cnt, 1), np.nan)
+        out['lum'], out['luma'], out['lumb'] = lum, nan_win(*TEX_ABOVE), nan_win(*TEX_BELOW)
+    return out
 
 
 def _leave_index(p: dict[str, Any], c: dict[str, np.ndarray]) -> int:
@@ -206,13 +243,30 @@ def _circ_interp(i: np.ndarray, good: np.ndarray, val: np.ndarray, n: int) -> np
     return np.interp(i, np.r_[g - n, g, g + n], np.r_[val[g], val[g], val[g]])
 
 
-def seam_loop(M: Any, ft: dict[str, Any]) -> dict[str, Any]:
-    """Parting seam from geometry alone. Exact vertical sections every 360 / SEAM_COLS degrees round the footprint centre; per section the
+def _otsu(x: np.ndarray) -> float:
+    """Otsu threshold of a 1-D sample (two-class split maximising the between-class variance)."""
+    if float(x.max() - x.min()) < 1e-9:
+        return float(x[0])
+    h, edges = np.histogram(x, bins=256)
+    mid = (edges[:-1] + edges[1:]) / 2
+    w0 = np.cumsum(h).astype(float)
+    w1 = w0[-1] - w0
+    m0 = np.cumsum(h * mid) / np.maximum(w0, 1)
+    m1 = (np.sum(h * mid) - np.cumsum(h * mid)) / np.maximum(w1, 1)
+    ok = (w0 > 0) & (w1 > 0)
+    bc = np.where(ok, w0 * w1 * (m0 - m1) ** 2, -1)
+    return float(mid[int(np.argmax(bc))])
+
+
+def seam_loop(M: Any, ft: dict[str, Any], lum: np.ndarray | None = None) -> dict[str, Any]:
+    """Parting seam from the outer wall. Exact vertical sections every 360 / SEAM_COLS degrees round the footprint centre; per section the
     outer wall from its lower edge up to ROI_SAMPLES * PROFILE_STEP of arc length. Cue = convex crease (curvature, log-compressed) + groove
-    (negative normal offset), gated so the plate-to-wall fillet (flat below it) cannot win. A circular Viterbi path with a |dz| smoothness
-    prior picks one seam point per section; a robust low-harmonic prior on the seam's arc offset above the lower edge (fitted to the clearly
-    supported sections) steers a second pass. Sections whose cue is weak are INFERRED: their offset follows the prior's shape, shifted to meet
-    the neighbouring supported ends."""
+    (negative normal offset), gated so the plate-to-wall fillet (flat below it) cannot win, plus (when `lum`, a per-vertex luminance from the
+    scan texture, is given and splits the wall into two well-separated classes) the colour step from the plate class just below a point to the
+    shell class just above it. The plate class is the one found at the wall's lower edge: no assumption about which part is dark. A circular
+    Viterbi path with a |dz| smoothness prior picks one seam point per section; a robust low-harmonic prior on the seam's arc offset above the
+    lower edge (fitted to the clearly supported sections) steers a second pass. Sections whose cue is weak are INFERRED: their offset follows
+    the prior's shape, shifted to meet the neighbouring supported ends."""
     P, F = M.P, M.F
     c0 = np.array([(P[:, 0].min() + P[:, 0].max()) / 2, (P[:, 1].min() + P[:, 1].max()) / 2])
     E, FE = _edge_table(F)
@@ -222,7 +276,7 @@ def seam_loop(M: Any, ft: dict[str, Any]) -> dict[str, Any]:
     CU: list[Any] = []
     LV = np.full(n, -1)
     for j, az in enumerate(AZ):
-        p = section_profile(P, F, E, FE, M.cen, ft['hv'], c0, az)
+        p = section_profile(P, F, E, FE, M.cen, ft['hv'], c0, az, lum)
         c = profile_cues(p) if p is not None else None
         PR.append(p)
         CU.append(c)
@@ -253,13 +307,42 @@ def seam_loop(M: Any, ft: dict[str, Any]) -> dict[str, Any]:
     allg = np.concatenate([CU[j]['groove'][LV[j]:LV[j] + K] for j in vi])
     sk = max(1.4826 * float(np.median(np.abs(allk - np.median(allk)))), 1e-9)
     sgv = max(1.4826 * float(np.median(np.abs(allg - np.median(allg)))), 1e-12)
+    # texture: two luminance classes on the wall ROI (Otsu); the class at the wall's lower edge is the plate class
+    TZ = np.zeros((m, K))
+    tex: dict[str, Any] = {'used': False, 'reason': 'no texture'}
+    if lum is not None and all('lum' in CU[j] for j in vi):
+        alll = np.concatenate([CU[j]['lum'][LV[j]:LV[j] + K] for j in vi])
+        alll = alll[np.isfinite(alll)]
+        if len(alll) >= 100:
+            thr = _otsu(alll)
+            lo, hi = alll[alll < thr], alll[alll >= thr]
+            if len(lo) > 10 and len(hi) > 10:
+                mu0, mu1 = float(lo.mean()), float(hi.mean())
+                pooled = float(np.sqrt((lo.var() * len(lo) + hi.var() * len(hi)) / len(alll)))
+                sep = (mu1 - mu0) / max(pooled, 1e-9)
+                edge = np.concatenate([CU[j]['lum'][LV[j]:LV[j] + 6] for j in vi])
+                edge = edge[np.isfinite(edge)]
+                plate_dark = bool(len(edge) and np.mean(edge < thr) > 0.5)
+                sign = 1.0 if plate_dark else -1.0        # + : luminance rises from plate to shell
+                tex = {'used': sep >= TEX_SEP_MIN, 'threshold': thr, 'class_means': [mu0, mu1], 'separation_sigma': float(sep), 'plate_class': 'dark' if plate_dark else 'light',
+                       'reason': None if sep >= TEX_SEP_MIN else 'the wall luminance does not split into two separated classes'}
+                if tex['used']:
+                    for q, j in enumerate(vi):
+                        r = np.arange(LV[j], min(LV[j] + K, len(PR[j]['s'])))
+                        c = CU[j]
+                        step = sign * (c['luma'][r] - c['lumb'][r]) / (mu1 - mu0)
+                        TZ[q, :len(r)] = np.clip(np.nan_to_num(step, nan=0.0), -0.5, 1.2)
+            else:
+                tex['reason'] = 'the wall luminance is (nearly) uniform'
+        else:
+            tex['reason'] = 'too few coloured wall samples'
     for q, j in enumerate(vi):
         r = np.arange(LV[j], min(LV[j] + K, len(PR[j]['s'])))
         c = CU[j]
         kz = 2 * np.log1p(np.maximum(c['kink'][r], 0) / sk)
         gz = np.clip(c['groove'][r] / sgv, -3, 6)
         gate = (c['phib'][r] > GATE_BELOW_DEG) & (c['phia'][r] > GATE_ABOVE_DEG)
-        cost[q, :len(r)] = -(kz + GROOVE_W * gz) + np.where(gate, 0, GATE_PEN)
+        cost[q, :len(r)] = -(kz + GROOVE_W * gz + TEX_W * TZ[q, :len(r)]) + np.where(gate, 0, GATE_PEN)
         Zs[q, :len(r)] = PR[j]['z'][r]
         DS[q, :len(r)] = PR[j]['s'][r] - PR[j]['s'][LV[j]]
         KZ[q, :len(r)], GZ[q, :len(r)] = kz, gz
@@ -305,8 +388,14 @@ def seam_loop(M: Any, ft: dict[str, Any]) -> dict[str, Any]:
     full_ds[vi] = ds
     sup_full = np.zeros(n, bool)
     sup_full[vi] = sup
-    kz_full, gz_full, sc_full, ct_full = np.zeros(n), np.zeros(n), np.zeros(n), np.zeros(n)
-    kz_full[vi], gz_full[vi], sc_full[vi], ct_full[vi] = KZ[rows, path], GZ[rows, path], score, contrast
+    kz_full, gz_full, sc_full, ct_full, tz_full = np.zeros(n), np.zeros(n), np.zeros(n), np.zeros(n), np.zeros(n)
+    kz_full[vi], gz_full[vi], sc_full[vi], ct_full[vi], tz_full[vi] = KZ[rows, path], GZ[rows, path], score, contrast, TZ[rows, path]
+    tex_miss = np.zeros(n, bool)                          # the section shows a clear colour boundary somewhere in the band, but the seam is not on it
+    if tex.get('used'):
+        band_ok = np.abs(DS - prior[:, None]) <= PRIOR_TOL + CONTRAST_WIN_MM
+        has_edge = (np.where(band_ok, TZ, 0) >= 0.7).any(1)
+        tex_miss[vi] = has_edge & (TZ[rows, path] < 0.3)
+        tex.update({'sections_with_colour_boundary': int(has_edge.sum()), 'sections_missing_it': int(tex_miss.sum())})
     pts = np.zeros((n, 3))
     tan = np.zeros((n, 2))
     for j in vi:
@@ -325,11 +414,49 @@ def seam_loop(M: Any, ft: dict[str, Any]) -> dict[str, Any]:
     rl_f = _circ_smooth(_circ_interp(ii, valid, np.nan_to_num(rl), n), 5, 1.0)
     rad = np.hypot(pts[:, 0] - c0[0], pts[:, 1] - c0[1])
     seglen = np.linalg.norm(np.roll(pts, -1, 0) - pts, axis=1)
-    ev = np.where(~sup_full, 'inferred', np.where((kz_full >= EVID_KINK) & (gz_full >= EVID_GROOVE), 'crease+groove',
-                                                   np.where(gz_full >= EVID_GROOVE, 'groove', 'crease')))
+    geo = np.where((kz_full >= EVID_KINK) & (gz_full >= EVID_GROOVE), 'crease+groove', np.where(gz_full >= EVID_GROOVE, 'groove', np.where(kz_full >= EVID_KINK, 'crease', '')))
+    ev = np.where(~sup_full, 'inferred', np.where(tz_full >= EVID_TEX, np.where(geo == '', 'texture', np.char.add(geo.astype('U16'), '+texture')), np.where(geo == '', 'crease', geo)))
     return {'c0': c0, 'ang': np.radians(AZ), 'az': AZ, 'pts': pts, 'z': pts[:, 2], 'rad': rad, 'tan': tan, 'supported': sup_full, 'valid': valid,
-            'seglen': seglen, 'ds': full_ds, 'zl': zl_f, 'rl': rl_f, 'score': sc_full, 'contrast': ct_full, 'kink_z': kz_full, 'groove_z': gz_full, 'evidence': ev,
-            'scales': {'crease_deg_per_mm': sk, 'groove_mm': sgv}}
+            'seglen': seglen, 'ds': full_ds, 'zl': zl_f, 'rl': rl_f, 'score': sc_full, 'contrast': ct_full, 'kink_z': kz_full, 'groove_z': gz_full, 'tex_z': tz_full,
+            'tex_miss': tex_miss, 'texture': tex, 'evidence': ev.astype('U24'), 'scales': {'crease_deg_per_mm': sk, 'groove_mm': sgv}}
+
+
+def seam_review(seam: dict[str, Any], footprint_length: float) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Generic seam sanity gate (no part constants; the band tolerance scales with the footprint). Returns (review reasons, numbers).
+    1. support: less than REVIEW_SUPPORT_MIN of the loop length carries a crease / groove / texture cue;
+    2. band: bins whose height above the wall's lower edge is off the supported median by more than max(median, REVIEW_BAND_DEV_REL x L)
+       AND are inferred make up more than REVIEW_INFERRED_DEV_FRAC of the loop (a supported rise, e.g. a rear skirt, is legitimate; an
+       inferred one is the prior drifting to a wrong cue);
+    3. jump: the seam moves more than REVIEW_STEP_MM between neighbouring bins;
+    4. texture: the texture shows a clear plate / shell boundary that the seam misses on more than REVIEW_TEX_DISAGREE_FRAC of the loop."""
+    sup, seglen = seam['supported'], seam['seglen']
+    tot = float(seglen.sum())
+    h = seam['z'] - seam['zl']
+    med = float(np.median(h[sup])) if sup.any() else float(np.median(h))
+    tol = max(med, REVIEW_BAND_DEV_REL * footprint_length)
+    off = np.abs(h - med) > tol
+    frac_sup = float(seglen[sup].sum() / tot)
+    frac_off_inf = float(seglen[off & ~sup].sum() / tot)
+    frac_off_sup = float(seglen[off & sup].sum() / tot)
+    step = float(np.max(seglen))
+    dz = float(np.max(np.abs(np.diff(np.r_[seam['z'], seam['z'][:1]]))))
+    frac_tex_miss = float(seglen[seam['tex_miss']].sum() / tot) if seam.get('texture', {}).get('used') else 0.0
+    nums = {'supported_fraction': round(frac_sup, 3), 'band_median_mm': round(med, 2), 'band_tolerance_mm': round(tol, 2),
+            'off_band_inferred_fraction': round(frac_off_inf, 3), 'off_band_supported_fraction': round(frac_off_sup, 3),
+            'max_neighbour_dz_mm': round(dz, 3), 'max_neighbour_step_mm': round(step, 3), 'texture_boundary_missed_fraction': round(frac_tex_miss, 3),
+            'thresholds': {'supported_fraction_min': REVIEW_SUPPORT_MIN, 'off_band_inferred_fraction_max': REVIEW_INFERRED_DEV_FRAC,
+                           'max_neighbour_dz_mm': REVIEW_STEP_MM, 'texture_boundary_missed_fraction_max': REVIEW_TEX_DISAGREE_FRAC}}
+    reasons: list[dict[str, Any]] = []
+    if frac_sup < REVIEW_SUPPORT_MIN:
+        reasons.append({'code': 'SEAM_UNSUPPORTED', 'value': round(frac_sup, 3), 'note': 'most of the seam loop is inferred; check seam_review.png'})
+    if frac_off_inf > REVIEW_INFERRED_DEV_FRAC:
+        reasons.append({'code': 'SEAM_BAND_INCONSISTENT', 'value': round(frac_off_inf, 3),
+                        'note': 'a long inferred stretch of the seam leaves the plate band height of the supported bins (median %.1f mm, tolerance %.1f mm)' % (med, tol)})
+    if dz > REVIEW_STEP_MM:
+        reasons.append({'code': 'SEAM_JUMP', 'value': round(dz, 3), 'note': 'the seam height jumps between neighbouring bins'})
+    if frac_tex_miss > REVIEW_TEX_DISAGREE_FRAC:
+        reasons.append({'code': 'SEAM_TEXTURE_DISAGREES', 'value': round(frac_tex_miss, 3), 'note': 'the texture shows a plate / shell colour boundary the seam does not follow'})
+    return reasons, nums
 
 
 def _face_graph(F: np.ndarray, cen: np.ndarray) -> sp.csr_matrix:
@@ -1276,8 +1403,11 @@ def shell_overlays(M: Any, face_codes: np.ndarray, seam: dict[str, Any], out: Pa
     n3 = np.c_[tan[:, 1] * np.cos(ang), tan[:, 1] * np.sin(ang), -tan[:, 0]]       # outward wall normal at the seam
     views = {'side_pos_y': (np.array([-1.0, 0, 0]), np.array([0, 0, 1.0]), np.array([0, 1.0, 0]), 'flank +y (mouse-left), front left'),
              'side_neg_y': (np.array([1.0, 0, 0]), np.array([0, 0, 1.0]), np.array([0, -1.0, 0]), 'flank -y (mouse-right), front right'),
+             'front': (np.array([0, 1.0, 0]), np.array([0, 0, 1.0]), np.array([1.0, 0, 0]), 'front (from +x), +y right'),
+             'rear': (np.array([0, -1.0, 0]), np.array([0, 0, 1.0]), np.array([-1.0, 0, 0]), 'rear (from -x), +y left'),
              'bottom': (np.array([1.0, 0, 0]), np.array([0, -1.0, 0]), np.array([0, 0, -1.0]), 'underside, front right, +y down')}
     result = []
+    pages: list[Any] = []
     for view, (r, u, t, _) in views.items():
         pr = np.stack([M.P @ r, M.P @ u, M.P @ t], -1)
         lo, hi = pr[:, :2].min(0) - 4, pr[:, :2].max(0) + 4
@@ -1334,6 +1464,17 @@ def shell_overlays(M: Any, face_codes: np.ndarray, seam: dict[str, Any], out: Pa
         name = f'overlay_{view}.png'
         img.save(out / name)
         result.append({'file': name, 'sha256': file_hash(out / name), 'view': view})
+        if view != 'bottom':
+            pages.append(img)
+    # seam review sheet: both flanks, front and rear on one page (inferred bins dashed orange), for a human look before chaining
+    wmax, htot = max(p.width for p in pages), sum(p.height for p in pages) + 8 * (len(pages) - 1)
+    sheet = Image.new('RGB', (wmax, htot), (255, 255, 255))
+    y = 0
+    for p in pages:
+        sheet.paste(p, (0, y))
+        y += p.height + 8
+    sheet.save(out / 'seam_review.png')
+    result.append({'file': 'seam_review.png', 'sha256': file_hash(out / 'seam_review.png'), 'view': 'review sheet: flank +y, flank -y, front, rear'})
     return result
 
 
@@ -1342,7 +1483,72 @@ def _not_ready(scan_id: str, reasons: list[str], extra: dict[str, Any] | None = 
             **(extra or {}), 'execution': {'completed': True}}
 
 
-def recognize_shell(workspace: Path, scan_id: str, handedness: str = 'auto') -> dict[str, Any]:
+def _texture_source(workspace: Path, prep: dict[str, Any], texture_path: str | None) -> Path | None:
+    """The textured PLY the prepared scan descends from: the explicit `texture_path`, else the prepare source itself when it is a PLY, else the
+    source of the brain_mouse_scan_model run that produced the prepare source. None when nothing textured is found."""
+    if texture_path:
+        return safe_path(workspace, texture_path)
+    src = (prep.get('source') or {}).get('relative_path')
+    if not src:
+        return None
+    p = workspace / src
+    if p.suffix.lower() == '.ply' and p.is_file():
+        return p
+    mr = p.parent / 'scan_model_report.json'
+    if mr.is_file():
+        try:
+            s2 = (json_load(mr).get('source') or {}).get('relative_path')
+        except Exception:
+            s2 = None
+        if s2 and (workspace / s2).suffix.lower() == '.ply' and (workspace / s2).is_file():
+            return workspace / s2
+    return None
+
+
+def texture_luminance(src: Path, v: np.ndarray, prep: dict[str, Any]) -> tuple[np.ndarray | None, dict[str, Any]]:
+    """Per-vertex luminance (0..1) of the prepared mesh sampled from a textured PLY (per-corner UVs + image): the texture is read at each raw
+    vertex's UV, the raw cloud is brought into the prepared frame (unit scale, prepare transform) and every prepared vertex takes the colour of
+    its nearest raw vertex (none when farther than TEX_MAX_DIST_EDGES median raw edge lengths). Vertex welding is irrelevant here: duplicates
+    of one position carry the same colour. Returns (lum or None, info)."""
+    from scipy.spatial import cKDTree
+    try:
+        import trimesh
+    except ImportError:
+        return None, {'used': False, 'reason': 'trimesh not installed'}
+    try:
+        m = trimesh.load(str(src), process=False, force='mesh')
+        vis = getattr(m, 'visual', None)
+        uv = getattr(vis, 'uv', None)
+        img = getattr(getattr(vis, 'material', None), 'image', None)
+        if uv is None or img is None or len(uv) != len(m.vertices):
+            return None, {'used': False, 'reason': 'the source PLY has no UV + texture image', 'file': src.name}
+        im = np.asarray(img.convert('RGB')).astype(np.float64) / 255.0
+        H, W = im.shape[:2]
+        uv = np.asarray(uv, dtype=np.float64)
+        px = np.clip(np.round(uv[:, 0] * (W - 1)).astype(int), 0, W - 1)
+        py = np.clip(np.round((1 - uv[:, 1]) * (H - 1)).astype(int), 0, H - 1)
+        rgb = im[py, px]
+        lum_raw = rgb @ np.array([0.299, 0.587, 0.114])
+        if float(np.ptp(lum_raw)) < 1e-3:
+            return None, {'used': False, 'reason': 'the texture image is missing or uniform (a PLY with UVs but no readable image file)', 'file': src.name}
+        rv = np.asarray(m.vertices, dtype=np.float64) * float((prep.get('settings') or {}).get('unit_scale_to_mm') or 1.0)
+        tr = (prep.get('settings') or {}).get('transform')
+        if tr is not None:
+            T = np.array(tr, dtype=np.float64).reshape(4, 4)
+            rv = rv @ T[:3, :3].T + T[:3, 3]
+        fcs = np.asarray(m.faces)
+        el = float(np.median(np.linalg.norm(rv[fcs[:, 0]] - rv[fcs[:, 1]], axis=1))) if len(fcs) else 1.0
+        dist, idx = cKDTree(rv).query(v, k=1)
+        lum = lum_raw[idx]
+        far = dist > TEX_MAX_DIST_EDGES * el
+        lum[far] = np.nan
+        return lum, {'used': True, 'file': src.name, 'image_size': [int(W), int(H)], 'raw_vertices': int(len(rv)), 'uncoloured_vertices': int(far.sum()),
+                     'max_sample_distance_mm': round(TEX_MAX_DIST_EDGES * el, 3)}
+    except Exception as exc:                               # a broken texture never blocks the geometry route
+        return None, {'used': False, 'reason': f'texture could not be read: {type(exc).__name__}', 'file': src.name}
+
+
+def recognize_shell(workspace: Path, scan_id: str, handedness: str = 'auto', texture_path: str | None = None) -> dict[str, Any]:
     scan_id = safe_id(scan_id)
     t0 = time.time()
     reg = sr.recognize_regions(workspace, scan_id, handedness, overlay=False)
@@ -1350,7 +1556,9 @@ def recognize_shell(workspace: Path, scan_id: str, handedness: str = 'auto') -> 
         return _not_ready(scan_id, ['REGIONS_NOT_READY'] + list(reg.get('blocking_reasons') or []), {'regions_run': reg.get('run_id')})
     d, prep = scan_shell.load_prepared(workspace, scan_id)
     v, f = scan_shell.load_prepared_mesh(d)
-    run_id = 'shl_' + digest({'regions': reg['run_id'], 'version': SHELL_VERSION})[:12]
+    tex_src = _texture_source(workspace, prep, texture_path)
+    tex_sha = file_hash(tex_src) if tex_src is not None and tex_src.is_file() else None
+    run_id = 'shl_' + digest({'regions': reg['run_id'], 'version': SHELL_VERSION, 'texture': tex_sha})[:12]
     out = d / 'shell' / run_id
     if (out / 'shell_report.json').is_file():
         return _stored(out)
@@ -1361,7 +1569,13 @@ def recognize_shell(workspace: Path, scan_id: str, handedness: str = 'auto') -> 
     codes = np.load(d / 'regions' / reg['run_id'] / 'face_labels.npz')['face_labels']
     buttons = (codes >= 1) & (codes <= 5)
     ft = sg.surface_features(M.P, M.F, M.L, M.vn, M.fn)
-    seam = seam_loop(M, ft)
+    lum, tex_info = (None, {'used': False, 'reason': 'the prepared scan descends from no textured PLY', 'hint': 'pass texture_path=<textured PLY inside the workspace>'})
+    if tex_src is not None:
+        lum, tex_info = texture_luminance(tex_src, v, prep)
+        if lum is not None:                                 # functional regions (buttons, wheel) carry their own colours: no seam cue there
+            lum = lum.copy()
+            lum[np.unique(M.F[buttons])] = np.nan
+    seam = seam_loop(M, ft, lum)
     bottom, top, cls_info = classify(M, ft, seam, buttons)       # the split itself is geometry only; buttons only carve the children
     islands = cls_info.pop('islands')
     sup = seam['supported']
@@ -1387,6 +1601,11 @@ def recognize_shell(workspace: Path, scan_id: str, handedness: str = 'auto') -> 
     sens = sensor_window(M, ft)
     blockers: list[str] = []
     warnings: list[dict[str, Any]] = []
+    review, review_nums = seam_review(seam, float(M.P[:, 0].max() - M.P[:, 0].min()))
+    if not tex_info.get('used'):
+        warnings.append({'code': 'SEAM_TEXTURE_NOT_USED', 'note': tex_info.get('reason'), **({'hint': tex_info['hint']} if 'hint' in tex_info else {})})
+    elif not seam['texture'].get('used'):
+        warnings.append({'code': 'SEAM_TEXTURE_NO_CUE', 'note': seam['texture'].get('reason')})
     if frac_sup < 0.5:
         warnings.append({'code': 'SEAM_MOSTLY_INFERRED', 'supported_fraction': round(frac_sup, 2), 'note': 'less than half of the seam loop shows a crease or groove; treat the plate / shell split as indicative'})
     if comp_b[2] != 1 or comp_tf[2] != 1:
@@ -1499,8 +1718,11 @@ def recognize_shell(workspace: Path, scan_id: str, handedness: str = 'auto') -> 
     except ImportError:
         warnings.append({'code': 'OVERLAY_SKIPPED', 'note': 'Pillow is not installed (geometry extra).'})
     report = {
-        'schema': 'scan_shell_report/1', 'run_id': run_id, 'scan_id': scan_id, 'status': 'NOT_READY' if blockers else 'READY', 'blocking_reasons': blockers, 'warnings': warnings,
-        'code_version': {'scan_shell': SHELL_VERSION, 'package': __version__}, 'settings': {'handedness': handedness}, 'regions_run': reg['run_id'],
+        'schema': 'scan_shell_report/1', 'run_id': run_id, 'scan_id': scan_id, 'status': 'NOT_READY' if blockers else ('REVIEW' if review else 'READY'),
+        'blocking_reasons': blockers, 'review_reasons': review, 'warnings': warnings,
+        'seam_gate': {**review_nums, 'verdict': 'REVIEW' if review else 'PASS', 'image': 'seam_review.png',
+                      'note': 'REVIEW = look at seam_review.png (both flanks, front, rear; dashed = inferred bins) before chaining; the outputs are written either way'},
+        'code_version': {'scan_shell': SHELL_VERSION, 'package': __version__}, 'settings': {'handedness': handedness, 'texture_path': texture_path}, 'regions_run': reg['run_id'],
         'scan': {'prepared_npz_sha256': prep['prepared_npz_sha256'], 'faces': int(len(f))}, 'surface_only': True, 'limitations': LIMITS,
         'regions': {'bottom_plate': {'face_count': int(bottom.sum()), 'area_mm2': round(float(area[bottom].sum()), 1), 'components': int(comp_b[2]),
                                      'definition': 'outer skirt below the parting seam plus the whole underside (feet, label area, screw bosses, sensor pocket): '
@@ -1523,10 +1745,15 @@ def recognize_shell(workspace: Path, scan_id: str, handedness: str = 'auto') -> 
                  'max_step_per_degree_mm': {'height_above_lower_edge': round(step_h, 3), 'z': round(step_z, 3)},
                  'sections_through_scan_holes': int((~seam['valid']).sum()),
                  'cue_scales': {k: round(float(v), 5) for k, v in seam['scales'].items()},
+                 'texture': {**tex_info, **{k: (round(float(x), 4) if isinstance(x, float) else x) for k, x in seam['texture'].items() if k != 'class_means'},
+                             **({'class_means': [round(float(x), 4) for x in seam['texture']['class_means']]} if 'class_means' in seam['texture'] else {}),
+                             'definition': 'per-vertex luminance from the source PLY texture; Otsu split of the wall samples into two classes; the class at the '
+                                           'wall lower edge is the plate class; cue = colour step from plate class (below) to shell class (above), weight %.0f' % TEX_W},
+                 'evidence_sections': {str(k): int(c) for k, c in zip(*np.unique(seam['evidence'], return_counts=True))},
                  'method': 'exact vertical sections every %.1f degrees round the footprint; per section the outer wall from its lower edge up 13 mm; cue = convex '
-                           'crease (profile curvature) + groove (band-pass normal offset), gated against the plate fillet; circular Viterbi with a height '
-                           'smoothness prior and a robust 3-harmonic prior on the offset above the lower edge; weak sections are inferred (prior shape '
-                           'between the supported ends)' % deg_per_col,
+                           'crease (profile curvature) + groove (band-pass normal offset) + texture colour step (when the source is textured), gated against the '
+                           'plate fillet; circular Viterbi with a height smoothness prior and a robust 3-harmonic prior on the offset above the lower edge; weak '
+                           'sections are inferred (prior shape between the supported ends)' % deg_per_col,
                  'confidence': 'high' if frac_sup >= 0.85 else ('medium' if frac_sup >= 0.6 else 'low')},
         'sensor': sensor, 'files': {'face_labels': {'file': 'face_labels.npz', 'sha256': file_hash(npz), 'faces': int(len(f)), 'codes': LABEL_CODES},
                                     'outlines': {'file': 'outlines.npz', 'sha256': file_hash(out / 'outlines.npz'), 'note': 'seam_xyz (%d x 3, work frame, one point per section), seam_xyz_closed (first point repeated), seam_supported, seam_azimuth_deg, '
@@ -1538,7 +1765,7 @@ def recognize_shell(workspace: Path, scan_id: str, handedness: str = 'auto') -> 
                                                       'frame': 'canonical: x rear -> front, y mouse-left, z base -> top, origin rear end / mid-line / base (mm, not mirrored)',
                                                       'scan_to_canonical_4x4': T.round(9).tolist(),
                                                       'next': 'brain_mouse_scan_flush(relative_path=<this folder>/canonical.stl, unit mm, labels_path=<this folder>/labels.npz)'}},
-        'seconds': round(time.time() - t0, 1), 'checks': {'regions_ready': 'PASS', 'seam_closed_loop': 'PASS', 'physical_function': 'UNVERIFIED'}, 'execution': {'completed': True}}
+        'seconds': round(time.time() - t0, 1), 'checks': {'regions_ready': 'PASS', 'seam_closed_loop': 'PASS', 'seam_gate': 'REVIEW' if review else 'PASS', 'physical_function': 'UNVERIFIED'}, 'execution': {'completed': True}}
     if overlays:
         report['files']['overlays'] = overlays
     atomic_json(out / 'shell_report.json', report)

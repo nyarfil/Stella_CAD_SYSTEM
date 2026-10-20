@@ -40,7 +40,10 @@ def default_home():
 class Config:
     def __init__(self, allow_documents=(), read_only=False, allow_read_any=False, home=None, port=None,
                  token_file=None, audit_path=None, scratch_dir=None, default_timeout=60.0,
-                 max_text=100000):
+                 max_text=100000, unrestricted=None):
+        # Owner order: no document allow-list / code policy (like the official Fusion MCP). Reversible with
+        # STELLA_STEVE_UNRESTRICTED=0 or unrestricted=False.
+        self.unrestricted = policy.unrestricted() if unrestricted is None else bool(unrestricted)
         self.allow_documents = tuple(allow_documents)
         self.read_only = read_only
         self.allow_read_any = allow_read_any
@@ -89,10 +92,12 @@ class Gateway:
         return {"name": payload.get("name"), "id": payload.get("document_id")}
 
     def _allowed_write(self, name):
-        return name is not None and name in self.cfg.allow_documents
+        if self.cfg.unrestricted:
+            return True
+        return name is not None and ('*' in self.cfg.allow_documents or name in self.cfg.allow_documents)
 
     def _allowed_read(self, name):
-        return self.cfg.allow_read_any or self._allowed_write(name)
+        return self.cfg.unrestricted or self.cfg.allow_read_any or self._allowed_write(name)
 
     def _finish(self, tool, started, payload, doc=None, **audit_extra):
         self.audit.write(tool=tool, phase="result", document=doc, status="ok" if payload.get("ok") else "error",
@@ -136,7 +141,7 @@ class Gateway:
         self.audit.write(tool="stella_fusion_health", phase="decision", decision="allow")
         status, seam = self._call("health", timeout=10)
         payload = {"ok": bool(seam.get("ok")), "seam": seam,
-                   "policy": {"read_only": self.cfg.read_only, "allow_read_any": self.cfg.allow_read_any,
+                   "policy": {"read_only": self.cfg.read_only, "allow_read_any": self.cfg.allow_read_any, "unrestricted": self.cfg.unrestricted,
                               "allowed_documents": list(self.cfg.allow_documents)}}
         return self._finish("stella_fusion_health", started, payload)
 
@@ -190,10 +195,10 @@ class Gateway:
             return error("invalid_arguments", "timeout_seconds must be 1..120."), True
         if mode == "execute" and self.cfg.read_only:
             return self._deny(tool, "read_only", None, code, "Server started with --read-only; execute is refused.")
-        if mode == "execute" and not self.cfg.allow_documents:
+        if mode == "execute" and not self.cfg.allow_documents and not self.cfg.unrestricted:
             return self._deny(tool, "no_allowlist", None, code,
                               "Modeling is disabled until the owner passes --allow-document.")
-        violations = policy.check(code, mode, self.cfg.scratch_dir)
+        violations = policy.check(code, mode, self.cfg.scratch_dir, restricted=not self.cfg.unrestricted)
         if violations:
             first = "; ".join("line %s: %s" % (v["line"], v["message"]) for v in violations[:5])
             return self._deny(tool, "code_policy", None, code, "Code policy rejected the code: " + first,
@@ -207,7 +212,7 @@ class Gateway:
             return self._deny(tool, "document_not_allowed", before, code,
                               "Active document %r is not on the allow-list." % before["name"])
         docs_before = None
-        if mode == "execute":
+        if mode == "execute" and not self.cfg.unrestricted:
             docs_before = self._open_documents(before["id"])
             if docs_before is None:   # fail closed: cannot prove other documents stay untouched
                 return self._deny(tool, "document_snapshot_failed", before, code,
@@ -240,7 +245,7 @@ class Gateway:
         if not pinned["unchanged"] and result.get("ok"):
             result["warning"] = "The active document differs from the pinned one after execution; verify before continuing."
         extra = {}
-        if mode == "execute":
+        if mode == "execute" and not self.cfg.unrestricted:
             docs_after = self._open_documents(after["id"] or before["id"])
             diff = None if docs_after is not None and docs_before is not None else {"unverifiable": True}
             if docs_after is not None:

@@ -91,3 +91,11 @@ def test_addin_folder_config_is_the_fallback(tmp_path, monkeypatch):
     assert stella_seam.load_config(empty) == {"enabled": True, "port": 1}
     (empty / "config.json").write_text(json.dumps({"enabled": False}), encoding="utf-8")
     assert stella_seam.load_config(empty) == {"enabled": False}
+
+
+def test_panel_guard_off_by_default_unrestricted(monkeypatch):
+    from steve import stella_seam
+    cfg = {"panel": {"allowedDocuments": ["SANDBOX"], "readOnly": True}}
+    assert stella_seam.panel_policy(cfg) is not None      # switch OFF (conftest): guard active
+    monkeypatch.delenv("STELLA_STEVE_UNRESTRICTED", raising=False)
+    assert stella_seam.panel_policy(cfg) is None          # owner-ordered default: no panel guard

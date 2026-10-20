@@ -15,7 +15,7 @@ from .scan_cad_common import check_file, check_range, layout_from, run_job, serv
 from .. import __version__
 from ..errors import BrainError
 
-SOLID_VERSION = 'SS1.2'
+SOLID_VERSION = 'SS1.11'
 WORKER = Path(__file__).with_name('scan_shell_solid_worker.py')
 REPORT = 'shell_solid_report.json'
 CODE = 'SHELL_SOLID'
@@ -110,7 +110,7 @@ def shell_solid(workspace: Path, shell_fit_report_path: str, layout_path: str | 
                        'shell_fit_id': sfr.get('fit_id'), 'mesh_relative_path': src.get('relative_path'), 'labels_relative_path': lab_rel,
                        'layout_relative_path': lay_rel, 'layout_sha256': hashes['layout']},
             'settings': settings, 'units': {'output': 'mm'}, 'parting': log.get('parting'), 'front': res['front'], 'frame': res['frame'],
-            'construction': {k: log[k] for k in ('skin', 'plan', 'gamma', 'tube', 'cap', 'cap_heightfield', 'sewing') if k in log},
+            'construction': {k: log[k] for k in ('skin', 'plan', 'exterior_front', 'gamma', 'tube', 'cap_trim', 'cap', 'cap_heightfield', 'sewing') if k in log},
             'brep': br, 'deviation': dev, 'checks': checks, 'timing': res['timing'],
             'outputs': {'solid': {'file': files['step'], 'faces': br['faces'], 'volume_mm3': br['volume_mm3']},
                         'construction': {'file': files['construction']}},

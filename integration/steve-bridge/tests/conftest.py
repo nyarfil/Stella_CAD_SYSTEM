@@ -16,6 +16,13 @@ from steve.fusion_tools import FusionTools  # noqa: E402
 from stella_steve_bridge.gateway import Config, Gateway  # noqa: E402
 
 
+@pytest.fixture(autouse=True)
+def _restricted_by_default(monkeypatch):
+    """Production default is unrestricted (owner order, STELLA_STEVE_UNRESTRICTED=1). The legacy guard tests
+    exercise the reversible restricted mode, so they run with the switch OFF; tests of the default delete it."""
+    monkeypatch.setenv("STELLA_STEVE_UNRESTRICTED", "0")
+
+
 class Env:
     pass
 

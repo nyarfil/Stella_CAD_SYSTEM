@@ -153,6 +153,77 @@ def test_overlapping_pads_are_not_ready(tmp_path):
     assert 'SIDE_BUTTONS_OVERLAP' in [b['code'] for b in res['blockers']]
 
 
+def make_slotted_shell(z_slot, width=0.5, depth=2.0):
+    """make_shell() with a narrow slot along the +y flank at height z_slot (an existing click slot of the shell)."""
+    from OCP.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
+    from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCylinder
+    from OCP.gp import gp_Ax2, gp_Dir, gp_Pnt
+    shell = make_shell()
+    ax = gp_Ax2(gp_Pnt(-40, 0, ZA), gp_Dir(1, 0, 0))
+    ring = BRepAlgoAPI_Cut(BRepPrimAPI_MakeCylinder(ax, RC + 3, 80).Shape(), BRepPrimAPI_MakeCylinder(ax, RC - depth, 80).Shape()).Shape()
+    slab = BRepPrimAPI_MakeBox(gp_Pnt(-41, 0, z_slot - width / 2), gp_Pnt(41, 40, z_slot + width / 2)).Shape()
+    cutter = BRepAlgoAPI_Common(ring, slab).Shape()
+    out = L.solids(BRepAlgoAPI_Cut(shell, cutter).Shape())
+    assert len(out) == 1 and L.is_valid(out[0])
+    return out[0]
+
+
+def slotted_case(root: Path, z_slot, pads):
+    d = root / 'in'
+    d.mkdir(parents=True, exist_ok=True)
+    L.write_step(make_slotted_shell(z_slot), d / 'shell.step')
+    return write_case(d, pads=pads)
+
+
+def test_pad_next_to_existing_slot_is_clipped_to_keep_the_land(tmp_path):
+    pads = {'side_button_2': PADS['side_button_2']}                       # top edge z = 17.5
+    d = slotted_case(tmp_path, 18.3, pads)                                # slot 0.55 mm above the pad edge: closer than groove + land
+    res = W.run(request(d, tmp_path / 'o'))
+    assert not res['blockers'], res['blockers']
+    b = res['buttons'][0]
+    sc = b['slot_clearance']
+    assert sc['slot_cells'] > 20 and sc['clipped'] and sc['cuts'] >= 1 and sc['min_distance_before_mm'] < sc['required_mm']
+    assert sc['area_after_mm2'] < sc['area_before_mm2'] and sc['area_after_mm2'] > 0.4 * sc['area_before_mm2']
+    assert sc['min_distance_after_mm'] >= 0.4 + 1.0 - 0.15                 # groove width + min_land_mm (minus the grid quantum)
+    assert any(w['code'] == 'SIDE_BUTTON_CLIPPED_BY_SLOT' for w in res['warnings'])
+    r = res['result']
+    assert r['valid'] and r['solids_in_step'] == 1 and r['modified'] and r['faces_below_0p05mm2'] == 0
+    m = b['measured']
+    assert abs(m['groove_width_mm']['p50'] - 0.4) < 0.02 and abs(m['groove_depth_mm']['p50'] - 1.5) < 0.05
+    assert b['outline']['centre_3d'][2] < 15.0                              # the pad kept the side away from the slot
+    # the slot is never moved: the output still has it (a narrow dip of the skin right above the pad)
+    back = L.solids(L.read_step(tmp_path / 'o' / 'side_buttons_shell.step'))[0]
+    rays = W.Rays(back)
+    v0 = rays.first(np.array([5.0, 40.0, 18.3]), np.array([0.0, -1.0, 0.0]), 80.0)
+    v1 = rays.first(np.array([5.0, 40.0, 19.6]), np.array([0.0, -1.0, 0.0]), 80.0)
+    assert v0 - v1 > 1.5
+
+
+def test_slot_through_the_button_region_is_not_ready_and_not_moved(tmp_path):
+    pads = {'side_button_2': PADS['side_button_2']}
+    d = slotted_case(tmp_path, 15.0, pads)                                # slot through the middle of the pad region
+    res = W.run(request(d, tmp_path / 'o'))
+    assert 'SIDE_BUTTON_BLOCKED_BY_SLOT' in [x['code'] for x in res['blockers']] and not res['result']['modified']
+
+
+def test_min_land_zero_disables_the_clip_margin_but_keeps_groove_clear(tmp_path):
+    pads = {'side_button_2': PADS['side_button_2']}
+    d = slotted_case(tmp_path, 18.3, pads)
+    res = W.run(request(d, tmp_path / 'o', min_land_mm=0.0))
+    sc = res['buttons'][0]['slot_clearance']
+    assert not res['blockers'] and sc['required_mm'] == pytest.approx(0.4)
+    assert sc['min_distance_after_mm'] >= 0.4 - 0.15 if sc['clipped'] else sc['min_distance_before_mm'] >= 0.4 - 0.15
+
+
+def test_clip_to_land_geometry():
+    poly = np.array([[0.0, 0.0], [10.0, 0.0], [10.0, 5.0], [0.0, 5.0]])
+    slots = np.array([[x, 6.0] for x in np.linspace(-2, 12, 30)])
+    p2, h2, n, clean = W.clip_to_land(poly, poly.copy(), slots, 1.4)
+    assert clean and n == 1 and abs(W._poly_area(p2) - 10.0 * 4.6) < 1e-6 and p2[:, 1].max() <= 4.6 + 1e-9
+    none, _, n0, ok0 = W.clip_to_land(poly, poly.copy(), np.zeros((0, 2)), 1.4)
+    assert ok0 and n0 == 0 and len(none) == 4
+
+
 def test_mesh_in_another_frame_is_refused(tmp_path):
     d = write_case(tmp_path / 'in')
     V, F, _ = make_scan()
@@ -214,3 +285,4 @@ def test_tool_end_to_end_review_cache_and_face_roles(tmp_path):
     c = fr['counts']['top_shell']
     assert c.get('sidebutton') == 2 and c.get('sidebutton_wall') == 2 and fr['checks']['sidebutton_walls'] == 'PASS'
     assert fr['colour_counts']['read_back']['0.15,0.65,0.25'] == 2
+

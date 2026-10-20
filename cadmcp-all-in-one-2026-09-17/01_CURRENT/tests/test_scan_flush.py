@@ -263,3 +263,57 @@ def test_wrong_label_is_only_a_hint(tmp_path):
     (tmp_path / 'labels.json').write_text(json.dumps({'bottom_plate': other.tolist()}), encoding='utf-8')
     r = W.run(request(tmp_path))
     assert r['fit']['tilt_before_deg'] == pytest.approx(TILT_DEG, abs=0.1)
+
+
+def make_recessed(deg=1.2, warp=0.0):
+    """80 x 40 x 12 body with a generic recessed, ribbed underside: a 4 mm rim at z 0 (28 % of the footprint), five 6 mm ribs at z 0.8 (30 %) and
+    floor panels between them at z 1.5 (42 %), one of them a deeper pocket at z 4. No plane carries half of the underside. warp > 0 lifts the ends
+    of the whole underside (z += warp (x/40)^2): a warped base. Tilted by deg. Returns (mesh, down-facing ids)."""
+    def box(ext, ctr):
+        b = trimesh.creation.box(extents=ext)
+        b.apply_translation(ctr)
+        for _ in range(3):
+            b = b.subdivide()
+        return b
+    parts = [box((80, 4, 12), (0, 18, 6)), box((80, 4, 12), (0, -18, 6)), box((4, 32, 12), (38, 0, 6)), box((4, 32, 12), (-38, 0, 6))]     # rim, bottom z 0
+    x = -36.0
+    for k in range(11):                       # floor 7 mm, rib 6 mm, floor ... x 5 ribs, 6 floor panels over x -36 .. 36
+        w, bottom = (7.0, 4.0 if k == 4 else 1.5) if k % 2 == 0 else (6.0, 0.8)
+        parts.append(box((w, 32, 12 - bottom), (x + w / 2, 0, bottom + (12 - bottom) / 2)))
+        x += w
+    m = trimesh.util.concatenate(parts)
+    V = np.asarray(m.vertices, float)
+    if warp:
+        low = V[:, 2] < 5.0
+        V[low, 2] += warp * (V[low, 0] / 40.0) ** 2
+    V = V @ tilt_matrix(deg).T
+    V[:, 2] += 9.0
+    out = trimesh.Trimesh(V, m.faces, process=False)
+    return out, np.flatnonzero(out.face_normals[:, 2] < -0.9)
+
+
+def _write_mesh(folder: Path, m, ids, labels=True):
+    folder.mkdir(parents=True, exist_ok=True)
+    m.export(folder / 'in.stl')
+    if labels:
+        (folder / 'labels.json').write_text(json.dumps({'regions': {'bottom_plate': {'face_ids': ids.tolist()}}}), encoding='utf-8')
+
+
+@pytest.mark.parametrize('labels', [True, False])
+def test_recessed_underside_is_flushed_on_its_support_rim(tmp_path, labels):
+    m, ids = make_recessed()
+    _write_mesh(tmp_path, m, ids, labels)
+    r = W.run(request(tmp_path, labels=labels))
+    assert r['fit']['method'] == 'support_plane' and r['fit']['tilt_before_deg'] == pytest.approx(1.2, abs=0.1)
+    after = r['after']
+    assert after['fit_tilt_deg'] < 0.05 and after['within_tol_pct_area'] > 20.0 and after['contact_hull_ratio'] > 0.8
+    assert after['recessed_pct_area'] > 40.0 and after['recessed_max_depth_mm'] == pytest.approx(4.0, abs=0.3)       # the recess is reported, not an error
+    assert r['extent']['protrusion_below_plate_mm'] < W.DEFAULTS['plate_tolerance_mm'] + 0.05                        # nothing below the rim
+    assert sf._flat_ok(after, r['fit']) and any(w['code'] == 'FLUSH_UNDERSIDE_RECESSED' for w in r['warnings'])
+
+
+def test_warped_base_is_not_flat(tmp_path):
+    m, ids = make_recessed(warp=1.5)
+    _write_mesh(tmp_path, m, ids)
+    r = W.run(request(tmp_path))
+    assert not sf._flat_ok(r['after'], r['fit'])                  # a bowed underside touches the plane at a point only: still blocked

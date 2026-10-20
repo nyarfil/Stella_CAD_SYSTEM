@@ -12,6 +12,9 @@ Pipeline (numpy / scipy / Pillow, no mesh library):
   5. every boundary is checked against the boundary cue; unsupported stretches are listed as inferred;
   6. R2.1 (scan_grooves): the click / wheel / remainder boundaries are re-drawn on the mesh: groove-penalised growth from the region
      interiors, the groove ridge traced across each boundary and fitted as a smooth 3-D curve, faces assigned by side of the curve.
+  7. R2.3 (scan_frontwall): the front wall of each click (the lip that rolls over the front edge, hidden from the top view, down to the parting
+     slit) is the region enclosed by groove lines (crest groove above, regularised parting-slit groove below, groove-evidence ends); only
+     faces inside that loop are taken; the left | right split continues through it.
 Results are stored with hashes under mouse/scans/<scan_id>/regions/<run_id>/ and never overwritten.
 """
 from __future__ import annotations
@@ -23,13 +26,13 @@ import scipy.sparse as sp
 import scipy.sparse.csgraph as cg
 from scipy import ndimage as ndi
 from scipy.spatial import cKDTree
-from . import scan_grooves, scan_segment, scan_shell
+from . import scan_frontwall, scan_grooves, scan_segment, scan_shell
 from .. import __version__
 from ..errors import BrainError
 from ..req2cad.common import atomic_json, json_load
 from ..util import digest, file_hash, safe_id
 
-REGIONS_VERSION = 'R2.1'
+REGIONS_VERSION = 'R2.5'
 PIX = scan_segment.PIX
 H_SEAM = 0.06                 # groove strength scale (mm) of the handedness probe and the palm / base split
 K_COST = 30.0                 # groove crossing penalty of the palm / base split
@@ -327,6 +330,8 @@ def recognize_regions(workspace: Path, scan_id: str, handedness: str = 'auto', o
     lab_v4 = np.where(seg['lab'] >= 0, seg['lab'], palm_base)
     gr = scan_grooves.refine_regions(M.P, M.F, M.cen, M.fn, M.vn, M.L, ft, lab_v4, _wheel_well(M, seg), _crease_window())
     lab = gr['lab']
+    gcue = scan_grooves.cue_vertex(M.P, M.L, ft['hv'], ft['angv'], _crease_window())[M.F].mean(1)
+    lab, fw = scan_frontwall.extend_click_front(M.F, M.cen, M.fn, lab, clicks=(0, 1), remainder=(NAMES.index('PALM'),), gF=gcue)
     # ------------------------------------------------------------ report
     names_out = dict(OUT_NAMES)
     if mirrored:     # positional names: the physical left button of a mirrored mouse is the region on the mirrored model's right
@@ -338,7 +343,8 @@ def recognize_regions(workspace: Path, scan_id: str, handedness: str = 'auto', o
     sec_top = ['front', 'rear', 'thumb-side', 'far-side']
     sec_side = ['front', 'rear', 'lower', 'upper']      # raster v = -z, so +v is downward
     cue_top = np.maximum(seg['cues']['top']['geo'], seg['cues']['top']['ang'])
-    cue_side = seg['cues']['side']['slope']
+    groove_side = 'groove' in seg['cues']['side']      # R2.4: pads closed by a narrow-slot loop on the flank
+    cue_side = seg['cues']['side']['groove'] if groove_side else seg['cues']['side']['slope']
     face_codes = np.zeros(len(f), np.uint8)
     for k in keys:
         mk = lab == NAMES.index(k)
@@ -357,7 +363,8 @@ def recognize_regions(workspace: Path, scan_id: str, handedness: str = 'auto', o
                 if w_mm < 3.2:
                     down += 1
                     extra.append(f'narrow pad ({w_mm:.1f} mm): the outline error of a few tenths of a mm is a large share of its width')
-                extra.append('the pad edge is the crest of the surface-slope ring round the raised pad, not a groove.')
+                extra.append('the pad edge is the inner edge of the closed narrow-slot (groove) loop round the pad.' if groove_side else
+                             'the pad edge is the crest of the surface-slope ring round the raised pad, not a groove.')
             crv = seg['curves'][k]
             row['outline'] = {'frame': 'top view (x, y), mm' if top else 'flank view (x, v = -z), mm', 'points': int(len(seg['outlines'][k])),
                               'max_fit_deviation_mm': max(c['maxdev_mm'] for c in crv), 'shared_with': sorted({c['kind'][12:] for c in crv if c['kind'].startswith('shared_with_')})}
@@ -437,8 +444,11 @@ def recognize_regions(workspace: Path, scan_id: str, handedness: str = 'auto', o
         'code_version': {'scan_regions': REGIONS_VERSION, 'package': __version__}, 'settings': {'handedness': handedness, 'overlay': bool(overlay)},
         'scan': {'prepared_npz_sha256': prep['prepared_npz_sha256'], 'source_sha256': prep['source']['sha256'], 'faces': int(len(f))},
         'surface_only': True, 'limitations': _LIMITS, 'frame': frame_info, 'handedness': {**hand_info, 'used': use, 'mirrored_for_detection': mirrored},
-        'regions': regions, 'other_faces': other, 'files': files, 'method': 'scan_segment v4 + scan_grooves R2.1 (geometry only: no texture, no label files)',
-        'boundary_refinement': _refine_summary(gr, names_out), 'seconds': round(time.time() - t0, 1),
+        'regions': regions, 'side_button_detection': seg.get('side_method'), 'other_faces': other, 'files': files, 'method': 'scan_segment v4 + scan_grooves R2.1 + scan_frontwall R2.3 (geometry only: no texture, no label files)',
+        'boundary_refinement': _refine_summary(gr, names_out),
+        'front_wall': {'applied': fw['applied'], 'faces_moved_from_palm_shell': fw.get('faces_moved', 0), 'reason': fw.get('reason'),
+                       'clicks': {names_out['LC' if k == 0 else 'RC']: v for k, v in fw['clicks'].items()},
+                       'method': 'scan_frontwall: groove-bounded loop per click (crest groove, smoothed parting-slit groove, groove-evidence ends); only faces inside the loop, connected to the front arc'}, 'seconds': round(time.time() - t0, 1),
         'region_naming': 'positional: left_click is the button on the mouse-left (+y) side of the frame; for a left-hand mouse the thumb-side main button is therefore right_click',
         'checks': {'prepared_scan_ready': 'PASS', 'frame_orientation_consistent': 'PASS', 'every_region_nonempty': 'PASS' if status == 'READY' else 'FAIL', 'physical_function': 'UNVERIFIED'},
         'execution': {'completed': True},

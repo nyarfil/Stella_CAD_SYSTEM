@@ -185,3 +185,95 @@ def test_seam_moves_onto_a_wall_crest_but_not_up_a_leaning_wall():
         out, log = w.seam_to_crest(V, F, S, p)
         assert np.allclose(out[:, :2], S[:, :2])
         assert np.abs(out[:, 2] - want).max() < 0.08, (want, out[:, 2].min(), out[:, 2].max(), log)
+
+
+def test_hidden_inner_sheet_is_not_part_of_the_exterior():
+    """A moulded lip scans as two sheets; the up-facing sheet under the outer one is hidden, walls and bottoms stay."""
+    from cadmcp_brain.studio import scan_shell_solid_worker as ssw
+    g = np.stack(np.meshgrid(np.arange(0, 20, 0.25), np.arange(0, 20, 0.25)), -1).reshape(-1, 2)
+    outer = np.c_[g, np.full(len(g), 10.0)]
+    inner = np.c_[g, np.full(len(g), 8.0)]
+    buf = ssw.zbuffers(np.vstack([outer, inner]), 0.5)
+    up = np.tile([0.0, 0.0, 1.0], (len(g), 1))
+    assert ssw.exterior_mask(outer[:50], up[:50], buf, 0.9, 0.6).all()
+    assert not ssw.exterior_mask(inner[:50], up[:50], buf, 0.9, 0.6).any()
+    wall = np.tile([1.0, 0.0, 0.0], (50, 1))
+    assert ssw.exterior_mask(inner[:50], wall, buf, 0.9, 0.6).all()
+
+
+def test_frame_of_an_offset_mirror_plane_puts_the_plane_on_y0():
+    from cadmcp_brain.studio import scan_shell_solid_worker as ssw
+    n = np.array([0.02, 1.0, 0.0])
+    n /= np.linalg.norm(n)
+    d = 5.3                                                  # mirror plane n.x = d is far from the origin
+    R, dd = ssw.frame_of(n, d, [1.0, -0.02, 0.0])
+    on_plane = np.array([0.0, d / n[1], 7.0]) + 11.0 * np.cross(n, [0, 0, 1.0]) + 3.0 * np.array([0, 0, 1.0])
+    assert abs(n @ on_plane - d) < 1e-9
+    assert abs(ssw.to_q(on_plane[None], R, dd)[0, 1]) < 1e-9
+    assert abs(np.linalg.det(R) - 1.0) < 1e-9
+
+
+def _front_nose_samples(nose_slope=1.4, lip_z=12.0, nose_lip_z=10.0, r0=30.0):
+    """Synthetic front half (aligned frame, cut at x = 0, outline a half circle of radius r0): the sides (|phi| > 45 deg) have a crisp
+    lip at lip_z (sloped top above, vertical wall below); the nose (|phi| <= 45 deg) has NO wall: the top slope runs straight down to
+    its bottom edge at nose_lip_z, receding inward above it by nose_slope mm per mm of height (an Inca-like nose)."""
+    P, N = [], []
+    for phi in np.linspace(-np.pi / 2, np.pi / 2, 361):
+        n = np.array([np.cos(phi), np.sin(phi)])
+        side = abs(phi) > np.pi / 4
+        for z in np.arange(4.0, 22.0, 0.1):
+            if side:
+                h = 0.0 if z < lip_z else -(z - lip_z)
+                nn = np.r_[n, 0.0] if z < lip_z else np.r_[n * 0.7071, 0.7071]
+            else:
+                if z < nose_lip_z:
+                    continue
+                h = -(z - nose_lip_z) * nose_slope
+                nn = np.r_[n, nose_slope] / np.hypot(1, nose_slope)
+            P.append([*((r0 + h) * n), z])
+            N.append(nn)
+    return np.array(P), np.array(N)
+
+
+def test_gamma_lies_on_the_skin_where_the_nose_has_no_crisp_crease():
+    """Inca cause: stations without a crisp crease were bridged in (h, z) from the side creases, so Gamma sat several mm in front of a
+    receding nose at its own height (beak). Gamma must lie on the measured skin at every station."""
+    from cadmcp_brain.studio import scan_shell_solid_worker as ssw
+    P, N = _front_nose_samples()
+    plan = ssw.Plan(P[:, :2], 0.0)
+    log = {}
+    hG, zG, rows = ssw.measure_gamma(plan, P, N, np.ones(len(P), bool), ssw.DEFAULTS, log)
+    assert log['gamma']['on_surface']['applied']
+    off = []
+    for s in np.linspace(0.3 * plan.LS, 0.7 * plan.LS, 25):       # nose stations
+        h_skin = ssw.surface_h_at(plan, P, s, float(np.interp(s, plan.ss, zG)), 0.5)
+        off.append(float(np.interp(s, plan.ss, hG)) - h_skin)
+    tol = float(ssw.DEFAULTS['gamma_surface_tol_mm'])                  # soft threshold: residual stays within the tolerance band
+    assert np.isfinite(off).all() and np.abs(off).max() < tol + 0.1, off
+    assert log['gamma_on_surface']['off_surface_before_mm']['max'] > 1.0    # the uncorrected bridge was off the skin
+    for s in (0.05 * plan.LS, 0.95 * plan.LS):                          # crisp side lip keeps its crease (z 12, h 0)
+        assert abs(float(np.interp(s, plan.ss, zG)) - 12.0) < 0.3
+        assert abs(float(np.interp(s, plan.ss, hG))) < 0.3
+
+
+def test_cap_heightfield_is_the_upper_envelope_not_pulled_into_a_well():
+    """Inca cause: a wheel well without a layout window (walls + floor labelled as shell) pulled the least-squares cap down and the
+    symmetric MAD trim then dropped the rim instead of the well (dent ring). The robust fit must stay on the skin over the well."""
+    from cadmcp_brain.studio import scan_shell_solid_worker as ssw
+    rng = np.random.default_rng(0)
+    xy = np.c_[rng.uniform(70, 120, 60000), rng.uniform(-30, 30, 60000)]
+    z = 30.0 - 0.006 * (xy[:, 0] - 95) ** 2 - 0.01 * xy[:, 1] ** 2 + rng.normal(0, 0.02, len(xy))
+    well = (np.abs(xy[:, 0] - 97) < 10) & (np.abs(xy[:, 1]) < 4)
+    z[well] -= 2.5 * rng.uniform(0.3, 1.0, well.sum())            # well floor and walls, 0.75 .. 2.5 mm below the skin
+    C = np.c_[xy, z]
+    X0, X1, Y1 = 69.0, 121.0, 31.0
+    kx = np.r_[[X0] * 3, np.linspace(X0, X1, 20), [X1] * 3]
+    ky = np.r_[[-Y1] * 3, np.linspace(-Y1, Y1, 20), [Y1] * 3]
+    cf, keep, thr = ssw.upper_envelope_heightfield(C, kx, ky, 0.5)
+    from scipy.interpolate import BSpline
+    fit = np.einsum('ni,ij,nj->n', BSpline.design_matrix(C[:, 0], kx, 3).toarray(), cf, BSpline.design_matrix(C[:, 1], ky, 3).toarray())
+    skin = 30.0 - 0.006 * (C[:, 0] - 95) ** 2 - 0.01 * C[:, 1] ** 2
+    ring = (~well) & (np.abs(C[:, 0] - 97) < 13) & (np.abs(C[:, 1]) < 7)
+    assert keep[~well].mean() > 0.99 and keep[well].mean() < 0.05, (keep[~well].mean(), keep[well].mean())
+    assert np.abs(fit[ring] - skin[ring]).max() < 0.2, np.abs(fit[ring] - skin[ring]).max()
+    assert np.abs(fit[well] - skin[well]).max() < 1.0                 # bridged over the well near the skin (symmetric trim: 1.78 sag)

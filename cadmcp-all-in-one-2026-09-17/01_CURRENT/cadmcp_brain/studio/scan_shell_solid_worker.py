@@ -38,7 +38,7 @@ if __name__ == '__main__':
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from cadmcp_brain.studio.scan_cad_common import WorkerError, worker_main  # noqa: E402
 
-WORKER_VERSION = 'shell_solid/4'
+WORKER_VERSION = 'shell_solid/13'
 DEFAULTS = {'shell_regions': ['top_shell', 'left_click', 'right_click'], 'plate_regions': ['bottom_plate', 'base_plate', 'plate', 'bottom'],
             'exclude_regions': ['wheel', 'WH', 'side_button_1', 'side_button_2', 'B1', 'B2', 'sensor'], 'exclude_margin_mm': 2.5,
             'parting_mode': 'auto', 'parting_z_mm': None, 'flat_tolerance_mm': 0.3, 'extension_mm': 3.0,
@@ -47,7 +47,8 @@ DEFAULTS = {'shell_regions': ['top_shell', 'left_click', 'right_click'], 'plate_
             'station_mm': 1.0, 'profile_halfwidth_mm': 0.35, 'crease_min_turn_deg': 20.0, 'groove_margin_mm': 1.2,
             'lip_band_mm': 4.2, 'front_sector_deg': 60.0, 'plain_front': True, 'robust_start_stiffness': 300.0, 'tube_spans': 40, 'tube_smoothing': 1e-5,
             'front_stiffness': 20.0, 'trim_inward_mm': 0.4, 'snap_blend_mm': 10.0, 'g1_end_mm': 3.0, 'cap_grid_mm': 2.5,
-            'cap_smoothing': 0.5, 'cap_gamma_clear_mm': 1.5, 'fill_max_degree': 8, 'fill_max_segments': 48, 'min_face_area_mm2': 0.5,
+            'cap_smoothing': 0.5, 'cap_gamma_clear_mm': 1.5, 'gamma_surface_tol_mm': 0.5, 'fill_max_degree': 8, 'fill_max_segments': 48, 'min_face_area_mm2': 0.5,
+            'exterior_only': True, 'exterior_cell_mm': 0.5, 'exterior_tol_mm': 0.9, 'exterior_min_nz': 0.6, 'exterior_density': 30.0,
             'unit_scale': 1.0, 'cut_planes': []}
 
 
@@ -436,6 +437,31 @@ def sample_faces(tri, idx, density, seed=0):
     return P, fn[fi], w, idx[fi]
 
 
+def zbuffers(P, cell):
+    """Top / bottom depth buffers of a dense point cloud (aligned frame): (x0, y0, cell, zmax grid, zmin grid)."""
+    x0, y0 = float(P[:, 0].min()) - cell, float(P[:, 1].min()) - cell
+    ij = np.floor((P[:, :2] - [x0, y0]) / cell).astype(np.int64)
+    shape = ij.max(0) + 2
+    zt, zb = np.full(shape, -np.inf), np.full(shape, np.inf)
+    np.maximum.at(zt, (ij[:, 0], ij[:, 1]), P[:, 2])
+    np.minimum.at(zb, (ij[:, 0], ij[:, 1]), P[:, 2])
+    return x0, y0, cell, zt, zb
+
+
+def exterior_mask(Q, N, buf, tol, min_nz):
+    """True for samples that belong to the visible outer skin. A scan of a moulded shell also contains hidden sheets (the inner surface of a
+    lip, a second skin behind a gap): an up-facing sample (n_z > min_nz) that lies more than tol below the highest surface above it is hidden,
+    and so is a down-facing sample (n_z < -min_nz) more than tol above the lowest surface below it. Steep and vertical walls stay (they are
+    seen from the side; min_nz keeps the cell slope error below tol)."""
+    x0, y0, cell, zt, zb = buf
+    ij = np.floor((Q[:, :2] - [x0, y0]) / cell).astype(np.int64)
+    inb = (ij[:, 0] >= 0) & (ij[:, 1] >= 0) & (ij[:, 0] < zt.shape[0]) & (ij[:, 1] < zt.shape[1])
+    ii = np.clip(ij, 0, np.array(zt.shape) - 1)
+    ztq, zbq = zt[ii[:, 0], ii[:, 1]], zb[ii[:, 0], ii[:, 1]]
+    hid = inb & (((N[:, 2] > min_nz) & (Q[:, 2] < ztq - tol)) | ((N[:, 2] < -min_nz) & (Q[:, 2] > zbq + tol)))
+    return ~hid
+
+
 def layout_paths(layout, R, d):
     """Plan polylines (aligned frame) of every slot path, centre-gap segment and window outline of a click_slot_layout/1."""
     out, window = [], None
@@ -490,23 +516,72 @@ def measure_gamma(plan, Pt, Nt, top_ok, p, log):
     s_all, h_all, z_all = s_all[o], h_all[o], z_all[o]
     _, uq = np.unique(np.round(s_all, 6), return_index=True)
     s_all, h_all, z_all = s_all[uq], h_all[uq], z_all[uq]
+    sg = np.r_[st, plan.LS - st]                             # full symmetric station grid: gaps without a crisp crease are bridged
+    sg = np.unique(np.round(sg, 6))                          # linearly (no spline extrapolation across the gap -> no hump)
     keep = np.ones(len(s_all), bool)
     for _ in range(5):                                       # robust: drop > 3 MAD outliers
-        fh = smooth1d(s_all[keep], h_all[keep], 3.0)
-        fz = smooth1d(s_all[keep], z_all[keep], 3.0)
+        fh = smooth1d(sg, np.interp(sg, s_all[keep], h_all[keep]), 3.0)
+        fz = smooth1d(sg, np.interp(sg, s_all[keep], z_all[keep]), 3.0)
         rh, rz = h_all - fh(s_all), z_all - fz(s_all)
         mh = 1.4826 * np.median(np.abs(rh[keep])) + 0.02
         mz = 1.4826 * np.median(np.abs(rz[keep])) + 0.02
         nk = (np.abs(rh) < 3 * mh) & (np.abs(rz) < 3 * mz)
-        if (nk == keep).all():
+        if (nk == keep).all() or nk.sum() < 10:
             break
         keep = nk
     ss = plan.ss
     hG, zG = fh(ss), fz(ss)
     sym = lambda a_: 0.5 * (a_ + a_[::-1])
+    hG, zG = sym(hG), sym(zG)
     log['crease_outliers_dropped'] = int((~keep).sum())
     log['crease_turn_deg'] = {'p50': float(np.median(rows[ok, 3])), 'min': float(rows[ok, 3].min()), 'max': float(rows[ok, 3].max())}
-    return sym(hG), sym(zG), rows
+    log['gamma'] = {'stations': int(len(rows)), 'crisp_crease': int(ok.sum()), 'outliers_dropped': int((~keep).sum()), 'turn_deg': log['crease_turn_deg'],
+                    'bridging': 'stations without a crisp crease are linearly interpolated between their neighbours before smoothing'}
+    # Gamma must lie ON the visible outer skin: where the smoothed / bridged crease sits off the surface at its own height (a nose
+    # without a crisp crease, two competing turns on a rounded fold), its outward offset is replaced by the measured skin offset.
+    tol = float(p['gamma_surface_tol_mm'])
+    hm = np.array([surface_h_at(plan, Pt, s, float(np.interp(s, ss, zG)), p['profile_halfwidth_mm'] + 0.15) for s in st])
+    okm = np.isfinite(hm)
+    log['gamma_on_surface'] = {'stations_measured': int(okm.sum()), 'tolerance_mm': tol, 'applied': False,
+                               'rule': 'outer-envelope offset of the skin at the Gamma height per station; the crease offset is pulled onto it '
+                                       'beyond gamma_surface_tol_mm (a crisp lip rounding inside the tolerance keeps the crease intersection)'}
+    if okm.sum() >= 10:
+        dlt = hm[okm] - np.interp(st[okm], ss, hG)
+        dlt = np.sign(dlt) * np.maximum(np.abs(dlt) - tol, 0.0)  # soft threshold: inside the tolerance nothing moves
+        s2 = np.r_[st[okm], plan.LS - st[okm]]
+        d2 = np.r_[dlt, dlt]
+        o2 = np.argsort(s2)
+        s2, d2 = s2[o2], d2[o2]
+        _, u2 = np.unique(np.round(s2, 6), return_index=True)
+        corr = sym(smooth1d(sg, np.interp(sg, s2[u2], d2[u2]), 1.0)(ss))
+        log['gamma_on_surface'].update(applied=True, correction_mm=_st(corr), stations_moved=int((np.abs(dlt) > 1e-9).sum()),
+                                       off_surface_before_mm=_st(hm[okm] - np.interp(st[okm], ss, hG)))
+        hG = hG + corr
+    log['gamma']['on_surface'] = log['gamma_on_surface']
+    return hG, zG, rows
+
+
+def surface_h_at(plan, Pt, s, z0, halfwidth, dz=0.5):
+    """Outward offset h of the visible outer skin at station s and height z0: outer envelope of the profile (max h per 0.1 mm z bin
+    within |z - z0| <= dz), fitted linearly in z and read at z0. nan when fewer than 4 bins carry points."""
+    O, nn = plan.at(s)
+    O, nn = O[0], nn[0]
+    t = np.r_[-nn[1], nn[0]]
+    rel = Pt[:, :2] - O
+    on = (np.abs(rel @ t) < halfwidth) & (np.abs(Pt[:, 2] - z0) <= dz) & (rel @ nn > -15) & (rel @ nn < 3)
+    if on.sum() < 4:
+        return np.nan
+    h, z = rel[on] @ nn, Pt[on, 2]
+    k = np.round((z - z0) / 0.1).astype(int)
+    env = {}
+    for kk, hh in zip(k, h):
+        env[kk] = max(env.get(kk, -np.inf), hh)
+    if len(env) < 4:
+        return np.nan
+    zz = np.array(list(env.keys())) * 0.1
+    he = np.array(list(env.values()))
+    a = np.polyfit(zz, he, 1)
+    return float(a[1])
 
 
 def skin_split_v(PR, tuR, tvR, plan, hG, zG, log):
@@ -573,10 +648,11 @@ def fit_tube(PR, tuR, tvR, vS0, plan, G, zGs, D, Dw, p, log):
         bb = bb * bb * (3 - 2 * bb)
         return (1 - bb) * f + bb * ve
     sel = (D[:, 2] < zGi - 0.8) & (D[:, 0] >= plan.xc)
-    if p['plain_front']:
-        fw = plan.front_weight(s_d, p['front_sector_deg'])
-        sel &= ~((fw > 0.5) & (D[:, 2] > zGi - p['lip_band_mm']))
-    Pd, sd, wd = D[sel], s_d[sel], Dw[sel]
+    band = np.zeros(len(D), bool)
+    if p['plain_front']:                                     # lip band (front sector, lip_band_mm below Gamma): a recess there (under-lip
+        fw = plan.front_weight(s_d, p['front_sector_deg'])   # groove) is judged against the stiff first fit and never followed; a plain
+        band = (fw > 0.5) & (D[:, 2] > zGi - p['lip_band_mm'])  # sloped nose without a recess keeps its band data (it is the wall itself)
+    Pd, sd, wd, bd = D[sel], s_d[sel], Dw[sel], band[sel]
     if len(Pd) < 100:
         raise WorkerError('SHELL_SOLID_TUBE', 'Too few wall points below the crease in front of the cut.', {'points': int(len(Pd))})
     ud, vd = sd / LS, vparam(sd, Pd[:, 2])
@@ -615,6 +691,7 @@ def fit_tube(PR, tuR, tvR, vS0, plan, G, zGs, D, Dw, p, log):
         return nrm / np.maximum(np.linalg.norm(nrm, axis=1), 1e-12)[:, None]
 
     keep = np.ones(len(Pd), bool)
+    band_drop = np.zeros(len(Pd), bool)
     for it in range(7):
         # whole_v1 rule (cable-filled plain front wall): the first passes are stiff (robust_start_stiffness x smoothing) so recesses such as the
         # cable hole cannot pull the wall in; points more than trim_inward_mm inside are dropped from the second pass on
@@ -634,15 +711,48 @@ def fit_tube(PR, tuR, tvR, vS0, plan, G, zGs, D, Dw, p, log):
             nrm = normals(Q, ud, vd)
             _, nn = plan.at(sd)
             sg = np.sign((nrm[:, :2] * nn).sum(1).mean())
-            keep = ((Pd - X) * nrm).sum(1) * sg > -p['trim_inward_mm']
+            inward = -((Pd - X) * nrm).sum(1) * sg
+            if it == 1:                                      # lip band judged once against the stiff fit, then frozen out
+                band_drop = bd & (inward > p['trim_inward_mm'])
+            keep = ~band_drop & (inward <= p['trim_inward_mm'])
     Q = 0.5 * (Q + Q[::-1] * [1, -1, 1])                     # exact symmetry (data and ends are mirror-symmetric)
     X = bs_eval(Q, tuT, tvT, ud, vd)
     dist = np.abs(((Pd - X) * normals(Q, ud, vd)).sum(1))
     gtop = bs_eval(Q, tuT, tvT, ug, np.ones_like(ug))
     log['tube'] = {'spans_u': NUs, 'poles': [nuT, nvT], 'data_points': int(len(Pd)), 'trimmed_inward': int((~keep).sum()),
+                   'lip_band': {'points': int(bd.sum()), 'recessed_dropped': int(band_drop.sum()),
+                                'rule': 'front-sector points within lip_band_mm below Gamma: dropped only when inward of the stiff first fit by > trim_inward_mm'},
                    'deviation_kept': _st(dist[keep]), 'deviation_all': _st(dist), 'gamma_fit_error_mm': float(np.linalg.norm(gtop - G, axis=1).max()),
                    'symmetry_error_mm': 0.0}
     return Q, tuT, tvT
+
+
+def upper_envelope_heightfield(C, kx, ky, lam, max_iter=8):
+    """Fair bicubic height field z(x, y) through C (n, 3), mirror-symmetric in y, robust to recesses: the outer skin of a shell is the
+    highest sheet of its top-view data, so points that fall below the current fit by more than max(0.2 mm, 4 MAD) (wheel well, grooves,
+    gap flanks, hidden inner sheets) are refitted out, while nothing above the fit is ever dropped. Returns (coefficients, kept mask,
+    threshold)."""
+    from scipy.interpolate import BSpline
+    NX, NY = len(kx) - 4, len(ky) - 4
+    X0, X1, Y0, Y1 = kx[0], kx[-1], ky[0], ky[-1]
+    Bx = BSpline.design_matrix(np.clip(C[:, 0], X0, X1), kx, 3).toarray()
+    By = BSpline.design_matrix(np.clip(C[:, 1], Y0, Y1), ky, 3).toarray()
+    A = np.einsum('ni,nj->nij', Bx, By).reshape(len(C), -1)
+    Pen = np.kron(d2mat(NX).T @ d2mat(NX), np.eye(NY)) + np.kron(np.eye(NX), d2mat(NY).T @ d2mat(NY))
+    keep = np.ones(len(C), bool)
+    thr = 0.2
+    for _it in range(max_iter):
+        Ak = A[keep]
+        cf = np.linalg.solve(Ak.T @ Ak + lam * Pen, Ak.T @ C[keep, 2]).reshape(NX, NY)
+        cf = 0.5 * (cf + cf[:, ::-1])
+        r_all = C[:, 2] - np.einsum('ni,ij,nj->n', Bx, cf, By)
+        mad = 1.4826 * float(np.median(np.abs(r_all[keep])))
+        thr = max(0.2, 4.0 * mad)
+        nk = r_all > -thr
+        if (nk == keep).all() or nk.sum() < 50:
+            break
+        keep = nk
+    return cf, keep, thr
 
 
 def cap_points(D, plan, hGs, zGs, G, layout_xy, window, p, log):
@@ -667,12 +777,11 @@ def cap_points(D, plan, hGs, zGs, G, layout_xy, window, p, log):
     NX = NY = 22
     kx = np.r_[[X0] * 3, np.linspace(X0, X1, NX - 2), [X1] * 3]
     ky = np.r_[[-Y1] * 3, np.linspace(-Y1, Y1, NY - 2), [Y1] * 3]
-    Bx = BSpline.design_matrix(np.clip(C[:, 0], X0, X1), kx, 3).toarray()
-    By = BSpline.design_matrix(np.clip(C[:, 1], -Y1, Y1), ky, 3).toarray()
-    A = np.einsum('ni,nj->nij', Bx, By).reshape(len(C), -1)
-    Pen = np.kron(d2mat(NX).T @ d2mat(NX), np.eye(NY)) + np.kron(np.eye(NX), d2mat(NY).T @ d2mat(NY))
-    cf = np.linalg.solve(A.T @ A + p['cap_smoothing'] * Pen, A.T @ C[:, 2]).reshape(NX, NY)
-    cf = 0.5 * (cf + cf[:, ::-1])
+    cf, keep, thr = upper_envelope_heightfield(C, kx, ky, float(p['cap_smoothing']))
+    log['cap_trim'] = {'kept': int(keep.sum()), 'of': int(len(C)), 'recessed_dropped': int((~keep).sum()), 'threshold_mm': float(thr),
+                       'rule': 'points below the fair height field by more than max(0.2, 4 MAD) are recesses and are refitted out; '
+                               'nothing above the surface is dropped (the outer skin is the upper envelope of the top data)'}
+    C = C[keep]
 
     def Hz(x, y):
         return np.einsum('ni,ij,nj->n', BSpline.design_matrix(np.clip(x, X0, X1), kx, 3).toarray(), cf,
@@ -771,7 +880,16 @@ def prepare(req, p, log, warnings):
     keep = shell & (cen[:, 0] > xc - 3)
     if excl.any():
         keep &= cKDTree(cen[excl]).query(cen)[0] > p['exclude_margin_mm']
+    keep_all = shell & (cen[:, 0] > xc - 3)
+    zbuf = None
+    if p['exterior_only']:                                    # hidden sheets of the scan (inner lip surfaces behind the skin) are not outer skin
+        Pocc = sample_faces(tri, np.flatnonzero(keep_all), float(p['exterior_density']), seed=2)[0]
+        zbuf = zbuffers(Pocc, float(p['exterior_cell_mm']))
     Pt, Nt, Wt, _ = sample_faces(tri, np.flatnonzero(keep), 20.0)
+    if zbuf is not None:
+        vis = exterior_mask(Pt, Nt, zbuf, float(p['exterior_tol_mm']), float(p['exterior_min_nz']))
+        log['exterior_front'] = {'samples': int(len(Pt)), 'hidden': int((~vis).sum()), 'rule': 'n_z > min_nz and below the top surface by > tol, or n_z < -min_nz and above the bottom surface by > tol'}
+        Pt, Nt, Wt = Pt[vis], Nt[vis], Wt[vis]
     Pt, Nt, Wt = np.vstack([Pt, Pt * [1, -1, 1]]), np.vstack([Nt, Nt * [1, -1, 1]]), np.r_[Wt, Wt]
     layout = json.loads(Path(inp['layout']).read_text(encoding='utf-8')) if inp.get('layout') else None
     paths, window = layout_paths(layout, R, d)
@@ -791,7 +909,7 @@ def prepare(req, p, log, warnings):
     pts, Cdat = cap_points(Pt[top_ok], plan, hGs, zGs, G, paths, window, p, log)
     return {'R': R, 'd': d, 'xc': xc, 'PR': PR, 'tuR': tuR, 'tvR': tvR, 'vS0': vS0, 'S0': S0, 'G': G, 'Q': Q, 'tuT': tuT, 'tvT': tvT,
             'pts': pts, 'Cdat': Cdat, 'plan': plan, 'rows': rows, 'cfI': cfI, 'kxI': kxI, 'kyI': kyI, 'mode': mode, 'zp': zp,
-            'V': V, 'F': F, 'shell': shell, 'excl': excl}
+            'V': V, 'F': F, 'shell': shell, 'excl': excl, 'zbuf': zbuf, 'paths': paths, 'window': window}
 
 
 def build(g, p, log, out):
@@ -900,17 +1018,58 @@ def build(g, p, log, out):
     brep['tessellates'] = bool(tess is not None and len(tess['T']) > 0)
     # deviation vs the scan shell (all shell samples, excluded regions removed)
     tri = g['V'][g['F']]
-    Ps, _, _, _ = sample_faces(tri, np.flatnonzero(g['shell'] & ~g['excl']), 2.0, seed=1)
-    Ps = Ps[np.random.default_rng(1).choice(len(Ps), min(4000, len(Ps)), replace=False)]
+    Ps, Ns, _, _ = sample_faces(tri, np.flatnonzero(g['shell'] & ~g['excl']), 2.0, seed=1)
+    sel = np.random.default_rng(1).choice(len(Ps), min(4000, len(Ps)), replace=False)
+    Ps, Ns = Ps[sel], Ns[sel]
+    n_excl = 0
+    if g['excl'].any():                                      # same exclusion margin as the fits (wheel / side buttons / sensor)
+        from scipy.spatial import cKDTree
+        ex = sample_faces(tri, np.flatnonzero(g['excl']), 1.0, seed=3)[0]
+        kx_ = cKDTree(ex).query(Ps)[0] > float(p['exclude_margin_mm'])
+        n_excl = int((~kx_).sum())
+        Ps, Ns = Ps[kx_], Ns[kx_]
+    n_hidden = 0
+    if g['zbuf'] is not None:                                # the deviation is measured on the visible outer skin only
+        vis = exterior_mask(Ps, Ns, g['zbuf'], float(p['exterior_tol_mm']), float(p['exterior_min_nz']))
+        n_hidden = int((~vis).sum())
+        Ps = Ps[vis]
     dd_ = []
     for q in Pin(Ps):
         ds = BRepExtrema_DistShapeShape(BRepBuilderAPI_MakeVertex(gp_Pnt(*map(float, q))).Vertex(), back)
         dd_.append(ds.Value() if ds.IsDone() else np.nan)
     dd_ = np.asarray(dd_)
+    # designed-away features that later stages rebuild, from the explicit slot layout only: the click-groove slots (perimeter / centre-gap
+    # paths, groove_margin_mm wide band) and the wheel-window opening (outline band + interior). Nothing else leaves the gate.
+    mg = float(p['groove_margin_mm'])
+    slot_band = np.zeros(len(Ps), bool)
+    win_band = np.zeros(len(Ps), bool)
+    if g.get('paths'):
+        from scipy.spatial import cKDTree
+        pp = np.vstack(g['paths'])
+        pp = np.vstack([pp, pp * [1, -1]])
+        slot_band = cKDTree(pp).query(Ps[:, :2])[0] <= mg
+    if g.get('window') is not None:
+        from matplotlib.path import Path as MPath
+        w_ = np.asarray(g['window'], float)
+        for W_ in (w_, w_ * [1, -1]):
+            c_ = W_.mean(0)
+            Wd = c_ + (W_ - c_) * (1 + mg / max(1e-6, np.linalg.norm(W_ - c_, axis=1).mean()))
+            win_band |= MPath(Wd).contains_points(Ps[:, :2])
+    band = slot_band | win_band
     front = Ps[:, 0] > g['xc']
-    dev = {'all': _st(dd_), 'front': _st(dd_[front]), 'rear_skin': _st(dd_[~front]),
-           'note': 'scan shell samples (excluded regions removed) to the solid; the front includes the cable hole, lip groove and slot grooves that are '
-                   'not followed on purpose'}
+    k = ~band
+    dev = {'all': _st(dd_[k]), 'front': _st(dd_[front & k]), 'rear_skin': _st(dd_[~front & k]),
+           'gate_population': 'visible outer-skin samples of the shell labels (regions in exclude_regions + exclude_margin_mm removed, hidden inner '
+                              'sheets removed) minus the designed_features below; all of them are gated by tol_p95_mm',
+           'excluded': {'regions': {'names': [str(r) for r in p['exclude_regions']], 'margin_mm': float(p['exclude_margin_mm']), 'samples': n_excl},
+                        'hidden_inner_sheets': n_hidden,
+                        'designed_features': {'rule': f'slot layout paths (perimeter, centre gap, window outline) within groove_margin_mm = {mg} mm, '
+                                                      'and the inside of the window outline dilated by groove_margin_mm; rebuilt by click_slots / wheel_window',
+                                              'slot_band': int(slot_band.sum()), 'window': int(win_band.sum()), 'samples': int(band.sum()),
+                                              'stats': _st(dd_[band])}},
+           'hidden_samples_excluded': n_hidden,
+           'note': 'visible outer-skin scan shell samples to the solid; an under-lip recess / cable hole in the front wall is not followed on purpose '
+                   '(plain_front) and stays in the gate'}
     return brep, dev
 
 

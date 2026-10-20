@@ -94,6 +94,13 @@ def make_stack(M: Any, ft: dict[str, Any], which: str) -> dict[str, Any]:
     elif which == 'shoulder':
         x0, x1, y0, y1 = SHOULDER_BOX
         t2, depth, valid = tri[:, :, :2], tri[:, :, 2].mean(1), fs[:, 2] > -0.05
+    elif which == 'flank':        # whole +y flank (box from the mesh itself, no prior): used by the groove-loop side-button detector
+        P = M.P
+        ymax = float(P[:, 1].max())
+        x0, x1 = float(np.floor(P[:, 0].min())) - 1.0, float(np.ceil(P[:, 0].max())) + 1.0
+        y0, y1 = -float(np.ceil(P[:, 2].max())) - 1.0, -float(np.floor(P[:, 2].min())) + 1.0
+        t2, depth = np.stack([tri[:, :, 0], -tri[:, :, 2]], -1), tri[:, :, 1].mean(1)
+        valid = (fs[:, 1] > 0.1) & (tri[:, :, 1].min(1) > 0.5 * ymax)
     else:
         x0, x1, y0, y1 = SIDE_BOX
         t2, depth = np.stack([tri[:, :, 0], -tri[:, :, 2]], -1), tri[:, :, 1].mean(1)
@@ -538,7 +545,7 @@ def regularise_group(raw: dict[str, np.ndarray], masks: dict[str, np.ndarray], s
 def make_cues(s: dict[str, Any]) -> dict[str, Any]:
     """Boundary cues of one stack: groove depth band |h|, normal-discontinuity angle and surface slope |grad depth|."""
     ok = s['ok']
-    dep = fillnn(s['z'] if s['which'] != 'side' else s['y3'], ok)
+    dep = fillnn(s['z'] if s['which'] not in ('side', 'flank') else s['y3'], ok)
     return {'ok': ok, 'geo': _norm(ndi.gaussian_filter(np.abs(s['h']), 3), ok, 97), 'ang': _norm(s['ang'], ok),
             'slope': _norm(ndi.gaussian_gradient_magnitude(dep, 1.0) / PIX, ok, 97)}
 
@@ -621,6 +628,52 @@ def seg_side_slope(s: dict[str, Any], env: dict[str, Any], sg: float = 1.0) -> d
         mk[core] = 1
         out[k] = clean_mask(ndi.binary_fill_holes(watershed(gy, mk, mask=ok) == 1), 0.3, 0.3)
     return out
+
+
+SLOT_CLOSE_MM = 1.0        # closing half-width: bridges slots up to ~2 mm wide (side-button gaps are 0.3-1.5 mm)
+SLOT_DEPTH_MM = 0.25       # a slot is at least this much below the closed surface
+SLOT_MIN_LEN_MM2 = 2.0     # groove components smaller than this (projected area) are noise
+PAD_MIN_MM2 = 8.0          # smallest enclosed island accepted as a button pad
+PAD_MAX_FRAC = 0.25        # largest island, as a share of the visible flank
+PAD_FACING_MIN = 0.2       # pad faces face the flank view (cos > 0.2, i.e. < ~78 deg); slot walls are edge-on and stay out
+
+
+def seg_side_grooves(s: dict[str, Any]) -> dict[str, Any]:
+    """Side-button pads as islands enclosed by closed narrow-slot loops on the flank view.
+    Slot depth = grey closing of the flank depth (square, half-width SLOT_CLOSE_MM) minus the depth; slot = depth > SLOT_DEPTH_MM away from
+    the silhouette; pads = holes of the slot mask (fully groove-bounded), raised or flush relative to the surrounding skin, sorted rear -> front."""
+    ok = s['ok']
+    dep = fillnn(s['y3'], ok)
+    w = 2 * int(round(SLOT_CLOSE_MM / PIX)) + 1
+    D = ndi.minimum_filter(ndi.maximum_filter(dep, size=w), size=w) - dep
+    inner = ndi.binary_erosion(ok, iterations=int(round((SLOT_CLOSE_MM + 0.5) / PIX)))
+    G = (D > SLOT_DEPTH_MM) & inner
+    lbl, _ = ndi.label(G)
+    sz = np.bincount(lbl.ravel()) * PIX * PIX
+    keep = np.flatnonzero(sz > SLOT_MIN_LEN_MM2)
+    G = np.isin(lbl, keep[keep > 0])
+    holes = ndi.binary_fill_holes(G) & ~G
+    hl, nh = ndi.label(holes)
+    area = np.bincount(hl.ravel(), minlength=nh + 1) * PIX * PIX
+    amax = PAD_MAX_FRAC * float(ok.sum()) * PIX * PIX
+    pads = []
+    for i in range(1, nh + 1):
+        if not PAD_MIN_MM2 <= area[i] <= amax:
+            continue
+        m = hl == i
+        if float(np.median(D[m])) > 0.5 * SLOT_DEPTH_MM:      # a pit, not a pad
+            continue
+        ring = ndi.binary_dilation(m, iterations=2) & ~m
+        pads.append({'mask': m, 'area_mm2': float(area[i]), 'x': float(np.nonzero(m)[0].mean()), 'ring_on_slot': float(G[ring].mean())})
+    pads.sort(key=lambda p: -p['area_mm2'])
+    found = len(pads)
+    pads = sorted(pads[:2], key=lambda p: p['x'])
+    dt = ndi.distance_transform_edt(G) * PIX
+    sk = G & (dt >= ndi.maximum_filter(dt, 3) - 1e-9)
+    info = {'islands_found': found, 'pad_areas_mm2': [round(p['area_mm2'], 1) for p in pads], 'slot_area_mm2': round(float(G.sum()) * PIX * PIX, 1),
+            'slot_width_median_mm': round(float(2 * np.median(dt[sk])), 2) if sk.any() else None,
+            'slot_depth_median_mm': round(float(np.median(D[sk])), 2) if sk.any() else None}
+    return {'pads': {k: p['mask'] for k, p in zip(('B1', 'B2'), pads)}, 'cue': np.clip(D / (2 * SLOT_DEPTH_MM), 0, 1) * inner, 'info': info}
 
 
 def seg_top_btn(sb: dict[str, Any], xr: dict[str, tuple[float, float]], sg: float = 1.5) -> dict[str, np.ndarray]:
@@ -711,9 +764,21 @@ def segment_regions(M: Any, ft: dict[str, Any]) -> dict[str, Any]:
     """Run the v4 pipeline (geometry only) on a work-frame mesh."""
     st = {w: make_stack(M, ft, w) for w in ('top', 'side', 'shoulder')}
     sT, sS, sB = st['top'], st['side'], st['shoulder']
-    cT, cS = make_cues(sT), make_cues(sS)
+    cT = make_cues(sT)
     rt, BT, MKT = seg_top(sT, cT, PRIOR)
-    rs = seg_side_slope(sS, SIDE_ENV)
+    # side buttons: groove-bounded islands on the whole flank first (no prior box); the prior-box slope watershed only when < 2 islands
+    sF = make_stack(M, ft, 'flank')
+    sgv = seg_side_grooves(sF)
+    groove_mode = len(sgv['pads']) == 2
+    side_method = {'method': 'groove_loop' if groove_mode else 'slope_ring_prior', **sgv['info']}
+    if groove_mode:
+        sS = st['side'] = sF
+        rs = sgv['pads']
+    else:
+        rs = seg_side_slope(sS, SIDE_ENV)
+    cS = make_cues(sS)
+    if groove_mode:
+        cS['groove'] = sgv['cue']
     empty = [k for k, m in {**rt, **rs}.items() if m.sum() * PIX * PIX < 5.0]
     if empty:
         raise SegmentError('The surface segmentation found no usable region for: ' + ', '.join(empty), {'empty_regions': empty,
@@ -724,10 +789,13 @@ def segment_regions(M: Any, ft: dict[str, Any]) -> dict[str, Any]:
     fT, iT = regularise_group({k: raw[k] for k in ('LC', 'RC', 'WH')}, {k: masks[k] for k in ('LC', 'RC', 'WH')}, sT)
     fS, iS = regularise_group({k: raw[k] for k in ('B1', 'B2')}, {k: masks[k] for k in ('B1', 'B2')}, sS, closed_only=('B1', 'B2'))
     xr = {k: (float(raw[k][:, 0].min()), float(raw[k][:, 0].max())) for k in ('B1', 'B2')}
-    rb = seg_top_btn(sB, xr)
-    mB = {k: smooth_mask(rb[k]) for k in rb}
-    rawB = {k: outline(mB[k], sB) for k in mB}
-    fB, iB = regularise_group(rawB, mB, sB, closed_only=('B1', 'B2'))
+    if groove_mode:      # a groove loop closes each pad in the flank view: no shoulder-view extension
+        fB, iB = {}, {}
+    else:
+        rb = seg_top_btn(sB, xr)
+        mB = {k: smooth_mask(rb[k]) for k in rb}
+        rawB = {k: outline(mB[k], sB) for k in mB}
+        fB, iB = regularise_group(rawB, mB, sB, closed_only=('B1', 'B2'))
     OL = {**fT, **fS}
     info = {**iT, **iS}
     PM = {k: polygon_mask(OL[k], stk[k]['x0'], stk[k]['y0'], stk[k]['nx'], stk[k]['ny']) for k in REG}
@@ -736,7 +804,7 @@ def segment_regions(M: Any, ft: dict[str, Any]) -> dict[str, Any]:
     tri, fs = M.tri, ft['fs']
     cen = tri.mean(1)
     up_f = fs[:, 2] > 0.1
-    fl_f = (fs[:, 1] > 0.1) & (tri[:, :, 1].min(1) > 15)
+    fl_f = (fs[:, 1] > 0.1) & (tri[:, :, 1].min(1) > (0.5 * float(M.P[:, 1].max()) if groove_mode else 15))
     zl, yl = fillnn(sT['z'], sT['ok']), fillnn(sS['y3'], sS['ok'])
     vis_top = up_f & (np.abs(cen[:, 2] - _look(zl, sT, cen[:, 0], cen[:, 1])) < FACE_MARGIN_MM)
     vis_side = fl_f & (np.abs(cen[:, 1] - _look(yl, sS, cen[:, 0], -cen[:, 2])) < FACE_MARGIN_MM)
@@ -744,20 +812,29 @@ def segment_regions(M: Any, ft: dict[str, Any]) -> dict[str, Any]:
     ids = {k: i for i, k in enumerate(REG)}
     for k in ('WH', 'LC', 'RC'):
         lab[vis_top & (lab < 0) & _pix_in(PM[k], sT, cen[:, 0], cen[:, 1])] = ids[k]
+    if groove_mode:      # pad = top skin only: slot walls / floor (deeper than half the slot depth) and pixels outside the raw island stay out
+        vis_pad = fl_f & (np.abs(cen[:, 1] - _look(yl, sS, cen[:, 0], -cen[:, 2])) < 0.5 * SLOT_DEPTH_MM) & (M.fn[:, 1] > PAD_FACING_MIN)
     for k in ('B1', 'B2'):
+        if groove_mode:
+            lab[vis_pad & _pix_in(PM[k] & rs[k], sS, cen[:, 0], -cen[:, 2])] = ids[k]
+            continue
         lab[vis_side & _pix_in(PM[k], sS, cen[:, 0], -cen[:, 2])] = ids[k]
     zlb = fillnn(sB['z'], sB['ok'])
     vis_topb = (fs[:, 2] > -0.05) & (cen[:, 1] > 24.9) & (np.abs(cen[:, 2] - _look(zlb, sB, cen[:, 0], cen[:, 1])) < FACE_MARGIN_MM)
     base = lab.copy()
     alt: dict[str, dict[str, np.ndarray]] = {}
     for k in ('B1', 'B2'):
+        if groove_mode:
+            sel = np.flatnonzero(base == ids[k])
+            alt[k] = {'side_priority': sel, 'top_priority': sel, 'balanced': sel}
+            continue
         dside = _look(ndi.distance_transform_edt(~PM[k]) * PIX, sS, cen[:, 0], -cen[:, 2])
         cand = vis_topb & (base < 0) & _pix_in(PMB[k], sB, cen[:, 0], cen[:, 1])
         alt[k] = {'side_priority': np.flatnonzero(base == ids[k]), 'top_priority': np.flatnonzero((base == ids[k]) | cand & (dside <= 1.0)),
                   'balanced': np.flatnonzero((base == ids[k]) | cand & (dside <= BTN_TOP_D_MM))}
         lab[cand & (dside <= BTN_TOP_D_MM)] = ids[k]
     return {'lab': lab, 'ids': ids, 'stacks': st, 'cues': {'top': cT, 'side': cS}, 'B_top': BT, 'masks': PM, 'outlines': OL, 'shoulder_outlines': fB,
-            'curves': info, 'shoulder_curves': iB, 'alt_face_sets': alt,
+            'curves': info, 'shoulder_curves': iB, 'alt_face_sets': alt, 'side_method': side_method,
             'outlines_3d': {**{k: lift(OL[k], sT, 'top') for k in ('LC', 'RC', 'WH')}, **{k: lift(OL[k], sS, 'side') for k in ('B1', 'B2')}},
             'shoulder_outlines_3d': {k: lift(fB[k], sB, 'top') for k in fB},
             'defect_faces': int(ft['defect'].sum())}

@@ -244,3 +244,7 @@ Tests that reference the community/official Fusion route (update or re-run when 
 - Not confirmed by the read-only scan: enclosing test names for `test_select_backend.py:123`; a repo-wide test search was partial - run `rg -n "fusion-community|stella-fusion-community|fusion_mcp" --glob "*test*"` before editing.
 
 Order of operations (when approved): pass the live checklist (section 11) -> add the config entries -> update docs/PREFERENCES -> update `backend_routing.py` label and `fusion.py` handoff -> adapt the two freecad tests -> only then mark the community dir legacy.
+
+## Owner-ordered policy change (2026-10-12)
+
+By owner order the bridge matches the official Fusion MCP: no document allow-list and no code AST policy by default. Switch: `STELLA_STEVE_UNRESTRICTED` (default `1`; `0` restores the guards in `gateway.py`, `policy.py` and the add-in panel guard in `stella_seam.py`). Kept: bearer-token auth, empty/size/syntax checks, the `def run(context)` contract, unit helpers, audit log, document pinning (calls run on the active document). The text above describing allow-list/code policy applies only when the switch is `0`.

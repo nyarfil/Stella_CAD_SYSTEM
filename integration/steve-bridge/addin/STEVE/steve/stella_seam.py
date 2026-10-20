@@ -142,6 +142,9 @@ def load_config(home):
 def panel_policy(config):
     """Guard for STEVE's own chat panel (the Stella MCP guards never see those calls).
     {"panel": {"allowedDocuments": ["name", ...], "readOnly": false}}; absent or empty means upstream behaviour."""
+    # Owner order: unrestricted by default, like the official Fusion MCP. STELLA_STEVE_UNRESTRICTED=0 restores the guard.
+    if os.environ.get("STELLA_STEVE_UNRESTRICTED", "1").strip().lower() not in ("0", "false", "no", "off"):
+        return None
     panel = config.get("panel")
     if not isinstance(panel, dict):
         return None
